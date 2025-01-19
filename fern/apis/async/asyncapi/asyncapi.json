@@ -1,0 +1,456 @@
+{
+    "asyncapi": "2.6.0",
+    "info": {
+        "title": "Active Symbols API",
+        "version": "1.0.0"
+    },
+    "servers": {
+        "production": {
+            "url": "wss://ws.jambonzws.com/websockets/v3",
+            "protocol": "wss"
+        }
+    },
+    "channels": {
+        "/": {
+            "description": "Place a new order or interact with an existing one.",
+            "bindings": {
+                "ws": {
+                    "query": {
+                        "type": "object",
+                        "properties": {
+                            "app_id": {
+                                "type": "string",
+                                "title": "App ID",
+                                "description": "App ID used for authenticating the client."
+                            }
+                        },
+                        "required": [
+                            "app_id"
+                        ]
+                    }
+                }
+            },
+            "subscribe": {
+                "message": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/components/messages/Ack"
+                        },
+                        {
+                            "$ref": "#/components/messages/Command"
+                        }
+                    ]
+                }
+            },
+            "publish": {
+                "message": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/components/messages/CallStatus"
+                        },
+                        {
+                            "$ref": "#/components/messages/VerbHook"
+                        },
+                        {
+                            "$ref": "#/components/messages/VerbStatus"
+                        },
+                        {
+                            "$ref": "#/components/messages/JambonzError"
+                        },
+                        {
+                            "$ref": "#/components/messages/SessionNew"
+                        },
+                        {
+                            "$ref": "#/components/messages/SessionRedirect"
+                        },
+                        {
+                            "$ref": "#/components/messages/SessionReconnect"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "components": {
+        "messages": {
+            "SessionNew": {
+                "name": "SessionNew",
+                "payload": {
+                    "$ref": "#/components/schemas/SessionNew"
+                }
+            },
+            "SessionRedirect": {
+                "name": "SessionRedirect",
+                "payload": {
+                    "$ref": "#/components/schemas/SessionRedirect"
+                }
+            },
+            "SessionReconnect": {
+                "name": "SessionReconnect",
+                "payload": {
+                    "$ref": "#/components/schemas/SessionReconnect"
+                }
+            },
+            "CallStatus": {
+                "name": "CallStatus",
+                "payload": {
+                    "$ref": "#/components/schemas/CallStatus"
+                }
+            },
+            "VerbHook": {
+                "name": "VerbHook",
+                "payload": {
+                    "$ref": "#/components/schemas/VerbHook"
+                }
+            },
+            "VerbStatus": {
+                "name": "VerbStatus",
+                "payload": {
+                    "$ref": "#/components/schemas/VerbStatus"
+                }
+            },
+            "JambonzError": {
+                "name": "JambonzError",
+                "payload": {
+                    "$ref": "#/components/schemas/JambonzError"
+                }
+            },
+            "Ack": {
+                "name": "Ack",
+                "payload": {
+                    "$ref": "#/components/schemas/Ack"
+                }
+            },
+            "Command": {
+                "name": "Command",
+                "payload": {
+                    "$ref": "#/components/schemas/Command"
+                }
+            }
+        },
+        "schemas": {
+            "SessionNew": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "session:new"
+                        ]
+                    },
+                    "msgid": {
+                        "type": "string",
+                        "title": "Message ID",
+                        "description": "Unique identifier for the message."
+                    },
+                    "call_sid": {
+                        "type": "string",
+                        "title": "Call SID",
+                        "description": "Unique identifier for the call."
+                    },
+                    "b3": {
+                        "type": "string",
+                        "title": "B3",
+                        "description": "B3 header."
+                    },
+                    "data": {
+                        "type": "object",
+                        "title": "Data",
+                        "description": "Data associated with the message."
+                    }
+                }
+            },
+            "SessionRedirect": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "session:redirect"
+                        ]
+                    },
+                    "msgid": {
+                        "type": "string",
+                        "title": "Message ID",
+                        "description": "Unique identifier for the message."
+                    },
+                    "call_sid": {
+                        "type": "string",
+                        "title": "Call SID",
+                        "description": "Unique identifier for the call."
+                    },
+                    "b3": {
+                        "type": "string",
+                        "title": "B3",
+                        "description": "B3 header."
+                    },
+                    "hook": {
+                        "type": "string",
+                        "title": "Hook",
+                        "description": "Hook to redirect to."
+                    },
+                    "data": {
+                        "type": "object",
+                        "title": "Data",
+                        "description": "Data associated with the message."
+                    }
+                }
+            },
+            "SessionReconnect": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "session:reconnect"
+                        ]
+                    },
+                    "msgid": {
+                        "type": "string",
+                        "title": "Message ID",
+                        "description": "Unique identifier for the message."
+                    },
+                    "call_sid": {
+                        "type": "string",
+                        "title": "Call SID",
+                        "description": "Unique identifier for the call."
+                    },
+                    "b3": {
+                        "type": "string",
+                        "title": "B3",
+                        "description": "B3 header."
+                    },
+                    "data": {
+                        "type": "object",
+                        "title": "Data",
+                        "description": "Data associated with the message."
+                    }
+                }
+            },
+            "CallStatus": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "call:status"
+                        ]
+                    },
+                    "msgid": {
+                        "type": "string",
+                        "title": "Message ID",
+                        "description": "Unique identifier for the message."
+                    },
+                    "call_sid": {
+                        "type": "string",
+                        "title": "Call SID",
+                        "description": "Unique identifier for the call."
+                    },
+                    "b3": {
+                        "type": "string",
+                        "title": "B3",
+                        "description": "B3 header."
+                    },
+                    "data": {
+                        "type": "object",
+                        "title": "Data",
+                        "description": "Data associated with the message."
+                    },
+                    "data.call_status": {
+                        "type": "string",
+                        "title": "Call Status",
+                        "description": "Status of the call."
+                    }
+                }
+            },
+            "VerbHook": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "verb:hook"
+                        ]
+                    },
+                    "msgid": {
+                        "type": "string",
+                        "title": "Message ID",
+                        "description": "Unique identifier for the message."
+                    },
+                    "call_sid": {
+                        "type": "string",
+                        "title": "Call SID",
+                        "description": "Unique identifier for the call."
+                    },
+                    "b3": {
+                        "type": "string",
+                        "title": "B3",
+                        "description": "B3 header."
+                    },
+                    "hook": {
+                        "type": "string",
+                        "title": "Hook",
+                        "description": "Hook to redirect to."
+                    },
+                    "data": {
+                        "type": "object",
+                        "title": "Data",
+                        "description": "Data associated with the message."
+                    }
+                }
+            },
+            "VerbStatus": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "verb:status"
+                        ]
+                    },
+                    "msgid": {
+                        "type": "string",
+                        "title": "Message ID",
+                        "description": "Unique identifier for the message."
+                    },
+                    "call_sid": {
+                        "type": "string",
+                        "title": "Call SID",
+                        "description": "Unique identifier for the call."
+                    },
+                    "b3": {
+                        "type": "string",
+                        "title": "B3",
+                        "description": "B3 header."
+                    },
+                    "data": {
+                        "type": "object",
+                        "title": "Data",
+                        "description": "Data associated with the message."
+                    },
+                    "data.id": {
+                        "type": "string",
+                        "title": "ID",
+                        "description": "Unique identifier for the verb."
+                    },
+                    "data.status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Status of the verb."
+                    },
+                    "data.verb": {
+                        "type": "string",
+                        "title": "Verb",
+                        "description": "Verb that was executed.",
+                        "enum": [
+                            "begin",
+                            "end"
+                        ]
+                    }
+                }
+            },
+            "JambonzError": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "jambonz:error"
+                        ]
+                    },
+                    "msgid": {
+                        "type": "string",
+                        "title": "Message ID",
+                        "description": "Unique identifier for the message."
+                    },
+                    "call_sid": {
+                        "type": "string",
+                        "title": "Call SID",
+                        "description": "Unique identifier for the call."
+                    },
+                    "b3": {
+                        "type": "string",
+                        "title": "B3",
+                        "description": "B3 header."
+                    },
+                    "data": {
+                        "type": "object",
+                        "title": "Data",
+                        "description": "Data associated with the message."
+                    },
+                    "data.error": {
+                        "type": "string",
+                        "title": "Error",
+                        "description": "Error message."
+                    },
+                    "data.verb": {
+                        "type": "string",
+                        "title": "Verb",
+                        "description": "Verb that was executed."
+                    }
+                }
+            },
+            "Ack": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "ack"
+                        ]
+                    },
+                    "msgid": {
+                        "type": "string",
+                        "title": "Message ID",
+                        "description": "Unique identifier for the message."
+                    },
+                    "data": {
+                        "type": "array",
+                        "title": "Data",
+                        "description": "Data associated with the message.",
+                        "items": {
+                            "type": "object",
+                            "title": "Data",
+                            "description": "Data associated with the message."
+                        }
+                    }
+                }
+            },
+            "Command": {
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "title": "Type",
+                        "description": "Type of the message.",
+                        "enum": [
+                            "command"
+                        ]
+                    },
+                    "command": {
+                        "type": "string",
+                        "title": "Command",
+                        "description": "Command to execute."
+                    },
+                    "queueCommand": {
+                        "type": "string",
+                        "title": "Queue Command",
+                        "description": "Command to execute."
+                    },
+                    "data": {
+                        "type": "object",
+                        "title": "Data",
+                        "description": "Data associated with the message."
+                    }
+                }
+            }
+        }
+    }
+}

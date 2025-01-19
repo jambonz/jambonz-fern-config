@@ -1,0 +1,133 @@
+instances:
+  - url: jambonz-12u348932.docs.buildwithfern.com
+  
+tabs: 
+  home: 
+    display-name: Home
+    icon: fa-regular fa-home
+    skip-slug: true
+  docs:
+    display-name: Docs
+    icon: fa-regular fa-book
+    slug: docs
+  reference: 
+    display-name: API Reference
+    icon: fa-regular fa-code
+    slug: reference
+  websocket:
+    display-name: WebSocket API
+    icon: fa-regular fa-signal-stream
+    slug: websocket
+  changelog: 
+    display-name: Release Notes
+    icon: fa-regular fa-history
+    changelog: ./changelog
+    
+navigation:
+  - tab: home
+    layout: 
+      - page: Welcome
+        path: ./docs/pages/welcome.mdx
+  - tab: docs
+    layout: 
+      - section: Get Started
+        contents: 
+          - page: Overview
+            path: ./docs/pages/get-started/overview.mdx
+          - page: Installation 
+            path: ./docs/pages/get-started/installation.mdx
+          - page: Quickstart
+            path: ./docs/pages/get-started/quickstart.mdx
+      - section: Capabilities
+        contents:
+          - page: Features
+            path: ./docs/pages/capabilities/features.mdx
+          - page: Use Cases
+            path: ./docs/pages/capabilities/use-cases.mdx
+      - section: Guides
+        path: ./docs/pages/guides/overview.mdx
+        contents: 
+          - page: Simple Task
+            path: ./docs/pages/guides/simple-task.mdx
+          - page: Common Task
+            path: ./docs/pages/guides/common-task.mdx
+          - page: Complex Task
+            path: ./docs/pages/guides/complex-task.mdx  
+      - section: Resources
+        contents: 
+          - page: FAQs
+            slug: faqs
+            path: ./docs/pages/resources/faqs.mdx
+          - page: Glossary
+            path: ./docs/pages/resources/glossary.mdx
+          - link: Blog
+            href: https://buildwithfern.com/
+          - link: Community
+            href: https://buildwithfern.com/
+  - tab: reference
+    layout:
+      - page: Introduction
+        path: ./docs/pages/reference/introduction.mdx
+      - page: Authentication
+        path: ./docs/pages/reference/authentication.mdx
+      - api: Endpoints
+        api-name: openapi
+        paginated: true
+  - tab: websocket
+    layout: 
+      - api: Async API
+        api-name: async
+        layout: 
+          - GET /websockets/
+  - tab: changelog
+  
+navbar-links: 
+  - type: minimal
+    text: Get support
+    url: https://buildwithfern.com/
+  - type: filled
+    text: Get a demo
+    url: https://buildwithfern.com/
+
+# Layout & Styling
+
+layout: 
+  tabs-placement: header
+  searchbar-placement: header
+
+colors:
+  background:
+    dark: "#101010"
+    light: "#fff"
+  accent-primary:
+    dark: "#da1c5c"
+    light: "#da1c5c"
+  header-background: 
+    dark: "#000"
+    light: "#fff"
+
+logo:
+  dark: ./docs/assets/logo-dark.svg
+  light: ./docs/assets/logo-light.svg
+  height: 32
+  href: /welcome
+
+favicon: ./docs/assets/favicon.ico
+
+css: 
+  - ./docs/assets/styles.css
+
+
+typography:
+  bodyFont:
+    name: Objectivity
+    paths: 
+      - path: ./docs/assets/fonts/objectivity-regular-webfont.woff2
+        weight: 400
+      - path: ./docs/assets/fonts/objectivity-medium-webfont.woff2
+        weight: 500
+  headingsFont:
+    name: ObjectivityBold
+    paths: 
+      - path: ./docs/assets/fonts/objectivity-bold-webfont.woff2
+        weight: 600

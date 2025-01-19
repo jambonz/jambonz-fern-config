@@ -1,0 +1,3 @@
+api: 
+  - ./asyncapi/wss.json
+  - ./asyncapi/asyncapi.json
