@@ -68,7 +68,50 @@
                         }
                     ]
                 }
-            }
+            },
+            "x-fern-examples": [
+                {
+                    "messages": [
+                        {
+                            "type": "publish",
+                            "messageId": "SessionNew",
+                            "value": {
+                                "type": "session:new",
+                                "msgid": "123",
+                                "call_sid": "123",
+                                "b3": "123",
+                                "data": {
+                                    "foo": "bar"
+                                }
+                            }
+                        },
+                        {
+                            "type": "subscribe",
+                            "messageId": "Ack",
+                            "value": {
+                                "type": "ack",
+                                "msgid": "123",
+                                "data": [
+                                    {
+                                    "foo": "bar"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "publish",
+                            "messageId": "VerbHook",
+                            "value": {
+                                "type": "verb:hook",
+                                "msgid": "123",
+                                "call_sid": "123",
+                                "b3": "123",
+                                "hook": "https://example.com/hook"
+                            }
+                        }
+                    ]
+                }
+            ]
         }
     },
     "components": {
