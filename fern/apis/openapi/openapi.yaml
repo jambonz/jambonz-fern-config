@@ -9,7 +9,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: 1.0.0
 servers:
-  - url: /v1
+  - url: https://api.jambonz.org/v1
     description: jambonz API server
 tags:
   - name: Authentication
