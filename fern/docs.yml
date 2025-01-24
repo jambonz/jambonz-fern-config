@@ -6,10 +6,14 @@ tabs:
     display-name: Home
     icon: fa-regular fa-home
     skip-slug: true
-  docs:
-    display-name: Docs
+  guides:
+    display-name: Guides
     icon: fa-regular fa-book
-    slug: docs
+    slug: guides
+  verbs:
+    display-name: Verbs
+    icon: fa-regular fa-tasks
+    slug: guides
   reference: 
     display-name: API Reference
     icon: fa-regular fa-code
@@ -28,7 +32,7 @@ navigation:
     layout: 
       - page: Welcome
         path: ./docs/pages/welcome.mdx
-  - tab: docs
+  - tab: guides
     layout: 
       - section: Get Started
         contents: 
@@ -38,32 +42,36 @@ navigation:
             path: ./docs/pages/get-started/installation.mdx
           - page: Quickstart
             path: ./docs/pages/get-started/quickstart.mdx
-      - section: Capabilities
+      - section: Features
         contents:
-          - page: Features
-            path: ./docs/pages/capabilities/features.mdx
-          - page: Use Cases
-            path: ./docs/pages/capabilities/use-cases.mdx
-      - section: Guides
-        path: ./docs/pages/guides/overview.mdx
-        contents: 
-          - page: Simple Task
-            path: ./docs/pages/guides/simple-task.mdx
-          - page: Common Task
-            path: ./docs/pages/guides/common-task.mdx
-          - page: Complex Task
-            path: ./docs/pages/guides/complex-task.mdx  
-      - section: Resources
-        contents: 
-          - page: FAQs
-            slug: faqs
-            path: ./docs/pages/resources/faqs.mdx
-          - page: Glossary
-            path: ./docs/pages/resources/glossary.mdx
-          - link: Blog
-            href: https://buildwithfern.com/
-          - link: Community
-            href: https://buildwithfern.com/
+          - page: Answering machine detection
+            path: ./docs/pages/features/answering-machine-detection.mdx
+          - page: Conferencing "coach" mode
+            path: ./docs/pages/features/conferencing-coach-mode.mdx
+          - page: Continous ASR
+            path: ./docs/pages/features/continuous-asr.mdx
+          - page: Controlling the Media-Path During a Call 
+            path: ./docs/pages/features/controlling-media-path-during-call.mdx
+          - page: Handling ActionHook Delays
+            path: ./docs/pages/features/handling-action-hook-delays.mdx 
+          - page: Queue notifications
+            path: ./docs/pages/features/queue-notifications.mdx 
+          - page: SIPREC Client
+            path: ./docs/pages/features/siprec-client.mdx
+          - page: SIPREC Server
+            path: ./docs/pages/features/siprec-server.mdx
+          - page: TTS Streaming
+            path: ./docs/pages/features/tts-streaming.mdx
+          - page: Dub tracks
+            path: ./docs/pages/features/using-dub-tracks.mdx
+          - page: Filler Noise
+            path: ./docs/pages/features/using-filler-noise.mdx
+  - tab: verbs
+    layout: 
+      - section: Verbs
+        contents:
+          - page: Answer
+            path: ./docs/pages/verbs/answer.md
   - tab: reference
     layout:
       - page: Introduction
