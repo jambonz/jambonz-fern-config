@@ -1,18 +1,10 @@
 {
     "asyncapi": "2.6.0",
     "info": {
-        "title": "Active Symbols API",
-        "version": "1.0.0"
-    },
-    "servers": {
-        "production": {
-            "url": "wss://ws.jambonzws.com/websockets/v3",
-            "protocol": "wss"
-        }
     },
     "channels": {
-        "/": {
-            "description": "Place a new order or interact with an existing one.",
+        "call": {
+            "description": "A connection is established for each call",
             "bindings": {
                 "ws": {
                     "query": {
