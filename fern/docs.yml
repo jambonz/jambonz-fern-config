@@ -13,13 +13,21 @@ tabs:
   verbs:
     display-name: Verbs
     icon: fa-regular fa-tasks
-    slug: guides
+    slug: verbs
+  tutorials:
+    display-name: Tutorials
+    icon: fa-regular fa-tasks
+    slug: tutorials
   reference: 
-    display-name: API Reference
+    display-name: REST API
     icon: fa-regular fa-code
     slug: reference
   websocket:
     display-name: WebSocket API
+    icon: fa-regular fa-signal-stream
+    slug: websocket
+  sdks:
+    display-name: Client SDKs
     icon: fa-regular fa-signal-stream
     slug: websocket
   changelog: 
@@ -38,8 +46,8 @@ navigation:
         contents: 
           - page: Overview
             path: ./docs/pages/get-started/overview.mdx
-          - page: Installation 
-            path: ./docs/pages/get-started/installation.mdx
+          - page: Deployment Options 
+            path: ./docs/pages/get-started/deployment.mdx
           - page: Quickstart
             path: ./docs/pages/get-started/quickstart.mdx
       - section: Features
@@ -66,12 +74,38 @@ navigation:
             path: ./docs/pages/features/using-dub-tracks.mdx
           - page: Filler Noise
             path: ./docs/pages/features/using-filler-noise.mdx
+      - section: Carriers
+        contents:
+          - page: Template
+            path: ./docs/pages/template.mdx
+      - section: Speech Providers
+        contents:
+          - page: Template
+            path: ./docs/pages/template.mdx
+      - section: Clients
+        contents:
+          - page: Template
+            path: ./docs/pages/template.mdx
+      - section: Help
+        contents:
+          - page: FAQs
+            path: ./docs/pages/resources/faqs.mdx
+          - page: Glossary
+            path: ./docs/pages/resources/glossary.mdx
+          - page: Support
+            path: ./docs/pages/resources/support.mdx
   - tab: verbs
     layout: 
       - section: Verbs
         contents:
           - page: Answer
             path: ./docs/pages/verbs/answer.md
+  - tab: tutorials
+    layout: 
+      - section: tutorials
+        contents:
+          - page: First Turorial
+            path: ./docs/pages/tutorials/first.mdx
   - tab: reference
     layout:
       - page: Introduction
@@ -87,15 +121,20 @@ navigation:
         api-name: async
         layout: 
           - GET /websockets/
+  - tab: sdks
+    layout: 
+      - page: SDKd
+        path: ./docs/pages/sdks/index.mdx
   - tab: changelog
+
   
 navbar-links: 
   - type: minimal
     text: Get support
     url: https://buildwithfern.com/
   - type: filled
-    text: Get a demo
-    url: https://buildwithfern.com/
+    text: Sign Up
+    url: https://jambonz.cloud/register
 
 # Layout & Styling
 

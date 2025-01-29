@@ -1,2 +1,2 @@
 api: 
-  - ./asyncapi/call.json
+  - ./call.json
