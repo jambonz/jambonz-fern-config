@@ -1,2 +1,5 @@
 api:
-  - ./openapi.yaml
+  - ./jambonz.yaml
+  - ./calls.yaml
+  - ./webhooks.yaml
+  

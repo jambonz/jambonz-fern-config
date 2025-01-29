@@ -6,16 +6,28 @@ tabs:
     display-name: Home
     icon: fa-regular fa-home
     skip-slug: true
-  docs:
-    display-name: Docs
+  guides:
+    display-name: Guides
     icon: fa-regular fa-book
-    slug: docs
+    slug: guides
+  verbs:
+    display-name: Verbs
+    icon: fa-regular fa-tasks
+    slug: verbs
+  tutorials:
+    display-name: Tutorials
+    icon: fa-regular fa-tasks
+    slug: tutorials
   reference: 
-    display-name: API Reference
+    display-name: REST API
     icon: fa-regular fa-code
     slug: reference
   websocket:
     display-name: WebSocket API
+    icon: fa-regular fa-signal-stream
+    slug: websocket
+  sdks:
+    display-name: Client SDKs
     icon: fa-regular fa-signal-stream
     slug: websocket
   changelog: 
@@ -28,42 +40,72 @@ navigation:
     layout: 
       - page: Welcome
         path: ./docs/pages/welcome.mdx
-  - tab: docs
+  - tab: guides
     layout: 
       - section: Get Started
         contents: 
           - page: Overview
             path: ./docs/pages/get-started/overview.mdx
-          - page: Installation 
-            path: ./docs/pages/get-started/installation.mdx
+          - page: Deployment Options 
+            path: ./docs/pages/get-started/deployment.mdx
           - page: Quickstart
             path: ./docs/pages/get-started/quickstart.mdx
-      - section: Capabilities
+      - section: Features
         contents:
-          - page: Features
-            path: ./docs/pages/capabilities/features.mdx
-          - page: Use Cases
-            path: ./docs/pages/capabilities/use-cases.mdx
-      - section: Guides
-        path: ./docs/pages/guides/overview.mdx
-        contents: 
-          - page: Simple Task
-            path: ./docs/pages/guides/simple-task.mdx
-          - page: Common Task
-            path: ./docs/pages/guides/common-task.mdx
-          - page: Complex Task
-            path: ./docs/pages/guides/complex-task.mdx  
-      - section: Resources
-        contents: 
+          - page: Answering machine detection
+            path: ./docs/pages/features/answering-machine-detection.mdx
+          - page: Conferencing "coach" mode
+            path: ./docs/pages/features/conferencing-coach-mode.mdx
+          - page: Continous ASR
+            path: ./docs/pages/features/continuous-asr.mdx
+          - page: Controlling the Media-Path During a Call 
+            path: ./docs/pages/features/controlling-media-path-during-call.mdx
+          - page: Handling ActionHook Delays
+            path: ./docs/pages/features/handling-action-hook-delays.mdx 
+          - page: Queue notifications
+            path: ./docs/pages/features/queue-notifications.mdx 
+          - page: SIPREC Client
+            path: ./docs/pages/features/siprec-client.mdx
+          - page: SIPREC Server
+            path: ./docs/pages/features/siprec-server.mdx
+          - page: TTS Streaming
+            path: ./docs/pages/features/tts-streaming.mdx
+          - page: Dub tracks
+            path: ./docs/pages/features/using-dub-tracks.mdx
+          - page: Filler Noise
+            path: ./docs/pages/features/using-filler-noise.mdx
+      - section: Carriers
+        contents:
+          - page: Template
+            path: ./docs/pages/template.mdx
+      - section: Speech Providers
+        contents:
+          - page: Template
+            path: ./docs/pages/template.mdx
+      - section: Clients
+        contents:
+          - page: Template
+            path: ./docs/pages/template.mdx
+      - section: Help
+        contents:
           - page: FAQs
-            slug: faqs
             path: ./docs/pages/resources/faqs.mdx
           - page: Glossary
             path: ./docs/pages/resources/glossary.mdx
-          - link: Blog
-            href: https://buildwithfern.com/
-          - link: Community
-            href: https://buildwithfern.com/
+          - page: Support
+            path: ./docs/pages/resources/support.mdx
+  - tab: verbs
+    layout: 
+      - section: Verbs
+        contents:
+          - page: Answer
+            path: ./docs/pages/verbs/answer.md
+  - tab: tutorials
+    layout: 
+      - section: tutorials
+        contents:
+          - page: First Turorial
+            path: ./docs/pages/tutorials/first.mdx
   - tab: reference
     layout:
       - page: Introduction
@@ -79,15 +121,20 @@ navigation:
         api-name: async
         layout: 
           - GET /websockets/
+  - tab: sdks
+    layout: 
+      - page: SDKd
+        path: ./docs/pages/sdks/index.mdx
   - tab: changelog
+
   
 navbar-links: 
   - type: minimal
     text: Get support
     url: https://buildwithfern.com/
   - type: filled
-    text: Get a demo
-    url: https://buildwithfern.com/
+    text: Sign Up
+    url: https://jambonz.cloud/register
 
 # Layout & Styling
 
