@@ -100,6 +100,60 @@ navigation:
         contents:
           - page: Answer
             path: ./docs/pages/verbs/answer.md
+          - page: Conference
+            path: ./docs/pages/verbs/conference.md
+          - page: Config
+            path: ./docs/pages/verbs/config.md
+          - page: Dequeue
+            path: ./docs/pages/verbs/dequeue.md
+          - page: Dial
+            path: ./docs/pages/verbs/dial.md
+          - page: Dialogflow
+            path: ./docs/pages/verbs/dialogflow.md
+          - page: DTMF
+            path: ./docs/pages/verbs/dtmf.md
+          - page: Dub
+            path: ./docs/pages/verbs/dub.md
+          - page: Enqueue
+            path: ./docs/pages/verbs/enqueue.mdx
+          - page: Gather
+            path: ./docs/pages/verbs/gather.md
+          - page: Hangup
+            path: ./docs/pages/verbs/hangup.md
+          - page: Leave
+            path: ./docs/pages/verbs/leave.md
+          - page: Lex
+            path: ./docs/pages/verbs/lex.md
+          - page: Listen
+            path: ./docs/pages/verbs/listen.md
+          - page: LLM
+            path: ./docs/pages/verbs/llm.md
+          - page: Message
+            path: ./docs/pages/verbs/message.md
+          - page: Pause
+            path: ./docs/pages/verbs/pause.md
+          - page: Play
+            path: ./docs/pages/verbs/play.md
+          - page: Queue Notifications
+            path: ./docs/pages/verbs/queue-notifications.md
+          - page: Rasa
+            path: ./docs/pages/verbs/rasa.md
+          - page: Recognizer
+            path: ./docs/pages/verbs/recognizer.md
+          - page: Redirect
+            path: ./docs/pages/verbs/redirect.md
+          - page: Say
+            path: ./docs/pages/verbs/say.md
+          - page: SIP Decline
+            path: ./docs/pages/verbs/sip-decline.md
+          - page: SIP Refer
+            path: ./docs/pages/verbs/sip-refer.md
+          - page: SIP Request
+            path: ./docs/pages/verbs/sip-request.md
+          - page: Tag
+            path: ./docs/pages/verbs/tag.md
+          - page: Transcribe
+            path: ./docs/pages/verbs/transcribe.md
   - tab: tutorials
     layout: 
       - section: tutorials
