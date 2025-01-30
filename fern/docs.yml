@@ -80,8 +80,8 @@ navigation:
             path: ./docs/pages/template.mdx
       - section: Speech Providers
         contents:
-          - page: Template
-            path: ./docs/pages/template.mdx
+          - page: Custom Speech API
+            path: ./docs/pages/speech/custom-speech.mdx
       - section: Clients
         contents:
           - page: Template
@@ -99,61 +99,59 @@ navigation:
       - section: Verbs
         contents:
           - page: Answer
-            path: ./docs/pages/verbs/answer.md
+            path: ./docs/pages/verbs/answer.mdx
           - page: Conference
-            path: ./docs/pages/verbs/conference.md
+            path: ./docs/pages/verbs/conference.mdx
           - page: Config
-            path: ./docs/pages/verbs/config.md
+            path: ./docs/pages/verbs/config.mdx
           - page: Dequeue
-            path: ./docs/pages/verbs/dequeue.md
+            path: ./docs/pages/verbs/dequeue.mdx
           - page: Dial
-            path: ./docs/pages/verbs/dial.md
+            path: ./docs/pages/verbs/dial.mdx
           - page: Dialogflow
-            path: ./docs/pages/verbs/dialogflow.md
+            path: ./docs/pages/verbs/dialogflow.mdx
           - page: DTMF
-            path: ./docs/pages/verbs/dtmf.md
+            path: ./docs/pages/verbs/dtmf.mdx
           - page: Dub
-            path: ./docs/pages/verbs/dub.md
+            path: ./docs/pages/verbs/dub.mdx
           - page: Enqueue
             path: ./docs/pages/verbs/enqueue.mdx
           - page: Gather
-            path: ./docs/pages/verbs/gather.md
+            path: ./docs/pages/verbs/gather.mdx
           - page: Hangup
-            path: ./docs/pages/verbs/hangup.md
+            path: ./docs/pages/verbs/hangup.mdx
           - page: Leave
-            path: ./docs/pages/verbs/leave.md
+            path: ./docs/pages/verbs/leave.mdx
           - page: Lex
-            path: ./docs/pages/verbs/lex.md
+            path: ./docs/pages/verbs/lex.mdx
           - page: Listen
-            path: ./docs/pages/verbs/listen.md
+            path: ./docs/pages/verbs/listen.mdx
           - page: LLM
-            path: ./docs/pages/verbs/llm.md
+            path: ./docs/pages/verbs/llm.mdx
           - page: Message
-            path: ./docs/pages/verbs/message.md
+            path: ./docs/pages/verbs/message.mdx
           - page: Pause
-            path: ./docs/pages/verbs/pause.md
+            path: ./docs/pages/verbs/pause.mdx
           - page: Play
-            path: ./docs/pages/verbs/play.md
-          - page: Queue Notifications
-            path: ./docs/pages/verbs/queue-notifications.md
+            path: ./docs/pages/verbs/play.mdx
           - page: Rasa
-            path: ./docs/pages/verbs/rasa.md
+            path: ./docs/pages/verbs/rasa.mdx
           - page: Recognizer
-            path: ./docs/pages/verbs/recognizer.md
+            path: ./docs/pages/verbs/recognizer.mdx
           - page: Redirect
-            path: ./docs/pages/verbs/redirect.md
+            path: ./docs/pages/verbs/redirect.mdx
           - page: Say
-            path: ./docs/pages/verbs/say.md
+            path: ./docs/pages/verbs/say.mdx
           - page: SIP Decline
-            path: ./docs/pages/verbs/sip-decline.md
+            path: ./docs/pages/verbs/sip-decline.mdx
           - page: SIP Refer
-            path: ./docs/pages/verbs/sip-refer.md
+            path: ./docs/pages/verbs/sip-refer.mdx
           - page: SIP Request
-            path: ./docs/pages/verbs/sip-request.md
+            path: ./docs/pages/verbs/sip-request.mdx
           - page: Tag
-            path: ./docs/pages/verbs/tag.md
+            path: ./docs/pages/verbs/tag.mdx
           - page: Transcribe
-            path: ./docs/pages/verbs/transcribe.md
+            path: ./docs/pages/verbs/transcribe.mdx
   - tab: tutorials
     layout: 
       - section: tutorials
