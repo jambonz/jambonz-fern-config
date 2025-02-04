@@ -1,0 +1,94 @@
+---
+title: Introducing jambonz! 
+subtitle: Overview and Concepts
+---
+
+jambonz is the open-source telephony platform for deploying Voice AI applications at scale.
+
+What do we mean by that?  Well, it's..
+
+- **Open-source**:  Offered under the [MIT license](https://tlo.mit.edu/understand-ip/exploring-mit-open-source-license-comprehensive-guide); 
+it is white-labelable, easy to customize, and can run anywhere - use our cloud or deploy on your own infrastructure.
+- **a telephony platform**: built by a team with extensive experience building scalable and reliable voice processing systems for some of the world's largest telecoms
+- **for deploying Voice AI applications**: jambonz is a "bring your own everything" platform that integrates with the major speech and conversational AI vendors, 
+allowing you to create low-latency speech and voice AI pipelines.
+- **at scale**: jambonz is designed to be horizontally scalable, and can be deployed in a multi-tenant configuration to support many thousands of customers on a single system.
+
+Through our customers and partners, jambonz is deployed today in many Fortune 500 companies 
+as the underlying voice platform for conversational AI while also being used by SMBs and startups around the globe to deliver innovative voice applications.
+
+## How it works
+
+jambonz allows developers to build voice applications using a simple, declarative JSON-based language. 
+Using either webhooks or websockets, developers interact with the jambonz platform to handle, create and manage calls.
+
+When an incoming call arrives, jambonz will route the call to a user application based on information such as 
+the dialed number or the incoming SIP trunk.  The application can then respond with a set of [verbs](http://localhost:3000/verbs/verbs/answer) 
+that provide instructions to jambonz on how to handle the call.
+
+jambonz also provides a [REST API](http://localhost:3000/reference/introduction) that allows developers to generate outbound dialing campaigns, modify a call 
+in progress, or configure any aspect of the provisioned service.
+
+The list of things you can do with jambonz is extensive, and includes things like:
+- Perform speech-to-text (STT) and text-to-speech (TTS),
+- Connect calls to speech LLMs such as OpenAI, Deepgram, Ultravox, and ElevenLabs
+- Receive and send bidirectional streaming audio directly into a call,
+- Create background audio tracks and layer them into a call,
+- Record and transcribe calls and save directly to your own cloud storage,
+- Manage conferences and call queues,
+- Receive calls from webRTC and MS Teams users, 
+- and much more.
+
+## Platform architecture
+
+jambonz can be deployed in a variety of physical configurations, from a single server to highly scalable cluster. 
+Regardless of the deployment model, every jambonz system consists of the following components:
+- a session border controller function
+- a feature server function
+- a mysql database
+- a redis cache
+- a web server
+- monitoring and logging, including a grafana dashboard
+
+### session border controller function
+The session border controller (SBC) function is responsible for handling the signaling and media for all calls.
+The SBC handles functions such as:
+- sip registrations, 
+- detection and deflection of SIP spam traffic, 
+- authentication of incoming calls, 
+- media transcoding, 
+- SIPREC call / media forking, 
+- and more.  
+
+> Note: for customers that have their own SBCs, jambonz can be placed behind the customer's SBC if desired.
+
+### feature server function
+The features server is the focal point and workhorse of the jambonz system.  It is responsible for:
+- handling incoming calls and routing them to the appropriate application,
+- receiving verbs from the user application and processing them,
+- connecting the incoming audio stream to external components such as speech recognition engines and LLMs, and
+- managing the overall state of the call.
+
+### mysql database
+The mysql database contains all of the customer-provisioned data such as:
+- phone numbers and SIP trunks,
+- user applications,
+- speech vendor selections and credentials, and
+- user and account configurations.
+
+The mysql database is a multi-tenant database that contain thousands of tenant accounts.
+
+### redis cache
+The redis cache is used to store transient data such as:
+- sip registrations,
+- call state information for calls in progress
+- the current state of the jambonz clusters
+
+### web server
+The web server hosts the jambonz portal, REST API, and the grafana portal.
+
+### monitoring and logging
+The monitoring and logging components provide call detail storage and system metrics that are displayed in the 
+grafana dashboards.
+
+![Alt text](../../assets/images/grafana-dashboard.jpg" "Grafana dashboard")

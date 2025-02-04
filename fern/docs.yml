@@ -44,12 +44,12 @@ navigation:
     layout: 
       - section: Get Started
         contents: 
-          - page: Overview
-            path: ./docs/pages/get-started/overview.mdx
-          - page: Deployment Options 
-            path: ./docs/pages/get-started/deployment.mdx
+          - page: Basic Concepts
+            path: ./docs/pages/get-started/concepts.mdx
           - page: Quickstart
             path: ./docs/pages/get-started/quickstart.mdx
+          - page: Deployment Options 
+            path: ./docs/pages/get-started/deployment.mdx
       - section: Features
         contents:
           - page: Answering machine detection
