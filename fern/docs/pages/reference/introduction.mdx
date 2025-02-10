@@ -1,59 +1,22 @@
 ---
-title: About the API
+title: About the REST API
 ---
+The jambonz REST API allows applications to query, create, and manage calls and other resources within the platform.
 
-Welcome to the Plant Store API! Our API is designed to provide developers with powerful tools to manage plant store operations programmatically. Whether you are handling plant inventory, processing orders, or personalizing customer experiences, the Plant Store API offers the flexibility and scalability to support a variety of tasks.
+## API Endpoint
 
-Below, we highlight a few key features that make our API robust and easy to use.
+User of jambonz.cloud should use `https://jambonz.cloud/api` as the base URL for all REST API requests, if you are self hosting your own instance of jambonz then you will need to use the value for your API server.
 
-### Pagination
+## Authentication
 
-The Plant Store API supports **pagination** to help manage large datasets efficiently. Instead of receiving an overwhelming amount of data in a single response, you can retrieve data in smaller, manageable chunks. This is especially useful when handling large inventories or customer order histories.
+The API uses Bearer authentication; i.e., a bearer token that must be provided in the Authorization header, e.g.
 
-**Example:**
+`Authorization: Bearer 'your-api-token'`
 
-To request a specific page of results, use the `page` and `limit` parameters:
+You can generate an api token for your account in the hosted portal.
 
-```bash
-GET /v1/plants?page=2&limit=50
-```
+## HTTP response codes
 
-This will return the second page of plant listings, with 50 plants per page.
-
-### Streaming
-
-Our API supports **streaming** to provide real-time data, which is particularly useful when monitoring events such as stock updates, new orders, or customer activity. Streaming allows you to stay up-to-date without needing to constantly poll the API.
-
-**Example:**
-
-You can subscribe to a real-time feed of inventory updates, ensuring you are instantly notified when a plant’s stock level changes.
-
-```bash
-GET /v1/plants/stream
-```
-
-The server will maintain an open connection, streaming updates as they happen.
-
-### Webhooks
-
-**Webhooks** are a powerful way to automate responses to key events within the Plant Store platform. You can configure webhooks to trigger specific actions when events occur, such as when a new order is placed, a payment is completed, or a plant is running low on stock.
-
-**Example:**
-
-Create a webhook to notify your system when an order is placed:
-
-```json
-{
-  "event": "order.created",
-  "url": "https://your-server.com/webhook"
-}
-```
-
-When the `order.created` event occurs, the Plant Store API will send a `POST` request to the specified URL with details about the order, allowing you to process the information in real time.
-
-### Rate Limiting
-
-To ensure fair usage and protect the performance of the API, we enforce **rate limits**. This prevents any single client from overwhelming the system with too many requests in a short time. Be sure to handle responses with `429 Too Many Requests` errors by implementing a retry mechanism or adjusting the frequency of your requests.
-
-
-These are just a few of the powerful features the **Plant Store API** offers. With features like **pagination** for efficient data retrieval, **streaming** for real-time updates, and **webhooks** for automated event handling, you can build flexible and scalable solutions tailored to your business needs. Explore more in our [API Reference](/reference/endpoints) to get started with specific endpoints and functionality.
+  POST requests will return a 201 status on success and a JSON payload that includes a sid property referencing the unique identifier of the resource that has been created.
+  UPDATE and DELETE requests will return a 204 status on success with no body
+  GET requests will return a 200 response with a JSON payload

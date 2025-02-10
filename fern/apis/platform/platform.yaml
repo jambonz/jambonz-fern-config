@@ -13,55 +13,24 @@ servers:
 security:
   - bearerAuth: []
 tags:
-  - name: Accounts
-    description: Accounts operations
   - name: Users
-    description: Users operations
+  - name: Settings
+  - name: Accounts
+  - name: Clients
   - name: Applications
-    description: Applications operations
+  - name: Recent Calls
+  - name: Alerts
+  - name: Carriers
+  - name: Speech
   - name: Phone Numbers
-    description: Phone Numbers operations
-  - name: Api Keys
-    description: Api Keys operations
-  - name: Service Providers
-    description: Service Providers operations
-  - name: SBCs
-    description: SBCs operations
-  - name: Voip Carriers
-    description: Voip Carriers operations
-  - name: Sip Gateways
-    description: Sip Gateways operations
-  - name: Webhooks
-    description: Webhooks operations
-  - name: Microsoft Teams Tenants
-    description: Microsoft Teams Tenants operations
-  - name: Lcrs
-    description: Least Cost Routing operations
-  - name: LcrRoutes
-    description: Least Cost Routing Routes operations
-  - name: LcrCarrierSetEntries
-    description: Least Cost Routing Carrier Set Entries operation
-  - name: GoogleCustomVoices
-    description: Google Custom voices operation
+  - name: Call Routing
+
 paths:
-  /Accounts/{AccountSid}/PredefinedCarriers/{PredefinedCarrierSid}:
-    parameters:
-      - name: AccountSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: PredefinedCarrierSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+  
   /Sbcs:
     get:
       tags:
-        - SBCs
+        - Carriers
       summary: retrieve public IP addresses of the jambonz SBCs
       operationId: listSbcs
       parameters:
@@ -91,13 +60,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /Sbcs/{SbcSid}:
-    parameters:
-      - name: SbcSid
-        in: path
-        required: true
-        schema:
-          type: string
   /ApiKeys/{ApiKeySid}:
     parameters:
       - name: ApiKeySid
@@ -269,7 +231,7 @@ paths:
   /Availability:
     get:
       tags:
-        - Availability
+        - Accounts
       summary: check if a limited-availability entity such as a subdomain, email or phone number is already in use
       operationId: checkAvailability
       parameters:
@@ -308,7 +270,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /ActivationCode/{Code}:
+
     parameters:
       - name: Code
         in: path
@@ -317,8 +279,6 @@ paths:
         explode: false
         schema:
           type: string
-  /AccountTest/{ServiceProviderSid}:
-    parameters:
       - name: ServiceProviderSid
         in: path
         required: true
@@ -337,7 +297,7 @@ paths:
           type: string
     get:
       tags:
-        - Webhooks
+        - Applications
       summary: retrieve webhook
       operationId: getWebhook
       responses:
@@ -358,7 +318,7 @@ paths:
   /VoipCarriers:
     post:
       tags:
-        - Voip Carriers
+        - Carriers
       summary: create voip carrier
       operationId: createVoipCarrier
       requestBody:
@@ -450,7 +410,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Voip Carriers
+        - Carriers
       summary: list voip carriers
       operationId: listVoipCarriers
       responses:
@@ -479,7 +439,7 @@ paths:
           type: string
     delete:
       tags:
-        - Voip Carriers
+        - Carriers
       summary: delete a voip carrier
       operationId: deleteVoipCarrier
       responses:
@@ -503,7 +463,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Voip Carriers
+        - Carriers
       summary: retrieve voip carrier
       operationId: getVoipCarrier
       responses:
@@ -523,7 +483,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     put:
       tags:
-        - Voip Carriers
+        - Carriers
       summary: update voip carrier
       operationId: updateVoipCarrier
       parameters:
@@ -563,7 +523,7 @@ paths:
   /SipGateways:
     post:
       tags:
-        - Sip Gateways
+        - Carriers
       summary: create sip gateway
       operationId: createSipGateway
       requestBody:
@@ -616,7 +576,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Sip Gateways
+        - Carriers
       summary: list sip gateways
       operationId: listSipGateways
       parameters:
@@ -652,7 +612,7 @@ paths:
           type: string
     delete:
       tags:
-        - Sip Gateways
+        - Carriers
       summary: delete a sip gateway
       operationId: deleteSipGateway
       responses:
@@ -668,7 +628,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Sip Gateways
+        - Carriers
       summary: retrieve sip gateway
       operationId: getSipGateway
       responses:
@@ -688,7 +648,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     put:
       tags:
-        - Sip Gateways
+        - Carriers
       summary: update sip gateway
       operationId: updateSipGateway
       requestBody:
@@ -1420,72 +1380,10 @@ paths:
                 $ref: '#/components/schemas/SuccessfulAdd'
         '404':
           description: service provider not found
-  /Accounts/{AccountSid}/Limits:
-    post:
-      tags:
-        - Accounts
-      summary: create a limit for an account
-      operationId: addLimitForAccount
-      parameters:
-        - name: AccountSid
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Limits'
-      responses:
-        '201':
-          description: limit successfully created or updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '404':
-          description: account not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    get:
-      tags:
-        - Accounts
-      summary: retrieve call capacity and other limits from the account
-      operationId: getAccountLimits
-      parameters:
-        - name: AccountSid
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: account limits
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Limits'
-        '404':
-          description: account not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
   /MicrosoftTeamsTenants:
     post:
       tags:
-        - Microsoft Teams Tenants
+        - Settings
       summary: provision a customer tenant for MS Teams
       operationId: createMsTeamsTenant
       requestBody:
@@ -1534,7 +1432,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Microsoft Teams Tenants
+        - Settings
       summary: list MS Teams tenants
       operationId: listMsTeamsTenants
       responses:
@@ -1562,7 +1460,7 @@ paths:
           format: uuid
     delete:
       tags:
-        - Microsoft Teams Tenants
+        - Settings
       summary: delete an MS Teams tenant
       operationId: deleteTenant
       responses:
@@ -1578,7 +1476,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Microsoft Teams Tenants
+        - Settings
       summary: retrieve an MS Teams tenant
       operationId: getTenant
       responses:
@@ -1598,7 +1496,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     put:
       tags:
-        - Microsoft Teams Tenants
+        - Settings
       summary: update an MS Teams tenant
       operationId: putTenant
       requestBody:
@@ -1997,7 +1895,7 @@ paths:
           format: uuid
     post:
       tags:
-        - Accounts
+        - Speech
       summary: add a speech credential
       operationId: createSpeechCredential
       requestBody:
@@ -2026,7 +1924,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Accounts
+        - Speech
       summary: retrieve all speech credentials for an account
       operationId: listSpeechCredentials
       responses:
@@ -2056,7 +1954,7 @@ paths:
           format: uuid
     get:
       tags:
-        - Accounts
+        - Speech
       summary: get a specific speech credential
       operationId: getSpeechCredentialByAccount
       responses:
@@ -2070,7 +1968,7 @@ paths:
           description: credential not found
     put:
       tags:
-        - Accounts
+        - Speech
       summary: update a speech credential
       operationId: updateSpeechCredentialByAccount
       requestBody:
@@ -2091,7 +1989,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     delete:
       tags:
-        - Accounts
+        - Speech
       summary: delete a speech credential
       operationId: deleteSpeechCredentialByAccount
       responses:
@@ -2102,7 +2000,7 @@ paths:
   /Accounts/{AccountSid}/SpeechCredentials/speech/supportedLanguagesAndVoices:
     get:
       tags:
-        - Accounts
+        - Speech
       summary: get supported languages, voices and models
       operationId: supportedLanguagesAndVoicesByAccount
       parameters:
@@ -2137,7 +2035,7 @@ paths:
   /Accounts/{AccountSid}/SpeechCredentials/{SpeechCredentialSid}/test:
     get:
       tags:
-        - Accounts
+        - Speech
       summary: test a speech credential
       operationId: testSpeechCredentialByAccount
       parameters:
@@ -2258,7 +2156,7 @@ paths:
         description: Filter value can be caller ID, callee ID or call Sid
     get:
       tags:
-        - Accounts
+        - Recent Calls
       summary: retrieve recent calls for an account
       operationId: listRecentCalls
       responses:
@@ -2356,7 +2254,7 @@ paths:
           type: string
     get:
       tags:
-        - Accounts
+        - Recent Calls
       summary: retrieve sip trace detail for a call
       operationId: getRecentCallTrace
       responses:
@@ -2368,6 +2266,82 @@ paths:
                 type: object
         '404':
           description: account or call not found
+  /Accounts/{AccountSid}/PredefinedCarriers/{PredefinedCarrierSid}:
+    parameters:
+      - name: AccountSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: PredefinedCarrierSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    /Accounts/{AccountSid}/Limits:
+    post:
+      tags:
+        - Accounts
+      summary: create a limit for an account
+      operationId: addLimitForAccount
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Limits'
+      responses:
+        '201':
+          description: limit successfully created or updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '404':
+          description: account not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    get:
+      tags:
+        - Accounts
+      summary: retrieve call capacity and other limits from the account
+      operationId: getAccountLimits
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: account limits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Limits'
+        '404':
+          description: account not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
   /ServiceProviders/{ServiceProviderSid}/RecentCalls/{CallId}/pcap:
     parameters:
       - name: ServiceProviderSid
@@ -2597,7 +2571,7 @@ paths:
           type: string
     get:
       tags:
-        - Accounts
+        - Recent Calls
       summary: retrieve pcap for a call
       operationId: getRecentCallTraceByAccount
       responses:
@@ -2783,7 +2757,7 @@ paths:
             - api-limit
     get:
       tags:
-        - Accounts
+        - Alerts
       summary: retrieve alerts for an account
       operationId: listAlertsByAccount
       responses:
@@ -2995,429 +2969,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /Accounts/{AccountSid}/Conferences:
-    get:
-      tags:
-        - Conferences
-      summary: list conferences
-      operationId: listConferences
-      parameters:
-        - name: AccountSid
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: list of conferences for a specified account
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /Accounts/{AccountSid}/Calls:
-    post:
-      tags:
-        - Accounts
-      summary: create a call
-      operationId: createCall
-      parameters:
-        - name: AccountSid
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              required:
-                - from
-                - to
-              type: object
-              properties:
-                application_sid:
-                  type: string
-                  format: uuid
-                  description: The application to use to control this call.  Either applicationSid or url is required.
-                answerOnBridge:
-                  type: boolean
-                  description: If set to true, the inbound call will ring until the number that was dialed answers the call, and at that point a 200 OK will be sent on the inbound leg.  If false, the inbound call will be answered immediately as the outbound call is placed.
-                  example: false
-                call_hook:
-                  $ref: '#/components/schemas/Webhook'
-                  example:
-                    url: https://acme.com/callhook
-                    method: POST
-                call_status_hook:
-                  $ref: '#/components/schemas/Webhook'
-                  example:
-                    url: https://acme.com/status
-                    method: POST
-                from:
-                  type: string
-                  description: The calling party number
-                  example: '16172375089'
-                fromHost:
-                  type: string
-                  description: The hostname to put in the SIP From header of the INVITE
-                  example: blf.finotel.com
-                timeout:
-                  type: integer
-                  description: The number of seconds to wait for call to be answered.  Defaults to 60.
-                  example: 30
-                timeLimit:
-                  type: integer
-                  description: The max length of call in seconds
-                  example: 60
-                tag:
-                  type: object
-                  description: Initial set of customer-supplied metadata to associate with the call (see jambonz 'tag' verb)
-                  example:
-                    callCount: 10
-                to:
-                  $ref: '#/components/schemas/Target'
-                  description: Destination for call
-                headers:
-                  type: object
-                  description: The customer SIP headers to associate with the call
-                  example:
-                    X-Custom-Header: Hello
-                sipRequestWithinDialogHook:
-                  type: string
-                  description: The sip indialog hook to receive session messages
-                  example: /customHook
-      responses:
-        '201':
-          description: call successfully created
-          content:
-            application/json:
-              schema:
-                required:
-                  - sid
-                properties:
-                  sid:
-                    type: string
-                    format: uuid
-                    example: 2531329f-fb09-4ef7-887e-84e648214436
-        '400':
-          description: bad request
-    get:
-      tags:
-        - Accounts
-      summary: list calls
-      operationId: listCalls
-      parameters:
-        - name: AccountSid
-          in: path
-          required: true
-          schema:
-            type: string
-        - in: query
-          name: direction
-          required: false
-          schema:
-            type: string
-            enum:
-              - inbound
-              - outbound
-          description: call direction to retrieve
-        - in: query
-          name: from
-          required: false
-          schema:
-            type: string
-          description: calling number to retrieve
-        - in: query
-          name: to
-          required: false
-          schema:
-            type: string
-          description: called number to retrieve
-        - in: query
-          name: callStatus
-          required: false
-          schema:
-            type: string
-            enum:
-              - trying
-              - ringing
-              - early-media
-              - in-progress
-              - completed
-              - failed
-              - busy
-              - no-answer
-              - queued
-          description: call status to retrieve
-      responses:
-        '200':
-          description: list of calls for a specified account
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Call'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /Accounts/{AccountSid}/Calls/{CallSid}:
-    parameters:
-      - name: AccountSid
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      - name: CallSid
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-    delete:
-      tags:
-        - Accounts
-      summary: delete a call
-      operationId: deleteCall
-      responses:
-        '204':
-          description: call successfully deleted
-        '404':
-          description: call not found
-        '422':
-          description: unprocessable entity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    get:
-      tags:
-        - Accounts
-      summary: retrieve a call
-      operationId: getCall
-      responses:
-        '200':
-          description: call found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Call'
-        '404':
-          description: call not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    post:
-      tags:
-        - Accounts
-      summary: update a call
-      operationId: updateCall
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                call_hook:
-                  $ref: '#/components/schemas/Webhook'
-                child_call_hook:
-                  $ref: '#/components/schemas/Webhook'
-                call_status:
-                  type: string
-                  enum:
-                    - completed
-                    - no-answer
-                conf_mute_status:
-                  type: string
-                  enum:
-                    - mute
-                    - unmute
-                conf_hold_status:
-                  type: string
-                  enum:
-                    - hold
-                    - unhold
-                listen_status:
-                  type: string
-                  enum:
-                    - pause
-                    - silence
-                    - resume
-                mute_status:
-                  type: string
-                  enum:
-                    - mute
-                    - unmute
-                whisper:
-                  $ref: '#/components/schemas/Webhook'
-                sip_request:
-                  type: object
-                  properties:
-                    method:
-                      type: string
-                    content_type:
-                      type: string
-                    content:
-                      type: string
-                    headers:
-                      type: object
-                record:
-                  type: object
-                  properties:
-                    action:
-                      type: string
-                      enum:
-                        - startCallRecording
-                        - stopCallRecording
-                        - pauseCallRecording
-                        - resumeCallRecording
-                    recordingID:
-                      type: string
-                    siprecServerURL:
-                      type: string
-                conferenceParticipantAction:
-                  type: object
-                  properties:
-                    action:
-                      type: string
-                      enum:
-                        - tag
-                        - untag
-                        - coach
-                        - uncoach
-                        - mute
-                        - unmute
-                        - hold
-                        - unhold
-                    tag:
-                      type: string
-      responses:
-        '200':
-          description: Accepted
-        '202':
-          description: Accepted
-        '400':
-          description: bad request
-        '404':
-          description: call not found
-        '422':
-          description: unprocessable entity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /Accounts/{AccountSid}/Messages:
-    post:
-      tags:
-        - Accounts
-      summary: create an outgoing SMS message
-      operationId: createMessage
-      parameters:
-        - name: AccountSid
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Message'
-      responses:
-        '201':
-          description: call successfully created
-          content:
-            application/json:
-              schema:
-                required:
-                  - sid
-                properties:
-                  sid:
-                    type: string
-                    format: uuid
-                    example: 2531329f-fb09-4ef7-887e-84e648214436
-                  providerResponse:
-                    type: string
-        '400':
-          description: bad request
-        '480':
-          description: temporary failure
-          content:
-            application/json:
-              schema:
-                required:
-                  - sid
-                properties:
-                  sid:
-                    type: string
-                    format: uuid
-                    example: 2531329f-fb09-4ef7-887e-84e648214436
-                  message:
-                    type: string
-                  smpp_err_code:
-                    type: string
-  /Accounts/{AccountSid}/Queues:
-    parameters:
-      - name: AccountSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - in: query
-        name: search
-        required: false
-        schema:
-          type: string
-          description: queue name of data to retrieve
-    get:
-      tags:
-        - Accounts
-      summary: retrieve active queues for an account
-      operationId: listQueues
-      responses:
-        '200':
-          description: retrieve active queues records for a specified account
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                    length:
-                      type: string
+
+ 
   /Accounts/{AccountSid}/RegisteredSipUsers:
     parameters:
       - name: AccountSid
@@ -3428,7 +2981,7 @@ paths:
           format: uuid
     get:
       tags:
-        - Accounts
+        - Clients
       summary: retrieve online sip users for an account
       operationId: listRegisteredSipUsers
       responses:
@@ -3442,7 +2995,7 @@ paths:
                   type: string
     post:
       tags:
-        - Accounts
+        - Clients
       summary: retrieve online sip users for an account by list of sip username
       operationId: listRegisteredSipUsersByUsername
       requestBody:
@@ -3478,7 +3031,7 @@ paths:
           type: string
     get:
       tags:
-        - Accounts
+        - Clients
       summary: retrieve registered client registration
       operationId: getRegisteredClient
       responses:
@@ -3498,7 +3051,7 @@ paths:
           format: uuid
     post:
       tags:
-        - Accounts
+        - Speech
       summary: get TTS from provider
       operationId: Synthesize
       requestBody:
@@ -3561,7 +3114,7 @@ paths:
   /Lcrs:
     post:
       tags:
-        - Lcrs
+        - Call Routing
       summary: create a Least Cost Routing
       operationId: createLcr
       requestBody:
@@ -3603,7 +3156,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Lcrs
+        - Call Routing
       summary: list least cost routings
       operationId: listLeastCostRoutings
       responses:
@@ -3632,7 +3185,7 @@ paths:
           type: string
     delete:
       tags:
-        - Lcrs
+        - Call Routing
       summary: delete a least cost routing
       operationId: deleteLeastCostRouting
       responses:
@@ -3656,7 +3209,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - Lcrs
+        - Call Routing
       summary: retrieve least cost routing
       operationId: getLeastCostRouting
       responses:
@@ -3676,7 +3229,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     put:
       tags:
-        - Lcrs
+        - Call Routing
       summary: update least cost routing
       operationId: updateLeastCostRouting
       requestBody:
@@ -3716,7 +3269,7 @@ paths:
           type: string
     post:
       tags:
-        - Lcrs
+        - Call Routing
       summary: Create least cost routing routes and carrier set entries
       operationId: createLeastCostRoutingRoutesAndCarrierEntries
       requestBody:
@@ -3743,7 +3296,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     put:
       tags:
-        - Lcrs
+        - Call Routing
       summary: update least cost routing routes and carrier set entries
       operationId: updateLeastCostRoutingRoutesAndCarrierEntries
       requestBody:
@@ -3771,7 +3324,7 @@ paths:
   /LcrRoutes:
     post:
       tags:
-        - LcrRoutes
+        - Call Routing
       summary: create a Least Cost Routing Routes
       operationId: createLcrRoutes
       requestBody:
@@ -3812,7 +3365,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - LcrRoutes
+        - Call Routing
       summary: list least cost routings routes
       operationId: listLeastCostRoutingRoutes
       responses:
@@ -3841,7 +3394,7 @@ paths:
           type: string
     delete:
       tags:
-        - LcrRoutes
+        - Call Routing
       summary: delete a least cost routing route
       operationId: deleteLeastCostRoutingRoute
       responses:
@@ -3865,7 +3418,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - LcrRoutes
+        - Call Routing
       summary: retrieve least cost routing route
       operationId: getLeastCostRoutingRoute
       responses:
@@ -3885,7 +3438,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     put:
       tags:
-        - LcrRoutes
+        - Call Routing
       summary: update least cost routing route
       operationId: updateLeastCostRoutingRoute
       requestBody:
@@ -3917,7 +3470,7 @@ paths:
   /LcrCarrierSetEntries:
     post:
       tags:
-        - LcrCarrierSetEntries
+       - Call Routing
       summary: create a Least Cost Routing Carrier Set Entry
       operationId: createLcrCarrierSetEntry
       requestBody:
@@ -3958,7 +3511,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - LcrCarrierSetEntries
+       - Call Routing
       summary: list least cost routings routes
       operationId: listLeastCostRoutingCarrierSetEntries
       responses:
@@ -3987,7 +3540,7 @@ paths:
           type: string
     delete:
       tags:
-        - LcrCarrierSetEntries
+       - Call Routing
       summary: delete a least cost routing carrier set entry
       operationId: deleteLeastCostRoutingCarrierSetEntry
       responses:
@@ -4011,7 +3564,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - LcrCarrierSetEntries
+       - Call Routing
       summary: retrieve least cost routing carrier set entry
       operationId: getLeastCostRoutingCarrierSetEntry
       responses:
@@ -4031,7 +3584,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     put:
       tags:
-        - LcrCarrierSetEntries
+       - Call Routing
       summary: update least cost routing carrier set entry
       operationId: updateLeastCostRoutingCarrierSetEntry
       requestBody:
@@ -4063,7 +3616,7 @@ paths:
   /GoogleCustomVoices:
     post:
       tags:
-        - GoogleCustomVoices
+        - Speech
       summary: create a Google custom voice
       operationId: createGoogleCustomVoice
       requestBody:
@@ -4105,7 +3658,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - GoogleCustomVoices
+        - Speech
       parameters:
         - in: query
           name: service_provider_sid
@@ -4153,7 +3706,7 @@ paths:
           type: string
     delete:
       tags:
-        - GoogleCustomVoices
+        - Speech
       summary: delete a google custom voice
       operationId: deleteGoogleCustomVoice
       responses:
@@ -4177,7 +3730,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     get:
       tags:
-        - GoogleCustomVoices
+        - Speech
       summary: retrieve google custom voice
       operationId: getGoogleCustomVoice
       responses:
@@ -4197,7 +3750,7 @@ paths:
                 $ref: '#/components/schemas/GeneralError'
     put:
       tags:
-        - GoogleCustomVoices
+        - Speech
       summary: update google custom voice
       operationId: updateGoogleCustomVoice
       requestBody:
@@ -5334,3 +4887,5 @@ components:
           type: array
           items:
             type: string
+
+

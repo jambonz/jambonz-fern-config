@@ -1,0 +1,79 @@
+openapi: 3.1.0
+info:
+  title: Webhooks
+  version: 0.9.3
+webhooks:
+  callHook:
+    post:
+      operationId: callHook
+      requestBody:
+        description: Information about a new call
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallHook'
+      responses:
+        '200':
+          description: Return a 200 containing a JSON payload consisting of an array of verbs
+components:
+  schemas:
+    CallHook:
+      required:
+        - call_sid
+        - application_sid
+        - account_sid
+        - direction
+        - from
+        - to
+        - caller_id
+        - call_status
+        - sip_status
+      properties:
+        call_sid:
+          type: string
+          example: "d2515c3b-b79a-41a2-971a-445e769c823c"
+          description: a unique identifier for the call.
+        application_sid:
+          type: string
+          example: "72c5c38f-9bba-40ce-aa83-aaa6be55e1b5"
+          description: a unique identifier for the jambonz application controlling this call
+        account_sid:
+          type: string
+          example: "bad98250-b34d-459d-9e90-f97dfb9bc519"
+          description: a unique identifier for the jambonz account associated with the application
+        direction:
+          type: string
+          enum: [inbound, outbound ]
+          description: >
+            the direction of the call:
+              * `inbound` - The call was originated outside jambonz
+              * `outbound` - The call was originated by jambonz
+        from:
+          example: "+12125551212"
+          type: string
+          description: the calling party number
+        to:
+          example: "+14155551234"
+          type: string
+          description: the called party number
+        caller_id:
+          type: string
+          example: "John Doe"
+          description: the caller name, if known
+        sip_status:
+          type: number
+          example: 100
+          description: the most recent sip status code received or generated for the call
+        call_status:
+          type: string
+          enum: [trying, ringing, early-media, in-progress, completed, failed, busy, no-answer ]
+          description: >
+            current status of the call:
+              * `trying` - a new incoming call has arrived or an outbound call has just been sent
+              * `ringing` - a 180 Ringing response has been sent or received
+              * `early-media` - an early media connection has been established prior to answering the call (183 Session Progress)
+              * `in-progress` - call has been answered
+              * `completed` - an answered call has ended
+              * `failed` - a call attempt failed
+              * `busy` - a call attempt failed because the called party returned a busy status
+              * `no-answer` - a call attempt failed because it was not answered in time

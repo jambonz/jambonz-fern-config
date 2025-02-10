@@ -19,7 +19,7 @@ tabs:
     icon: fa-regular fa-tasks
     slug: tutorials
   reference: 
-    display-name: REST API
+    display-name: API Reference
     icon: fa-regular fa-code
     slug: reference
   websocket:
@@ -162,17 +162,30 @@ navigation:
     layout:
       - page: Introduction
         path: ./docs/pages/reference/introduction.mdx
-      - page: Authentication
-        path: ./docs/pages/reference/authentication.mdx
-      - api: Endpoints
-        api-name: openapi
-        paginated: true
-  - tab: websocket
-    layout: 
-      - api: Async API
-        api-name: async
+      - api: REST Call Control
+        api-name: calls
         layout: 
-          - GET /websockets/
+          - calls
+          - conferences
+      - api: REST Platform Management
+        api-name: platform
+        layout: 
+          - users
+          - settings
+          - accounts
+          - clients
+          - applications
+          - recentCalls
+          - alerts
+          - carriers
+          - speech
+          - phoneNumbers
+          - callRouting
+      - api: Webhooks
+        api-name: webhooks
+      - api: Websocket Call Control
+        api-name: async
+        hidden: true
   - tab: sdks
     layout: 
       - page: SDKd
