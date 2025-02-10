@@ -1,4 +1,262 @@
 ---
-title: Quickstart 
-subtitle: Basics of developing applications with jambonz
+title: Developer quickstart 
+subtitle: The basics of developing applications for jambonz
 ---
+
+In the previous article we covered the building blocks of the jambonz system; but you, the developer, are 
+an important component of jambonz as well! 
+
+After all, jambonz doesn't do anything until you write an application for it. 
+In this article we'll cover the basics of building applications for jambonz.
+
+jambonz supports both a webhook and a websocket API for creating user applications, as well as a choice of three SDKs that 
+you can use.  These will be described below.
+
+<Note>
+These are in addition to the [REST API](/reference/introduction) that allows you to manage your account, provision phone numbers, and so on.
+</Note>
+
+jambonz includes the following client SDKs:
+- Node.js SDK for the websocket API,
+- Node.js SDK for the webhook API, or
+- NodeRED nodes to build graphical flows in [NodeRED](https://nodered.org/)
+
+If you are starting out and not quite sure which to use, we recommend websockets. This offers the most flexibility 
+in building asynchronous applications which you are likely to eventually need.  Also, some advanced features require the websocket API.  
+So we'll look at this first.
+
+## Building a jambonz application using websockets
+
+Let's jump in by using our npx application generator to scaffold a websocket application.
+
+```js
+$ npx create-jambonz-ws-app
+Usage: create-jambonz-ws-app [options] project-name
+
+Options:
+  -v, --version              display the current version
+  -s, --scenario <scenario>  generates a sample websocket app for jambonz
+                             (default: "hello-world")
+  -h, --help                 display help for command
+
+
+Scenarios available:
+- hello-world: a simple app that responds to an incoming call using text-to-speech
+- echo: an collect-and-response app that echos caller voice input
+- openai-realtime: a conversational voice interface to the OpenAI Realtime API
+- deepgram-voice-agent: a conversational voice interface to the Deepgram Voice Agent API
+- llm-streaming: example of streaming text tokens from Anthropic LLM
+- all: generate all of the above scenarios
+
+Example:
+  $ npx create-jambonz-ws-app --scenario "hello-world, echo" my-app
+```
+
+You can see this tool will let us scaffold out a new application using one of several scenarios.
+
+Let's start with a basic "echo tester" app that peforms speech-to-text on the caller's utterances and 
+repeats it back using text-to-speech.  This is a useful little app to use to test out a new speech 
+engine or to verify that a new jambonz system you just provisioned is working properly.
+
+```js
+$ npx create-jambonz-ws-app --scenario echo my-echo-app
+Creating a new jambonz websocket app in /Users/dhorton/tmp/my-echo-app
+Installing packages...
+```
+
+That's it!  You've just created your first jambonz application.  In fact you can run it right now, if you want:
+
+```js
+$ cd my-echo-app/
+$ npm start
+
+> my-echo-app@0.0.1 start
+> node app
+
+{
+  "level":30,
+  "time":1739116350704,
+  "pid":31336,
+  "msg":"jambonz websocket server listening at http://localhost:3000"
+}
+```
+
+Now we have a websocket application listening for incoming connections from jambonz on port 3000.  You can see that in this 
+case I am running it on my laptop, but in a production environment you would typically run this on a
+server in the cloud, a hosted Node.js service, or in a container -- wherever you can run a Node.js 
+application and provide a public URL to access it.
+
+Running on your laptop is fine for development and testing, and you can use a service like ngrok to 
+provide a public URL for your application. 
+
+Let's look at the code a bit before we configure our jambonz server to connect to this application.
+
+The main app.js file be boilerplate code that you will rarely need to change, but let's take a quick look at it:
+
+```js
+const {createServer} = require('http');
+const {createEndpoint} = require('@jambonz/node-client-ws');
+const server = createServer();
+const makeService = createEndpoint({server});
+const logger = require('pino')({level: process.env.LOGLEVEL || 'info'});
+const port = process.env.WS_PORT || 3000;
+
+require('./lib/routes')({logger, makeService});
+
+server.listen(port, () => {
+  logger.info(`jambonz websocket server listening at http://localhost:${port}`);
+});
+```
+
+It sets up a websocket server listening on port 3000 by default.  
+
+The handlers for various URL paths can be found in the lib/routes folder.  This is where the 
+actual application logic can be found. Let's take a look at the echo.js file, which implements 
+the 'echo' application:
+
+```js maxLines=100
+const service = ({logger, makeService}) => {
+  const svc = makeService({path: '/echo'});
+
+  svc.on('session:new', (session) => {
+    session.locals = {logger: logger.child({call_sid: session.call_sid})};
+    logger.info({session}, `new incoming call: ${session.call_sid}`);
+
+    try {
+      session
+        .on('close', onClose.bind(null, session))
+        .on('error', onError.bind(null, session))
+        .on('/echo', onSpeechEvent.bind(null, session));
+
+      session
+        .gather({
+          say: {text: 'Please say something and we will echo it back to you.'},
+          input: ['speech'],
+          actionHook: '/echo',
+          partialResultHook: '/interimTranscript',
+          timeout: 15
+        })
+        .send();
+    } catch (err) {
+      session.locals.logger.info({err}, `Error to responding to incoming call: ${session.call_sid}`);
+      session.close();
+    }
+  });
+};
+
+const onSpeechEvent = async(session, evt) => {
+  const {logger} = session.locals;
+  logger.info(`got speech evt: ${JSON.stringify(evt)}`);
+
+  switch (evt.reason) {
+    case 'speechDetected':
+      echoSpeech(session, evt);
+      break;
+    case 'timeout':
+      reprompt(session);
+      break;
+    default:
+      session.reply();
+      break;
+  }
+};
+
+const echoSpeech = async(session, evt) => {
+  const {transcript, confidence} = evt.speech.alternatives[0];
+
+  session
+    .say({text: `You said: ${transcript}.  The confident score was ${confidence.toFixed(2)}`})
+    .gather({
+      say: {text: 'Say something else.'},
+      input: ['speech'],
+      actionHook: '/echo'
+    })
+    .reply();
+};
+
+const reprompt = async(session, evt) => {
+  session
+    .gather({
+      say: {text: 'Are you still there?  I didn\'t hear anything.'},
+      input: ['speech'],
+      actionHook: '/echo'
+    })
+    .reply();
+};
+
+const onClose = (session, code, reason) => {
+  const {logger} = session.locals;
+  logger.info({session, code, reason}, `session ${session.call_sid} closed`);
+};
+
+const onError = (session, err) => {
+  const {logger} = session.locals;
+  logger.info({err}, `session ${session.call_sid} received error`);
+};
+
+module.exports = service;
+```
+A few things to note about this code:
+- line 2: The `makeService` function is used to create a service that listens for incoming calls on the `/echo` path.
+You can have multiple different services in the same Node.js application, each listening on a different path.
+- line 4: The `session:new` event is emitted when a new call arrives. It contains a lot of information about the call,
+including all of the SIP headers should your application need them..
+- line 5: By convention, if we want to store any user data with the session we use the `session.locals` object.
+- line 9-12: We set up event handlers for asynchronous events that we want to respond to.
+- line 15: The 'session' object has methods for all the jambonz verbs that you might want to use.
+In this case use a [gather](/verbs/verbs/gather) verb to collect speech from the caller along with a 
+nested [say](/verbs/verbs/say) verb to prompt them. When we configure this application in jambonz we will set 
+default speech recognizer and text-to-speech engines, but we could override those choices here if we wanted to change
+the speech vendor for single turn of the conversation.
+- line 22: Having called one or more verb methods on the session, we send them back to jambonz for execution.
+After this, we are waiting for the next event from jambonz - likely either speech detected, timeout, or caller hangup.
+- line 30: When a speech detected event is received, the `onSpeechEvent` function is called.  How did this happen?
+Well, we provided an actionHook of `/echo` in the gather verb, and we set up an event handler back on line 12 to 
+handle events on the `/echo` path with the `onSpeechEvent` function.
+
+That's it!  The rest of the application is pretty straightforward once you understand the patterns and conventions 
+in the code described above.
+
+### Configuring jambonz to use your websocket application
+
+Now that we have our application running, we need to configure jambonz to use it.  This is done in the jambonz portal
+by creating a new application.  
+- Click on Applications in the left-hand navigation, then click the "+" button.
+- Give your application a name, then put your websocket URL in both the `Calling webhook` 
+and `Call status webhook` fields.
+- Select speech vendors for both speech synthesis and speech recognition, and choose voice and language settings.
+- If desired, select fallback speech vendors in case the primary vendors fail.
+- Click Save.
+
+<div class="card-video">
+<video 
+    src="../../assets/save-application.mp4"
+    width="600"
+    height="480"
+    playsinline
+    muted
+    controls
+    loop
+>
+</video>
+</div>
+
+Once your application is saved in jambonz, you can specify a phone number to route to it so that any incoming 
+calls on this number trigger the application:
+- Click on Phone Numbers in the left-hand navigation, then click the "+" button.
+- Select the Carrier / originating SIP trunk and enter the phone number.
+- Select the application you just created from the dropdown list.
+- Click Save.
+
+Now when you call that number, your application will be triggered and you can test it out!
+
+<video 
+    src="../../assets/save-number.mp4"
+    width="600"
+    height="480"
+    playsinline
+    muted
+    controls
+    loop
+>
+</video>

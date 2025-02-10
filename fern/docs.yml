@@ -44,10 +44,10 @@ navigation:
     layout: 
       - section: Get Started
         contents: 
-          - page: Basic Concepts
+          - page: jambonz Overview
             path: ./docs/pages/get-started/concepts.mdx
-          - page: Quickstart
-            path: ./docs/pages/get-started/quickstart.mdx
+          - page: Developer Quickstart
+            path: ./docs/pages/get-started/developer.mdx
           - page: Deployment Options 
             path: ./docs/pages/get-started/deployment.mdx
       - section: Features
