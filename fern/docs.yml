@@ -98,6 +98,8 @@ navigation:
     layout: 
       - section: Verbs
         contents:
+          - page: Overview
+            path: ./docs/pages/verbs/overview.mdx
           - page: Answer
             path: ./docs/pages/verbs/answer.mdx
           - page: Conference
@@ -130,6 +132,7 @@ navigation:
             path: ./docs/pages/verbs/llm.mdx
           - page: Message
             path: ./docs/pages/verbs/message.mdx
+            hidden: true
           - page: Pause
             path: ./docs/pages/verbs/pause.mdx
           - page: Play

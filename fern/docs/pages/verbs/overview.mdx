@@ -1,0 +1,86 @@
+Verbs are the fundamental building blocks of your jambonz application, they instruct the platform how to handle the call.
+
+## Interaction
+jambonz controls calls through the use of JSON payloads that are exchanged either over an webhook or a websocket connection.  
+When an incoming call for your account is received, jambonz retrieves the URL that you have configured for the application you want to run.  
+If the URL begins with 'http(s)://' jambonz makes an http request to the URL, while if the URL starts with 'ws(s)://' jambonz establishes a websocket connection to that URL. 
+jambonz then sends an initial message describing the incoming call, and your webapp is then responsible for returning a JSON payload that indicates how you want the call handled.
+
+Either way (http or websocket) the details of the JSON payloads are the same.  
+
+When an incoming call for your account is received, jambonz makes an HTTP request to a URL that you have configured and your webapp will then return a response containing a JSON body that indicates how you want the call handled.
+
+> You can develop your webapp using whatever language or framework you like, but the quickest way to scaffold up a webapp is by using our [Node.js framework](http://localhost:3000/docs/sdks/nodeclient)
+
+If you want to generate an outbound call it works similarly: you will make an HTTP request using the [REST API](/reference/rest-call-control/calls/create-call) and in it you will specify a URL or application identifier that will be invoked once the call is answered.  Once again, your response to that HTTP request will contain a JSON body that indicates how you want the call handled.
+
+## Basic JSON message structure
+The JSON payload that you provide in response to an HTTP request must be an array with each item describing a task that the platform shall perform.  These tasks are executed sequentially in the order they appear in the array.  Each task is identified by a verb (e.g. "dial", "gather", "hangup" etc) with associated detail to configure how the action should be carried out.
+
+If the caller hangs up during the execution of an application for that call, the current task is allowed to complete and any remaining tasks in the application are ignored.
+
+```json
+[
+  {
+    "verb": "say",
+    "text": "Hi there!  Please leave a message at the tone.",
+    "synthesizer": {
+      "vendor": "Google",
+      "language": "en-US",
+      "gender": "FEMALE"
+    }
+  },
+  {
+    /* ..next verb */
+  }
+]
+```
+
+Some verbs allow other verbs to be nested; e.g. "gather" can have a nested "say" command in order to play a prompt and collect a response in one command:
+
+```json
+{
+  "verb": "gather",
+  "actionHook": "/gatherCardNumber",
+  "input": ["speech", "dtmf"],
+  "timeout": 16,
+  "numDigits": 6,
+  "recognizer": {
+    "vendor": "Google",
+    "language": "en-US"
+  },
+  "say": {
+    "text": "Please say or enter your six digit card number now",
+    "synthesizer": {
+      "vendor": "Google",
+      "language": "en-US",
+      "gender": "FEMALE"
+    }
+  }
+}
+```
+
+Altogether then, a simple voicemail application could look like this:
+```json
+[
+  {
+    "verb": "say",
+    "text": "Hi there!  Please leave a message at the tone and we will get back to you shortly."
+  },
+  {
+    "verb": "listen",
+    "actionHook": "http://example.com/voicemail",
+    "url": "wss://example.com/my-recorder",
+    "finishOnKey": "#",
+    "metadata": {
+      "topic": "voicemail"
+    },
+    "playBeep": true,
+    "timeout": 20
+  },
+  {
+    "verb": "say",
+    "text": "Thanks for your message.  We'll get back to you"
+  }
+]
+```
