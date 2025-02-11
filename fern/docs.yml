@@ -50,6 +50,8 @@ navigation:
             path: ./docs/pages/get-started/developer.mdx
           - page: Deployment Options 
             path: ./docs/pages/get-started/deployment.mdx
+          - page: Support Plans 
+            path: ./docs/pages/get-started/support.mdx
       - section: Features
         contents:
           - page: Answering machine detection
