@@ -496,10 +496,6 @@ paths:
       responses:
         '204':
           description: voip carrier updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VoipCarrier'
         '400':
           description: bad request
           content:
@@ -820,10 +816,6 @@ paths:
       responses:
         '204':
           description: phone number updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VoipCarrier'
         '400':
           description: bad request
           content:
@@ -3122,10 +3114,6 @@ paths:
       responses:
         '204':
           description: least cost routing updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Lcr'
         '400':
           description: bad request
           content:
@@ -3331,10 +3319,6 @@ paths:
       responses:
         '204':
           description: least cost routing route updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LcrRoute'
         '400':
           description: bad request
           content:
@@ -3477,10 +3461,7 @@ paths:
       responses:
         '204':
           description: least cost routing carrier set entry updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LcrCarrierSetEntry'
+
         '400':
           description: bad request
           content:
@@ -3643,10 +3624,6 @@ paths:
       responses:
         '204':
           description: google custom voice updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GoogleCustomVoice'
         '400':
           description: bad request
           content:
