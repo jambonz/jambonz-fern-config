@@ -2,10 +2,16 @@ openapi: 3.1.0
 info:
   title: Webhooks
   version: 0.9.3
+servers:
+  - url: /
+security:
+  - basicAuth: []
 webhooks:
   callHook:
     post:
-      operationId: callHook
+      operationId: callHookPost
+      summary: New Call
+      description: This webhook is sent when a new call is created on the platform, it is configured at the appplication level
       requestBody:
         description: Information about a new call
         content:
@@ -15,6 +21,129 @@ webhooks:
       responses:
         '200':
           description: Return a 200 containing a JSON payload consisting of an array of verbs
+    get:
+      operationId: callHookGet
+      summary: New Call
+      description: This webhook is sent when a new call is created on the platform, it is configured at the appplication level
+      parameters:
+        - name: params
+          in: query
+          schema: 
+            $ref: '#/components/schemas/CallHook'
+      responses:
+        '200':
+          description: Return a 200 containing a JSON payload consisting of an array of verbs
+  registrationHook:
+    post:
+      operationId: registrationHook
+      summary: Client Registration
+      description: This webhook is sent when a SIP client tries to register, it is configured at the account level
+      requestBody:
+        description: |
+          provides details of the authentication request.  The receiving server is responsible for authenticating the 
+          request as per [RFC 2617](https://tools.ietf.org/html/rfc2617)
+        content:
+          application/json:
+            schema:
+              required:
+                - method
+                - realm
+                - username
+                - expires
+                - nonce
+                - uri
+                - response
+              type: object
+              properties:
+                method:
+                  type: string
+                  description: sip request method
+                  example: REGISTER
+                realm:
+                  type: string
+                  description: sip realm
+                  example: mycompany.com
+                username:
+                  type: string
+                  description: sip username provided
+                  example: daveh
+                expires:
+                  type: number
+                  description: expiration requested, in seconds
+                  example: 3600
+                scheme:
+                  type: string
+                  description: encryption protocol
+                  example: digest
+                nonce:
+                  type: string
+                  description: nonce value
+                  example: InFriVGWVoKeCckYrTx7wg=="
+                uri:
+                  type: string
+                  format: uri
+                  description: sip uri in request
+                  example: sip:mycompany.com
+                algorithm:
+                  type: string
+                  description: encryption algorithm used, default to MD5 if not provided
+                  example: MD5
+                qop:
+                  type: string
+                  description: qop value
+                  example: auth
+                cnonce:
+                  type: string
+                  description: cnonce value
+                  example: 6b8b4567
+                nc:
+                  type: string
+                  description: nc value
+                  example: 1
+                response:
+                  type: string
+                  description: digest value calculated by the client
+                  example: be641cf7951ff23ab04c57907d59f37d
+      responses:
+        '200':
+          description: |
+            Your callback should return this HTTP status code in all cases.
+            if the request was authenticated and you wish to admit 
+            the client to the network, this is indicated by setting the 'response' 
+            attribute in the body to 'ok'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    description: indicates whether the request was successfully authenticated
+                    enum:
+                      - ok
+                      - fail
+                    example: ok
+                  message:
+                    type: string
+                    description: a human-readable message
+                    example: authentication granted
+                  call_hook:
+                    type: string
+                    format: url
+                    description: url of application to invoke when this device places a call
+                  expires:
+                    type: number
+                    description: |
+                      The expires value to grant to the requesting user.
+                      If not provided, the expires value in the request is observed.
+                      If provided, must be less than the requested expires value.
+                  blacklist:
+                    type: number
+                    description: |
+                      If provided, represents a period in seconds during which the source IP 
+                      address should be blacklisted by the platform (0 means forever).
 components:
   schemas:
     CallHook:
@@ -77,3 +206,7 @@ components:
               * `failed` - a call attempt failed
               * `busy` - a call attempt failed because the called party returned a busy status
               * `no-answer` - a call attempt failed because it was not answered in time
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
