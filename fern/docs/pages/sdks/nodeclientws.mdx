@@ -1,3 +1,7 @@
+---
+title: Node.JS Websocket SDK
+layout: page
+---
 
 ## Installing
 ```
@@ -175,7 +179,7 @@ wssBar.on('connection', (ws) => {
 
 This function is the main export of the library. 
 
-#### createEndpoint({server, port, logger})
+#### createEndpoint()
 
 - `server` {http.Server}  A pre-created Node.js HTTP/S server.
 - `port` {Number} Optional, the port to listen on.  If not provided it is assumed the application will call `listen` on the server object
