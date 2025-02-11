@@ -44,12 +44,14 @@ navigation:
     layout: 
       - section: Get Started
         contents: 
-          - page: Overview
-            path: ./docs/pages/get-started/overview.mdx
+          - page: jambonz Overview
+            path: ./docs/pages/get-started/concepts.mdx
+          - page: Developer Quickstart
+            path: ./docs/pages/get-started/developer.mdx
           - page: Deployment Options 
             path: ./docs/pages/get-started/deployment.mdx
-          - page: Quickstart
-            path: ./docs/pages/get-started/quickstart.mdx
+          - page: Support Plans 
+            path: ./docs/pages/get-started/support.mdx
       - section: Features
         contents:
           - page: Answering machine detection
