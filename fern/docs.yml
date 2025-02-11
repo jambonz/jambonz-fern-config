@@ -167,6 +167,7 @@ navigation:
         layout: 
           - calls
           - conferences
+          - queues
       - api: REST Platform Management
         api-name: platform
         layout: 

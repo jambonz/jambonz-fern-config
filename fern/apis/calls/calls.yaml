@@ -9,7 +9,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: 1.0.0
 servers:
-  - url: https://api.jambonz.cloud/
+  - url: https://api.jambonz.cloud/v1
 security:
   - bearerAuth: []
 tags:
@@ -51,21 +51,21 @@ paths:
                 call_hook:
                   $ref: '#/components/schemas/Webhook'
                   example:
-                    url: https://acme.com/callhook
+                    url: https://example.com/callhook
                     method: POST
                 call_status_hook:
                   $ref: '#/components/schemas/Webhook'
                   example:
-                    url: https://acme.com/status
+                    url: https://example.com/status
                     method: POST
                 from:
                   type: string
                   description: The calling party number
-                  example: '16172375089'
+                  example: '16175551212'
                 fromHost:
                   type: string
                   description: The hostname to put in the SIP From header of the INVITE
-                  example: blf.finotel.com
+                  example: sip.example.com
                 timeout:
                   type: integer
                   description: The number of seconds to wait for call to be answered.  Defaults to 60.
@@ -332,56 +332,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /Accounts/{AccountSid}/Messages:
-    post:
-      tags:
-        - Messages
-      summary: create an outgoing SMS message
-      operationId: createMessage
-      parameters:
-        - name: AccountSid
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Message'
-      responses:
-        '201':
-          description: call successfully created
-          content:
-            application/json:
-              schema:
-                required:
-                  - sid
-                properties:
-                  sid:
-                    type: string
-                    format: uuid
-                    example: 2531329f-fb09-4ef7-887e-84e648214436
-                  providerResponse:
-                    type: string
-        '400':
-          description: bad request
-        '480':
-          description: temporary failure
-          content:
-            application/json:
-              schema:
-                required:
-                  - sid
-                properties:
-                  sid:
-                    type: string
-                    format: uuid
-                    example: 2531329f-fb09-4ef7-887e-84e648214436
-                  message:
-                    type: string
-                  smpp_err_code:
-                    type: string
   /Accounts/{AccountSid}/Queues:
     parameters:
       - name: AccountSid
@@ -442,6 +392,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+
 
 components:
   securitySchemes:

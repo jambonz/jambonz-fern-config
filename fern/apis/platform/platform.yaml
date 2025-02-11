@@ -14,16 +14,27 @@ security:
   - bearerAuth: []
 tags:
   - name: Users
+    description: User Management
   - name: Settings
+    description: General Settings
   - name: Accounts
+    description: Account Settings
   - name: Clients
+    description: SIP Clients
   - name: Applications
+    description: Applications
   - name: Recent Calls
+    description: Details of calls
   - name: Alerts
+    description: Alerts of Errors and failures
   - name: Carriers
+    description: SIP Carriers & Trunks
   - name: Speech
+    description: Text to Speech & Speech to Text Providers
   - name: Phone Numbers
+    description: Routing of Phone numbers to Applications
   - name: Call Routing
+    description: Least cost Call Routing
 
 paths:
   
@@ -270,22 +281,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-
-    parameters:
-      - name: Code
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
   /Webhooks/{WebhookSid}:
     parameters:
       - name: WebhookSid
@@ -1089,7 +1084,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials/:
+  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials:
     parameters:
       - name: ServiceProviderSid
         in: path
@@ -2280,7 +2275,7 @@ paths:
         schema:
           type: string
           format: uuid
-    /Accounts/{AccountSid}/Limits:
+  /Accounts/{AccountSid}/Limits:
     post:
       tags:
         - Accounts
@@ -2969,8 +2964,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-
- 
   /Accounts/{AccountSid}/RegisteredSipUsers:
     parameters:
       - name: AccountSid
