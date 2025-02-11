@@ -26,16 +26,57 @@ webhooks:
       summary: New Call
       description: This webhook is sent when a new call is created on the platform, it is configured at the appplication level
       parameters:
-        - name: params
+        - name: call_sid
           in: query
-          schema: 
-            $ref: '#/components/schemas/CallHook'
+          required: true
+          schema:
+              $ref: '#/components/schemas/CallHook/properties/call_sid'
+        - name: application_sid
+          in: query
+          required: true
+          schema:
+              $ref: '#/components/schemas/CallHook/properties/application_sid'
+        - name: account_sid
+          in: query
+          required: true
+          schema:
+              $ref: '#/components/schemas/CallHook/properties/account_sid'
+        - name: direction
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/CallHook/properties/direction'
+        - name: from
+          in: query
+          required: true
+          schema:
+              $ref: '#/components/schemas/CallHook/properties/from'
+        - name: to
+          in: query
+          required: true
+          schema:
+              $ref: '#/components/schemas/CallHook/properties/to'
+        - name: caller_id
+          in: query
+          required: true
+          schema:
+              $ref: '#/components/schemas/CallHook/properties/caller_id'
+        - name: call_status
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/CallHook/properties/call_status'        
+        - name: sip_status
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/CallHook/properties/sip_status' 
       responses:
         '200':
           description: Return a 200 containing a JSON payload consisting of an array of verbs
   registrationHook:
     post:
-      operationId: registrationHook
+      operationId: registrationHookPost
       summary: Client Registration
       description: This webhook is sent when a SIP client tries to register, it is configured at the account level
       requestBody:
