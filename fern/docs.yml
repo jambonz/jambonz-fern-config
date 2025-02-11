@@ -25,11 +25,11 @@ tabs:
   websocket:
     display-name: WebSocket API
     icon: fa-regular fa-signal-stream
-    slug: websocket
+    slug: reference
   sdks:
     display-name: Client SDKs
     icon: fa-regular fa-signal-stream
-    slug: websocket
+    slug: sdks
   changelog: 
     display-name: Release Notes
     icon: fa-regular fa-history
@@ -192,8 +192,20 @@ navigation:
         hidden: true
   - tab: sdks
     layout: 
-      - page: SDKd
+      - page: SDKs
         path: ./docs/pages/sdks/index.mdx
+      - page: nodeclient
+        path: ./docs/pages/sdks/nodeclient.mdx
+        hidden: true
+      - page: nodered
+        path: ./docs/pages/sdks/nodered.mdx
+        hidden: true
+      - page: nodeclientws
+        path: ./docs/pages/sdks/nodeclientws.mdx
+        hidden: true
+      - page: npx
+        path: ./docs/pages/sdks/npx.mdx
+        hidden: true
   - tab: changelog
 
   
