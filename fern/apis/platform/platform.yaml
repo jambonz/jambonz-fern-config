@@ -3165,7 +3165,7 @@ paths:
                   type: object
           '404':
             description: account or call not found
-    /ServiceProviders/{ServiceProviderSid}/RecentCalls:
+  /ServiceProviders/{ServiceProviderSid}/RecentCalls:
       parameters:
         - name: ServiceProviderSid
           in: path
@@ -3354,6 +3354,7 @@ paths:
                 type: object
         '404':
           description: service provider or call not found
+  /ServiceProviders/{ServiceProviderSid}/Lcrs:
     parameters:
       - name: ServiceProviderSid
         in: path
@@ -3407,8 +3408,7 @@ paths:
                 $ref: '#/components/schemas/SuccessfulAdd'
         '404':
           description: service provider not found
-  
-          /MicrosoftTeamsTenants:
+  /MicrosoftTeamsTenants:
     post:
       tags:
         - Settings
@@ -3479,7 +3479,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeneralError'
   
-                /MicrosoftTeamsTenants/{TenantSid}:
+  /MicrosoftTeamsTenants/{TenantSid}:
     parameters:
       - name: TenantSid
         in: path
