@@ -1,5 +1,6 @@
 instances:
   - url: jambonz-12u348932.docs.buildwithfern.com
+    custom-domain: docs.jambonz.org
   
 tabs: 
   home: 
