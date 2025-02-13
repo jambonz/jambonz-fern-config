@@ -830,683 +830,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders:
-    post:
-      tags:
-        - Service Providers
-      summary: create service provider
-      operationId: createServiceProvider
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: service provider name
-                  example: fastcomms
-                description:
-                  type: string
-                root_domain:
-                  type: string
-                  description: root domain for group of accounts that share a registration hook
-                  example: example.com
-                registration_hook:
-                  $ref: '#/components/schemas/Webhook'
-                  description: authentication webhook for registration
-                ms_teams_fqdn:
-                  type: string
-                  description: SBC domain name for Microsoft Teams
-                  example: contoso.com
-              required:
-                - name
-      responses:
-        '201':
-          description: service provider successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '422':
-          description: unprocessable entity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    get:
-      tags:
-        - Service Providers
-      summary: list service providers
-      operationId: listServiceProviders
-      responses:
-        '200':
-          description: list of service providers
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ServiceProvider'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-    delete:
-      tags:
-        - Service Providers
-      summary: delete a service provider
-      operationId: deleteServiceProvider
-      responses:
-        '204':
-          description: service provider successfully deleted
-        '404':
-          description: service provider not found
-        '422':
-          description: unprocessable entity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    get:
-      tags:
-        - Service Providers
-      summary: retrieve service provider
-      operationId: getServiceProvider
-      responses:
-        '200':
-          description: service provider found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServiceProvider'
-        '404':
-          description: service provider not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    put:
-      tags:
-        - Service Providers
-      summary: update service provider
-      operationId: updateServiceProvider
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ServiceProvider'
-      responses:
-        '204':
-          description: service provider updated
-        '404':
-          description: service provider not found
-        '422':
-          description: unprocessable entity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}/Accounts:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      tags:
-        - Service Providers
-      summary: get all accounts for a service provider
-      operationId: getServiceProviderAccounts
-      responses:
-        '200':
-          description: account listing
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Account'
-        '403':
-          description: unauthorized
-        '404':
-          description: service provider not found
-  /ServiceProviders/{ServiceProviderSid}/VoipCarriers:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      tags:
-        - Service Providers
-      summary: get all carriers for a service provider
-      operationId: getServiceProviderCarriers
-      responses:
-        '200':
-          description: account listing
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VoipCarrier'
-        '403':
-          description: unauthorized
-        '404':
-          description: service provider not found
-    post:
-      tags:
-        - Service Providers
-      summary: create a carrier
-      operationId: createCarrierForServiceProvider
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VoipCarrier'
-      responses:
-        '201':
-          description: service provider successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '404':
-          description: service provider not found
-  /ServiceProviders/{ServiceProviderSid}/PredefinedCarriers/{PredefinedCarrierSid}:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: PredefinedCarrierSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    post:
-      tags:
-        - Service Providers
-      summary: add a VoiPCarrier to a service provider based on PredefinedCarrier template
-      operationId: createVoipCarrierFromTemplateBySP
-      responses:
-        '201':
-          description: voip carrier successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '400':
-          description: bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    post:
-      tags:
-        - Service Providers
-      summary: create a speech credential for a service provider
-      operationId: addSpeechCredentialForSeerviceProvider
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SpeechCredential'
-      responses:
-        '201':
-          description: speech credential successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '404':
-          description: credential not found
-  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials/{SpeechCredentialSid}:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: SpeechCredentialSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      tags:
-        - Service Providers
-      summary: get a specific speech credential
-      operationId: getSpeechCredential
-      responses:
-        '200':
-          description: retrieve speech credentials for a specified account
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SpeechCredential'
-        '404':
-          description: credential not found
-    put:
-      tags:
-        - Service Providers
-      summary: update a speech credential
-      operationId: updateSpeechCredential
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SpeechCredentialUpdate'
-      responses:
-        '204':
-          description: credential successfully updated
-        '404':
-          description: credential not found
-        '422':
-          description: credential not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    delete:
-      tags:
-        - Service Providers
-      summary: delete a speech credential
-      operationId: deleteSpeechCredential
-      responses:
-        '204':
-          description: credential successfully deleted
-        '404':
-          description: credential not found
-  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials/speech/supportedLanguagesAndVoices:
-    get:
-      tags:
-        - Service Providers
-      summary: get supported languages, voices and models
-      operationId: supportedLanguagesAndVoices
-      parameters:
-        - name: ServiceProviderSid
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: vendor
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: label
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: get supported languages, voices and models
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SpeechLanguagesVoices'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials/{SpeechCredentialSid}/test:
-    get:
-      tags:
-        - Service Providers
-      summary: test a speech credential
-      operationId: testSpeechCredential
-      parameters:
-        - name: ServiceProviderSid
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: SpeechCredentialSid
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: credential test results
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  tts:
-                    type: object
-                    properties:
-                      status:
-                        type: string
-                        enum:
-                          - success
-                          - fail
-                          - not tested
-                      reason:
-                        type: string
-                  stt:
-                    type: object
-                    properties:
-                      status:
-                        type: string
-                        enum:
-                          - success
-                          - fail
-                      reason:
-                        type: string
-        '404':
-          description: credential not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}/Limits:
-    post:
-      tags:
-        - Service Providers
-      summary: create a limit for a service provider
-      operationId: addLimitForServiceProvider
-      parameters:
-        - name: ServiceProviderSid
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Limits'
-      responses:
-        '201':
-          description: limit successfully created or updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '404':
-          description: service provider not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    get:
-      tags:
-        - Service Providers
-      summary: retrieve call capacity and other limits from the service provider
-      operationId: getServiceProviderLimits
-      parameters:
-        - name: ServiceProviderSid
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: service provider limits
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Limits'
-        '404':
-          description: service provider not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}/Lcrs:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      tags:
-        - Service Providers
-      summary: get all Least Cost Routings for a service provider
-      operationId: getServiceProviderLcrs
-      responses:
-        '200':
-          description: Least cost routing listing
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Lcr'
-        '403':
-          description: unauthorized
-        '404':
-          description: service provider not found
-    post:
-      tags:
-        - Service Providers
-      summary: create a Lest cost routing
-      operationId: createLcrForServiceProvider
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: name or Least Cost Routing
-                  example: twilioLcr
-              required:
-                - name
-      responses:
-        '201':
-          description: service provider Lcr successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '404':
-          description: service provider not found
-  /MicrosoftTeamsTenants:
-    post:
-      tags:
-        - Settings
-      summary: provision a customer tenant for MS Teams
-      operationId: createMsTeamsTenant
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                service_provider_sid:
-                  type: string
-                  format: uuid
-                  example: 85f9c036-ba61-4f28-b2f5-617c23fa68ff
-                account_sid:
-                  type: string
-                  format: uuid
-                  example: 85f9c036-ba61-4f28-b2f5-617c23fa68ff
-                application_sid:
-                  type: string
-                  format: uuid
-                  example: 85f9c036-ba61-4f28-b2f5-617c23fa68ff
-                tenant_fqdn:
-                  type: string
-                  example: customer.contoso.com
-              required:
-                - service_provider_sid
-                - account
-                - tenant_fqdn
-      responses:
-        '201':
-          description: tenant successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '400':
-          description: bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    get:
-      tags:
-        - Settings
-      summary: list MS Teams tenants
-      operationId: listMsTeamsTenants
-      responses:
-        '200':
-          description: list of tenants
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MsTeamsTenant'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /MicrosoftTeamsTenants/{TenantSid}:
-    parameters:
-      - name: TenantSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    delete:
-      tags:
-        - Settings
-      summary: delete an MS Teams tenant
-      operationId: deleteTenant
-      responses:
-        '204':
-          description: tenant successfully deleted
-        '404':
-          description: tenant not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    get:
-      tags:
-        - Settings
-      summary: retrieve an MS Teams tenant
-      operationId: getTenant
-      responses:
-        '200':
-          description: tenant found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MsTeamsTenant'
-        '404':
-          description: account not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    put:
-      tags:
-        - Settings
-      summary: update an MS Teams tenant
-      operationId: putTenant
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MsTeamsTenant'
-      responses:
-        '204':
-          description: tenant updated
-        '404':
-          description: tenant not found
-        '422':
-          description: unprocessable entity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
   /Accounts:
     post:
       tags:
@@ -2161,6 +1484,7 @@ paths:
       tags:
         - Accounts
       summary: create a limit for an account
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
       operationId: addLimitForAccount
       parameters:
         - name: AccountSid
@@ -2218,220 +1542,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}/RecentCalls/{CallId}/pcap:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: CallId
-        in: path
-        required: true
-        schema:
-          type: string
-    get:
-      tags:
-        - Service Providers
-      summary: retrieve pcap for a call
-      operationId: getRecentCallTraceBySP
-      responses:
-        '200':
-          description: retrieve sip trace data
-          content:
-            application/octet-stream:
-              schema:
-                type: object
-        '404':
-          description: account or call not found
-  /ServiceProviders/{ServiceProviderSid}/RecentCalls:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - in: query
-        name: page
-        required: true
-        schema:
-          type: number
-          format: integer
-          description: page number of data to retrieve
-      - in: query
-        name: count
-        required: true
-        schema:
-          type: number
-          format: integer
-          description: number of rows to retrieve in each page set
-      - in: query
-        name: days
-        required: false
-        schema:
-          type: number
-          format: integer
-          description: number of days back to retrieve, must be ge 1 and le 30
-      - in: query
-        name: start
-        required: false
-        schema:
-          type: string
-          format: date-time
-          description: start date to retrieve
-      - in: query
-        name: end
-        required: false
-        schema:
-          type: string
-          format: date-time
-          description: end date to retrieve
-      - in: query
-        name: answered
-        required: false
-        schema:
-          type: string
-          enum:
-            - "true"
-            - "false"
-          description: retrieve only answered calls
-      - in: query
-        name: direction
-        required: false
-        schema:
-          type: string
-          enum:
-            - inbound
-            - outbound
-      - in: query
-        name: from
-        required: false
-        schema:
-          type: string
-        description: calling number to retrieve
-      - in: query
-        name: to
-        required: false
-        schema:
-          type: string
-        description: called number to retrieve
-    get:
-      tags:
-        - Service Providers
-      summary: retrieve recent calls for an account
-      operationId: listRecentCallsBySP
-      responses:
-        '200':
-          description: retrieve recent call records for a specified account
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  total:
-                    type: number
-                    format: integer
-                    description: total number of records in that database that match the filter criteria
-                  batch:
-                    type: number
-                    format: integer
-                    description: total number of records returned in this page set
-                  page:
-                    type: number
-                    format: integer
-                    description: page number that was requested, and is being returned
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        service_provider_sid:
-                          type: string
-                          format: uuid
-                        account_sid:
-                          type: string
-                          format: uuid
-                        call_sid:
-                          type: string
-                          format: uuid
-                        from:
-                          type: string
-                        to:
-                          type: string
-                        answered:
-                          type: boolean
-                        sip_call_id:
-                          type: string
-                        sip_status:
-                          type: number
-                          format: integer
-                        duration:
-                          type: number
-                          format: integer
-                        attempted_at:
-                          type: number
-                          format: integer
-                        answered_at:
-                          type: number
-                          format: integer
-                        terminated_at:
-                          type: number
-                          format: integer
-                        termination_reason:
-                          type: string
-                        host:
-                          type: string
-                        remote_host:
-                          type: string
-                        direction:
-                          type: string
-                          enum:
-                            - inbound
-                            - outbound
-                        trunk:
-                          type: string
-                      required:
-                        - account_sid
-                        - call_sid
-                        - attempted_at
-                        - terminated_at
-                        - answered
-                        - direction
-                        - from
-                        - to
-                        - sip_status
-                        - duration
-        '404':
-          description: account not found
-  /ServiceProviders/{ServiceProviderSid}/RecentCalls/{CallId}:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: CallId
-        in: path
-        required: true
-        schema:
-          type: string
-    get:
-      tags:
-        - Service Providers
-      summary: retrieve sip trace detail for a call
-      operationId: getRecentCallTraceByCallId
-      responses:
-        '200':
-          description: retrieve sip trace data
-          content:
-            application/json:
-              schema:
-                type: object
-        '404':
-          description: service provider or call not found
   /Accounts/{AccountSid}/RecentCalls/{CallId}/pcap:
     parameters:
       - name: AccountSid
@@ -2459,118 +1569,6 @@ paths:
                 type: object
         '404':
           description: account or call not found
-  /ServiceProviders/{ServiceProviderSid}/Alerts:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - in: query
-        name: page
-        required: true
-        schema:
-          type: number
-          format: integer
-          description: page number of data to retrieve
-      - in: query
-        name: count
-        required: true
-        schema:
-          type: number
-          format: integer
-          description: number of rows to retrieve in each page set
-      - in: query
-        name: days
-        required: false
-        schema:
-          type: number
-          format: integer
-          description: number of days back to retrieve, must be ge 1 and le 30
-      - in: query
-        name: start
-        required: false
-        schema:
-          type: string
-          format: date-time
-          description: start date to retrieve
-      - in: query
-        name: end
-        required: false
-        schema:
-          type: string
-          format: date-time
-          description: end date to retrieve
-      - in: query
-        name: alert_type
-        required: false
-        schema:
-          type: string
-          enum:
-            - webhook-failure
-            - webhook-connection-failure
-            - webhook-auth-failure
-            - no-tts
-            - no-stt
-            - tts-failure
-            - stt-failure
-            - no-carrier
-            - call-limit
-            - device-limit
-            - api-limit
-    get:
-      tags:
-        - Service Providers
-      summary: retrieve alerts for a service provider
-      operationId: listAlerts
-      responses:
-        '200':
-          description: retrieve alerts for a specified account
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  total:
-                    type: number
-                    format: integer
-                    description: total number of records in that database that match the filter criteria
-                  batch:
-                    type: number
-                    format: integer
-                    description: total number of records returned in this page set
-                  page:
-                    type: number
-                    format: integer
-                    description: page number that was requested, and is being returned
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        time:
-                          type: string
-                          format: date-time
-                        service_provider_sid:
-                          type: string
-                          format: uuid
-                        account_sid:
-                          type: string
-                          format: uuid
-                        alert_type:
-                          type: string
-                        message:
-                          type: string
-                        detail:
-                          type: string
-                      required:
-                        - time
-                        - account_sid
-                        - alert_type
-                        - message
-        '404':
-          description: service provider not found
   /Accounts/{AccountSid}/Alerts:
     parameters:
       - name: AccountSid
@@ -3638,6 +2636,1035 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+  /ServiceProviders:
+    post:
+      tags:
+        - Service Providers
+      summary: create service provider 
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: createServiceProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: service provider name
+                  example: fastcomms
+                description:
+                  type: string
+                root_domain:
+                  type: string
+                  description: root domain for group of accounts that share a registration hook
+                  example: example.com
+                registration_hook:
+                  $ref: '#/components/schemas/Webhook'
+                  description: authentication webhook for registration
+                ms_teams_fqdn:
+                  type: string
+                  description: SBC domain name for Microsoft Teams
+                  example: contoso.com
+              required:
+                - name
+      responses:
+        '201':
+          description: service provider successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '422':
+          description: unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    get:
+      tags:
+        - Service Providers
+      summary: list service providers
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: listServiceProviders
+      responses:
+        '200':
+          description: list of service providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceProvider'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /ServiceProviders/{ServiceProviderSid}:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+    delete:
+      tags:
+        - Service Providers
+      summary: delete a service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: deleteServiceProvider
+      responses:
+        '204':
+          description: service provider successfully deleted
+        '404':
+          description: service provider not found
+        '422':
+          description: unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    get:
+      tags:
+        - Service Providers
+      summary: retrieve service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: getServiceProvider
+      responses:
+        '200':
+          description: service provider found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceProvider'
+        '404':
+          description: service provider not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    put:
+      tags:
+        - Service Providers
+      summary: update service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: updateServiceProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceProvider'
+      responses:
+        '204':
+          description: service provider updated
+        '404':
+          description: service provider not found
+        '422':
+          description: unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /ServiceProviders/{ServiceProviderSid}/Accounts:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Service Providers
+      summary: get all accounts for a service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: getServiceProviderAccounts
+      responses:
+        '200':
+          description: account listing
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        '403':
+          description: unauthorized
+        '404':
+          description: service provider not found
+  /ServiceProviders/{ServiceProviderSid}/VoipCarriers:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Carriers
+      summary: get all carriers for a service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: getServiceProviderCarriers
+      responses:
+        '200':
+          description: account listing
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VoipCarrier'
+        '403':
+          description: unauthorized
+        '404':
+          description: service provider not found
+    post:
+      tags:
+        - Carriers
+      summary: create a carrier
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: createCarrierForServiceProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoipCarrier'
+      responses:
+        '201':
+          description: service provider successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '404':
+          description: service provider not found
+  /ServiceProviders/{ServiceProviderSid}/PredefinedCarriers/{PredefinedCarrierSid}:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: PredefinedCarrierSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags:
+        - Carriers
+      summary: add a Carrier to a service provider using a template
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: createVoipCarrierFromTemplateBySP
+      responses:
+        '201':
+          description: voip carrier successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags:
+        - Speech
+      summary: create a speech credential for a service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: addSpeechCredentialForSeerviceProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeechCredential'
+      responses:
+        '201':
+          description: speech credential successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '404':
+          description: credential not found
+  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials/{SpeechCredentialSid}:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: SpeechCredentialSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Speech
+      summary: get a specific speech credential
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: getSpeechCredential
+      responses:
+        '200':
+          description: retrieve speech credentials for a specified account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeechCredential'
+        '404':
+          description: credential not found
+    put:
+      tags:
+        - Speech
+      summary: update a speech credential
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: updateSpeechCredential
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeechCredentialUpdate'
+      responses:
+        '204':
+          description: credential successfully updated
+        '404':
+          description: credential not found
+        '422':
+          description: credential not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    delete:
+      tags:
+        - Speech
+      summary: delete a speech credential
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: deleteSpeechCredential
+      responses:
+        '204':
+          description: credential successfully deleted
+        '404':
+          description: credential not found
+  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials/speech/supportedLanguagesAndVoices:
+    get:
+      tags:
+        - Speech
+      summary: get supported languages, voices and models
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: supportedLanguagesAndVoices
+      parameters:
+        - name: ServiceProviderSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: vendor
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: label
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: get supported languages, voices and models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeechLanguagesVoices'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /ServiceProviders/{ServiceProviderSid}/SpeechCredentials/{SpeechCredentialSid}/test:
+    get:
+      tags:
+        - Speech
+      summary: test a speech credential
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: testSpeechCredential
+      parameters:
+        - name: ServiceProviderSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: SpeechCredentialSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: credential test results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tts:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                          - success
+                          - fail
+                          - not tested
+                      reason:
+                        type: string
+                  stt:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                          - success
+                          - fail
+                      reason:
+                        type: string
+        '404':
+          description: credential not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /ServiceProviders/{ServiceProviderSid}/Limits:
+    post:
+      tags:
+        - Service Providers
+      summary: create a limit for a service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: addLimitForServiceProvider
+      parameters:
+        - name: ServiceProviderSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Limits'
+      responses:
+        '201':
+          description: limit successfully created or updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '404':
+          description: service provider not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    get:
+      tags:
+        - Service Providers
+      summary: retrieve call capacity and other limits from the service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: getServiceProviderLimits
+      parameters:
+        - name: ServiceProviderSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: service provider limits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Limits'
+        '404':
+          description: service provider not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /ServiceProviders/{ServiceProviderSid}/RecentCalls/{CallId}/pcap:
+      parameters:
+        - name: ServiceProviderSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: CallId
+          in: path
+          required: true
+          schema:
+            type: string
+      get:
+        tags:
+          - Recent Calls
+        summary: retrieve pcap for a call
+        description: <Error>This endpoint is only availble with an Admin level API key</Error>
+        operationId: getRecentCallTraceBySP
+        responses:
+          '200':
+            description: retrieve sip trace data
+            content:
+              application/octet-stream:
+                schema:
+                  type: object
+          '404':
+            description: account or call not found
+  /ServiceProviders/{ServiceProviderSid}/RecentCalls:
+      parameters:
+        - name: ServiceProviderSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: number
+            format: integer
+            description: page number of data to retrieve
+        - in: query
+          name: count
+          required: true
+          schema:
+            type: number
+            format: integer
+            description: number of rows to retrieve in each page set
+        - in: query
+          name: days
+          required: false
+          schema:
+            type: number
+            format: integer
+            description: number of days back to retrieve, must be ge 1 and le 30
+        - in: query
+          name: start
+          required: false
+          schema:
+            type: string
+            format: date-time
+            description: start date to retrieve
+        - in: query
+          name: end
+          required: false
+          schema:
+            type: string
+            format: date-time
+            description: end date to retrieve
+        - in: query
+          name: answered
+          required: false
+          schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+            description: retrieve only answered calls
+        - in: query
+          name: direction
+          required: false
+          schema:
+            type: string
+            enum:
+              - inbound
+              - outbound
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: string
+          description: calling number to retrieve
+        - in: query
+          name: to
+          required: false
+          schema:
+            type: string
+          description: called number to retrieve
+      get:
+        tags:
+          - Recent Calls
+        summary: retrieve recent calls for an account
+        description: <Error>This endpoint is only availble with an Admin level API key</Error>
+        operationId: listRecentCallsBySP
+        responses:
+          '200':
+            description: retrieve recent call records for a specified account
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    total:
+                      type: number
+                      format: integer
+                      description: total number of records in that database that match the filter criteria
+                    batch:
+                      type: number
+                      format: integer
+                      description: total number of records returned in this page set
+                    page:
+                      type: number
+                      format: integer
+                      description: page number that was requested, and is being returned
+                    data:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          service_provider_sid:
+                            type: string
+                            format: uuid
+                          account_sid:
+                            type: string
+                            format: uuid
+                          call_sid:
+                            type: string
+                            format: uuid
+                          from:
+                            type: string
+                          to:
+                            type: string
+                          answered:
+                            type: boolean
+                          sip_call_id:
+                            type: string
+                          sip_status:
+                            type: number
+                            format: integer
+                          duration:
+                            type: number
+                            format: integer
+                          attempted_at:
+                            type: number
+                            format: integer
+                          answered_at:
+                            type: number
+                            format: integer
+                          terminated_at:
+                            type: number
+                            format: integer
+                          termination_reason:
+                            type: string
+                          host:
+                            type: string
+                          remote_host:
+                            type: string
+                          direction:
+                            type: string
+                            enum:
+                              - inbound
+                              - outbound
+                          trunk:
+                            type: string
+                        required:
+                          - account_sid
+                          - call_sid
+                          - attempted_at
+                          - terminated_at
+                          - answered
+                          - direction
+                          - from
+                          - to
+                          - sip_status
+                          - duration
+          '404':
+            description: account not found
+  /ServiceProviders/{ServiceProviderSid}/RecentCalls/{CallId}:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: CallId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Recent Calls
+      summary: retrieve sip trace detail for a call
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: getRecentCallTraceByCallId
+      responses:
+        '200':
+          description: retrieve sip trace data
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: service provider or call not found
+  /ServiceProviders/{ServiceProviderSid}/Lcrs:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Call Routing
+      summary: get all Least Cost Routings for a service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: getServiceProviderLcrs
+      responses:
+        '200':
+          description: Least cost routing listing
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lcr'
+        '403':
+          description: unauthorized
+        '404':
+          description: service provider not found
+    post:
+      tags:
+        - Call Routing
+      summary: create a Lest cost routing for a service provider
+      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      operationId: createLcrForServiceProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: name or Least Cost Routing
+                  example: twilioLcr
+              required:
+                - name
+      responses:
+        '201':
+          description: service provider Lcr successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '404':
+          description: service provider not found
+  /MicrosoftTeamsTenants:
+    post:
+      tags:
+        - Settings
+      summary: provision a customer tenant for MS Teams
+      operationId: createMsTeamsTenant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service_provider_sid:
+                  type: string
+                  format: uuid
+                  example: 85f9c036-ba61-4f28-b2f5-617c23fa68ff
+                account_sid:
+                  type: string
+                  format: uuid
+                  example: 85f9c036-ba61-4f28-b2f5-617c23fa68ff
+                application_sid:
+                  type: string
+                  format: uuid
+                  example: 85f9c036-ba61-4f28-b2f5-617c23fa68ff
+                tenant_fqdn:
+                  type: string
+                  example: customer.contoso.com
+              required:
+                - service_provider_sid
+                - account
+                - tenant_fqdn
+      responses:
+        '201':
+          description: tenant successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    get:
+      tags:
+        - Settings
+      summary: list MS Teams tenants
+      operationId: listMsTeamsTenants
+      responses:
+        '200':
+          description: list of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MsTeamsTenant'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  
+  /MicrosoftTeamsTenants/{TenantSid}:
+    parameters:
+      - name: TenantSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      tags:
+        - Settings
+      summary: delete an MS Teams tenant
+      operationId: deleteTenant
+      responses:
+        '204':
+          description: tenant successfully deleted
+        '404':
+          description: tenant not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    get:
+      tags:
+        - Settings
+      summary: retrieve an MS Teams tenant
+      operationId: getTenant
+      responses:
+        '200':
+          description: tenant found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MsTeamsTenant'
+        '404':
+          description: account not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    put:
+      tags:
+        - Settings
+      summary: update an MS Teams tenant
+      operationId: putTenant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MsTeamsTenant'
+      responses:
+        '204':
+          description: tenant updated
+        '404':
+          description: tenant not found
+        '422':
+          description: unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+
+
+                /ServiceProviders/{ServiceProviderSid}/Alerts:
+                  parameters:
+                    - name: ServiceProviderSid
+                      in: path
+                      required: true
+                      schema:
+                        type: string
+                        format: uuid
+                    - in: query
+                      name: page
+                      required: true
+                      schema:
+                        type: number
+                        format: integer
+                        description: page number of data to retrieve
+                    - in: query
+                      name: count
+                      required: true
+                      schema:
+                        type: number
+                        format: integer
+                        description: number of rows to retrieve in each page set
+                    - in: query
+                      name: days
+                      required: false
+                      schema:
+                        type: number
+                        format: integer
+                        description: number of days back to retrieve, must be ge 1 and le 30
+                    - in: query
+                      name: start
+                      required: false
+                      schema:
+                        type: string
+                        format: date-time
+                        description: start date to retrieve
+                    - in: query
+                      name: end
+                      required: false
+                      schema:
+                        type: string
+                        format: date-time
+                        description: end date to retrieve
+                    - in: query
+                      name: alert_type
+                      required: false
+                      schema:
+                        type: string
+                        enum:
+                          - webhook-failure
+                          - webhook-connection-failure
+                          - webhook-auth-failure
+                          - no-tts
+                          - no-stt
+                          - tts-failure
+                          - stt-failure
+                          - no-carrier
+                          - call-limit
+                          - device-limit
+                          - api-limit
+                  get:
+                    tags:
+                      - Recent Calls
+                    summary: retrieve alerts for a service provider
+                    description: <Error>This endpoint is only availble with an Admin level API key</Error>
+                    operationId: listAlerts
+                    responses:
+                      '200':
+                        description: retrieve alerts for a specified account
+                        content:
+                          application/json:
+                            schema:
+                              type: object
+                              properties:
+                                total:
+                                  type: number
+                                  format: integer
+                                  description: total number of records in that database that match the filter criteria
+                                batch:
+                                  type: number
+                                  format: integer
+                                  description: total number of records returned in this page set
+                                page:
+                                  type: number
+                                  format: integer
+                                  description: page number that was requested, and is being returned
+                                data:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      time:
+                                        type: string
+                                        format: date-time
+                                      service_provider_sid:
+                                        type: string
+                                        format: uuid
+                                      account_sid:
+                                        type: string
+                                        format: uuid
+                                      alert_type:
+                                        type: string
+                                      message:
+                                        type: string
+                                      detail:
+                                        type: string
+                                    required:
+                                      - time
+                                      - account_sid
+                                      - alert_type
+                                      - message
+                      '404':
+                        description: service provider not found     
 components:
   securitySchemes:
     bearerAuth:

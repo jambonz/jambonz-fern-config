@@ -38,7 +38,7 @@ You can use the following options in the `gather` command:
 | input |Array, specifying allowed types of input: ['digits'], ['speech'], or ['digits', 'speech'].  Default: ['digits'] | no |
 | interDigitTimeout | Amount of time to wait between digits after minDigits have been entered.| no |
 |listenDuringPrompt| if false, do not listen for user speech until say or play has completed.  Defaults to true|no|
-| minBargeinWordCount | if bargein is true, only kill speech when this many words are spoken.  Defaults to 1 | no|
+| minBargeinWordCount | if bargein is true, only kill speech when this many words are spoken OR a final transcripion is returned,  Defaults to 1 | no|
 | minDigits | Minimum number of dtmf digits expected to gather.  Defaults to 1. | no |
 | maxDigits | Maximum number of dtmf digits expected to gather | no |
 | numDigits | Exact number of dtmf digits expected to gather | no |

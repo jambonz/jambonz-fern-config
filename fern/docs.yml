@@ -1,5 +1,6 @@
 instances:
   - url: jambonz-12u348932.docs.buildwithfern.com
+    custom-domain: docs.jambonz.org
   
 tabs: 
   home: 
@@ -94,8 +95,6 @@ navigation:
             path: ./docs/pages/resources/faqs.mdx
           - page: Glossary
             path: ./docs/pages/resources/glossary.mdx
-          - page: Support
-            path: ./docs/pages/resources/support.mdx
   - tab: verbs
     layout: 
       - section: Verbs
@@ -198,23 +197,16 @@ navigation:
         path: ./docs/pages/sdks/index.mdx
       - page: nodeclient
         path: ./docs/pages/sdks/nodeclient.mdx
-        hidden: true
       - page: nodered
         path: ./docs/pages/sdks/nodered.mdx
-        hidden: true
       - page: nodeclientws
         path: ./docs/pages/sdks/nodeclientws.mdx
-        hidden: true
       - page: npx
         path: ./docs/pages/sdks/npx.mdx
-        hidden: true
   - tab: changelog
 
   
 navbar-links: 
-  - type: minimal
-    text: Get support
-    url: https://buildwithfern.com/
   - type: filled
     text: Sign Up
     url: https://jambonz.cloud/register
@@ -240,7 +232,7 @@ logo:
   dark: ./docs/assets/logo-dark.svg
   light: ./docs/assets/logo-light.svg
   height: 32
-  href: /welcome
+  href: https://jambonz.org
 
 favicon: ./docs/assets/favicon.ico
 
