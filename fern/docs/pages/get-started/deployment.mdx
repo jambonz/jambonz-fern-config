@@ -1,4 +1,77 @@
 ---
 title: Deployment Options 
-subtitle: How to run jambonz
+subtitle: Cloud vs Self-hosted
 ---
+
+The simplest way to get started with jambonz is to create an account on our [cloud platform](https://jambonz.cloud). 
+This is a fully managed service that allows you to start building jambonz applications in minutes. 
+You can sign up for a free 3-week trial and convert to a paid plan at any time.
+
+Many customers, however, prefer to self host jambonz on their own cloud or infrastructure. 
+For those customers interested in self-hosting, please review our [paid support plans](), where 
+the jambonz team will work with you to design, deploy, turn up and test your system and provide 
+ongoing support and maintenance.  The jambonz project is largely funded by our support services, 
+and our related devops scripts and deployment expertise are made available only to paid support customers.
+
+## Self-hosted deployment options
+
+There are four different deployment configurations for a self-hosted system, depending on your expected traffic volumes:
+- "**jambonz mini**" - a single server deployment that can handle 50-75 concurrent calls.  This is an entire jambonz 
+system on one server or VM, useful for small deployments or for development and testing.
+- "**jambonz medium**" - a jambonz cluster built on multiple servers or VMs that can handle up to 3,000 concurrent calls.
+- "**jambonz large**" - a jambonz cluster built on multiple servers or VMs that can handle an unlimited number of calls.
+
+### jambonz mini
+
+The jambonz mini deployment runs the complete jambonz software suite on a single server.  This includes quite a 
+few different components: the [SBC](/guides/get-started/jambonz-overview#session-border-controller) and 
+[feature server](http://localhost:3000/guides/get-started/jambonz-overview#feature-server) call processing elements, databases and monitoring/tracing 
+software, call recording support and more.  Because of that the scalability of the system is limited; for scalability we 
+recommend a clusterered environment, either a jambonz medium or large cluster.  However, the jambonz mini 
+is a great choice for a development or staging environment, PoCs, or small production loads. 
+
+### jambonz medium
+
+A jambonz medium cluster is a horizontally scalable deployment that should be used if you project needing
+to handle up to 3,000 concurrent calls.  It would consist of
+- 1 (or more) SBCs
+- 1 web / mmonitoring server
+- 1 or more feature servers in an horizontally scalable cluster.
+
+Each SBC will be able to handle 1,500 concurrent calls, and each feature server will generally be able 
+to handle between 300-500 concurrent calls, so you will scale those according to your volumes. 
+These numbers are dependent on the specific hardware and network configuration of your deployment, 
+which we will provide guidance for as part of the paid support plan.
+
+### jambonz large
+A jambonz large system contains multiple horizontally scalable clusters, and can handle any number of concurrent calls.
+The system will minimalluy consist of:
+- 1 or more SBC SIP servers
+- 1 or more SBC RTP servers in a horizontally scalable cluster
+- 1 or more feature servers in a horizontally scalable cluster
+- 1 web server
+- 1 monitoring server
+
+The system scales, first by adding additional feature servers, then later as traffic grows by adding additional 
+SBC RTP servers and finally, if needed, additional SBC SIP servers.  This reflects the fact that
+the feature server is central processing focus point of the system and that handling the media is much 
+more processing-intensive than handling then the sip signaling.
+
+### Kubernetes
+We provide a helm chart for deploying jambonz on Kubernetes for our paid support customers that prefer that.
+However, there are challenges in running VoIP on Kubernetes and it requires a complex configuration of 
+special node pools with host networking enabled.  Furthermore, performance is less on Kubernetes as we can 
+not run the kernel module for the SBC STP element that we can when deploying on VMs or bare metal.  Finally, 
+troubleshooting is more difficult on Kubernetes as well because Kubernetes logging elements like Kibana are 
+not well-suited for troubleshooting SIP log files.  
+
+For these reasons, if you are undecided about whether to deploy on Kubernetes or VMs, we recommend deploying 
+on VMs using autoscale groups.  On most hosting providers you can build reusable machine images (e.g. AMIs on AWS)
+which provide many of the same benefits of an easily recreatable and manageble deployment.
+
+## Hosting Providers
+
+Under our paid support plans, we help customers deploy on their preferred hosting provider.  We have experience 
+deploying on AWS, Azure, Google Cloud, OVH, Hetzner, and many others as well as bare metal deployments. 
+We provide scripts (e.g. Terraform, Cloudformation, packer etc) to automate the deployment process for you and 
+we train your team in how to properly manage jambonz deployments on your chosen provider.
