@@ -5,14 +5,14 @@ layout: page
 
 The jambonz Node.js SDK is one of the simplest and most powerful ways to build jambonz applications.  
 
-The video below provides a walk-through of how to create an application using the [create-jambonz-app](/docs/client-sdks/create-jambonz-app) utility, and then gives examples of building various webhooks applications that include collecting speech or dtmf input as well as integration with Google [Dialogflow](https://developers.google.com/learn/pathways/chatbots-dialogflow) and AWS [Lex V2](https://aws.amazon.com/blogs/aws/amazon-lex-enhanced-console-experience/).
+The video below provides a walk-through of how to create an application using the [create-jambonz-app](/sdks/npx) utility, and then gives examples of building various webhooks applications that include collecting speech or dtmf input as well as integration with Google [Dialogflow](https://developers.google.com/learn/pathways/chatbots-dialogflow) and AWS [Lex V2](https://aws.amazon.com/blogs/aws/amazon-lex-enhanced-console-experience/).
 
 <div class="video-wrap">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/42jcqyvCstU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 #### Up and running
-As mentioned above, the [create-jambonz-app](/docs/client-sdks/create-jambonz-app) will scaffold you an [express](https://expressjs.com/)-based app that provides a great starting point.
+As mentioned above, the [create-jambonz-app](/sdks/npx) will scaffold you an [express](https://expressjs.com/)-based app that provides a great starting point.
 
 If you prefer to use a different http server, or you need to integrate the jambonz webhooks into an existing Node.js application, then you simply need to install [@jambonz/node-client](https://www.npmjs.com/package/@jambonz/node-client) in your application.
 
@@ -20,12 +20,12 @@ If you prefer to use a different http server, or you need to integrate the jambo
 npm install --save @jambonz/node-client
 ```
 
-If your application just needs to respond to [webhooks](/docs/webhooks/overview/), you can include it like this:
+If your application just needs to respond to [webhooks](/reference/webhooks/call-hook-post), you can include it like this:
 ```js
 const {WebhookResponse} = require('@jambonz/node-client');
 ```
 
-If your application also needs to make [REST API calls](/docs/rest/overview/), you can include it like this:
+If your application also needs to make [REST API calls](/reference/rest-call-control), you can include it like this:
 ```js
 const jambonz = require('@jambonz/node-client');
 const {WebhookResponse} = jambonz;
@@ -47,7 +47,7 @@ router.post('/', (req, res) => {
   res.status(200).json(app);
 ```
 
-The WebhookResponse instance offers methods corresponding to each of the [jambonz verbs](/docs/webhooks/overview/), so for the example above you can see the possible options for the `pause` verb [here](/docs/webhooks/pause/), and for the `say` verb [here](/docs/webhooks/say/).  After adding all of the verbs that you want to execute, in the order that you want them to happen, simply return the `app` object in the 200 OK to the HTTP request.
+The WebhookResponse instance offers methods corresponding to each of the [jambonz verbs](/verbs/verbs/overview/), so for the example above you can see the possible options for the `pause` verb [here](/verbs/verbs/pause/), and for the `say` verb [here](/verbs/verbs/say/).  After adding all of the verbs that you want to execute, in the order that you want them to happen, simply return the `app` object in the 200 OK to the HTTP request.
 
 
 #### How to use it - REST API
@@ -55,4 +55,4 @@ To making a REST API call simply use the `client` object we showed how to create
 ```js
 await client.calls.update(req.body.call_sid, {mute_status: 'mute'});
 ```
-Documentation for the REST API can be found [here](/docs/rest/overview/).
+Documentation for the REST API can be found [here](/reference/rest-call-control/calls/create-call).
