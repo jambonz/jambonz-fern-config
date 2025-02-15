@@ -1,22 +1,21 @@
-
-> Added in v0.8.6
-
-The `dub` verb adds one or more additional audio tracks into the conversation (currently, a max of two additional audio tracks may be added). Audio can then be inserted into these tracks and it will be blended with the `play` or `say` content being sent to the caller/called party.  The source of the audio content can be either text to speech or mp3 audio accessible via http(s).
-
-Additionally, the volume (gain) of the inserted audio may be adjusted up or down.  As well, the [config.boostAudioSignal](/verbs/verbs/config) allows the volume in the main conversational channel to be adjusted as well.
+---
+title: Dub
+subtitle: Add one or more additional audio tracks into the conversation
+hide-toc: true
+---
 
 ```json
-  {
-    "verb": "dub",
-    "action": "addTrack",
-    "track": "ambient-noise",
-  },
-  {
-    "verb": "dub",
-    "action": "playOnTrack",
-    "track": "ambient-noise",
-    "play": "https://example.com/sounds/office-hubbub.mp3"
-  }
+{
+  "verb": "dub",
+  "action": "addTrack",
+  "track": "ambient-noise",
+},
+{
+  "verb": "dub",
+  "action": "playOnTrack",
+  "track": "ambient-noise",
+  "play": "https://example.com/sounds/office-hubbub.mp3"
+}
 ```
 Verb properties for the `dub` command:
 
