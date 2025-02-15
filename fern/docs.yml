@@ -127,6 +127,7 @@ navigation:
             path: ./docs/pages/verbs/leave.mdx
           - page: Lex
             path: ./docs/pages/verbs/lex.mdx
+            hidden: true
           - page: Listen
             path: ./docs/pages/verbs/listen.mdx
           - page: LLM
@@ -142,6 +143,7 @@ navigation:
             path: ./docs/pages/verbs/rasa.mdx
           - page: Recognizer
             path: ./docs/pages/verbs/recognizer.mdx
+            hidden: true
           - page: Redirect
             path: ./docs/pages/verbs/redirect.mdx
           - page: Say
@@ -158,10 +160,19 @@ navigation:
             path: ./docs/pages/verbs/transcribe.mdx
   - tab: tutorials
     layout: 
-      - section: tutorials
+      - section: Using the jambonz portal
         contents:
-          - page: First Turorial
-            path: ./docs/pages/tutorials/first.mdx
+          - section: Basic Concepts
+            contents:
+              - page: Creating carriers
+                path: ./docs/pages/tutorials/carriers.mdx
+              - page: Creating phone numbers
+                path: ./docs/pages/tutorials/phone-numbers.mdx
+              - page: Creating speech credentials
+                path: ./docs/pages/tutorials/speech-credentials.mdx
+              - page: How inbound call routing works
+                path: ./docs/pages/tutorials/inbound-call-routing.mdx
+                hidden: true
   - tab: reference
     layout:
       - page: Introduction

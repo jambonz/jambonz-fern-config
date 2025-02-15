@@ -1,28 +1,32 @@
-> Added in v0.7.4
+---
+title: Config
+subtitle: Modifies one or more aspects of the current session and continues immediately with the next verb in the application.
+hide-toc: true
+---
 
-The `config` verb allows the developer to change the default speech settings for the current session, or to gather speech or dtmf input in the background while other verbs are executing.  The latter technique is useful mainly for certain scenarios when integrating with certain conversational AI systems.
+<Note>
+The `config` verb is non-blocking.
+</Note>
 
-This verb is non-blocking; i.e. the specified settings are changed and execution immediately continues with the next verb in the application.
 
 ```json
-  {
-    "verb": "config",
-    "synthesizer": {
-      "voice": "Jenny"
-    },
-    "recognizer": {
-      "vendor": "google",
-      "language": "de-DE"
-    },
-    "bargeIn": {
-      "enable": true,
-      "input" : ["speech"],
-      "actionHook: "/userInput"
-      }
-    }
+{
+  "verb": "config",
+  "synthesizer": {
+    "voice": "Jenny"
   },
+  "recognizer": {
+    "vendor": "google",
+    "language": "de-DE"
+  },
+  "bargeIn": {
+    "enable": true,
+    "input" : ["speech"],
+    "actionHook: "/userInput"
+    }
+  }
+}
 ```
-You can use the following attributes in the `config` command:
 
 | option        | description | required  |
 | ------------- |-------------| -----|

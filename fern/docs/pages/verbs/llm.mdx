@@ -1,10 +1,18 @@
-The `llm` verb connects a call to AI language model.  
+---
+title: Llm
+subtitle: connects a call to AI language model.  
+hide-toc: true
+---
 
-> In release 0.9.2, OpenAI's realtime API is the only supported model.  Support for other LLMs will be rolling out shortly.
+The following LLMs are currently supported:
+- OpenAI Realtime API
+- Deepgram Voice Agent
+- Ultravox
+- ElevenLabs
 
-[Here is an example](https://github.com/jambonz/openai-s2s-example) showing how to connect to OpenAI Realtime API.
+Example:
 
-```js
+```js maxLines=100
 session.llm(
 {
   vendor: 'openai',
@@ -79,3 +87,10 @@ You can use the following options in the `llm` verb:
 | toolHook | webhook that will be called when the LLM wants to call a function | no |
 | events | array of event names listing the events requested (wildcards allowed) | no |
 | llmOptions | object containing instructions for the LLM; format depdendent on the LLM model | no |
+
+Please checkout the following example applications:
+- for [OpenAI](https://github.com/jambonz/openai-s2s-example)
+- for [Deepgram](https://github.com/jambonz/deepgram-voice-agent-example)
+- for [Ultravox](https://github.com/jambonz/ultravox-s2s-example)
+- for [ElevenLabs](https://github.com/jambonz/elevenlabs-s2s-example)
+
