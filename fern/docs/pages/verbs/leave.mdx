@@ -1,9 +1,15 @@
-The `leave` verb transfers a call out of a queue.  The call then returns to the flow of execution following the [enqueue](#enqueue) verb that parked the call, or the document returned by that verbs *actionHook* property, if provided.
+---
+title: Hangup
+subtitle: Transfers a call out of a queue
+hide-toc: true
+---
+
+The call will return to the flow of execution following the [enqueue](/verbs/verbs/enqueue) verb that parked the call, or the document returned by that verbs *actionHook* property, if provided.
+
+There are no options for the `leave` verb.
 
 ```json
 {
   "verb": "leave"
 }
 ```
-
-There are no options for the `leave` verb.

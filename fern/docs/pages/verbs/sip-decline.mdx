@@ -1,8 +1,14 @@
-The sip:decline action is used to reject an incoming call with a specific status and, optionally, a reason and SIP headers to include on the response.  
+---
+title: SIP Decline
+subtitle: Reject an incoming call with a specific status
+hide-toc: true
+---
 
-This action must be the first and only action returned in the JSON payload for an incoming call.  
+<Note>
+The `config` verb is non-blocking.
+</Note>
 
-The sip:decline action is a non-blocking action and the session ends immediately after the action is executed.
+The session ends immediately after the action is executed.
 
 ```json
 {

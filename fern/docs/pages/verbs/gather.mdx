@@ -1,9 +1,13 @@
-The `gather` command is used to collect dtmf or speech input.
+---
+title: Gather
+subtitle: Collect dtmf or speech input
+hide-toc: true
+---
 
-```json
+```json maxLines=30
 {
   "verb": "gather",
-  "actionHook": "http://example.com/collect",
+  "actionHook": "/collect",
   "input": ["digits", "speech"],
   "bargein": true,
   "dtmfBargein": true,
@@ -26,47 +30,176 @@ The `gather` command is used to collect dtmf or speech input.
 }
 ```
 
+When collecting speech input, the default recognizer for the application will be used unless you 
+overridde it by specifying a [recognizer](/verbs/verbs/recognizer) property, as shown above.
+
 You can use the following options in the `gather` command:
 
 | option        | description | required  |
 | ------------- |-------------| -----|
-| actionHook | Webhook POST to invoke with the collected digits or speech. The payload will include a 'speech' or 'dtmf' property along with the standard attributes.  See below for more detail.| yes |
-|actionHookDelayAction|object, see [here](/guides/features/handling-action-hook-delays) for details.|no|
-| bargein | allow speech bargein, i.e. kill audio playback if caller begins speaking | no |
-| dtmfBargein | allow dtmf bargein, i.e. kill audio playback if caller enters dtmf | no |
-| finishOnKey | Dmtf key that signals the end of input | no |
-| input |Array, specifying allowed types of input: ['digits'], ['speech'], or ['digits', 'speech'].  Default: ['digits'] | no |
-| interDigitTimeout | Amount of time to wait between digits after minDigits have been entered.| no |
-|listenDuringPrompt| if false, do not listen for user speech until say or play has completed.  Defaults to true|no|
+| actionHook | Webhook or websocket URL to send the collected digits or speech to; may be either an absolute or relative URL (see note below).  In the case of webhooks, this will be sent in a POST request.  [See below](#actionhook-payload) for payload details.| yes |
+|actionHookDelayAction|an object [describing behaviors](/guides/features/handling-action-hook-delays) to apply if the webhook or websocket application delays in responding to the actionHook.|no|
+| bargein | boolean indicating whether to allow bargein when collecting speech (i.e. kill audio playback if caller begins speaking).| no |
+| dtmfBargein | boolean indicating whether to allow bargein using dtmf keys.| no |
+| finishOnKey | A dmtf key that if received indicates the the end of dtmf input.| no |
+| input |array, specifying allowed types of input: ['digits'], ['speech'], or ['digits', 'speech'].  Default: ['digits'] | no |
+| interDigitTimeout | Amount of time in seconds to wait between digits after minDigits have been entered.| no |
+|listenDuringPrompt| booleanm if false means do not listen for user speech until the nested say or play command has completed.  Defaults to true.|no|
 | minBargeinWordCount | if bargein is true, only kill speech when this many words are spoken OR a final transcripion is returned,  Defaults to 1 | no|
 | minDigits | Minimum number of dtmf digits expected to gather.  Defaults to 1. | no |
 | maxDigits | Maximum number of dtmf digits expected to gather | no |
 | numDigits | Exact number of dtmf digits expected to gather | no |
 | partialResultHook | Webhook to send interim transcription results to. Partial transcriptions are only generated if this property is set. | no |
-| play | nested [play](#play) Command that can be used to prompt the user | no |
-| fillerNoise | play audio to the caller while the remote application is processing gather transcriptions. See [Using filler noise](/guides/features/using-filler-noise) for more details.| no |
-| fillerNoise.enable | boolean, whether to enable or disable filler noise | yes |
-| fillerNoise.url | http(s) audio to play as filler noise | yes |
-| fillerNoise.startDelaySecs | integer value specifying number of seconds to wait for a response from the remote  [recognizer](/verbs/verbs/recognizer)  Speech recognition options | no |
+| play | nested [play](/verbs/verbs/play) verb that can be used to prompt the user with an audio file. | no |
+| say | nested [say](/verbs/verbs/say) Command that can be used to prompt the user with text to speech.| no |
+| fillerNoise | an object describing audio to play to the caller if the webhook or websocket application delays in responding to the actionHook. (Deprecated in favor of actionHookDelay)| no |
+| fillerNoise.enable | boolean, whether to enable or disable filler noise. | yes |
+| fillerNoise.url | http(s) audio to play as filler noise. | yes |
+| fillerNoise.startDelaySecs | integer value specifying number of seconds to wait for a response from the remote application| yes |
+| [recognizer](/verbs/verbs/recognizer)|  Speech recognition options to override default settings if desired. | no |
 
-In the case of speech input, the actionHook payload will include a `speech` object with the response from Google speech:
-```json
-"speech": {
-			"stability": 0,
-			"is_final": true,
-			"alternatives": [{
-				"confidence": 0.858155,
-				"transcript": "sales please"
-			}]
-		}
-```
+<Note>
+The `actionHook` property may be either an absolute URL or a relative URL. 
+If it is a relative URL, it will be resolved relative to the base URL of the jambonz application.
+Generally speaking, you will typically use a relative URL for the `actionHook` property, and when using websockets you
+are strongly encouragedto use a relative URL.
+</Note>
 
-In the case of digits input, the payload will simple include a `digits` property indicating the dtmf keys pressed:
-```json
-"digits": "0276"
-```
+### actionHook payload
 
-**Note**: an HTTP POST will be used for both the `action` and the `partialResultCallback` since the body may need to contain nested JSON objects for speech details.
+The payload sent to the `actionHook` URL will always include a `reason` property with one of the following values:
+- `speechDetected` - user speech was collected
+- `dtmfDetected` - user dtmf entries were collected
+- `stt-low-confidence` - user speech was collected but the confidence level was below the threshold
+- `timeout` - neither speech nor dtmf was collected before the timeout expired
+- `error` - an error occurred during the gather operation, possibly with the speech recognizer
 
-Note: the `partialResultCallback` web callback should not return content; any returned content will be discarded.
+Depending on the reason, additional properties may be included in the payload.
+
+<AccordionGroup>
+  <Accordion title="speechDetected">
+    A `speech` object will be included in the payload.  The `speech` object will include the following properties:
+    - `language_code` - the detected language that was spoken
+    - `is_final` - a boolean indicating whether this was a final or interim transcription
+    - `channel_tag` - a value of 1 if the transcription is from the caller, or 2 if from the callee
+    - `alternatives` - an array of alternative transcriptions, each with a `transcript` and `confidence` value
+    - `vendor` - the raw payload returned from the speech vendor
+
+    Example:
+    ```json maxLines=100
+    {
+      "language_code": "en",
+      "channel_tag": 1,
+      "is_final": true,
+      "alternatives": [
+        {
+          "confidence": 0.9848633,
+          "transcript": "yes sorry setting up wi fi calling"
+        }
+      ],
+      "vendor": {
+        "name": "deepgram",
+        "evt": {
+          "type": "Results",
+          "channel_index": [
+            0,
+            1
+          ],
+          "duration": 4.1899986,
+          "start": 47.74,
+          "is_final": true,
+          "speech_final": true,
+          "channel": {
+            "alternatives": [
+              {
+                "transcript": "yes sorry setting up a wi fi calling",
+                "confidence": 0.9848633,
+                "words": [
+                  {
+                      "word": "yes",
+                      "start": 48.659542,
+                      "end": 48.939404,
+                      "confidence": 0.82470703
+                  },
+                  {
+                      "word": "sorry",
+                      "start": 48.939404,
+                      "end": 49.259243,
+                      "confidence": 0.98535156
+                  },
+                  {
+                      "word": "setting",
+                      "start": 49.259243,
+                      "end": 49.61906,
+                      "confidence": 0.9941406
+                  },
+                  {
+                      "word": "up",
+                      "start": 49.61906,
+                      "end": 49.85894,
+                      "confidence": 0.9848633
+                  },
+                  {
+                      "word": "a",
+                      "start": 49.85894,
+                      "end": 49.97888,
+                      "confidence": 0.94921875
+                  },
+                  {
+                      "word": "wi",
+                      "start": 49.97888,
+                      "end": 50.178783,
+                      "confidence": 0.80371094
+                  },
+                  {
+                      "word": "fi",
+                      "start": 50.178783,
+                      "end": 50.418663,
+                      "confidence": 0.99902344
+                  },
+                  {
+                      "word": "calling",
+                      "start": 50.418663,
+                      "end": 50.918663,
+                      "confidence": 0.9326172
+                  }
+                ]
+              }
+            ]
+          },
+          "metadata": {
+            "request_id": "b1bf1f58-ce74-42be-8b43-37f2f8331e72",
+            "model_info": {
+              "name": "phonecall-enhanced",
+              "version": "2022-05-12.1",
+              "arch": "polaris"
+            },
+            "model_uuid": "9a15c1cc-65e1-429a-9db6-f4ea6fbf822a"
+          },
+          "from_finalize": false
+        }
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="dtmfDetected">
+    A `digits` property will be included in the payload containing the digits that were collected.
+  </Accordion>
+
+  <Accordion title="stt-low-confidence">
+    A `speech` object will be included, see `speechDetected`for an example.  The reason `stt-low-confidence` 
+    indicates to the application that this transcript should be treated with caution as it is likely to 
+    be an inaccurate reporting of what the user actually said.
+  </Accordion>
+
+  <Accordion title="timeout">
+    No additional properties will be included in the payload.
+  </Accordion>
+
+  <Accordion title="error">
+    A `details` property will be included in the payload with a description of the error.
+  </Accordion>
+
+</AccordionGroup>
 

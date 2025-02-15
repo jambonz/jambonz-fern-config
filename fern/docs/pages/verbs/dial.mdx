@@ -1,5 +1,10 @@
-The `dial` verb is used to create a new call by dialing out to a telephone number, a registered sip user, a sip uri, or a Microsoft Teams user.  
-```json
+---
+title: Dial
+subtitle: Create a new call by dialing out to a telephone number, a registered sip user, a sip uri, or a Microsoft Teams user.
+hide-toc: true
+---
+
+```json maxLines=100
 {
   "verb": "dial",
   "actionHook": "/outdial",
@@ -72,51 +77,55 @@ You can use the following attributes in the `dial` command:
 
 ##### target types
 
-*PSTN number*
+<AccordionGroup>
+  <Accordion title="phone">
+    Sends the call to a telephone number using one of your provisioned Carriers. The following properties are available:
+    | option        | description | required  |
+    | ------------- |-------------| -----|
+    | type | must be "phone" | yes |
+    | confirmHook | A webhook for an application to run on the callee's end after the dialed number answers but before the call is connected. This will override the confirmHook property set on the parent dial verb, if any.| no |
+    | number | a telephone number in E.164 number. | yes |
+    | trunk | if provided, this should be the name of a Carrier that you created in the jambonz portal or API, which you want to use to complete this call.  If not provided, jambonz will selectone of your configured Carriers that has an outbound trunk. | no |
+  </Accordion>
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| type | must be "phone" | yes |
-| confirmHook | A webhook for an application to run on the callee's end after the dialed number answers but before the call is connected. This will override the confirmHook property set on the parent dial verb, if any.| no |
-| number | a telephone number in E.164 number. | yes |
-| trunk | if provided, this should be the name of a Carrier that you created in the jambonz portal or API, which you want to use to complete this call.  If not provided, jambonz will selectone of your configured Carriers that has an outbound trunk. | no |
+  <Accordion title="sip">
+    Sends the call to a sip uri. If the sip trunking provider enforces username/password authentication, supply the credentials in the `auth` property.
+    The following properties are available:
+    | option        | description | required  |
+    | ------------- |-------------| -----|
+    | type | must be "sip" | yes |
+    | confirmHook | A webhook for an application to run on the callee's end after the dialed number answers but before the call is connected. This will override the confirmHook property set on the parent dial verb, if any.| no |
+    | sipUri | sip uri to send call to | yes |
+    | auth | authentication credentials | no |
+    | auth.username | sip username | no |
+    | auth.password | sip password | no |
+  </Accordion>
 
-*sip endpoint*
+  <Accordion title="user">
+    Sends the call to a registered webrtc or sip user. The following properties are available:
+    | option        | description | required  |
+    | ------------- |-------------| -----|
+    | type | must be "user" | yes |
+    | confirmHook | A webhook for an application to run on the callee's end after the dialed number answers but before the call is connected. This will override the confirmHook property set on the parent dial verb, if any.| no |
+    | name | registered sip user, including domain (e.g. ""joeb@sip.jambonz.org") | yes |
+  </Accordion>
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| type | must be "sip" | yes |
-| confirmHook | A webhook for an application to run on the callee's end after the dialed number answers but before the call is connected. This will override the confirmHook property set on the parent dial verb, if any.| no |
-| sipUri | sip uri to send call to | yes |
-| auth | authentication credentials | no |
-| auth.username | sip username | no |
-| auth.password | sip password | no |
-
-Using this approach, it is possible to send calls out a sip trunk.  If the sip trunking provider enforces username/password authentication, supply the credentials in the `auth` property.
-
-*a registered webrtc or sip user*
-
-| option        | description | required  |
-| ------------- |-------------| -----|
-| type | must be "user" | yes |
-| confirmHook | A webhook for an application to run on the callee's end after the dialed number answers but before the call is connected. This will override the confirmHook property set on the parent dial verb, if any.| no |
-| name | registered sip user, including domain (e.g. "joeb@sip.jambonz.org") | yes |
-
-*Microsoft Teams user*
-
-If Microsoft Teams integration has been configured, you can dial out to  Teams users.
-
-| option        | description | required  |
-| ------------- |-------------| -----|
-| type | must be "teams" | yes |
-| tenant | Microsoft Teams customer tenant domain name.  Will default to the Microsoft Teams tenant associated with the account of the calling party. | no |
-| number | the phone number that has been mapped to the teams user by the Microsoft Teams administrator | yes |
-| voicemail | if true, dial directly into user's voicemail to leave a message | no |
+  <Accordion title="teams">
+    If Microsoft Teams integration has been configured, you can dial out to Teams users. The following properties are available:
+    | option        | description | required  |
+    | ------------- |-------------| -----|
+    | type | must be "teams" | yes |
+    | tenant | Microsoft Teams customer tenant domain name.  Will default to the Microsoft Teams tenant associated with the account of the calling party. | no |
+    | number | the phone number that has been mapped to the teams user by the Microsoft Teams administrator | yes |
+    | voicemail | if true, dial directly into user's voicemail to leave a message | no |
+  </Accordion>
+</AccordionGroup>
 
 The `confirmHook` property that can be optionally specified as part of the target types is a web callback that will be invoked when the outdial call is answered.  That callback should return an application that will run on the outbound call before bridging it to the inbound call.  If the application completes with the outbound call still in a stable/connected state, then the two calls will be bridged together.
 
-This allows you to easily implement call screening applications (e.g. "You have a call from so-and-so.  Press 1 to decline").
-
+<Note>
+The confirmHook allows you to easily implement call screening applications (e.g. "You have a call from so-and-so.  Press 1 to decline").
+</Note>
 
 ##### actionHook properties
 
@@ -128,24 +137,19 @@ The actionHook that is invoked when the dial command ends will include the follo
 | dial_status | the final status of the call attempt, one of 'completed', 'failed', 'busy', 'no-answer', or 'queued'|
 | dial_sip_status | the sip status of the final response to the INVITE that was sent|
 
-<h5 id="dial-amd-properties">amd.hook properties</h5>
+<br/>
+##### amd.hook properties
 
-The webhook that is invoked when amd property is included and jambonz has either determined the type of called party (human or machine) or has detected a tone or beep.
+This webhook that is invoked when amd property is included and jambonz has either determined the type of called party (human or machine) or has detected a tone or beep.
 
 | property name  | description | 
 | ------------- |-------------|
 | event | one of 'amd', 'beep', or 'silence' |
 | amd_type| 'human' or 'machine', only provided when event = 'amd'|
 
+<br/>
 ##### exitMediaPath
-
-> Added in 0.9.3
 
 The purpose of the `exitMediaPath` is to support use cases where it is important that the media path not touch the jambonz system at all.  The common use case is the need to transfer a call to a human agent or credit card system where the caller will be giving their credit card details over the phone.  In order to have a PCI-Compliant transaction it is necessary that this conversation not be able to be recorded, stored, or in any way reach the jambonz system.  Performing the `dial` verb using the `exitMediaPath` property ensures this happens.
 
 For more details on controlling the media path during a call, please see [Controlling media path during call](/guides/features/controlling-media-path-during-call).
-
-<p class="flex">
-<a href="/docs/webhooks/dequeue">Prev: dequeue</a>
-<a href="/docs/webhooks/dialogflow">Next: dialogflow</a>
-</p>

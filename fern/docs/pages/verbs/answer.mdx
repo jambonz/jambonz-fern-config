@@ -1,13 +1,13 @@
-The `answer` verb answers an incoming call by sending a SIP 200 OK.
-```json
-  {
-    "verb": "answer",
-  },
-```
+---
+title: Answer
+subtitle: Answers an incoming call by sending a SIP 200 OK.
+hide-toc: true
+---
 
-There are no attributes in the `answer` command.
+There are no attributes in the `answer` verb.
 
-Note that it is not usually necessary to use the `answer` verb, as jambonz automatically answers the call 
+<Note>
+It is not usually necessary to use the `answer` verb, as jambonz automatically answers the call 
 when it begins executing the first verb in the application that requires a media connection.
 
 For instance, if your application starts with a `say` verb, 
@@ -17,6 +17,5 @@ Sometimes, however, on  VoIP networks a caller may experience a phenomenum known
 leading part of the initial prompt is not heard because the prompt plays immediately on answer before 
 all downstream network elements have established the audio path.  In cases like these, it can be useful 
 to start your application with an `answer` verb followed by a `pause` of a second or so to stream silence.  
-
-
+</Note>
 
