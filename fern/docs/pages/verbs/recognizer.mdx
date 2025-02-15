@@ -39,8 +39,8 @@ hide-toc: true
 | initialSpeechTimeoutMs | (microsoft) Initial speech timeout in milliseconds| no |
 | minConfidence | If provided, final transcripts with confidence less than this value return a reason of 'stt-low-confidence' in webhook | no |
 | transcriptionHook | Webhook to receive an HTPP POST when an interim or final transcription is received. | yes |
-| asrTimeout|timeout value for [continuous ASR feature](/guides/features/continuous-asr)| no |
-| asrDtmfTerminationDigit|DMTF key that terminates [continuous ASR feature](/guides/features/continuous-asr)| no |
+| asrTimeout|timeout value for [continuous ASR feature](/guides/features/continous-asr)| no |
+| asrDtmfTerminationDigit|DMTF key that terminates [continuous ASR feature](/guides/features/continous-asr)| no |
 | azureServiceEndpoint | Custom service endpoint to connect to, instead of hosted Microsoft regional endpoints | no |
 | [azureOptions](#azureOptions) (added in 0.8.5) | Azure-specific speech recognition options (see below) | no |
 | [deepgramOptions](#deepgramOptions) (added in 0.8.0)|Deepgram-specific speech recognition options (see below)| no |
@@ -62,7 +62,7 @@ jambonz natively supports the following speech-to-text services:
 - nvidia
 - sonoix
 
-Note: Microsoft supports [on-prem and private link options](/guides/features/azure-private-link) for deploying the speech service in addition to the hosted Microsoft service.
+Note: Microsoft supports [on-prem and private link options](/guides/speech-providers/azure-private-link) for deploying the speech service in addition to the hosted Microsoft service.
 
 <h2 id="hints">Providing speech hints</h2>
 

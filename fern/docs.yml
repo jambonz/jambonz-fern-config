@@ -85,6 +85,15 @@ navigation:
         contents:
           - page: Custom Speech API
             path: ./docs/pages/speech/custom-speech.mdx
+          - page: Custom Speech STT
+            path: ./docs/pages/speech/custom-speech-stt.mdx
+            hidden: true
+          - page: Custom Speech TTS
+            path: ./docs/pages/speech/custom-speech-tts.mdx
+            hidden: true
+          - page: Azure Private Link
+            path: ./docs/pages/speech/azure-private-link.mdx
+            hidden: true
       - section: Clients
         contents:
           - page: Template

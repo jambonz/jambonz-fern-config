@@ -24,7 +24,6 @@ The `config` verb is non-blocking.
     "input" : ["speech"],
     "actionHook: "/userInput"
     }
-  }
 }
 ```
 
@@ -43,7 +42,7 @@ The `config` verb is non-blocking.
 | bargeIn.maxDigits | Maximum number of dtmf digits expected to gather. | no |
 | bargeIn.interDigitTimeout | Amount of time to wait between digits after minDigits have been entered.| no |
 | boostAudioSignal| A string or integer value indicating the number of decibels to boost or reduce the strength of the outgoing audio signal to the caller/called party, e.g. "-6 dB". Note this applies to the main track only, not to any [dub](/verbs/verbs/dub) tracks.| no |
-| fillerNoise | play audio to the caller while the remote application is processing gather transcriptions. This is a session-wide setting that may be overridden at the [gather verb](/verbs/verbs/gather) level. See [Using filler noise](/guides/features/using-filler-noise) for more details.| no |
+| fillerNoise | play audio to the caller while the remote application is processing gather transcriptions. This is a session-wide setting that may be overridden at the [gather verb](/verbs/verbs/gather) level. See [Using filler noise](/guides/features/filler-noise) for more details.| no |
 | fillerNoise.enable | boolean, whether to enable or disable filler noise | yes |
 | fillerNoise.url | http(s) audio to play as filler noise | yes |
 | fillerNoise.startDelaySecs | integer value specifying number of seconds to wait for a response from the remote application before playing filler noise | no (default: play immediately after sending results) |

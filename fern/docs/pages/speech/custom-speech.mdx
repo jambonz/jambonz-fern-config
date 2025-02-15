@@ -1,9 +1,8 @@
-> Added in 0.8.2
 
-jambonz natively supports a large number of [STT](/verbs/verbs/recognizer) and [TTS](/verbs/verbs/say) speech providers out of the box, but if you want to use a speech provider that we don't support: no propblem! You can also add support for new speech vendors using our Speech APIs:
+jambonz natively supports a large number of [Speech to Text (STT)](/verbs/verbs/recognizer) and [Text to Speech (TTS)](/verbs/verbs/say) speech providers out of the box, but if you want to use a speech provider that we don't support: no propblem! You can also add support for new speech vendors using our Speech APIs:
 
-- [custom STT API](/docs/supporting-articles/custom-speech-stt) (websocket-based)
-- [custom TTS API](/docs/supporting-articles/custom-speech-tts) (http-based)
+- [custom STT API](/guides/speech-providers/custom-speech-stt) (websocket-based)
+- [custom TTS API](/guides/speech-providers/custom-speech-tts) (http-based)
 
 Adding support for a new STT or TTS vendor requires you to implement a server process that implements our APIs as described above, and integrates on the other side with your chosen vendor.  Check out [this example code](https://github.com/jambonz/custom-speech-example) which shows how to integrate [AssemblyAI](https://www.assemblyai.com/) as custom STT vendor, among others.
 
