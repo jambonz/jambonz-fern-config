@@ -43,7 +43,7 @@ And, finally, if the answering machine detection feature is unable to determine 
 {"type":"amd_decision_timeout"}
 ```
 
-The application receiving the webhook can return a new jambonz payload of verbs.  For instance, say you had an outbound dialer application in which if you connect to a person you want to deliver a message, but if you connect to someone's voicemail you simply want to hang up.  In that case, your app can respond to the webhook with a simple [hangup](/docs/webhooks/hangup) verb if you receive an event payload indicating a machine has answered.
+The application receiving the webhook can return a new jambonz payload of verbs.  For instance, say you had an outbound dialer application in which if you connect to a person you want to deliver a message, but if you connect to someone's voicemail you simply want to hang up.  In that case, your app can respond to the webhook with a simple [hangup](/verbs/verbs/hangup) verb if you receive an event payload indicating a machine has answered.
 
 ## How it works
 
@@ -107,7 +107,7 @@ The full set of configuration parameters is shown below.
 |--------|-------|---------|
 |actionHook|webhook to send amd events|yes|
 |thresholdWordCount|number of spoken words in a greeting that result in an amd_machine_detected result|no, default=9|
-|recognizer|speech recognition parameters, used as per [gather](/docs/webhooks/gather) and [transcribe](/docs/webhooks/transcribe)|no, default=app defaults|
+|recognizer|speech recognition parameters, used as per [gather](/verbs/verbs/gather) and [transcribe](/verbs/verbs/transcribe)|no, default=app defaults|
 |timers|object containing various timeouts|no|
 |timers.noSpeechTimeoutMs|time in milliseconds to wait for speech before returning amd_no_speech_detected|no, default=5000|
 |timers.decisionTimeoutMs|time in milliseconds to wait before returning amd_decision_timeout|no, default=15000|
@@ -120,4 +120,4 @@ If desired, a JSON file of voicemail phrases, organized by language as shown abo
 
 ## Answering machine detection on inbound calls
 
-Answering machine detection can also be performed on an inbound leg by adding an `amd` property to a [config](/docs/webhooks/config) verb.  While it is less common to need to do answering machine detection on an inbound leg, this can be useful when jambonz is behind a dialer that has placed the outbound call and then connected it to jambonz by sending an INVITE to jambonz.
+Answering machine detection can also be performed on an inbound leg by adding an `amd` property to a [config](/verbs/verbs/config) verb.  While it is less common to need to do answering machine detection on an inbound leg, this can be useful when jambonz is behind a dialer that has placed the outbound call and then connected it to jambonz by sending an INVITE to jambonz.

@@ -3,7 +3,7 @@ title: Using dub tracks
 hidden: false
 ---
 
-jambonz allows you to insert additional audio tracks into the conversation; i.e to "dub in" additional tracks using the [dub](/docs/webhooks/dub) verb. 
+jambonz allows you to insert additional audio tracks into the conversation; i.e to "dub in" additional tracks using the [dub](/verbs/verbs/dub) verb. 
 
 One common usage is to use background ambient noise to simulate an office environment, but there are many possibile ways to use this feature.
 
@@ -48,4 +48,4 @@ Dub tracks are automatically removed when the call ends, so there is no need to 
 
 The `dial` verb also allows for a nested `dub` verb, which causes the party answering the call to hear the dubbed audio track.  Note that the dub track audio is always only sent to one party so in the case of a dial where dubbed audio is sent to the called party the calling party will not hear that audio track.
 
-Finally, note that purpose of using a dub track is to blend audio into the call more or less continously, so do not use the `dub` verb for something like playing a typing sound or other "thinking noise" while an app or AI is processing a user response.  For that, use the [filler noise](/docs/supporting-articles/using-filler-noise) feature instead.
+Finally, note that purpose of using a dub track is to blend audio into the call more or less continously, so do not use the `dub` verb for something like playing a typing sound or other "thinking noise" while an app or AI is processing a user response.  For that, use the [filler noise](/guides/features/filler-noise) feature instead.
