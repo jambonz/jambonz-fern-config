@@ -67,7 +67,8 @@ navigation:
             contents:
               - page: Inbound call routing
                 path: ./docs/pages/get-started/inbound-call-routing.mdx
-                hidden: false
+              - page: Outbound call routing
+                path: ./docs/pages/get-started/outbound-call-routing.mdx
       - section: Features
         contents:
           - page: Answering machine detection

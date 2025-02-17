@@ -113,7 +113,19 @@ call to continue by returning a 200 OK response with JSON payload like below:
 }
 ```
 
-To see a detailed example, please checkout [this repo](https://github.com/jambonz/customer-auth-server).
+To see a detailed example, please checkout [this repo](https://github.com/jambonz/customer-auth-server)
+or you can watch this longer video that walks through the process step by step.
+
+<div class="card-video">
+<video 
+    src="../../assets/sip-device-registrations.mp4"
+    width="600"
+    height="480"
+    playsinline
+    controls
+>
+</video>
+</div>
 
 ## Determing the application
 
@@ -130,3 +142,8 @@ in the jambonz portal, you then [provision phone numbers](/guides/using-the-jamb
   When the call is from a SIP device, jambonz will a special application to invoke. 
   This application is configured in the Account panel of the jambonz portal.  All calls 
   from authenticated sip devices or users will be routed to this application.
+
+  **That's a wrap, folks!** 
+  
+  We've just walked through how jambonz responds to an incoming call 
+  and determines both the jambonz account and application that should be invoked to handle the call.

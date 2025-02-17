@@ -502,27 +502,34 @@ components:
             - teams
         number:
           type: string
+          description: A phone number to call (when type is phone)
         sipUri:
           type: string
+          description: A SIP URI to call (when type is sip)
         tenant:
           type: string
-          description: Microsoft Teams customer tenant domain name
+          description: Microsoft Teams customer tenant domain name (when type is teams)
         trunk:
           type: string
+          description: The name of the Carrier that should be used to deliver this call (when type is phone)
         vmail:
           type: boolean
-          description: Dial directly into user's voicemail to leave a message
+          description: Dial directly into user's voicemail to leave a message (MS Teams only)
         overrideTo:
           type: string
+          description: A SIP URI that, if provided, will be used as the To header in the outbound INVITE (not needed in most cases)
         name:
           type: string
+          description: The name of a registered jambonz user to call (when type is user)
         auth:
           type: object
           properties:
             username:
               type: string
+              description: The username to use for SIP authentication, if challenged
             password:
               type: string
+              description: The password to use for SIP authentication, if challenged
       required:
         - type
       example:
