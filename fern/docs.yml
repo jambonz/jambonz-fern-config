@@ -53,6 +53,21 @@ navigation:
             path: ./docs/pages/get-started/deployment.mdx
           - page: Support Plans 
             path: ./docs/pages/get-started/support.mdx
+      - section: Using the jambonz portal
+        contents:
+          - section: Basic Concepts
+            contents:
+              - page: Creating carriers
+                path: ./docs/pages/get-started/carriers.mdx
+              - page: Creating phone numbers
+                path: ./docs/pages/get-started/phone-numbers.mdx
+              - page: Creating speech credentials
+                path: ./docs/pages/get-started/speech-credentials.mdx
+          - section: Advanced Concepts
+            contents:
+              - page: Inbound call routing
+                path: ./docs/pages/get-started/inbound-call-routing.mdx
+                hidden: false
       - section: Features
         contents:
           - page: Answering machine detection
@@ -167,21 +182,6 @@ navigation:
             path: ./docs/pages/verbs/tag.mdx
           - page: Transcribe
             path: ./docs/pages/verbs/transcribe.mdx
-  - tab: tutorials
-    layout: 
-      - section: Using the jambonz portal
-        contents:
-          - section: Basic Concepts
-            contents:
-              - page: Creating carriers
-                path: ./docs/pages/tutorials/carriers.mdx
-              - page: Creating phone numbers
-                path: ./docs/pages/tutorials/phone-numbers.mdx
-              - page: Creating speech credentials
-                path: ./docs/pages/tutorials/speech-credentials.mdx
-              - page: How inbound call routing works
-                path: ./docs/pages/tutorials/inbound-call-routing.mdx
-                hidden: true
   - tab: reference
     layout:
       - page: Introduction
