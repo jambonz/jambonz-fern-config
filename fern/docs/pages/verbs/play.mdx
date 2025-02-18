@@ -1,7 +1,6 @@
 ---
 title: Play
 subtitle: Stream recorded audio to a call.
-hide-toc: true
 ---
 
 
@@ -15,19 +14,33 @@ hide-toc: true
 }
 ```
 
-You can use the following options in the `play` action:
+### Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| url | a single url or array of urls (will play in sequence) to a wav or mp3 file | yes |
-| loop | number of times to play the url(s) | no (default: 1) |
-| earlyMedia | if true and the call has not yet been answered, play the audio without answering call.  Defaults to false | no |
-| timeoutSecs | the number of seconds to play the url | no |
-| seekOffset | how many samples to seek into the url | no |
-| actionHook | webhook that is called when the play verb completes | no | 
+<ParamField path="actionHook" type="string" required={false}>
+  Webhook that is called when the play verb completes.
+</ParamField>
 
+<ParamField path="earlyMedia" type="boolean" required={false} default="false">
+  If true and the call has not yet been answered, play the audio without answering the call.  
+</ParamField>
 
-#####actionHook properties
+<ParamField path="loop" type="number" required={false} default="1">
+  Number of times to play the URL(s).  
+</ParamField>
+
+<ParamField path="seekOffset" type="number" required={false}>
+  Number of samples to seek into the URL.
+</ParamField>
+
+<ParamField path="timeoutSecs" type="number" required={false}>
+  Number of seconds to play the URL.
+</ParamField>
+
+<ParamField path="url" type="string | array" required={true}>
+  A single URL or an array of URLs (will play in sequence) to a WAV or MP3 file.
+</ParamField>
+
+### actionHook properties
 
 The actionHook that is invoked when the `play` command completes will include the following properties:
 

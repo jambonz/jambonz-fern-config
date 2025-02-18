@@ -1,7 +1,6 @@
 ---
 title: SIP Request
 subtitle: Add properties to the standard call attributes that jambonz will then include on every webhook / websocket message
-hide-toc: true
 ---
 
 <Note>
@@ -44,7 +43,9 @@ After the above 'tag' verb has executed, web callbacks using POST would have a p
 
 You can use the following options in the `tag` command:
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| data | a JSON object containing values to be saved and included in future action or call status notifications (HTTP POST only) for this call | yes |
+## Parameters
 
+<ParamField path="data" type="object" required={true}>
+  A JSON object containing values to be saved and included in future action or  
+  call status notifications (HTTP POST only) for this call.
+</ParamField>

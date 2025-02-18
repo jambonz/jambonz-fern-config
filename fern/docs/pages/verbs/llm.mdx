@@ -1,16 +1,7 @@
 ---
 title: Llm
-subtitle: connects a call to AI language model.  
-hide-toc: true
+subtitle: Connect a call to AI language model.  
 ---
-
-The following LLMs are currently supported:
-- OpenAI Realtime API
-- Deepgram Voice Agent
-- Ultravox
-- ElevenLabs
-
-Example:
 
 ```js maxLines=100
 session.llm(
@@ -74,20 +65,52 @@ session.llm(
 })
 ```
 
-You can use the following options in the `llm` verb:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| vendor | name of the LLM vendor | yes |
-| model | name of the LLM mode | yes |
-| auth | object containing authentication credentials; format according to the model (see below) | no |
-| connectOptions | object containing information such as URI to connect to | no |
-| actionHook | webhook that will be called when the LLM session ends | no |
-| eventHook | webhook that will be called when a requested LLM event happens (e.g. transcript) | no |
-| toolHook | webhook that will be called when the LLM wants to call a function | no |
-| events | array of event names listing the events requested (wildcards allowed) | no |
-| llmOptions | object containing instructions for the LLM; format depdendent on the LLM model | no |
+<ParamField path="actionHook" type="string" required={false}>
+  Webhook that will be called when the LLM session ends.
+</ParamField>
 
+<ParamField path="auth" type="object" required={false}>
+  Object containing authentication credentials; format according to the model.
+</ParamField>
+
+<ParamField path="connectOptions" type="object" required={false}>
+  Object containing information such as the URI to connect to.
+</ParamField>
+
+<ParamField path="eventHook" type="string" required={false}>
+  Webhook that will be called when a requested LLM event happens (e.g., transcript).
+</ParamField>
+
+<ParamField path="events" type="array" required={false}>
+  Array of event names listing the events requested (wildcards allowed).
+</ParamField>
+
+<ParamField path="llmOptions" type="object" required={false}>
+  Object containing instructions for the LLM; format dependent on the LLM model.
+</ParamField>
+
+<ParamField path="model" type="string" required={true}>
+  Name of the LLM model.
+</ParamField>
+
+<ParamField path="toolHook" type="string" required={false}>
+  Webhook that will be called when the LLM wants to call a function.
+</ParamField>
+
+<ParamField path="vendor" type="string" required={true}>
+  Name of the LLM vendor.
+</ParamField>
+
+
+The following LLMs are currently supported:
+- OpenAI Realtime API
+- Deepgram Voice Agent
+- Ultravox
+- ElevenLabs
+
+## Example Applications
 Please checkout the following example applications:
 - for [OpenAI](https://github.com/jambonz/openai-s2s-example)
 - for [Deepgram](https://github.com/jambonz/deepgram-voice-agent-example)

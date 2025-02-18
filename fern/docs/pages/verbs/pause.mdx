@@ -1,7 +1,6 @@
 ---
 title: Pause
 subtitle: Waits silently for a specified number of seconds.  
-hide-toc: true
 ---
 
 ```json
@@ -10,10 +9,8 @@ hide-toc: true
   "length": 3
 }
 ```
+## Parameters
 
-You can use the following options in the `pause` action:
-
-| option        | description | required  |
-| ------------- |-------------| -----|
-| length | number of seconds to wait before continuing the app | yes |
-
+<ParamField path="length" type="number" required={true}>
+  number of seconds to wait before continuing the app
+</ParamField>

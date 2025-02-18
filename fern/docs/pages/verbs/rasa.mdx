@@ -1,7 +1,6 @@
 ---
 title: Rasa
 subtitle: Connect a call to a [Rasa](https://rasa.com/) assistant
-hide-toc: true
 ---
 
 ```json
@@ -14,28 +13,70 @@ hide-toc: true
 }
 ```
 
-You can use the following options in the `rasa` verb:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| url | URL to connect to the Rasa assistant using the [RestInput](https://rasa.com/docs/rasa/connectors/your-own-website) channel | yes |
-| prompt | an initial greeting to play to the user | no |
-| eventHook | a webhook that is called when the rasa assistant returns either a user message or a bot message | no |
-| actionHook | A webhook that is called when the rasa verb completes | no |
-| tts | if provided, audio prompts will be played using these text-to-speech choices rather than the application defaults | no |
-| tts.vendor | speech vendor to use: Google, aws (alias: polly), or default (for application default) | no |
-| tts.language | language code to use.  | yes |
-| tts.gender | (Google only) MALE, FEMALE, or NEUTRAL.  | no |
-| recognizer | if provided, the speech recognition settings to use (defaults to application settings) | no |
-| tts.voice | voice to use.  Note that the voice list differs whether you are using aws or Google. Defaults to application setting, if provided. | no |
-| recognizer.hints | array of words or phrases to assist speech detection | no |
-| recognizer.language | language code to use for speech detection.  Defaults to the application level setting, or 'en-US' if not set | no |
-| recognizer.profanityFilter | if true, filter profanity from speech transcription.  Default:  no| no |
-| recognizer.vendor | speech vendor to use (currently only Google supported) | no |
+<ParamField path="actionHook" type="string" required={false}>
+  A webhook that is called when the Rasa verb completes.
+</ParamField>
 
-The rasa verb performs speech recognition on the caller audio stream and sends it as text input to the rasa assistant using the rasa [RestInput](https://rasa.com/docs/rasa/connectors/your-own-website) channel.  Text returned from the assistant is played to the caller using text-to-speech.  As the conversation proceeds, webhook events can be sent to notify of all of the messages being exchanged between the user and the bot, allowing your application to intercede at any point, e.g. to transfer the call to an agent.
+<ParamField path="eventHook" type="string" required={false}>
+  A webhook that is called when the Rasa assistant returns either a user message or a bot message.
+</ParamField>
 
-The *actionHook* webhook will contain the following additional parameters:
+<ParamField path="prompt" type="string" required={false}>
+  An initial greeting to play to the user.
+</ParamField>
+
+<ParamField path="recognizer" type="object" required={false}>
+  If provided, the speech recognition settings to use (defaults to application settings).
+</ParamField>
+
+<ParamField path="recognizer.hints" type="array" required={false}>
+  Array of words or phrases to assist speech detection.
+</ParamField>
+
+<ParamField path="recognizer.language" type="string" required={false}>
+  Language code to use for speech detection.  
+  Defaults to the application-level setting or `'en-US'` if not set.
+</ParamField>
+
+<ParamField path="recognizer.profanityFilter" type="boolean" required={false}>
+  If true, filter profanity from speech transcription.  
+  Default: `false`.
+</ParamField>
+
+<ParamField path="recognizer.vendor" type="string" required={false}>
+  Speech vendor to use (currently only Google is supported).
+</ParamField>
+
+<ParamField path="tts" type="object" required={false}>
+  If provided, audio prompts will be played using these text-to-speech choices rather than the application defaults.
+</ParamField>
+
+<ParamField path="tts.gender" type="string" required={false}>
+  (Google only) MALE, FEMALE, or NEUTRAL.
+</ParamField>
+
+<ParamField path="tts.language" type="string" required={true}>
+  Language code to use.
+</ParamField>
+
+<ParamField path="tts.vendor" type="string" required={false}>
+  Speech vendor to use: Google, AWS (alias: Polly), or `default` (for application default).
+</ParamField>
+
+<ParamField path="tts.voice" type="string" required={false}>
+  Voice to use. Note that the voice list differs depending on whether you are using AWS or Google.  
+  Defaults to the application setting, if provided.
+</ParamField>
+
+<ParamField path="url" type="string" required={true}>
+  URL to connect to the Rasa assistant using the [RestInput](https://rasa.com/docs/rasa/connectors/your-own-website) channel.
+</ParamField>
+
+### actionHook properties
+
+The **actionHook** webhook will contain the following additional parameters:
 
 - `rasaResult`: the completion reason:
     - `caller hungup` - the caller hungup
@@ -43,5 +84,11 @@ The *actionHook* webhook will contain the following additional parameters:
     - `timeout` - the user did not respond to a prompt
     - `webhookError` - an error was received attempting to call an event webhook
 
-The *eventHook* webhook will contain two parameters: `event` and `message`.  The `event` parameter will be either `userMessage` or `botMessage` depending on whether the message comes from the user or the rasa assistant, and `message` will contain the message itself.  Your event webhook may return a new application in a json payload, in which case the call will be redirected to that application.
+### eventHook properties
+
+The **eventHook** webhook will contain two parameters: `event` and `message`. 
+The `event` parameter will be either `userMessage` or `botMessage` depending on whether 
+the message comes from the user or the rasa assistant, and `message` will contain the message itself. 
+Your event webhook may return a new application in a json payload, in which case the call 
+will be redirected to that application.
 

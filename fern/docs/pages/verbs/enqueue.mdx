@@ -1,7 +1,6 @@
 ---
 title: Enqueue
 subtitle: Place a caller in a queue.
-hide-toc: true
 ---
 
 ```json
@@ -13,16 +12,33 @@ hide-toc: true
 }
 ```
 
-You can use the following options in the `enqueue` command:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| name | name of the queue | yes |
-| priority | (added in 0.8.3-4) optional priority value between 0 and 999. Calls are dequeued in priority order, lowest to highest| no (default: 999)|
-| actionHook | A webhook invoke when operation completes. <br /> If a call is dequeued through the `leave` verb, the webook is immediately invoked. <br /> If the call has been bridged to another party via the `dequeue` verb, then the webhook is invoked after both parties have disconnected. <br/>If no webhook is provided, execution will continue with the next verb in the current application. <br /> See below for specified request parameters.| no |
-| waitHook | A webhook to invoke while the caller is in queue.  The only allowed verbs in the application returned from this webhook are `say`, `play`, `pause`, and `leave`, <br/>See below for additional request parameters| no|
+<ParamField path="actionHook" type="string" required={false}>
+  A webhook invoked when the operation completes.  
+  - If a call is dequeued through the `leave` verb, the webhook is immediately invoked.  
+  - If the call has been bridged to another party via the `dequeue` verb, then the webhook is invoked after both parties have disconnected.  
+  - If no webhook is provided, execution will continue with the next verb in the current application.  
+  See below for specified request parameters.
+</ParamField>
 
-The *actionHook* webhook will contain the following additional parameters:
+<ParamField path="name" type="string" required={true}>
+  Name of the queue.
+</ParamField>
+
+<ParamField path="priority" type="number" required={false}>
+  (Added in 0.8.3-4) Optional priority value between 0 and 999.  
+  Calls are dequeued in priority order, lowest to highest.  
+  Default: 999.
+</ParamField>
+
+<ParamField path="waitHook" type="string" required={false}>
+  A webhook to invoke while the caller is in queue.  
+  The only allowed verbs in the application returned from this webhook are `say`, `play`, `pause`, and `leave`.  
+  See below for additional request parameters.
+</ParamField>
+
+#### actionHook properties
 
 - `queueSid`: the unique identifier for the queue
 - `queueResult`: the completion reason:
@@ -36,13 +52,14 @@ The *actionHook* webhook will contain the following additional parameters:
 - `callSid` - the unique identifier for the call
 - `callId` - the sip Call-ID for the call
 
-The *waitHook* webhook will contain the following additional parameters:
+#### waitHook properties
 
 - `queueSid`: the unique identifier for the queue
 - `queuePosition`: the current zero-based position in the queue
 - `queueTime`: the current number of seconds the call has spent in queue
 - `queueSize`: the current number of calls in the queue
 
-You can also optionally receive [queue webhook notifications](/guides/features/queue-notifications) any time a members joins or leaves a queue.
+You can also optionally receive [queue webhook notifications](/guides/features/queue-notifications) 
+any time a members joins or leaves a queue.
 
 

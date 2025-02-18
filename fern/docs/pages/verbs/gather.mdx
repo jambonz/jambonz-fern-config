@@ -1,7 +1,6 @@
 ---
 title: Gather
 subtitle: Collect dtmf or speech input
-hide-toc: true
 ---
 
 ```json maxLines=30
@@ -21,42 +20,102 @@ hide-toc: true
     "hintsBoost": 10
   },
   "say": {
-    "text": "To speak to Sales press 1 or say Sales.  To speak to customer support press 2 or say Support",
-    "synthesizer": {
-      "vendor": "Google",
-      "language": "en-US"
-    }
+    "text": "To speak to Sales press 1 or say Sales.  To speak to customer support press 2 or say Support"
   }
 }
 ```
 
+<Note>
 When collecting speech input, the default recognizer for the application will be used unless you 
-overridde it by specifying a [recognizer](/verbs/verbs/recognizer) property, as shown above.
+overridde it by specifying a [recognizer](/verbs/verbs/recognizer) property.
+</Note>
 
-You can use the following options in the `gather` command:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| actionHook | Webhook or websocket URL to send the collected digits or speech to; may be either an absolute or relative URL (see note below).  In the case of webhooks, this will be sent in a POST request.  [See below](#actionhook-payload) for payload details.| yes |
-|actionHookDelayAction|an object [describing behaviors](/guides/features/handling-action-hook-delays) to apply if the webhook or websocket application delays in responding to the actionHook.|no|
-| bargein | boolean indicating whether to allow bargein when collecting speech (i.e. kill audio playback if caller begins speaking).| no |
-| dtmfBargein | boolean indicating whether to allow bargein using dtmf keys.| no |
-| finishOnKey | A dmtf key that if received indicates the the end of dtmf input.| no |
-| input |array, specifying allowed types of input: ['digits'], ['speech'], or ['digits', 'speech'].  Default: ['digits'] | no |
-| interDigitTimeout | Amount of time in seconds to wait between digits after minDigits have been entered.| no |
-|listenDuringPrompt| booleanm if false means do not listen for user speech until the nested say or play command has completed.  Defaults to true.|no|
-| minBargeinWordCount | if bargein is true, only kill speech when this many words are spoken OR a final transcripion is returned,  Defaults to 1 | no|
-| minDigits | Minimum number of dtmf digits expected to gather.  Defaults to 1. | no |
-| maxDigits | Maximum number of dtmf digits expected to gather | no |
-| numDigits | Exact number of dtmf digits expected to gather | no |
-| partialResultHook | Webhook to send interim transcription results to. Partial transcriptions are only generated if this property is set. | no |
-| play | nested [play](/verbs/verbs/play) verb that can be used to prompt the user with an audio file. | no |
-| say | nested [say](/verbs/verbs/say) Command that can be used to prompt the user with text to speech.| no |
-| fillerNoise | an object describing audio to play to the caller if the webhook or websocket application delays in responding to the actionHook. (Deprecated in favor of actionHookDelay)| no |
-| fillerNoise.enable | boolean, whether to enable or disable filler noise. | yes |
-| fillerNoise.url | http(s) audio to play as filler noise. | yes |
-| fillerNoise.startDelaySecs | integer value specifying number of seconds to wait for a response from the remote application| yes |
-| [recognizer](/verbs/verbs/recognizer)|  Speech recognition options to override default settings if desired. | no |
+<ParamField path="actionHook" type="string" required={true}>
+  Webhook or websocket URL to send the collected digits or speech to; may be either an absolute or relative URL (see note below).  
+  In the case of webhooks, this will be sent in a POST request.  
+  [See below](#actionhook-payload) for payload details.
+</ParamField>
+
+<ParamField path="actionHookDelayAction" type="object" required={false}>
+  An object [describing behaviors](/guides/features/handling-action-hook-delays) to apply if the webhook or websocket application delays in responding to the `actionHook`.
+</ParamField>
+
+<ParamField path="bargein" type="boolean" required={false}>
+  Boolean indicating whether to allow barge-in when collecting speech (i.e., kill audio playback if the caller begins speaking).
+</ParamField>
+
+<ParamField path="dtmfBargein" type="boolean" required={false}>
+  Boolean indicating whether to allow barge-in using DTMF keys.
+</ParamField>
+
+<ParamField path="fillerNoise" type="object" required={false} deprecated={true}>
+  An object describing audio to play to the caller if the webhook or websocket application delays in responding to the `actionHook`.  
+  (Deprecated in favor of `actionHookDelay`).
+</ParamField>
+
+<ParamField path="fillerNoise.enable" type="boolean" required={true} deprecated={true}>
+  Whether to enable or disable filler noise.
+</ParamField>
+
+<ParamField path="fillerNoise.startDelaySecs" type="number" required={true} deprecated={true}>
+  Integer value specifying the number of seconds to wait for a response from the remote application.
+</ParamField>
+
+<ParamField path="fillerNoise.url" type="string" required={true} deprecated={true}>
+  HTTP(S) URL to audio to play as filler noise.
+</ParamField>
+
+<ParamField path="finishOnKey" type="string" required={false}>
+  A DTMF key that, if received, indicates the end of DTMF input.
+</ParamField>
+
+<ParamField path="input" type="array" required={false} default="['digits']">
+  Array specifying allowed types of input: `['digits']`, `['speech']`, or `['digits', 'speech']`.  
+</ParamField>
+
+<ParamField path="interDigitTimeout" type="number" required={false}>
+  Amount of time in seconds to wait between digits after `minDigits` have been entered.
+</ParamField>
+
+<ParamField path="listenDuringPrompt" type="boolean" required={false} default="true">
+  If `false`, do not listen for user speech until the nested `say` or `play` command has completed.  
+</ParamField>
+
+<ParamField path="maxDigits" type="number" required={false}>
+  Maximum number of DTMF digits expected to gather.
+</ParamField>
+
+<ParamField path="minBargeinWordCount" type="number" required={false} default="1">
+  If `bargein` is `true`, only kill speech when this many words are spoken OR a final transcription is returned.  
+</ParamField>
+
+<ParamField path="minDigits" type="number" required={false} default="1">
+  Minimum number of DTMF digits expected to gather.  
+</ParamField>
+
+<ParamField path="numDigits" type="number" required={false}>
+  Exact number of DTMF digits expected to gather.
+</ParamField>
+
+<ParamField path="partialResultHook" type="string" required={false}>
+  Webhook to send interim transcription results to.  
+  Partial transcriptions are only generated if this property is set.
+</ParamField>
+
+<ParamField path="play" type="object" required={false}>
+  Nested [`play`](/verbs/verbs/play) verb that can be used to prompt the user with an audio file.
+</ParamField>
+
+<ParamField path="recognizer" type="object" required={false}>
+  Speech recognition options to override default settings if desired.  
+  See [`recognizer`](/verbs/verbs/recognizer).
+</ParamField>
+
+<ParamField path="say" type="object" required={false}>
+  Nested [`say`](/verbs/verbs/say) command that can be used to prompt the user with text-to-speech.
+</ParamField>
 
 <Note>
 The `actionHook` property may be either an absolute URL or a relative URL. 
@@ -65,7 +124,7 @@ Generally speaking, you will typically use a relative URL for the `actionHook` p
 are strongly encouragedto use a relative URL.
 </Note>
 
-### actionHook payload
+### actionHook properties
 
 The payload sent to the `actionHook` URL will always include a `reason` property with one of the following values:
 - `speechDetected` - user speech was collected

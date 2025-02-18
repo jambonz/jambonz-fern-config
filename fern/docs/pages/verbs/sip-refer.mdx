@@ -1,7 +1,6 @@
 ---
 title: SIP Refer
 subtitle: Perform a blind transfer of a call by sending a SIP REFER
-hide-toc: true
 ---
 
 ```json
@@ -12,28 +11,46 @@ hide-toc: true
 }
 ```
 
-You can use the following options in the `sip:refer` action:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| referTo | a sip uri or a phone number / user identifier | yes |
-| referredBy | a sip uri or a phone number / user identifier; if not provided it will default to the identity of the party being transferred | no |
-| actionHook | a webhook to call when the transfer has completed | no |
-| eventHook | a webhook to call when NOTIFY messages of follow-on call status are received | no |
-| headers | additional SIP headers to include in the response | no
+<ParamField path="actionHook" type="string" required={false}>
+  A webhook to call when the transfer has completed.
+</ParamField>
+
+<ParamField path="eventHook" type="string" required={false}>
+  A webhook to call when NOTIFY messages of follow-on call status are received.
+</ParamField>
+
+<ParamField path="headers" type="object" required={false}>
+  Additional SIP headers to include in the response.
+</ParamField>
+
+<ParamField path="referTo" type="string" required={true}>
+  A SIP URI or a phone number/user identifier.
+</ParamField>
+
+<ParamField path="referredBy" type="string" required={false}>
+  A SIP URI or a phone number/user identifier.  
+  If not provided, it will default to the identity of the party being transferred.
+</ParamField>
 
 The sip:refer verb completes when one of these conditions are met:
 - a failure response is received to the REFER
 - a 202 Accepted is received in response to the REFER, and a NOTIFY of the follow-on call status with a final call status is received.
 
-The sip:refer has an action hook that will provide details of the final result, as well as an event hook that is called for every NOTIFY received after a successful REFER.
+The sip:refer has an action hook that will provide details of the final result, 
+as well as an event hook that is called for every NOTIFY received after a successful REFER.
 
-The *actionHook* webhook will contain the following additional parameters:
+### actionHook properties
+
+The **actionHook** webhook will contain the following additional parameters:
 
 - `referStatus`: the sip status response to the REFER request
 - `final_referred_call_status` - the final sip status of the subsequent call to the transferee.  This is only provided in the case where the REFER is accepted and NOTIFY requests are received from the far end.
 
-The *eventHook* webhook will contain two parameters: `event` and `call_status`.  The `event` parameter will always be `transfer-status` and the `call-status` will contain a sip status received in a NOTIFY after a successful REFER; e.g.
+### eventHook properties
+
+The **eventHook** webhook will contain two parameters: `event` and `call_status`.  The `event` parameter will always be `transfer-status` and the `call-status` will contain a sip status received in a NOTIFY after a successful REFER; e.g.
 ```json
 {
 	"event": "transfer-status",
