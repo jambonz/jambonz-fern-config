@@ -91,6 +91,26 @@ paths:
                   type: string
                   description: The sip indialog hook to receive session messages
                   example: /customHook
+                speech_synthesis_vendor:
+                  type: string
+                  description: The vendor for Text to Speech (required if application_sid is not used)
+                  example: google
+                speech_synthesis_language:
+                  type: string
+                  description: The language for Text to Speech (required if application_sid is not used)
+                  example: en-US
+                speech_synthesis_voice:
+                  type: string
+                  description: The voice for Text to Speech (required if application_sid is not used)
+                  example: Wavenet-A
+                speech_recognizer_vendor:
+                  type: string
+                  description: The vendor for Speech to Text (required if application_sid is not used)
+                  example: google
+                speech_recognizer_language:
+                  type: string
+                  description: The language for Speech to Text (required if application_sid is not used)
+                  example: en-US
       responses:
         '201':
           description: call successfully created
