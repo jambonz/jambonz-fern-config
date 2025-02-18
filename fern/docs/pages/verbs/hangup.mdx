@@ -1,7 +1,6 @@
 ---
 title: Hangup
 subtitle: Terminates the call.
-hide-toc: true
 ---
 
 ```json
@@ -13,10 +12,8 @@ hide-toc: true
 }
 ```
 
-You can use the following options in the `hangup` action:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| headers | an object containing SIP headers to include in the BYE request | no |
-
-
+<ParamField path="headers" type="object" required={false}>
+  An object containing SIP headers to include in the BYE request.
+</ParamField>

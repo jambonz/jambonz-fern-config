@@ -1,7 +1,6 @@
 ---
 title: Dub
 subtitle: Add one or more additional audio tracks into the conversation
-hide-toc: true
 ---
 
 ```json
@@ -19,14 +18,32 @@ hide-toc: true
 ```
 Verb properties for the `dub` command:
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| action | one of 'addTrack', 'removeTrack', 'silenceTrack', 'playOnTrack', or 'sayOnTrack' | yes |
-| track | label for the track | yes |
-| play | an http(s) url to an mp3 file to play into the track | no |
-| say | text to convert to audio and play into the track| no |
-| loop | boolean; if true, loop the mp3 | no |
-| gain | a string value in the format "-6 dB" specifying decibels to boost or reduce the strength of the audio signal (note: simple integer values accepted as well). The value supplied must be between +- 50 dB.| no |
+## Parameters
+
+<ParamField path="action" type="string" required={true}>
+  One of 'addTrack', 'removeTrack', 'silenceTrack', 'playOnTrack', or 'sayOnTrack'.
+</ParamField>
+
+<ParamField path="gain" type="string" required={false}>
+  A string value in the format "-6 dB" specifying decibels to boost or reduce the strength of the audio signal  
+  (note: simple integer values accepted as well). The value supplied must be between ±50 dB.
+</ParamField>
+
+<ParamField path="loop" type="boolean" required={false}>
+  If true, loop the mp3.
+</ParamField>
+
+<ParamField path="play" type="string" required={false}>
+  An http(s) URL to an mp3 file to play into the track.
+</ParamField>
+
+<ParamField path="say" type="string" required={false}>
+  Text to convert to audio and play into the track.
+</ParamField>
+
+<ParamField path="track" type="string" required={true}>
+  Label for the track.
+</ParamField>
 
 The various options are:
 - `addTrack` adds an audio track to the conversation; once added, the `play` or `say` command may be used to inject audio into the track

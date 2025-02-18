@@ -1,7 +1,6 @@
 ---
 title: Transcribe
 subtitle: Send real time transcriptions of speech continuously.
-hide-toc: true
 ---
 
 <Note>
@@ -20,10 +19,13 @@ The transcribe verb may appear on its own or as a nested verb within a dial or l
 }
 ```
 
-You can use the following options in the `transcribe` command:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| recognizer.transcriptionHook | Webhook to receive an HTPP POST when an interim or final transcription is received. | yes |
-| [recognizer](/verbs/verbs/recognizer) | Speech recognition options | yes |
+<ParamField path="recognizer" type="object" required={true}>
+  [Speech recognition options](/verbs/verbs/recognizer).
+</ParamField>
+
+<ParamField path="recognizer.transcriptionHook" type="string" required={true}>
+  Webhook to receive an HTTP POST when an interim or final transcription is received.
+</ParamField>
 

@@ -1,7 +1,6 @@
 ---
 title: Dtmf
-subtitle: Generates a string of dtmf digit
-hide-toc: true
+subtitle: Sends outgoing DTMF signals on a call; useful for navigating IVRs or voicemail systems.
 ---
 
 ```json
@@ -12,10 +11,12 @@ hide-toc: true
 }
 ```
 
-You can use the following options in the `dtmf` action:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| dtmf | a string containing a sequence of dtmf digits (0-9,*,#) | yes |
-| duration | the length of each digit, in milliseconds,  Defaults to 500 | no |
+<ParamField path="dtmf" type="string" required={true}>
+  A string containing a sequence of DTMF digits (0-9, *, #).
+</ParamField>
 
+<ParamField path="duration" type="number" required={false}>
+  The length of each digit, in milliseconds. Defaults to 500.
+</ParamField>

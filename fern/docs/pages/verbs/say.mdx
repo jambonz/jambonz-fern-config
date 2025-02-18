@@ -1,7 +1,6 @@
 ---
 title: Say
-subtitle: Send synthesized speech to the remote party.
-hide-toc: true
+subtitle: Generate text-to-speech audio.
 ---
 
 ```json
@@ -15,15 +14,38 @@ hide-toc: true
 }
 ```
 
-You can use the following options in the `say` action:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-| text | text to speak; may contain SSML tags | yes |
-| synthesizer.vendor | speech vendor to use (see list below, along with any others you add via the [custom speech API](/guides/speech-providers/custom-speech-api))| no |
-| synthesizer.language | language code to use.  | no |
-| synthesizer.gender | (Google only) MALE, FEMALE, or NEUTRAL.  | no |
-| synthesizer.voice | voice to use.  Note that the voice list differs whether you are using aws or Google. Defaults to application setting, if provided. | no |
-| loop | the number of times a text is to be repeated; 0 means repeat forever.  Defaults to 1. | no |
-| earlyMedia | if true and the call has not yet been answered, play the audio without answering call.  Defaults to false | no |
+<ParamField path="earlyMedia" type="boolean" required={false}>
+  If true and the call has not yet been answered, play the audio without answering the call.  
+  Default: `false`.
+</ParamField>
 
+<ParamField path="loop" type="number" required={false}>
+  The number of times a text is to be repeated.  
+  `0` means repeat forever.  
+  Default: `1`.
+</ParamField>
+
+<ParamField path="synthesizer.gender" type="string" required={false}>
+  (Google only) `MALE`, `FEMALE`, or `NEUTRAL`.
+</ParamField>
+
+<ParamField path="synthesizer.language" type="string" required={false}>
+  Language code to use.
+</ParamField>
+
+<ParamField path="synthesizer.vendor" type="string" required={false}>
+  Speech vendor to use (see list below, along with any others added via the  
+  [custom speech API](/guides/speech-providers/custom-speech-api)).
+</ParamField>
+
+<ParamField path="synthesizer.voice" type="string" required={false}>
+  Voice to use.  
+  Note that the voice list differs depending on whether you are using AWS or Google.  
+  Defaults to application setting, if provided.
+</ParamField>
+
+<ParamField path="text" type="string" required={true}>
+  Text to speak; may contain SSML tags.
+</ParamField>
