@@ -53,6 +53,11 @@ There are several types of endpoints that you can dial:
 
 ## Parameters
 
+<ParamField path="target" type="array" required={true}>
+  array of up to 10 [destinations](#target-types) to simultaneously dial.  
+  The first person (or entity) to answer the call will be connected to the caller, and the rest of the called numbers will be hung up.
+</ParamField>
+
 <ParamField path="actionHook" type="string" required={false}>
   webhook to invoke when the call ends. The webhook will include [properties](#actionhook-properties) describing the outcome of the call attempt.
 </ParamField>
@@ -62,7 +67,7 @@ There are several types of endpoints that you can dial:
 </ParamField>
 
 <ParamField path="anchorMedia" type="boolean" required={false}>
-  if true, jambonz will not release the media from feature server for the bridged call. [See here](/guides/features/controlling-the-media-path-during-a-call) for details.  
+  if true, jambonz will not release the media from feature server for the bridged call. [See here](/guides/features/managing-media-anchors) for details.  
   Default: false.
 </ParamField>
 
@@ -121,11 +126,6 @@ There are several types of endpoints that you can dial:
   
   Note that jambonz will send the 202 Accepted and do nothing further. It is the responsibility of the third-party application to outdial a new call and bridge the other leg, presumably by using the REST API.  
   See [this example app](https://github.com/jambonz/sip-blind-transfer) for more details.
-</ParamField>
-
-<ParamField path="target" type="array" required={true}>
-  array of up to 10 [destinations](#target-types) to simultaneously dial.  
-  The first person (or entity) to answer the call will be connected to the caller, and the rest of the called numbers will be hung up.
 </ParamField>
 
 <ParamField path="timeLimit" type="number" required={false}>
@@ -216,4 +216,4 @@ This webhook that is invoked when amd property is included and jambonz has eithe
 
 The purpose of the `exitMediaPath` is to support use cases where it is important that the media path not touch the jambonz system at all.  The common use case is the need to transfer a call to a human agent or credit card system where the caller will be giving their credit card details over the phone.  In order to have a PCI-Compliant transaction it is necessary that this conversation not be able to be recorded, stored, or in any way reach the jambonz system.  Performing the `dial` verb using the `exitMediaPath` property ensures this happens.
 
-For more details on controlling the media path during a call, please see [Controlling media path during call](/guides/features/controlling-the-media-path-during-a-call).
+For more details on controlling the media path during a call, please see [Controlling media path during call](/guides/features/managing-media-anchors).

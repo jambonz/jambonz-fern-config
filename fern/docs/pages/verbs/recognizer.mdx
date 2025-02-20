@@ -1,6 +1,6 @@
 ---
 title: Recognizer
-subtitle: Customize speech recognition in a `gather` or `transcribe` verb
+subtitle: A **property** that can be used in `gather`, `transcribe` or other verbs to override the application default recognizer settings.
 ---
 
 ## Parameters
@@ -144,7 +144,7 @@ subtitle: Customize speech recognition in a `gather` or `transcribe` verb
 
 <ParamField path="vendor" type="string" required={false}>
   Speech vendor to use (see list below, along with any others you add via the  
-  [custom speech API](/guides/speech-providers/custom-speech-api)).
+  [custom speech API](/guides/features/adding-speech-providers)).
 </ParamField>
 
 <ParamField path="vocabularyFilterName" type="string" required={false}>
@@ -157,517 +157,491 @@ subtitle: Customize speech recognition in a `gather` or `transcribe` verb
 
 ### Vendor-specific options
 
-<ParamField path="azureOptions" type="object" required={false}>
-  Azure-specific speech recognition options (see below).
-</ParamField>
+<AccordionGroup>
+  <Accordion title="azureOptions">
+    <ParamField path="speechSegmentationSilenceTimeoutMs" type="number" required={false}>
+      Duration (in milliseconds) of non-speech audio within a phrase that's currently being spoken before that phrase is considered "done."  
+      See [here](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-recognize-speech?pivots=programming-language-csharp#change-how-silence-is-handled) for details.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="deepgramOptions">
+    <ParamField path="alternatives" type="number" required={false}>
+      Number of alternative transcripts to return.
+    </ParamField>
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Deepgram API key to authenticate with (overrides setting in Jambonz portal).
+    </ParamField>
+
+    <ParamField path="customModel" type="string" required={false}>
+      ID of custom model.
+    </ParamField>
+
+    <ParamField path="diarize" type="boolean" required={false}>
+      [Whether to assign a speaker](https://developers.deepgram.com/docs/diarization) to each word in the transcript.
+    </ParamField>
+
+    <ParamField path="diarizeVersion" type="string" required={false}>
+      If set to `'2021-07-14.0'`, the legacy diarization feature will be used.
+    </ParamField>
+
+    <ParamField path="endpointing" type="number | string" required={false}>
+      [Indicates the number of milliseconds](https://developers.deepgram.com/docs/endpointing) of silence Deepgram  
+      will use to determine a speaker has finished saying a word or phrase.  
+      Value must be either a number of milliseconds or `'false'` to disable the feature entirely.  
+      Default: `10ms`.
+    </ParamField>
+
+    <ParamField path="keyterms" type="array" required={false}>
+      [An array of keyterm prompts](https://developers.deepgram.com/docs/keyterm)  
+    </ParamField>
+
+    <ParamField path="keywords" type="array" required={false}>
+      [An array of keywords](https://developers.deepgram.com/documentation/features/keywords/)  
+      to which the model should pay particular attention to boosting or suppressing to help it understand context.
+    </ParamField>
+
+    <ParamField path="model" type="string" required={false}>
+      Deepgram model used to process submitted audio.  
+      Example models: `'nova-3'`, `'nova-2'`, `'nova-2-phonecall'`; see [Deepgram docs](https://developers.deepgram.com/docs/model) for full list.  
+      Default: `'general'`.
+    </ParamField>
+
+    <ParamField path="multichannel" type="boolean" required={false}>
+      Indicates whether to transcribe each audio channel independently.
+    </ParamField>
+
+    <ParamField path="nodelay" type="boolean" required={false}>
+      Indicates whether to enable [Deepgram's nodelay](https://developers.deepgram.com/docs/smart-format#using-no-delay) feature.
+    </ParamField>
+
+    <ParamField path="numerals" type="boolean" required={false}>
+      [Indicates whether to convert numbers](https://developers.deepgram.com/docs/numerals)  
+      from written format (e.g., `"one"`) to numerical format (e.g., `"1"`).
+    </ParamField>
+
+    <ParamField path="profanityFilter" type="boolean" required={false}>
+      [Indicates whether to remove profanity](https://developers.deepgram.com/documentation/features/profanity-filter/)  
+      from the transcript.
+    </ParamField>
+
+    <ParamField path="punctuate" type="boolean" required={false}>
+      [Indicates whether to add punctuation](https://developers.deepgram.com/docs/punctuation)  
+      and capitalization to the transcript.
+    </ParamField>
+
+    <ParamField path="redact" type="array" required={false}>
+      [Whether to redact information](https://developers.deepgram.com/documentation/features/redact/)  
+      from transcripts.  
+      Allowed values: `'pci'`, `'numbers'`, `'true'`, `'ssn'`.
+    </ParamField>
+
+    <ParamField path="replace" type="array" required={false}>
+      [An array of terms or phrases](https://developers.deepgram.com/docs/find-and-replace)  
+      to search for in the submitted audio and replace.
+    </ParamField>
+
+    <ParamField path="search" type="array" required={false}>
+      An array of terms or phrases to search for in the submitted audio.
+    </ParamField>
+
+    <ParamField path="shortUtterance" type="boolean" required={false}>
+      Causes a transcript to be returned as soon as Deepgram's `is_final` property is set.  
+      This should only be used in scenarios where you expect a very short confirmation  
+      or directed command and want minimal latency.
+    </ParamField>
+
+    <ParamField path="smartFormatting" type="boolean" required={false}>
+      Indicates whether to enable[Deepgram's Smart Formatting](https://developers.deepgram.com/docs/smart-format) feature.
+    </ParamField>
+
+    <ParamField path="tag" type="string" required={false}>
+      [A tag to associate with the request](https://developers.deepgram.com/docs/tagging).  
+      Tags appear in usage reports.
+    </ParamField>
+
+    <ParamField path="tier" type="string" required={false}>
+      [Deepgram tier](https://developers.deepgram.com/docs/tier) you would like to use.  
+      Allowed values: `'enhanced'`, `'base'`.  
+      Default: `'base'`.
+    </ParamField>
+
+    <ParamField path="utteranceEndMs" type="number" required={false}>
+      A number of milliseconds of silence that Deepgram will wait  
+      after the last word was spoken before returning an `UtteranceEnd` event,  
+      which is used by Jambonz to trigger the transcript webhook if this property is supplied.  
+      This is essentially Deepgram's version of continuous ASR.
+    </ParamField>
+
+    <ParamField path="version" type="string" required={false}>
+      [Deepgram version](https://developers.deepgram.com/docs/version) of the model to use.  
+      Default: `'latest'`.
+    </ParamField>
+
+  </Accordion>
+
+  <Accordion title="ibmOptions">
+    <ParamField path="acousticCustomizationId" type="string" required={false}>
+      ID of a custom acoustic model.
+    </ParamField>
+
+    <ParamField path="baseModelVersion" type="string" required={false}>
+      Base model to be used.
+    </ParamField>
+
+    <ParamField path="instanceId" type="string" required={false}>
+      IBM speech instance ID (overrides setting in Jambonz portal).
+    </ParamField>
+
+    <ParamField path="languageCustomizationId" type="string" required={false}>
+      ID of a custom language model.
+    </ParamField>
+
+    <ParamField path="model" type="string" required={false}>
+      The model to use for speech recognition.
+    </ParamField>
+
+    <ParamField path="sttApiKey" type="string" required={false}>
+      IBM API key to authenticate with (overrides setting in Jambonz portal).
+    </ParamField>
+
+    <ParamField path="sttRegion" type="string" required={false}>
+      IBM region (overrides setting in Jambonz portal).
+    </ParamField>
+
+    <ParamField path="watsonLearningOptOut" type="boolean" required={false}>
+      Set to `true` to prevent IBM from using your API request data to improve their service.
+    </ParamField>
+
+    <ParamField path="watsonMetadata" type="string" required={false}>
+      A [tag value](https://cloud.ibm.com/apidocs/speech-to-text?code=node#getting-started-data-labels)  
+      to apply to the request data provided.
+    </ParamField>
+
+  </Accordion>
+
+  <Accordion title="nuanceOptions">
+    <ParamField path="allowZeroBaseLmWeight" type="boolean" required={false}>
+      When true, custom resources (DLMs, wordsets, etc.) can use the entire weight range.
+    </ParamField>
+
+    <ParamField path="clientData" type="object" required={false}>
+      An object containing arbitrary key-value pairs to inject into the call log.
+    </ParamField>
+
+    <ParamField path="clientId" type="string" required={false}>
+      Nuance client ID to authenticate with (overrides setting in Jambonz portal).
+    </ParamField>
+
+    <ParamField path="discardSpeakerAdaptation" type="boolean" required={false}>
+      If speaker profiles are used, whether to discard updated speaker data.  
+      By default, data is stored.
+    </ParamField>
+
+    <ParamField path="filterWakeupWord" type="boolean" required={false}>
+      Whether to remove the wakeup word from the final result.
+    </ParamField>
+
+    <ParamField path="formatting.options" type="object" required={false}>
+      Object containing key-value pairs of formatting options and values defined in the data pack.
+    </ParamField>
+
+    <ParamField path="formatting.scheme" type="string" required={false}>
+      Keyword for a formatting type defined in the data pack.
+    </ParamField>
+
+    <ParamField path="includeTokenization" type="boolean" required={false}>
+      Whether to include a tokenized recognition result.
+    </ParamField>
+
+    <ParamField path="kryptonEndpoint" type="string" required={false}>
+      Endpoint of the on-prem Krypton endpoint to connect to.  
+      Default: Hosted service.
+    </ParamField>
+
+    <ParamField path="maskLoadFailures" type="boolean" required={false}>
+      Whether to terminate recognition when failing to load external resources.
+    </ParamField>
+
+    <ParamField path="maxHypotheses" type="number" required={false}>
+      Maximum number of n-best hypotheses to return.
+    </ParamField>
+
+    <ParamField path="noInputTimeoutMs" type="number" required={false}>
+      Maximum silence (in milliseconds) allowed while waiting for user input after recognition timers are started.
+    </ParamField>
+
+    <ParamField path="punctuation" type="boolean" required={false}>
+      Whether to enable auto-punctuation.
+    </ParamField>
+
+    <ParamField path="recognitionTimeoutMs" type="number" required={false}>
+      Maximum duration (in milliseconds) of the recognition turn.
+    </ParamField>
+
+    <ParamField path="resource" type="array" required={false}>
+      An array of zero or more [recognition resources](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#recognitionresource)  
+      (domain LMs, wordsets, etc.) to improve recognition.
+    </ParamField>
+
+    <ParamField path="resource[].builtin" type="string" required={false}>
+      Name of a built-in resource in the data pack.
+    </ParamField>
+
+    <ParamField path="resource[].externalReference" type="object" required={false}>
+      [An external DLM or settings file](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#resourcereference)  
+      for creating or updating a speaker profile.
+    </ParamField>
+
+    <ParamField path="resource[].externalReference.headers" type="object" required={false}>
+      An object containing HTTP cache-control directives (e.g., `max-age`, etc.).
+    </ParamField>
+
+    <ParamField path="resource[].externalReference.maxLoadFailures" type="boolean" required={false}>
+      When true, allow transcription to proceed even if resource loading fails.
+    </ParamField>
+
+    <ParamField path="resource[].externalReference.requestTimeoutMs" type="number" required={false}>
+      Time to wait when downloading resources.
+    </ParamField>
+
+    <ParamField path="resource[].externalReference.type" type="string" required={false}>
+      Resource type: `'undefined_resource_type'`, `'wordset'`, `'compiled_wordset'`, `'domain_lm'`,  
+      `'speaker_profile'`, `'grammar'`, `'settings'`.
+    </ParamField>
+
+    <ParamField path="resource[].externalReference.uri" type="string" required={false}>
+      Location of the resource as a URN reference.
+    </ParamField>
+
+    <ParamField path="resource[].inlineGrammar" type="string" required={false}>
+      Inline grammar in SRGS XML format.
+    </ParamField>
+
+    <ParamField path="resource[].inlineWordset" type="object" required={false}>
+      Inline wordset JSON resource.  
+      See [Wordsets](https://docs.nuance.com/mix/apis/asr-grpc/v1/ref-topics/resources-asr/wordsets-asr/) for details.
+    </ParamField>
+
+    <ParamField path="resource[].reuse" type="string" required={false}>
+      Whether the resource will be [used multiple times](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#enumresourcereuse).  
+      Allowed values: `'undefined_reuse'`, `'low_reuse'`, `'high_reuse'`.  
+      Default: `low_reuse`.
+    </ParamField>
+
+    <ParamField path="resource[].weightName" type="string" required={false}>
+      Input field setting the [weight](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#enumweight) of the  
+      domain LM or built-in resource relative to the data pack.  
+      Allowed values: `'defaultWeight'`, `'lowest'`, `'low'`, `'medium'`, `'high'`, `'highest'`.  
+      Default: `MEDIUM`.
+    </ParamField>
+
+    <ParamField path="resource[].weightValue" type="number" required={false}>
+      Weight of the DLM or built-in resource as a numeric value from `0` to `1`.  
+      Default: `0.25`.
+    </ParamField>
+
+    <ParamField path="resource[].wakeupWord" type="array" required={false}>
+      Array of [wakeup words](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#wakeupword).
+    </ParamField>
+
+    <ParamField path="resultType" type="string" required={false}>
+      The level of recognition results: `'final'`, `'partial'`, `'immutable_partial'`.  
+      Default: `final`.
+    </ParamField>
+
+    <ParamField path="secret" type="string" required={false}>
+      Nuance secret to authenticate with (overrides setting in Jambonz portal).
+    </ParamField>
+
+    <ParamField path="speechDetectionSensitivity" type="number" required={false}>
+      A balance between detecting speech and noise (breathing, etc.), ranging from `0` to `1`.  
+      `0` means ignore all noise, `1` means interpret all noise as speech.  
+      Default: `0.5`.
+    </ParamField>
+
+    <ParamField path="speechDomain" type="string" required={false}>
+      Mapping to internal weight sets for language models in the data pack.
+    </ParamField>
+
+    <ParamField path="suppressCallRecording" type="boolean" required={false}>
+      Whether to disable call logging and audio capture.  
+      By default, call logs, audio, and metadata are collected.
+    </ParamField>
+
+    <ParamField path="suppressInitialCapitalization" type="boolean" required={false}>
+      When true, the first word in a sentence is not automatically capitalized.
+    </ParamField>
+
+    <ParamField path="topic" type="string" required={false}>
+      Specialized language model.
+    </ParamField>
+
+    <ParamField path="utteranceDetectionMode" type="string" required={false}>
+      How many sentences (utterances) within the audio stream are processed.  
+      Allowed values: `'single'`, `'multiple'`, `'disabled'`.  
+      Default: `single`.
+    </ParamField>
+
+    <ParamField path="utteranceEndSilenceMs" type="number" required={false}>
+      Minimum silence (in milliseconds) that determines the end of a sentence.
+    </ParamField>
+
+    <ParamField path="userId" type="string" required={false}>
+      Identifies a specific user within the application.
+    </ParamField>
+
+  </Accordion>
+
+  <Accordion title="nvidiaOptions">
+    <ParamField path="customConfiguration" type="object" required={false}>
+      An object of key-value pairs that can be sent to Nvidia for custom configuration.
+    </ParamField>
+
+    <ParamField path="maxAlternatives" type="number" required={false}>
+      Number of alternative transcripts to return.
+    </ParamField>
+
+    <ParamField path="profanityFilter" type="boolean" required={false}>
+      Indicates whether to remove profanity from the transcript.
+    </ParamField>
+
+    <ParamField path="punctuation" type="boolean" required={false}>
+      Indicates whether to provide punctuation in the transcripts.
+    </ParamField>
+
+    <ParamField path="rivaUri" type="string" required={false}>
+      GRPC endpoint (`ip:port`) that Nvidia Riva is listening on.
+    </ParamField>
+
+    <ParamField path="verbatimTranscripts" type="boolean" required={false}>
+      Indicates whether to provide verbatim transcripts.
+    </ParamField>
+
+    <ParamField path="wordTimeOffsets" type="boolean" required={false}>
+      Indicates whether to provide word-level detail.
+    </ParamField>
+
+  </Accordion>
+
+  <Accordion title="sonioxOptions">
+    <ParamField path="api_key" type="string" required={false}>
+      Soniox API key.
+    </ParamField>
+
+    <ParamField path="model" type="string" required={false}>
+      Soniox [model](https://soniox.com/docs/models) to use.  
+      Default: `'precision_ivr'`.
+    </ParamField>
+
+    <ParamField path="profanityFilter" type="boolean" required={false}>
+      Indicates whether to [remove profanity](https://soniox.com/docs/profanity_filter) from the transcript.
+    </ParamField>
+
+    <ParamField path="storage" type="object" required={false}>
+      Properties that dictate whether to store audio and/or transcripts.  
+      Can be useful for debugging purposes.
+    </ParamField>
+
+    <ParamField path="storage.disableSearch" type="boolean" required={false} default="false">
+      If true, do not allow search.  
+    </ParamField>
+
+    <ParamField path="storage.disableStoreAudio" type="boolean" required={false} default="false">
+      If true, do not store audio.  
+    </ParamField>
+
+    <ParamField path="storage.disableStoreTranscript" type="boolean" required={false} default="false">
+      If true, do not store transcripts.  
+    </ParamField>
+
+    <ParamField path="storage.id" type="string" required={false}>
+      Storage identifier.
+    </ParamField>
+
+    <ParamField path="storage.title" type="string" required={false}>
+      Storage title.
+    </ParamField>
+
+  </Accordion>
+
+  <Accordion title="speechmaticsOptions">
+    <ParamField path="sm_audioEventsConfig" type="object" required={false}>
+      Audio events to report.
+    </ParamField>
+
+    <ParamField path="sm_audioEventsConfig.types" type="array" required={true}>
+      "applause", "laughter", or "music"
+    </ParamField>
+
+    <ParamField path="transcription_config" type="object" required={false}>
+      Audio transcription configuration.
+    </ParamField>
+
+    <ParamField path="transcription_config.additional_vocab" type="array" required={false}>
+      Additional vocabulary words.
+    </ParamField>
+
+    <ParamField path="transcription_config.audio_filtering_config" type="object" required={false}>
+      Audio filtering configuration.
+    </ParamField>
+
+    <ParamField path="transcription_config.audio_filtering_config.volume_threshold" type="number" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.diarization" type="string" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.domain" type="array" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.enable_entities" type="boolean" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.enable_partials" type="boolean" required={false}>
+      Enable partial transcriptions.
+    </ParamField>
+
+    <ParamField path="transcription_config.language" type="string" required={false}>
+      Language to transcribe.
+    </ParamField>
+
+    <ParamField path="transcription_config.max_delay" type="number" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.max_delay_mode" type="string" required={false}>
+      "fixed" or "flexible"
+    </ParamField>
+
+    <ParamField path="transcription_config.output_locale" type="string" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.operating_point" type="string" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.punctuation_overrides" type="object" required={false}>
+      Punctuation configuration
+    </ParamField>
+
+    <ParamField path="transcription_config.punctuation_overrides.permitted_marks" type="array" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.punctuation_overrides.sensitivity" type="number" required={false}>
+    </ParamField>
+
+    <ParamField path="sm_audioFilteringConfig" type="object" required={false}>
+      Audio filtering configuration.
+    </ParamField>
+
+    <ParamField path="sm_audioFilteringConfig.volume_threshold" type="number" required={true}>
+      Volume threshold to filter.
+    </ParamField>
+
+  </Accordion>
+
+</AccordionGroup>
 
-<ParamField path="deepgramOptions" type="object" required={false}>
-  Deepgram-specific speech recognition options (see below).
-</ParamField>
-
-<ParamField path="ibmOptions" type="object" required={false}>
-  IBM Watson-specific speech recognition options (see below).
-</ParamField>
-
-<ParamField path="nuanceOptions" type="object" required={false}>
-  Nuance-specific speech recognition options (see below).
-</ParamField>
-
-<ParamField path="nvidiaOptions" type="object" required={false}>
-  Nvidia-specific speech recognition options (see below).
-</ParamField>
-
-<ParamField path="sonioxOptions" type="object" required={false}>
-  Soniox-specific speech recognition options (see below).
-</ParamField>
-
-### azureOptions
-
-`azureOptions` is an object with the following properties. 
-
-<ParamField path="speechSegmentationSilenceTimeoutMs" type="number" required={false}>
-  Duration (in milliseconds) of non-speech audio within a phrase that's currently being spoken before that phrase is considered "done."  
-  See [here](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-recognize-speech?pivots=programming-language-csharp#change-how-silence-is-handled) for details.
-</ParamField>
-
-### nuanceOptions
-
-`nuanceOptions` is an object with the following properties. Please refer to the [Nuance Documentation](https://docs.nuance.com/mix/apis/asr-grpc/v1/#recognitionparameters) for detailed descriptions.  This option is available in jambonz 0.8.0 or above.
-
-<ParamField path="allowZeroBaseLmWeight" type="boolean" required={false}>
-  When true, custom resources (DLMs, wordsets, etc.) can use the entire weight range.
-</ParamField>
-
-<ParamField path="clientData" type="object" required={false}>
-  An object containing arbitrary key-value pairs to inject into the call log.
-</ParamField>
-
-<ParamField path="clientId" type="string" required={false}>
-  Nuance client ID to authenticate with (overrides setting in Jambonz portal).
-</ParamField>
-
-<ParamField path="discardSpeakerAdaptation" type="boolean" required={false}>
-  If speaker profiles are used, whether to discard updated speaker data.  
-  By default, data is stored.
-</ParamField>
-
-<ParamField path="filterWakeupWord" type="boolean" required={false}>
-  Whether to remove the wakeup word from the final result.
-</ParamField>
-
-<ParamField path="formatting.options" type="object" required={false}>
-  Object containing key-value pairs of formatting options and values defined in the data pack.
-</ParamField>
-
-<ParamField path="formatting.scheme" type="string" required={false}>
-  Keyword for a formatting type defined in the data pack.
-</ParamField>
-
-<ParamField path="includeTokenization" type="boolean" required={false}>
-  Whether to include a tokenized recognition result.
-</ParamField>
-
-<ParamField path="kryptonEndpoint" type="string" required={false}>
-  Endpoint of the on-prem Krypton endpoint to connect to.  
-  Default: Hosted service.
-</ParamField>
-
-<ParamField path="maskLoadFailures" type="boolean" required={false}>
-  Whether to terminate recognition when failing to load external resources.
-</ParamField>
-
-<ParamField path="maxHypotheses" type="number" required={false}>
-  Maximum number of n-best hypotheses to return.
-</ParamField>
-
-<ParamField path="noInputTimeoutMs" type="number" required={false}>
-  Maximum silence (in milliseconds) allowed while waiting for user input after recognition timers are started.
-</ParamField>
-
-<ParamField path="punctuation" type="boolean" required={false}>
-  Whether to enable auto-punctuation.
-</ParamField>
-
-<ParamField path="recognitionTimeoutMs" type="number" required={false}>
-  Maximum duration (in milliseconds) of the recognition turn.
-</ParamField>
-
-<ParamField path="resource" type="array" required={false}>
-  An array of zero or more [recognition resources](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#recognitionresource)  
-  (domain LMs, wordsets, etc.) to improve recognition.
-</ParamField>
-
-<ParamField path="resource[].builtin" type="string" required={false}>
-  Name of a built-in resource in the data pack.
-</ParamField>
-
-<ParamField path="resource[].externalReference" type="object" required={false}>
-  [An external DLM or settings file](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#resourcereference)  
-  for creating or updating a speaker profile.
-</ParamField>
-
-<ParamField path="resource[].externalReference.headers" type="object" required={false}>
-  An object containing HTTP cache-control directives (e.g., `max-age`, etc.).
-</ParamField>
-
-<ParamField path="resource[].externalReference.maxLoadFailures" type="boolean" required={false}>
-  When true, allow transcription to proceed even if resource loading fails.
-</ParamField>
-
-<ParamField path="resource[].externalReference.requestTimeoutMs" type="number" required={false}>
-  Time to wait when downloading resources.
-</ParamField>
-
-<ParamField path="resource[].externalReference.type" type="string" required={false}>
-  Resource type: `'undefined_resource_type'`, `'wordset'`, `'compiled_wordset'`, `'domain_lm'`,  
-  `'speaker_profile'`, `'grammar'`, `'settings'`.
-</ParamField>
-
-<ParamField path="resource[].externalReference.uri" type="string" required={false}>
-  Location of the resource as a URN reference.
-</ParamField>
-
-<ParamField path="resource[].inlineGrammar" type="string" required={false}>
-  Inline grammar in SRGS XML format.
-</ParamField>
-
-<ParamField path="resource[].inlineWordset" type="object" required={false}>
-  Inline wordset JSON resource.  
-  See [Wordsets](https://docs.nuance.com/mix/apis/asr-grpc/v1/ref-topics/resources-asr/wordsets-asr/) for details.
-</ParamField>
-
-<ParamField path="resource[].reuse" type="string" required={false}>
-  Whether the resource will be [used multiple times](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#enumresourcereuse).  
-  Allowed values: `'undefined_reuse'`, `'low_reuse'`, `'high_reuse'`.  
-  Default: `low_reuse`.
-</ParamField>
-
-<ParamField path="resource[].weightName" type="string" required={false}>
-  Input field setting the [weight](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#enumweight) of the  
-  domain LM or built-in resource relative to the data pack.  
-  Allowed values: `'defaultWeight'`, `'lowest'`, `'low'`, `'medium'`, `'high'`, `'highest'`.  
-  Default: `MEDIUM`.
-</ParamField>
-
-<ParamField path="resource[].weightValue" type="number" required={false}>
-  Weight of the DLM or built-in resource as a numeric value from `0` to `1`.  
-  Default: `0.25`.
-</ParamField>
-
-<ParamField path="resource[].wakeupWord" type="array" required={false}>
-  Array of [wakeup words](https://docs.nuance.com/mix/apis/asr-grpc/v1/api/nuance-asr/#wakeupword).
-</ParamField>
-
-<ParamField path="resultType" type="string" required={false}>
-  The level of recognition results: `'final'`, `'partial'`, `'immutable_partial'`.  
-  Default: `final`.
-</ParamField>
-
-<ParamField path="secret" type="string" required={false}>
-  Nuance secret to authenticate with (overrides setting in Jambonz portal).
-</ParamField>
-
-<ParamField path="speechDetectionSensitivity" type="number" required={false}>
-  A balance between detecting speech and noise (breathing, etc.), ranging from `0` to `1`.  
-  `0` means ignore all noise, `1` means interpret all noise as speech.  
-  Default: `0.5`.
-</ParamField>
-
-<ParamField path="speechDomain" type="string" required={false}>
-  Mapping to internal weight sets for language models in the data pack.
-</ParamField>
-
-<ParamField path="suppressCallRecording" type="boolean" required={false}>
-  Whether to disable call logging and audio capture.  
-  By default, call logs, audio, and metadata are collected.
-</ParamField>
-
-<ParamField path="suppressInitialCapitalization" type="boolean" required={false}>
-  When true, the first word in a sentence is not automatically capitalized.
-</ParamField>
-
-<ParamField path="topic" type="string" required={false}>
-  Specialized language model.
-</ParamField>
-
-<ParamField path="utteranceDetectionMode" type="string" required={false}>
-  How many sentences (utterances) within the audio stream are processed.  
-  Allowed values: `'single'`, `'multiple'`, `'disabled'`.  
-  Default: `single`.
-</ParamField>
-
-<ParamField path="utteranceEndSilenceMs" type="number" required={false}>
-  Minimum silence (in milliseconds) that determines the end of a sentence.
-</ParamField>
-
-<ParamField path="userId" type="string" required={false}>
-  Identifies a specific user within the application.
-</ParamField>
-
-### deepgramOptions
-
-`deepgramOptions` is an object with the following properties. Please refer to the [Deepgram Documentation](https://developers.deepgram.com/api-reference/transcription/#transcribe-live-streaming-audio) for detailed descriptions. This option is available in jambonz 0.8.0 or above.
-
-<ParamField path="alternatives" type="number" required={false}>
-  Number of alternative transcripts to return.
-</ParamField>
-
-<ParamField path="apiKey" type="string" required={false}>
-  Deepgram API key to authenticate with (overrides setting in Jambonz portal).
-</ParamField>
-
-<ParamField path="customModel" type="string" required={false}>
-  ID of custom model.
-</ParamField>
-
-<ParamField path="diarize" type="boolean" required={false}>
-  [Whether to assign a speaker](https://developers.deepgram.com/docs/diarization) to each word in the transcript.
-</ParamField>
-
-<ParamField path="diarizeVersion" type="string" required={false}>
-  If set to `'2021-07-14.0'`, the legacy diarization feature will be used.
-</ParamField>
-
-<ParamField path="endpointing" type="number | string" required={false}>
-  [Indicates the number of milliseconds](https://developers.deepgram.com/docs/endpointing) of silence Deepgram  
-  will use to determine a speaker has finished saying a word or phrase.  
-  Value must be either a number of milliseconds or `'false'` to disable the feature entirely.  
-  Default: `10ms`.
-</ParamField>
-
-<ParamField path="keyterms" type="array" required={false}>
-  [An array of keyterm prompts](https://developers.deepgram.com/docs/keyterm)  
-</ParamField>
-
-<ParamField path="keywords" type="array" required={false}>
-  [An array of keywords](https://developers.deepgram.com/documentation/features/keywords/)  
-  to which the model should pay particular attention to boosting or suppressing to help it understand context.
-</ParamField>
-
-<ParamField path="model" type="string" required={false}>
-  Deepgram model used to process submitted audio.  
-  Example models: `'nova-3'`, `'nova-2'`, `'nova-2-phonecall'`; see [Deepgram docs](https://developers.deepgram.com/docs/model) for full list.  
-  Default: `'general'`.
-</ParamField>
-
-<ParamField path="multichannel" type="boolean" required={false}>
-  Indicates whether to transcribe each audio channel independently.
-</ParamField>
-
-<ParamField path="nodelay" type="boolean" required={false}>
-  Indicates whether to enable [Deepgram's nodelay](https://developers.deepgram.com/docs/smart-format#using-no-delay) feature.
-</ParamField>
-
-<ParamField path="numerals" type="boolean" required={false}>
-  [Indicates whether to convert numbers](https://developers.deepgram.com/docs/numerals)  
-  from written format (e.g., `"one"`) to numerical format (e.g., `"1"`).
-</ParamField>
-
-<ParamField path="profanityFilter" type="boolean" required={false}>
-  [Indicates whether to remove profanity](https://developers.deepgram.com/documentation/features/profanity-filter/)  
-  from the transcript.
-</ParamField>
-
-<ParamField path="punctuate" type="boolean" required={false}>
-  [Indicates whether to add punctuation](https://developers.deepgram.com/docs/punctuation)  
-  and capitalization to the transcript.
-</ParamField>
-
-<ParamField path="redact" type="array" required={false}>
-  [Whether to redact information](https://developers.deepgram.com/documentation/features/redact/)  
-  from transcripts.  
-  Allowed values: `'pci'`, `'numbers'`, `'true'`, `'ssn'`.
-</ParamField>
-
-<ParamField path="replace" type="array" required={false}>
-  [An array of terms or phrases](https://developers.deepgram.com/docs/find-and-replace)  
-  to search for in the submitted audio and replace.
-</ParamField>
-
-<ParamField path="search" type="array" required={false}>
-  An array of terms or phrases to search for in the submitted audio.
-</ParamField>
-
-<ParamField path="shortUtterance" type="boolean" required={false}>
-  Causes a transcript to be returned as soon as Deepgram's `is_final` property is set.  
-  This should only be used in scenarios where you expect a very short confirmation  
-  or directed command and want minimal latency.
-</ParamField>
-
-<ParamField path="smartFormatting" type="boolean" required={false}>
-  Indicates whether to enable[Deepgram's Smart Formatting](https://developers.deepgram.com/docs/smart-format) feature.
-</ParamField>
-
-<ParamField path="tag" type="string" required={false}>
-  [A tag to associate with the request](https://developers.deepgram.com/docs/tagging).  
-  Tags appear in usage reports.
-</ParamField>
-
-<ParamField path="tier" type="string" required={false}>
-  [Deepgram tier](https://developers.deepgram.com/docs/tier) you would like to use.  
-  Allowed values: `'enhanced'`, `'base'`.  
-  Default: `'base'`.
-</ParamField>
-
-<ParamField path="utteranceEndMs" type="number" required={false}>
-  (Added in `08.5`) A number of milliseconds of silence that Deepgram will wait  
-  after the last word was spoken before returning an `UtteranceEnd` event,  
-  which is used by Jambonz to trigger the transcript webhook if this property is supplied.  
-  This is essentially Deepgram's version of continuous ASR.
-</ParamField>
-
-<ParamField path="version" type="string" required={false}>
-  [Deepgram version](https://developers.deepgram.com/docs/version) of the model to use.  
-  Default: `'latest'`.
-</ParamField>
-
-### ibmOptions
-
-<ParamField path="acousticCustomizationId" type="string" required={false}>
-  ID of a custom acoustic model.
-</ParamField>
-
-<ParamField path="baseModelVersion" type="string" required={false}>
-  Base model to be used.
-</ParamField>
-
-<ParamField path="instanceId" type="string" required={false}>
-  IBM speech instance ID (overrides setting in Jambonz portal).
-</ParamField>
-
-<ParamField path="languageCustomizationId" type="string" required={false}>
-  ID of a custom language model.
-</ParamField>
-
-<ParamField path="model" type="string" required={false}>
-  The model to use for speech recognition.
-</ParamField>
-
-<ParamField path="sttApiKey" type="string" required={false}>
-  IBM API key to authenticate with (overrides setting in Jambonz portal).
-</ParamField>
-
-<ParamField path="sttRegion" type="string" required={false}>
-  IBM region (overrides setting in Jambonz portal).
-</ParamField>
-
-<ParamField path="watsonLearningOptOut" type="boolean" required={false}>
-  Set to `true` to prevent IBM from using your API request data to improve their service.
-</ParamField>
-
-<ParamField path="watsonMetadata" type="string" required={false}>
-  A [tag value](https://cloud.ibm.com/apidocs/speech-to-text?code=node#getting-started-data-labels)  
-  to apply to the request data provided.
-</ParamField>
-
-### nvidiaOptions
-
-`nvidiaOptions` is an object with the following properties. Please refer to the [Nvidia Riva Documentation](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/index.html) for detailed descriptions. This option is available in jambonz 0.8.0 or above.
-
-<ParamField path="customConfiguration" type="object" required={false}>
-  An object of key-value pairs that can be sent to Nvidia for custom configuration.
-</ParamField>
-
-<ParamField path="maxAlternatives" type="number" required={false}>
-  Number of alternative transcripts to return.
-</ParamField>
-
-<ParamField path="profanityFilter" type="boolean" required={false}>
-  Indicates whether to remove profanity from the transcript.
-</ParamField>
-
-<ParamField path="punctuation" type="boolean" required={false}>
-  Indicates whether to provide punctuation in the transcripts.
-</ParamField>
-
-<ParamField path="rivaUri" type="string" required={false}>
-  GRPC endpoint (`ip:port`) that Nvidia Riva is listening on.
-</ParamField>
-
-<ParamField path="verbatimTranscripts" type="boolean" required={false}>
-  Indicates whether to provide verbatim transcripts.
-</ParamField>
-
-<ParamField path="wordTimeOffsets" type="boolean" required={false}>
-  Indicates whether to provide word-level detail.
-</ParamField>
-
-### sonioxOptions
-
-`sonioxOptions` is an object with the following properties. Please refer to the [Soniox Documentation](https://soniox.com/docs/) for detailed descriptions. This option is available in jambonz 0.8.2 or above.
-
-<ParamField path="api_key" type="string" required={false}>
-  Soniox API key.
-</ParamField>
-
-<ParamField path="model" type="string" required={false}>
-  Soniox [model](https://soniox.com/docs/models) to use.  
-  Default: `'precision_ivr'`.
-</ParamField>
-
-<ParamField path="profanityFilter" type="boolean" required={false}>
-  Indicates whether to [remove profanity](https://soniox.com/docs/profanity_filter) from the transcript.
-</ParamField>
-
-<ParamField path="storage" type="object" required={false}>
-  Properties that dictate whether to store audio and/or transcripts.  
-  Can be useful for debugging purposes.
-</ParamField>
-
-<ParamField path="storage.disableSearch" type="boolean" required={false} default="false">
-  If true, do not allow search.  
-</ParamField>
-
-<ParamField path="storage.disableStoreAudio" type="boolean" required={false} default="false">
-  If true, do not store audio.  
-</ParamField>
-
-<ParamField path="storage.disableStoreTranscript" type="boolean" required={false} default="false">
-  If true, do not store transcripts.  
-</ParamField>
-
-<ParamField path="storage.id" type="string" required={false}>
-  Storage identifier.
-</ParamField>
-
-<ParamField path="storage.title" type="string" required={false}>
-  Storage title.
-</ParamField>
-
-### speechmaticsOptions
-
-`speechmaticsOptions` is an object with the following properties. Please refer to the [Soniox Documentation](https://soniox.com/docs/) for detailed descriptions. This option is available in jambonz 0.8.2 or above.
-
-<ParamField path="sm_audioEventsConfig" type="object" required={false}>
-  Audio events to report.
-</ParamField>
-
-<ParamField path="sm_audioEventsConfig.types" type="array" required={true}>
-  "applause", "laughter", or "music"
-</ParamField>
-
-<ParamField path="transcription_config" type="object" required={false}>
-  Audio transcription configuration.
-</ParamField>
-
-<ParamField path="transcription_config.additional_vocab" type="array" required={false}>
-  Additional vocabulary words.
-</ParamField>
-
-<ParamField path="transcription_config.audio_filtering_config" type="object" required={false}>
-  Audio filtering configuration.
-</ParamField>
-
-<ParamField path="transcription_config.audio_filtering_config.volume_threshold" type="number" required={false}>
-</ParamField>
-
-<ParamField path="transcription_config.diarization" type="string" required={false}>
-</ParamField>
-
-<ParamField path="transcription_config.domain" type="array" required={false}>
-</ParamField>
-
-<ParamField path="transcription_config.enable_entities" type="boolean" required={false}>
-</ParamField>
-
-<ParamField path="transcription_config.enable_partials" type="boolean" required={false}>
-  Enable partial transcriptions.
-</ParamField>
-
-<ParamField path="transcription_config.language" type="string" required={false}>
-  Language to transcribe.
-</ParamField>
-
-<ParamField path="transcription_config.max_delay" type="number" required={false}>
-</ParamField>
-
-<ParamField path="transcription_config.max_delay_mode" type="string" required={false}>
-  "fixed" or "flexible"
-</ParamField>
-
-<ParamField path="transcription_config.output_locale" type="string" required={false}>
-</ParamField>
-
-<ParamField path="transcription_config.operating_point" type="string" required={false}>
-</ParamField>
-
-<ParamField path="transcription_config.punctuation_overrides" type="object" required={false}>
-  Punctuation configuration
-</ParamField>
-
-<ParamField path="transcription_config.punctuation_overrides.permitted_marks" type="array" required={false}>
-</ParamField>
-
-<ParamField path="transcription_config.punctuation_overrides.sensitivity" type="number" required={false}>
-</ParamField>
-
-<ParamField path="sm_audioFilteringConfig" type="object" required={false}>
-  Audio filtering configuration.
-</ParamField>
-
-<ParamField path="sm_audioFilteringConfig.volume_threshold" type="number" required={true}>
-  Volume threshold to filter.
-</ParamField>
 
 ### Providing speech hints
 

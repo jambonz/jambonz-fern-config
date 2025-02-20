@@ -15,6 +15,10 @@ subtitle: Places a call into a conference.
 ```
 ## Parameters
 
+<ParamField path="name" type="string" required={true}>
+  name of the conference
+</ParamField>
+
 <ParamField path="actionHook" type="string" required={false}>
   A webhook to call when the conference ends
 </ParamField>
@@ -41,10 +45,6 @@ subtitle: Places a call into a conference.
 
 <ParamField path="memberTag" type="string" required={false}>
   a way to classify participants for the "coach" feature; see related speakOnlyTo attribute below (0.9.1 and above)
-</ParamField>
-
-<ParamField path="name" type="string" required={true}>
-  name of the conference
 </ParamField>
 
 <ParamField path="speakOnlyTo" type="string" required={false}>

@@ -27,6 +27,10 @@ subtitle: Generate text-to-speech audio.
   Default: `1`.
 </ParamField>
 
+<ParamField path="streaming" type="boolean" required={false}>
+  If set to true streaming text input is enabled.
+</ParamField>
+
 <ParamField path="synthesizer.gender" type="string" required={false}>
   (Google only) `MALE`, `FEMALE`, or `NEUTRAL`.
 </ParamField>
@@ -37,7 +41,7 @@ subtitle: Generate text-to-speech audio.
 
 <ParamField path="synthesizer.vendor" type="string" required={false}>
   Speech vendor to use (see list below, along with any others added via the  
-  [custom speech API](/guides/speech-providers/custom-speech-api)).
+  [custom speech API](/guides/features/adding-speech-providers)).
 </ParamField>
 
 <ParamField path="synthesizer.voice" type="string" required={false}>
@@ -46,6 +50,6 @@ subtitle: Generate text-to-speech audio.
   Defaults to application setting, if provided.
 </ParamField>
 
-<ParamField path="text" type="string" required={true}>
+<ParamField path="text" type="string" required={false}>
   Text to speak; may contain SSML tags.
 </ParamField>

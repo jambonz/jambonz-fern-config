@@ -22,6 +22,10 @@ The session ends immediately after the action is executed.
 
 ## Parameters
 
+<ParamField path="status" type="number" required={true}>
+  A valid SIP status code in the range `4XX - 6XX`.
+</ParamField>
+
 <ParamField path="headers" type="object" required={false}>
   SIP headers to include in the response.
 </ParamField>
@@ -29,8 +33,4 @@ The session ends immediately after the action is executed.
 <ParamField path="reason" type="string" required={false}>
   A brief description.  
   Default: The well-known SIP reasons associated with the specified status code.
-</ParamField>
-
-<ParamField path="status" type="number" required={true}>
-  A valid SIP status code in the range `4XX - 6XX`.
 </ParamField>

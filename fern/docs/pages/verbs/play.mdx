@@ -16,6 +16,10 @@ subtitle: Stream recorded audio to a call.
 
 ### Parameters
 
+<ParamField path="url" type="string | array" required={true}>
+  A single URL or an array of URLs (will play in sequence) to a WAV or MP3 file.
+</ParamField>
+
 <ParamField path="actionHook" type="string" required={false}>
   Webhook that is called when the play verb completes.
 </ParamField>
@@ -34,10 +38,6 @@ subtitle: Stream recorded audio to a call.
 
 <ParamField path="timeoutSecs" type="number" required={false}>
   Number of seconds to play the URL.
-</ParamField>
-
-<ParamField path="url" type="string | array" required={true}>
-  A single URL or an array of URLs (will play in sequence) to a WAV or MP3 file.
 </ParamField>
 
 ### actionHook properties

@@ -1,0 +1,134 @@
+---
+title: Synthesizer
+subtitle: A **property** that can be used in a `say` verb to override the application default TTS settings.
+---
+
+## Parameters
+
+<ParamField path="vendor" type="string" required={true}>
+  Name of the TTS vendor, or 'default' to use the application default.
+</ParamField>
+
+<ParamField path="voice" type="string" required={true}>
+  Name of the voice to use for the TTS, or 'default' to use the application default.
+</ParamField>
+
+<ParamField path="engine" type="string" required={false}>
+  (Google specific) may be `standard`, `neural`, `generative`, or `long-form`.
+</ParamField>
+
+<ParamField path="gender" type="string" required={false}>
+  (Google specific) may be `MALE`, `FEMALE`, `NEUTRAL`.
+</ParamField>
+
+<ParamField path="label" type="string" required={false}>
+  Label associated with the TTS vendor.
+</ParamField>
+
+<ParamField path="language" type="string" required={false}>
+  Language code for the TTS, or 'default' to use the application default.
+</ParamField>
+
+<ParamField path="options" type="object" required={false}>
+  Vendor-specific options for the TTS, see below for supported properties.
+</ParamField>
+
+### Vendor-specific options
+
+<AccordionGroup>
+
+  <Accordion title="cartesia">
+    <ParamField path="voice_mode" type="string" required={false}>
+      `embedding` or `id` (see [Cartesia docs](https://docs.cartesia.ai/api-reference/tts/bytes#request.body.voice))
+    </ParamField>
+    <ParamField path="embedding" type="string" required={false}>
+      a voice embedding (see [Cartesia docs](https://docs.cartesia.ai/api-reference/tts/bytes#request.body.voice.Ttsrequest%20Embedding%20Specifier.embedding))
+    </ParamField>
+    <ParamField path="emotion" type="string" required={false}>
+      specifies emotion (see [Cartesia docs](https://docs.cartesia.ai/api-reference/tts/bytes#request.body.voice.Ttsrequest%20Embedding%20Specifier.__experimental_controls.emotion))
+    </ParamField>
+    <ParamField path="speed" type="number" required={false}>
+      A number or named specifier (e.g "slow") (see [Cartesia docs](https://docs.cartesia.ai/api-reference/tts/bytes#request.body.voice.Ttsrequest%20Embedding%20Specifier.__experimental_controls.speed))
+    </ParamField>
+  </Accordion>
+  
+  <Accordion title="elevenlabs">
+    <ParamField path="stability" type="number" required={false}>
+       Defines the stability for voice settings (see [Elevenlabs docs](https://elevenlabs.io/docs/api-reference/websocket#properties))  
+    </ParamField>
+    <ParamField path="similarity_boost" type="number" required={false}>
+       Defines the similarity boost for voice settings. (see [Elevenlabs docs](https://elevenlabs.io/docs/api-reference/websocket#properties))  
+    </ParamField>
+    <ParamField path="use_speaker_boost" type="boolean" required={false}>
+       Defines the use speaker boost for voice settings. This parameter is available on V2+ models (see [Elevenlabs docs](https://elevenlabs.io/docs/api-reference/websocket#properties))  
+    </ParamField>
+    <ParamField path="style" type="number" required={false}>
+       Defines the style for voice settings. This parameter is available on V2+ models. (see [Elevenlabs docs](https://elevenlabs.io/docs/api-reference/websocket#properties))  
+    </ParamField>
+    <ParamField path="model_id" type="string" required={false}>
+       Identifier of the model that will be used (see [Elevenlabs docs](https://elevenlabs.io/docs/api-reference/websocket#properties))  
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="playht">
+    <ParamField path="voice_engine" type="string" required={false}>
+      The voice engine used to synthesize the voice. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
+    </ParamField>
+    <ParamField path="quality" type="string" required={false}>
+      draft, low, medium, high, premium (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
+    </ParamField>
+    <ParamField path="seed" type="number" required={false}>
+      An integer number greater than or equal to 0. If equal to null or not provided, a random seed will be used. Useful to control the reproducibility of the generated audio. 
+      Assuming all other properties didn't change, a fixed seed should always generate the exact same audio file (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
+    </ParamField>
+    <ParamField path="temperature" type="number" required={false}>
+      A floating point number between 0, inclusive, and 2, inclusive. If equal to null or not provided, the model's default temperature will be used. The temperature parameter controls variance. Lower temperatures result in more predictable results, higher temperatures allow each run to vary more, so the voice may sound less like the baseline voice. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
+    </ParamField>
+    <ParamField path="emotion" type="string" required={false}>
+      An emotion to be applied to the speech. Only supported when voice_engine is set to Play3.0-mini, PlayHT2.0 or PlayHT2.0-turbo, and voice uses that engine. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
+    </ParamField>
+    <ParamField path="voice_guidance" type="number" required={false}>
+      A number between 1 and 6. Use lower numbers to reduce how unique your chosen voice will be compared to other voices. Higher numbers will maximize its individuality. Only supported when voice_engine is set to Play3.0-mini, PlayHT2.0 or PlayHT2.0-turbo, and voice uses that engine. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
+    </ParamField>
+    <ParamField path="style_guidance" type="number" required={false}>
+      A number between 1 and 30. Use lower numbers to to reduce how strong your chosen emotion will be. Higher numbers will create a very emotional performance. Only supported when voice_engine is set to Play3.0-mini, PlayHT2.0 or PlayHT2.0-turbo, and voice uses that engine. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
+    </ParamField>
+    <ParamField path="text_guidance" type="number" required={false}>
+      A number between 1 and 2. This number influences how closely the generated speech adheres to the input text. Use lower values to create more fluid speech, but with a higher chance of deviating from the input text. Higher numbers will make the generated speech more accurate to the input text, ensuring that the words spoken align closely with the provided text. Only supported when voice_engine is set to Play3.0-mini or PlayHT2.0, and voice uses that engine. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="rimelabs">
+    <ParamField path="pauseBetweenBrackets" type="boolean" required={false}>
+      When set to true, adds pauses between words enclosed in angle brackets. The number inside the brackets specifies the pause duration in milliseconds.
+Example: "Hi. \<200> I'd love to have a conversation with you." adds a 200ms pause between the first and second sentences. see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)
+    </ParamField>
+    <ParamField path="phonemizeBetweenBrackets" type="boolean" required={false}>
+      When set to true, you can specify the phonemes for a word enclosed in curly brackets. see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)
+    </ParamField>
+    <ParamField path="inlineSpeedAlpha" type="string" required={false}>
+      Comma-separated list of speed values applied to words in square brackets. Values < 1.0 speed up speech, > 1.0 slow it down. Example: "This sentence is [really] [fast]" with inlineSpeedAlpha "0.5, 3" will make "really" slow and "fast" fast. see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)
+    </ParamField>
+    <ParamField path="speedAlpha" type="number" required={false}>
+      Adjusts the speed of speech. Lower than 1.0 is faster than default. Higher than 1.0 is slower than default. see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)
+    </ParamField>
+    <ParamField path="reduceLatency" type="boolean" required={false}>
+      Reduces the latency of response, at the cost of some possible mispronunciation of digits and abbreviations. see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="verbio">
+    <ParamField path="engine_version" type="string" required={false}>
+      The engine version to use. (see [Verbio docs](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text/Available-languages-and-features))
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="whisper">
+    <ParamField path="model_id" type="string" required={false}>
+      TTS model to use. (see [Whisper docs](https://platform.openai.com/docs/api-reference/audio/createSpeech))
+    </ParamField>
+  </Accordion>
+
+</AccordionGroup>
+
+

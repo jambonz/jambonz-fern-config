@@ -17,11 +17,22 @@ This feature is enabled via the [config](/verbs/verbs/config) verb using the `re
 }
 ```
 
-The available properties are as follows:
+## Parameters
 
-| option        | description | required  |
-| ------------- |-------------| -----|
-|action|"startCallRecording", "stopCallRecording", "pauseCallRecording", or "resumeCallRecording"|yes|
-|siprecServerURL|sip uri for SIPREC server|required if action is "startCallRecording"|
-|recordingID|user-supplied string to identify the recording|no|
+<ParamField path="action" type="string" required={true}>
+  Specifies the recording action.  
+  Allowed values: 
+  - startCallRecording
+  - stopCallRecording
+  - pauseCallRecording
+  - resumeCallRecording
+</ParamField>
 
+<ParamField path="recordingID" type="string" required={false}>
+  User-supplied string to identify the recording.
+</ParamField>
+
+<ParamField path="siprecServerURL" type="string" required={false}>
+  SIP URI for SIPREC server.  
+  Note: Required if `action` is `"startCallRecording"`.
+</ParamField>

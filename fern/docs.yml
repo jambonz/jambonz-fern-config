@@ -71,18 +71,18 @@ navigation:
                 path: ./docs/pages/get-started/outbound-call-routing.mdx
       - section: Features
         contents:
+          - page: Adding speech providers
+            path: ./docs/pages/features/custom-speech-stt.mdx
           - page: Answering machine detection
             path: ./docs/pages/features/answering-machine-detection.mdx
           - page: Conferencing "coach" mode
             path: ./docs/pages/features/conferencing-coach-mode.mdx
           - page: Continous ASR
             path: ./docs/pages/features/continuous-asr.mdx
-          - page: Controlling the Media-Path During a Call 
-            path: ./docs/pages/features/controlling-media-path-during-call.mdx
           - page: Handling ActionHook Delays
             path: ./docs/pages/features/handling-action-hook-delays.mdx 
-          - page: Queue notifications
-            path: ./docs/pages/features/queue-notifications.mdx 
+          - page: Managing media anchors 
+            path: ./docs/pages/features/managing-media-anchors.mdx
           - page: SIPREC Client
             path: ./docs/pages/features/siprec-client.mdx
           - page: SIPREC Server
@@ -93,12 +93,6 @@ navigation:
             path: ./docs/pages/features/using-dub-tracks.mdx
           - page: Filler Noise
             path: ./docs/pages/features/using-filler-noise.mdx
-      - section: Help
-        contents:
-          - page: FAQs
-            path: ./docs/pages/resources/faqs.mdx
-          - page: Glossary
-            path: ./docs/pages/resources/glossary.mdx
   - tab: verbs
     layout: 
       - section: Verbs
@@ -147,7 +141,6 @@ navigation:
             path: ./docs/pages/verbs/rasa.mdx
           - page: Recognizer
             path: ./docs/pages/verbs/recognizer.mdx
-            hidden: true
           - page: Redirect
             path: ./docs/pages/verbs/redirect.mdx
           - page: Say
@@ -158,6 +151,8 @@ navigation:
             path: ./docs/pages/verbs/sip-refer.mdx
           - page: SIP Request
             path: ./docs/pages/verbs/sip-request.mdx
+          - page: Synthesizer
+            path: ./docs/pages/verbs/synthesizer.mdx
           - page: Tag
             path: ./docs/pages/verbs/tag.mdx
           - page: Transcribe
@@ -203,6 +198,20 @@ navigation:
         path: ./docs/pages/sdks/nodeclientws.mdx
       - page: npx
         path: ./docs/pages/sdks/npx.mdx
+  - tab: tutorials
+    layout: 
+      - section: Voice AI
+        contents:
+          - page: Deepgram Voice Agent
+            path: ./docs/pages/tutorials/deepgram.mdx
+          - page: Elevenlabs Conversational AI
+            path: ./docs/pages/tutorials/elevenlabs.mdx
+          - page: OpenAI Realtime API
+            path: ./docs/pages/tutorials/openai.mdx
+          - page: Retell.ai
+            path: ./docs/pages/tutorials/retell.mdx
+          - page: Ultravox
+            path: ./docs/pages/tutorials/ultravox.mdx
   - tab: changelog
 
   

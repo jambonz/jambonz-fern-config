@@ -13,6 +13,10 @@ subtitle: Perform a blind transfer of a call by sending a SIP REFER
 
 ## Parameters
 
+<ParamField path="referTo" type="string" required={true}>
+  A SIP URI or a phone number/user identifier.
+</ParamField>
+
 <ParamField path="actionHook" type="string" required={false}>
   A webhook to call when the transfer has completed.
 </ParamField>
@@ -23,10 +27,6 @@ subtitle: Perform a blind transfer of a call by sending a SIP REFER
 
 <ParamField path="headers" type="object" required={false}>
   Additional SIP headers to include in the response.
-</ParamField>
-
-<ParamField path="referTo" type="string" required={true}>
-  A SIP URI or a phone number/user identifier.
 </ParamField>
 
 <ParamField path="referredBy" type="string" required={false}>

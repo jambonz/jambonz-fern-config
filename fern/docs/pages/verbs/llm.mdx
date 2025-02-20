@@ -67,6 +67,14 @@ session.llm(
 
 ## Parameters
 
+<ParamField path="model" type="string" required={true}>
+  Name of the LLM model.
+</ParamField>
+
+<ParamField path="vendor" type="string" required={true}>
+  Name of the LLM vendor.
+</ParamField>
+
 <ParamField path="actionHook" type="string" required={false}>
   Webhook that will be called when the LLM session ends.
 </ParamField>
@@ -91,18 +99,9 @@ session.llm(
   Object containing instructions for the LLM; format dependent on the LLM model.
 </ParamField>
 
-<ParamField path="model" type="string" required={true}>
-  Name of the LLM model.
-</ParamField>
-
 <ParamField path="toolHook" type="string" required={false}>
   Webhook that will be called when the LLM wants to call a function.
 </ParamField>
-
-<ParamField path="vendor" type="string" required={true}>
-  Name of the LLM vendor.
-</ParamField>
-
 
 The following LLMs are currently supported:
 - OpenAI Realtime API
