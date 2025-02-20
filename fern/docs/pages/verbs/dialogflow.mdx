@@ -17,6 +17,18 @@ subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialo
 
 ## Parameters
 
+<ParamField path="credentials" type="string" required={true}>
+  The service account key in JSON string form that is used to authenticate to Dialogflow.
+</ParamField>
+
+<ParamField path="lang" type="string" required={true}>
+  Language to use for speech recognition.
+</ParamField>
+
+<ParamField path="project" type="string" required={true}>
+  The Google Dialogflow project ID.
+</ParamField>
+
 <ParamField path="actionHook" type="string" required={false}>
   A webhook invoked when the operation completes.  
   See below for specified request parameters.
@@ -26,17 +38,9 @@ subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialo
   If true, kill playback immediately when the user begins speaking.
 </ParamField>
 
-<ParamField path="credentials" type="string" required={true}>
-  The service account key in JSON string form that is used to authenticate to Dialogflow.
-</ParamField>
-
 <ParamField path="eventHook" type="string" required={false}>
   A webhook to invoke when a Dialogflow event occurs, such as an intent being detected or a speech transcription being returned.  
   The response to the event hook may contain a new Jambonz application to execute.
-</ParamField>
-
-<ParamField path="lang" type="string" required={true}>
-  Language to use for speech recognition.
 </ParamField>
 
 <ParamField path="noInputEvent" type="string" required={false}>
@@ -49,10 +53,6 @@ subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialo
 
 <ParamField path="passDtmfAsTextInput" type="boolean" required={false}>
   If true, pass user DTMF entries as text inputs to the Dialogflow bot.
-</ParamField>
-
-<ParamField path="project" type="string" required={true}>
-  The Google Dialogflow project ID.
 </ParamField>
 
 <ParamField path="thinkingMusic" type="string" required={false}>

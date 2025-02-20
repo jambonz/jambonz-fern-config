@@ -15,6 +15,10 @@ subtitle: Connect a call to a [Rasa](https://rasa.com/) assistant
 
 ## Parameters
 
+<ParamField path="url" type="string" required={true}>
+  URL to connect to the Rasa assistant using the [RestInput](https://rasa.com/docs/rasa/connectors/your-own-website) channel.
+</ParamField>
+
 <ParamField path="actionHook" type="string" required={false}>
   A webhook that is called when the Rasa verb completes.
 </ParamField>
@@ -68,10 +72,6 @@ subtitle: Connect a call to a [Rasa](https://rasa.com/) assistant
 <ParamField path="tts.voice" type="string" required={false}>
   Voice to use. Note that the voice list differs depending on whether you are using AWS or Google.  
   Defaults to the application setting, if provided.
-</ParamField>
-
-<ParamField path="url" type="string" required={true}>
-  URL to connect to the Rasa assistant using the [RestInput](https://rasa.com/docs/rasa/connectors/your-own-website) channel.
 </ParamField>
 
 ### actionHook properties

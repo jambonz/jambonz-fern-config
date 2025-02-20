@@ -1,25 +1,44 @@
 ---
 title: Handling delays in bots
+subtitle: Provide feedback to users while backend processing is happening
 hidden: false
 ---
 
+When the [gather verb](/verbs/verbs/gather) collects a user utterance and submits it to the jambonz webhook or 
+websocket application for processing, there may be a noticeable delay depending on what the back-end logic needs to do.  
 
-When the [gather verb](/verbs/verbs/gather) collects a user utterance and submits it to the jambonz webhook or websocket application for processing, there may be a noticeable delay depending on what the back-end logic needs to do.  
+For instance, it may need to update a CRM system, make an http request, or feed an LLM and wait for a response. 
+Some of these operations may take a while to complete, and you may want to be able to provide a user with some calming 
+feedback that this is normal system processing.
 
-For instance, it may need to update a CRM system, make an http request, or feed an LLM and wait for a response etc.  Some of these operations may take a while to complete, and you want to be able to provide a user with some cue that this is normal system processing.
+The actionhook delay feature provides a way to pre-program instructions on what to say or play 
+something when these sorts of delays are experienced.  This feature is enabled by the `actionHookDelayAction` property 
+in either the gather or [config](/verbs/verbs/config) verbs.
 
-In addition to these normal delays, there could also be situations where the backend has failed in some unexpected way (e.g. crashed, gone offline, restarted) and in this case the user would be left listening to dead air.
+## Parameters
 
-For both of these cases, jambonz provides a way to pre-program instructions on what to say or play something when these sorts of delays are experienced.  This feature is enabled by the `actionHookDelayAction` property in either the gather or [config](/verbs/verbs/config) verbs. It is an object with the following properties:
+<ParamField path="actions" type="array" required={true}>
+  An array of actions (`jambonz` verbs) to take when `noResponseTimeout` is triggered.
+</ParamField>
 
-| property      | description | required  |
-| ------------- |-------------| -----|
-| enabled | boolean; enable or disable the actionHookDelayAction feature | yes |
-| noResponseTimeout | length of delay (in secs) which triggers an action | no (default: 0) |
-| actions | array of actions (jambonz verbs) to take when noResponseTimeout is triggered | yes |
-| retries | number of times to perform actions, with a noResponseTimeout between each retry | no (default: 1) |
-| noResponseGiveUpTimeout | length of time (in secs) to give up and stop performing actions | no (default: none) |
+<ParamField path="enabled" type="boolean" required={true}>
+  Enable or disable the `actionHookDelayAction` feature.
+</ParamField>
 
+<ParamField path="noResponseGiveUpTimeout" type="number" required={false}>
+  Length of time (in seconds) to give up and stop performing actions.  
+  Default: `none`.
+</ParamField>
+
+<ParamField path="noResponseTimeout" type="number" required={false}>
+  Length of delay (in seconds) that triggers an action.  
+  Default: `0`.
+</ParamField>
+
+<ParamField path="retries" type="number" required={false}>
+  Number of times to perform actions, with a `noResponseTimeout` between each retry.  
+  Default: `1`.
+</ParamField>
 ## Examples
 #### Providing filler noise
 

@@ -27,6 +27,9 @@ subtitle: Generate text-to-speech audio.
   Default: `1`.
 </ParamField>
 
+<ParamField path="streaming" type="boolean" required={false}>
+  If set to true streaming text input is enabled.
+
 <ParamField path="synthesizer.gender" type="string" required={false}>
   (Google only) `MALE`, `FEMALE`, or `NEUTRAL`.
 </ParamField>
@@ -46,6 +49,6 @@ subtitle: Generate text-to-speech audio.
   Defaults to application setting, if provided.
 </ParamField>
 
-<ParamField path="text" type="string" required={true}>
+<ParamField path="text" type="string" required={false}>
   Text to speak; may contain SSML tags.
 </ParamField>

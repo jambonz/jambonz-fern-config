@@ -1,9 +1,18 @@
 ---
 title: Answering machine detection
+subtitle: Detects whether a call has been answered by a person or a machine.
 hidden: false
 ---
 
-The answering machine detection feature can be enabled on outbound calls to provide an indication of whether a call has been answered by a person or a machine.  This is done by providing an `amd` property in a `dial` verb as shown in the simple example below:
+The answering machine detection (amd) feature can be enabled on either outbound or inbound calls 
+to provide an indication of whether a call has been answered by a person or a machine. 
+
+<Note>
+The reason for supporting amd on inbound calls is that some dialers will place an outbound call and then 
+connect it to jambonz by sending an INVITE to jambonz.  While jambonz sees this as an incoming call, 
+you may still want to peform answering machine detection on the call.  You can do this by having your 
+application use a [config](/verbs/verbs/config) verb with an `amd` property.
+</Note>
 
 ```json
 {
@@ -22,30 +31,118 @@ The answering machine detection feature can be enabled on outbound calls to prov
   }
 }
 ```
-In this example, when the dialed call is answered the answering machine detection feature will begin listening on the outbound call leg and after a short period of time will send a webhook to '/amdEvents' with an indication of whether a human or a machine has answered the call.
+
+In the example above when the dialed call is answered the answering machine 
+detection feature will begin listening on the outbound call leg and after a short period of time will send a 
+webhook to '/amdEvents' with an indication of whether a human or a machine has answered the call.
+
+
+## Parameters
+
+<ParamField path="actionHook" type="string" required={true}>
+  Webhook to send AMD events.
+</ParamField>
+
+<ParamField path="recognizer" type="object" required={false}>
+  Speech [recognizer](/verbs/verbs/recognizer) to use, if you want to override the application default settings.
+</ParamField>
+
+<ParamField path="thresholdWordCount" type="number" required={false} default="9">
+  Number of spoken words in a greeting that result in an `amd_machine_detected` result.  
+</ParamField>
+
+<ParamField path="timers" type="object" required={false}>
+  Object containing various timeouts.
+</ParamField>
+
+<ParamField path="timers.decisionTimeoutMs" type="number" required={false} default="15000">
+  Time in milliseconds to wait before returning `amd_decision_timeout`.  
+</ParamField>
+
+<ParamField path="timers.greetingCompletionTimeoutMs" type="number" required={false} default="2000">
+  Silence in milliseconds to wait for during greeting before returning `amd_machine_stopped_speaking`.  
+</ParamField>
+
+<ParamField path="timers.noSpeechTimeoutMs" type="number" required={false} default="5000">
+  Time in milliseconds to wait for speech before returning `amd_no_speech_detected`.  
+</ParamField>
+
+<ParamField path="timers.toneTimeoutMs" type="number" required={false} default="20000">
+  Time in milliseconds to wait to hear a tone.  
+</ParamField>
+
+
+### actionHook properties
 
 The payload in the webhook will look something like this:
 ```json
-{"type":"amd_human_detected"}
+{
+  "type": "amd_human_detected"
+}
 ```
 or
 ```json
-{"type":"amd_machine_detected","reason":"hint","hint":"call has been forwarded","language":"en-us"}
+{
+  "type": "amd_machine_detected",
+  "reason": "hint",
+  "hint": "call has been forwarded",
+  "language": "en-us"
+}
 ```
 
 If no speech is detected at all from the far end, the payload will look like this:
 ```json
-{"type":"amd_no_speech_detected"}
+{
+  "type": "amd_no_speech_detected"
+}
 ```
 
 And, finally, if the answering machine detection feature is unable to determine whether the remote party is a machine or human it will return
 ```json
-{"type":"amd_decision_timeout"}
+{
+  "type": "amd_decision_timeout"
+}
 ```
 
-The application receiving the webhook can return a new jambonz payload of verbs.  For instance, say you had an outbound dialer application in which if you connect to a person you want to deliver a message, but if you connect to someone's voicemail you simply want to hang up.  In that case, your app can respond to the webhook with a simple [hangup](/verbs/verbs/hangup) verb if you receive an event payload indicating a machine has answered.
+The `type` property can have the following values:
 
-## How it works
+|type|meaning|additional properties|
+|----|-------|---------------------|
+|amd_human_detected|a human is speaking|reason, greeting, language|
+|amd_machine_detected|a machine is speaking|reason, hint, transcript, language|
+|amd_no_speech_detected|no speech was detected|none|
+|amd_decision_timeout|no decision was able to be made in the time given|none|
+|amd_machine_stopped_speaking|machine has completed the greeting|none|
+|amd_tone_detected|a beep was detected|none|
+|amd_error|an error has occurred|error|
+|amd_stopped|answering machine detection was stopped|none|
+
+Additional properties:
+
+|name|description|
+|----|-----------|
+|reason|describes why the decision was made (e.g. "short greeting")|
+|greeting|the text of the greeting that was detected|
+|hint|the hint that was matched in the greeting|
+|transcript|the transcript that was gathered|
+|language|the language that was detected|
+
+
+<Note>
+It is possible to receive more than one event for a single call.  For instance, a possible sequence of events on a call to an answering machine is:
+1. amd_machine_detected, then
+1. amd_tone_detected, then
+1. amd_machine_stopped_speaking
+</Note>
+
+
+The application receiving the webhook can optionally return a new jambonz payload of verbs to change the call flow 
+based on the result of the answering machine detection.
+
+For instance, say you had an outbound dialer application and you want 
+to deliver a message when you connect to a person, but otherwise hang up. 
+In that case, your app can respond to the webhook with a simple [hangup](/verbs/verbs/hangup) verb 
+if you receive an event payload indicating a machine has answered.
 
 ### Length of greeting
 The answering machine detection feature leverages the fact that voicemail greetings are typically quite a bit more lengthy than a human's greeting.  When the call is answered, speech recognition is used to determine the length of the greeting and if it is shorter than a (configurable) threshold, it is determined to be human; if longer then it is determined to be a machine.
@@ -73,51 +170,11 @@ Optionally, the feature can also given a list of common phrases that one might h
 }
 ```
 
+The current set of phrases is defined [here](https://github.com/jambonz/jambonz-feature-server/blob/main/data/example-voicemail-greetings.json).
+Feel free to make a pull request against that repo to suggest additional phrases or languages that should be added.
+
 ### Beep detection
 The feature also attempts to detect audio tones, or beeps that are commonly used on voicemail systems.  If detected, an event is sent via the actionHookf to the webapp.
 
 ### Determining when to leave a voicemail
 For an application that wishes to leave a message on a voicemail system, it is necessary to know when the voicemail greeting has completed and the voicemail system is now ready to record the message.  If the feature determines that the remote party is a machine, it will continue listening to the greeting until it completes and then send an event via the `actionHook` to the application.  This can be used as a cue to let the application know that it is time to start leaving the message.
-
-## Events
-The payload that is included in the `actionHook` will always contain a `type` property describing the event type.  Some event types may also include additional properties.  These are described in the table below.
-
-|type|meaning|additional properties|
-|----|-------|---------------------|
-|amd_human_detected|a human is speaking|`{reason, greeting, language}`<br/> reason is 'short greeting', <br/> greeting is the recognized greeting and <br/> language is the recognized language|
-|amd_machine_detected|a machine is speaking|`{reason, hint, transcript, language}`<br/> reason is 'hint' or 'long greeting',<br/>hint is the recognized hint <br/> transcript is the recognized greeting and <br/> language is the recognized language|
-|amd_no_speech_detected|no speech was detected|none|
-|amd_decision_timeout|no decision was able to be made in the time given|none|
-|amd_machine_stopped_speaking|machine has completed the greeting|none|
-|amd_tone_detected|a beep was detected|none|
-|amd_error|an error has occurred|error - an error message|
-|amd_stopped|answering machine detection was stopped|none|
-
-It is possible to receive more than one event for a single call.  For instance, a possible sequence of events on a call to an answering machine is:
-
-1. amd_machine_detected, then
-1. amd_tone_detected, then
-1. amd_machine_stopped_speaking
-
-## Configuration
-
-The full set of configuration parameters is shown below.
-
-|property|meaning|required?|
-|--------|-------|---------|
-|actionHook|webhook to send amd events|yes|
-|thresholdWordCount|number of spoken words in a greeting that result in an amd_machine_detected result|no, default=9|
-|recognizer|speech recognition parameters, used as per [gather](/verbs/verbs/gather) and [transcribe](/verbs/verbs/transcribe)|no, default=app defaults|
-|timers|object containing various timeouts|no|
-|timers.noSpeechTimeoutMs|time in milliseconds to wait for speech before returning amd_no_speech_detected|no, default=5000|
-|timers.decisionTimeoutMs|time in milliseconds to wait before returning amd_decision_timeout|no, default=15000|
-|timers.toneTimeoutMs|time in milliseconds to wait to hear a tone|no, default=20000|
-|timers.greetingCompletionTimeoutMs|silence in milliseconds to wait for during greeting before returning amd_machine_stopped_speaking|no, default=2000|
-
-### Voicemail phrases
-
-If desired, a JSON file of voicemail phrases, organized by language as shown above can be supplied.  If provided, the environment variable `VMD_HINTS_FILE` should point to the file path to this file.
-
-## Answering machine detection on inbound calls
-
-Answering machine detection can also be performed on an inbound leg by adding an `amd` property to a [config](/verbs/verbs/config) verb.  While it is less common to need to do answering machine detection on an inbound leg, this can be useful when jambonz is behind a dialer that has placed the outbound call and then connected it to jambonz by sending an INVITE to jambonz.

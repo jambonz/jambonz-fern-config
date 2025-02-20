@@ -16,6 +16,10 @@ subtitle: Sends a SIP INFO, NOTIFY, or MESSAGE request during a call.
 
 ## Parameters
 
+<ParamField path="method" type="string" required={true}>
+  SIP method, should be one of `INFO`, `MESSAGE`, or `NOTIFY`.
+</ParamField>
+
 <ParamField path="actionHook" type="string" required={false}>
   A webhook to call when the SIP request has completed.
 </ParamField>
@@ -26,10 +30,6 @@ subtitle: Sends a SIP INFO, NOTIFY, or MESSAGE request during a call.
 
 <ParamField path="headers" type="object" required={false}>
   An object containing headers (key-value pairs) to include with the SIP request.
-</ParamField>
-
-<ParamField path="method" type="string" required={true}>
-  SIP method, should be one of `INFO`, `MESSAGE`, or `NOTIFY`.
 </ParamField>
 
 The sip:request verb completes when a response is received from the far end. 

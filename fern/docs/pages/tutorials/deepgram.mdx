@@ -1,0 +1,55 @@
+---
+title: Deepgram Voice Agent
+subtitle: Using jambonz to connect custom telephony to Deepgram's conversational AI
+---
+
+<Note>
+The jambonz application referenced in this article can be 
+found [here](https://github.com/jambonz/deepgram-voice-agent-example). 
+</Note>
+
+This is an example jambonz application that connect to Deepgram's Voice Agent and illustrates how to
+build a Voice-AI application using jambonz and OpenAI.  
+
+## Authentication
+To use this application, you'll need a Deepgram API key. 
+Set the api key as an environment variable before launching the application, like so:
+
+```bash
+DEEPGRAM_API_KEY=<api-key> npm start
+```
+
+Replace `<api-key>` with your actual Deepgram api key.
+
+## Configuring the assistant
+
+With Deepgram, there is no "agent" that you need to create on their platform.  You do, however, get to 
+specify in your application the LLM model you want to use, as 
+[shown here](https://github.com/jambonz/deepgram-voice-agent-example/blob/8b7fb51972d9f16e400eacc34b3ac7bb06fcce90/lib/routes/voice-agent.js#L48) 
+and described [here](https://developers.deepgram.com/docs/voice-agent-llm-models) in the Deepgram docs.
+
+You can also specify the [STT model](https://github.com/jambonz/deepgram-voice-agent-example/blob/8b7fb51972d9f16e400eacc34b3ac7bb06fcce90/lib/routes/voice-agent.js#L45) 
+in the `think` property and optionally a [TTS voice](https://developers.deepgram.com/docs/voice-agent-tts-models) in the 
+`speak` property.
+
+Finally, you provide [client-side tools](https://developers.deepgram.com/docs/voice-agents-function-calling) as 
+shown in the example [here](https://github.com/jambonz/deepgram-voice-agent-example/blob/8b7fb51972d9f16e400eacc34b3ac7bb06fcce90/lib/routes/voice-agent.js#L54).
+
+## actionHook properties
+
+Like many Jambonz verbs, the `llm` verb sends an `actionHook` with a final status when the verb completes. 
+The payload includes a `completion_reason` property indicating why the `llm` session ended.
+ Possible values for `completion_reason` are:
+
+- Normal conversation end
+- Connection failure
+- Disconnect from remote end
+- Server failure
+- Server error
+
+---
+
+Ensure all environment variables are properly configured before starting the application. 
+For detailed API references and documentation, 
+visit the [Deepgram Documentation](https://developers.deepgram.com/docs/voice-agent).
+
