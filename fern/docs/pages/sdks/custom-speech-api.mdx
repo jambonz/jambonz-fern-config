@@ -1,13 +1,19 @@
 # Speech-to-text API
-> Added in 0.8.2
 
-jambonz provides native support for lots of speech recognition vendors, but if you want to integrate with a vendor we don't yet support you can easily do this by writing to our API.  
+jambonz provides native support for lots of speech recognition vendors, 
+but if you want to integrate with a vendor we don't yet support you can easily do this by writing to our API.  
 
 The STT API is based on Websockets.  
 
-jambonz opens a Websocket connection towards a URL that you specify, and sends audio as well as JSON control text frames to your server.  Your server is responsible for implementing the interface to your chosen speech vendor and returning results in JSON format back over the Websocket connection to jambonz.
+jambonz opens a Websocket connection towards a URL that you specify, 
+and sends audio as well as JSON control text frames to your server. 
+Your server is responsible for implementing the interface to your chosen speech vendor 
+and returning results in JSON format back over the Websocket connection to jambonz.
 
-> **Important Note**: your server is responsible for closing the websocket connection.  Generally, this is done after receiving the [stop control message](#h3-stop-control-message) from jambonz.
+<Note>
+Your server is responsible for closing the websocket connection. 
+Generally, this is done after receiving the [stop control message](#h3-stop-control-message) from jambonz.
+</Note>
 
 Want to look at some working code?  Check out [these examples](https://github.com/jambonz/custom-speech-example).
 
@@ -19,9 +25,11 @@ An Authorization header is sent by jambonz on the HTTP request that creates the 
 Authorization: Bearer <apiKey>
 ```
 
-When you create a custom speech vendor in the jambonz portal you will specify an api key which is then then provided in the Authorization header whenever that custom speech vendor is used in your application.
+When you create a custom speech vendor in the jambonz portal you will specify an api key which is 
+then then provided in the Authorization header whenever that custom speech vendor is used in your application.
 
-In the example below, we creeate a Custom speech service for [AssemblyAI](https://www.assemblyai.com/docs) and add an apiKey of 'foobarbazzle'.
+In the example below, we creeate a Custom speech service for [AssemblyAI](https://www.assemblyai.com/docs) 
+and add an apiKey of 'foobarbazzle'.
 
 >> Note: this is *not* the API key that you may get from AssemblyAI to use their service.
 
@@ -29,9 +37,11 @@ In the example below, we creeate a Custom speech service for [AssemblyAI](https:
 
 ## Control messages sent by jambonz
 
-Control messages are sent as JSON frames.  Audio is sent as binary frames containing linear16 pcm-encoded audio at 8khz sampling.  
+Control messages are sent as JSON frames.  Audio is sent as binary frames containing 
+linear16 pcm-encoded audio at 8khz sampling.  
 
-The first message that you will receive from jambonz after accepting and upgrading the http request to a Websocket connection is a "start" control message, followed by binary audio frames.
+The first message that you will receive from jambonz after accepting and upgrading the 
+http request to a Websocket connection is a "start" control message, followed by binary audio frames.
 
 ### Start control message
 

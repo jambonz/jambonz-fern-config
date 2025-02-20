@@ -104,8 +104,7 @@ subtitle: A **property** that can be used in a `say` verb to override the applic
 Example: "Hi. \<200> I'd love to have a conversation with you." adds a 200ms pause between the first and second sentences. see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)
     </ParamField>
     <ParamField path="phonemizeBetweenBrackets" type="boolean" required={false}>
-      When set to true, you can specify the phonemes for a word enclosed in curly brackets.
-Example: "{h’El.o} World” will pronounce “Hello” as expected. More details on this feature are incoming! see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)
+      When set to true, you can specify the phonemes for a word enclosed in curly brackets. see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)
     </ParamField>
     <ParamField path="inlineSpeedAlpha" type="string" required={false}>
       Comma-separated list of speed values applied to words in square brackets. Values < 1.0 speed up speech, > 1.0 slow it down. Example: "This sentence is [really] [fast]" with inlineSpeedAlpha "0.5, 3" will make "really" slow and "fast" fast. see [Rimelabs docs](https://docs.rime.ai/api-reference/endpoint/streaming-pcm)

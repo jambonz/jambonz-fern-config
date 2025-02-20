@@ -144,7 +144,7 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
 
 <ParamField path="vendor" type="string" required={false}>
   Speech vendor to use (see list below, along with any others you add via the  
-  [custom speech API](/guides/speech-providers/custom-speech-api)).
+  [custom speech API](/guides/features/adding-speech-providers)).
 </ParamField>
 
 <ParamField path="vocabularyFilterName" type="string" required={false}>
@@ -157,13 +157,12 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
 
 ### Vendor-specific options
 
-
 <AccordionGroup>
   <Accordion title="azureOptions">
     <ParamField path="speechSegmentationSilenceTimeoutMs" type="number" required={false}>
       Duration (in milliseconds) of non-speech audio within a phrase that's currently being spoken before that phrase is considered "done."  
       See [here](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-recognize-speech?pivots=programming-language-csharp#change-how-silence-is-handled) for details.
-  </ParamField>
+    </ParamField>
   </Accordion>
 
   <Accordion title="deepgramOptions">
@@ -269,7 +268,7 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
     </ParamField>
 
     <ParamField path="utteranceEndMs" type="number" required={false}>
-      (Added in `08.5`) A number of milliseconds of silence that Deepgram will wait  
+      A number of milliseconds of silence that Deepgram will wait  
       after the last word was spoken before returning an `UtteranceEnd` event,  
       which is used by Jambonz to trigger the transcript webhook if this property is supplied.  
       This is essentially Deepgram's version of continuous ASR.

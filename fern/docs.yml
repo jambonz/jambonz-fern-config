@@ -71,6 +71,8 @@ navigation:
                 path: ./docs/pages/get-started/outbound-call-routing.mdx
       - section: Features
         contents:
+          - page: Adding speech providers
+            path: ./docs/pages/features/custom-speech-stt.mdx
           - page: Answering machine detection
             path: ./docs/pages/features/answering-machine-detection.mdx
           - page: Conferencing "coach" mode
