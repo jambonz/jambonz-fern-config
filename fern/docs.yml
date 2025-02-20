@@ -1,6 +1,11 @@
 instances:
   - url: jambonz-12u348932.docs.buildwithfern.com
     custom-domain: docs.jambonz.org
+    edit-this-page:
+      github: 
+        owner: jambonz
+        repo: jambonz-fern-config
+        branch: main
   
 tabs: 
   home: 
