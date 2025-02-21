@@ -12,7 +12,7 @@ The transcribe verb may appear on its own or as a nested verb within a dial or l
   "verb": "transcribe",
   "transcriptionHook": "http://example.com/transcribe",
   "recognizer": {
-    "vendor": "Google",
+    "vendor": "google",
     "language" : "en-US",
     "interim": true
   }
@@ -21,11 +21,10 @@ The transcribe verb may appear on its own or as a nested verb within a dial or l
 
 ## Parameters
 
-<ParamField path="recognizer" type="object" required={true}>
-  [Speech recognition options](/verbs/verbs/recognizer).
-</ParamField>
-
-<ParamField path="recognizer.transcriptionHook" type="string" required={true}>
+<ParamField path="transcriptionHook" type="string" required={true}>
   Webhook to receive an HTTP POST when an interim or final transcription is received.
 </ParamField>
 
+<ParamField path="recognizer" type="object" required={false}>
+  [Speech recognition options](/verbs/verbs/recognizer).
+</ParamField>

@@ -5,6 +5,13 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
 
 ## Parameters
 
+
+<ParamField path="vendor" type="string" required={true}>
+  Speech vendor to use (see list below, along with any others you add via the  
+  [custom speech API](/guides/features/adding-speech-providers)).
+  Note: this field is case sensitve, all the built-in vendors are lower case eg `aws` not `AWS`
+</ParamField>
+
 <ParamField path="altLanguages" type="array" required={false}>
   (Google, Microsoft) An array of alternative languages that the speaker may be using.
 </ParamField>
@@ -66,7 +73,8 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
 
 <ParamField path="interim" type="boolean" required={false}>
   If true, interim transcriptions are sent.  
-  Default: `false`.
+  Default: `false`.<br/>
+  Note: this only effects use in a [Transcribe](./transcribe) verb, in [Gather](./gather) interims are sent based on the presence of a `partialResponseHook`
 </ParamField>
 
 <ParamField path="language" type="string" required={false}>
@@ -140,11 +148,6 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
 
 <ParamField path="vad.voiceMs" type="number" required={false}>
   If `vad` is enabled, the number of milliseconds of speech required before connecting to the cloud recognizer.
-</ParamField>
-
-<ParamField path="vendor" type="string" required={false}>
-  Speech vendor to use (see list below, along with any others you add via the  
-  [custom speech API](/guides/features/adding-speech-providers)).
 </ParamField>
 
 <ParamField path="vocabularyFilterName" type="string" required={false}>
