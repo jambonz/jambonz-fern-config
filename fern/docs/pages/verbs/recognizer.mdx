@@ -72,7 +72,8 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
 
 <ParamField path="interim" type="boolean" required={false}>
   If true, interim transcriptions are sent.  
-  Default: `false`.
+  Default: `false`.<br/>
+  Note: this only effects use in a [Transcribe](./transcribe) verb, in [Gather](./gather) interims are sent based on the presence of a `partialResponseHook`
 </ParamField>
 
 <ParamField path="language" type="string" required={false}>
