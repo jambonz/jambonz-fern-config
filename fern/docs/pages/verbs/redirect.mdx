@@ -20,3 +20,6 @@ All actions after `redirect` are unreachable and ignored.
   URL of webhook to retrieve a new application from.
 </ParamField>
 
+Where the actionHook url is a full url eg `https://example.com/connectToSales` Jambonz will update the base URL used for the call so any futher actionHooks that contain relative urls will use the new base.
+
+This has no effect on the statusHook which will continue to use the value configured in the application.
