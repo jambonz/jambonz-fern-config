@@ -1,0 +1,45 @@
+<Card title="0.9.3-8" icon="regular hands-holding-diamond" iconPosition="left">
+Point release
+</Card>
+
+## Audio Improvements with Bidirectional Streams, Ultravox Enhancements, AWS Autoscaling fixes and more
+
+1. Allows the `url` property in a [listen](/verbs/verbs/listen) verb to be a relative URL when used in a websocket application.  This allows developers 
+to create a single websocket app that handles both jambonz commands and bidirectional audio streams.  
+<br/>See [this realtime translation example that uses openAI](https://github.com/jambonz/realtime-translator-using-llms) 
+and bidirectional audio streams, where the `url` property is a [relative URL](https://github.com/jambonz/realtime-translator-using-llms/blob/5d438b35989ceb8ed62fcb934a56441d12fdc81b/lib/routes/openai-translator.js#L30) 
+and the 
+[app handles both jambonz commands and the audio stream](https://github.com/jambonz/realtime-translator-using-llms/blob/5d438b35989ceb8ed62fcb934a56441d12fdc81b/app.js#L10).
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/issues/1101), [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1101)
+
+1. Fixes an intermittent issue with audio issue with crackling noise on bidirectional audio streams.
+
+1. When an application [redirects](/verbs/verbs/redirect) to a new absolute URL, update the base requestor so that future relative URLs 
+are resolved relative to the new URL.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1096), [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1079)
+
+1. Fixes an issue where the final transcript in a conversation initiated with the [dial]() verb was sometimes not collected 
+if the caller hung up quickly after their final utterance.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1073), [Issue](https://github.com/jambonz/jambonz-feature-server/issues/997)
+
+1. Adds support for sending an [input_text_message](https://docs.ultravox.ai/datamessages#inputtextmessage) to Ultravox.ai 
+during a speech-to-speech session.  This enables the application to dynamically direct the conversation through means 
+other than the caller's voice.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1100)
+
+1. Fixes an issue with intermittent failure to clean up media server resources after a call completes.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1090) [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1072)
+
+1. Webapp no longer shows Messaging webhook as SMPP is a deprecated feature for the time being (lack of customer demand).
+<br/><br/>[PR](https://github.com/jambonz/jambonz-webapp/pull/488), [Issue](https://github.com/jambonz/jambonz-webapp/issues/482)
+
+1. Fixes database upgrade script which had previously misnamed a column.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/391) [Issue](https://github.com/jambonz/jambonz-api-server/issues/390)
+
+1. Fixes an issue with AWS autoscaling where incorrect SNS topic name was used, leading to unnecessarily long scale-in durations.
+<br/><br/>[PR](https://github.com/jambonz/sbc-inbound/pull/193)
+
+1. When sending a REFER over sips the Contact header should also use sips scheme.
+<br/><br/>[PR](https://github.com/jambonz/sbc-inbound/pull/192)
+
+

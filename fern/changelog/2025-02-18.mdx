@@ -1,0 +1,45 @@
+<Card title="0.9.3-5" icon="regular hands-holding-diamond" iconPosition="left">
+Point release
+</Card>
+
+## Important STT Improvements for Deepgram and Speechmatics, Support for Outbound SIP Proxy and more
+
+1. Adds support for carriers that require us to send them calls through an outbound sip proxy.
+<br/><br/>[PR](https://github.com/jambonz/sbc-outbound/pull/165), [PR](https://github.com/jambonz/jambonz-api-server/pull/389) 
+[PR](https://github.com/jambonz/jambonz-webapp/pull/484),  [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1076)
+
+1. Reject call attempts on hosted jambonz systems where the account has no active subscription.
+<br/><br/>[PR](https://github.com/jambonz/sbc-inbound/pull/191)
+
+1. Improve Deepgram integration by ignoring UtteranceEnd event from Deepgram when we have unprocessed words; 
+in this scenario it is better to continue to wait for the unprocessed words to become finalized.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1089) [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1088)
+
+1. Fixes issue where exception thrown when a new application URL is provided during a call and the request to 
+that URL fails.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1087)
+
+1. Improves handling of errors when handling `tts:tokens` requests to stream text tokens from an LLM.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1087)
+
+1. Fixes timeout issues when working with speechmatics STT.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1081/commits/ab8735bdec9177fbd4819791f554e8be346083ee)
+
+1. Adds a response time metric when using tts streaming.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1086)
+
+1. Fixes an issue where when using the `dialMusic` property in a [dial](/verbs/verbs/dial) verb, the music 
+could play endlessly.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1085), [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1084)
+
+1. Allows the Deepgram [nodelay](https://developers.deepgram.com/docs/smart-format#using-no-delay) property to be explicitly set.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1083), [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1082)
+
+1. Enhances the [createCall REST API](/reference/rest-call-control/calls/create-call) to allow the caller to specify a sip proxy to send the INVITE through.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1075)
+
+1. Fixes issue where an incoming REGISTER with invalid sip uri in the From or To header causes an exception.
+<br/><br/>[PR](https://github.com/jambonz/sbc-sip-sidecar/pull/84), [Issue](https://github.com/jambonz/sbc-sip-sidecar/issues/83)
+
+1. Supports recording an incoming SIPREC call using the jambonz recording feature.
+<br/><br/>[PR](https://github.com/jambonz/sbc-inbound/pull/190)
