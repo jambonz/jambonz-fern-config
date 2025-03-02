@@ -1,0 +1,35 @@
+<Card title="0.9.3-1" icon="regular hands-holding-diamond" iconPosition="left">
+Point release
+</Card>
+
+## Adding Voxist as new STT Vendor, ElevenLanbs Conversational AI Agents and more
+1. Adds support for Voxist STT.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1066)
+
+1. Enhance TTS caching to account for the model of the TTS engine as well as vendor and other properties.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1062), [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1059)
+
+1. Adds support for using ElevenLabs conversational AI agents.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1052), [PR](https://github.com/jambonz/jambonz-feature-server/pull/1063)
+
+1. Adds support for setting the speech recognition mode for Azure STT.  The allowed values are 
+CONVERSATION, DICTATION and INTERACTIVE.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1060), [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1057)
+
+1. Fixes an issue where a re-INVITE received during a [dial](/verbs/verbs/dial) operation could cause an exception.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1054), [Issue](https://github.com/jambonz/jambonz-feature-server/issues/1053)
+
+1. Adds support for streaming TTS using Rime Labs.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1047)
+
+1. Supports fetching elevenlabs models by api-key.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/383)
+
+1. Fixes some issues with tracking call counts on the SBC.
+<br/><br/>[PR](https://github.com/jambonz/sbc-inbound/pull/189)
+
+
+
+
+
+

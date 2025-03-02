@@ -37,7 +37,7 @@ tabs:
     icon: fa-regular fa-signal-stream
     slug: sdks
   changelog: 
-    display-name: Release Notes
+    display-name: Changelog
     icon: fa-regular fa-history
     changelog: ./changelog
     
@@ -98,6 +98,11 @@ navigation:
             path: ./docs/pages/features/using-dub-tracks.mdx
           - page: Filler Noise
             path: ./docs/pages/features/using-filler-noise.mdx
+      - section: Telephony integrations
+        path: ./docs/pages/telephony/overview.mdx
+        contents:
+          - page: 3CX
+            path: ./docs/pages/telephony/3cx.mdx
   - tab: verbs
     layout: 
       - section: Verbs
