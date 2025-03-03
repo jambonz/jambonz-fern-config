@@ -288,6 +288,11 @@ paths:
                   enum:
                     - mute
                     - unmute
+                transcribe_status:
+                  type: string
+                  enum:
+                    - pause
+                    - resume    
                 whisper:
                   $ref: '#/components/schemas/Webhook'
                 sip_request:
