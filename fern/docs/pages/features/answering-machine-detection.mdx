@@ -51,6 +51,10 @@ webhook to '/amdEvents' with an indication of whether a human or a machine has a
   Number of spoken words in a greeting that result in an `amd_machine_detected` result.  
 </ParamField>
 
+<ParamField path="digitCount" type="number" required={false} default="0">
+  Number of digits in a greeting to trigger a `amd_machine_detected` result. 0 is off 
+</ParamField>
+
 <ParamField path="timers" type="object" required={false}>
   Object containing various timeouts.
 </ParamField>
@@ -172,6 +176,12 @@ Optionally, the feature can also given a list of common phrases that one might h
 
 The current set of phrases is defined [here](https://github.com/jambonz/jambonz-feature-server/blob/main/data/example-voicemail-greetings.json).
 Feel free to make a pull request against that repo to suggest additional phrases or languages that should be added.
+
+### Digit Count
+Many voicemail systems (especially on cellular) include the called number as part of their default greeting, the transcription returns these digits as a single "word" eg "07790123900 is not availble",
+therefore the `thresholdWordCount` is often not reached for what is in effect a long message.<br/>
+By default the feature is off (digitCount = 0) so won't trigger. The length is adjustable for different scenarios and countries, with UK numbers I've found that 5-6 is a good value.<br/>
+There are some humans (in the UK at least) that still answer their landlines with the phone number eg "London 212555" so you may need to consider your audience with this feature.
 
 ### Beep detection
 The feature also attempts to detect audio tones, or beeps that are commonly used on voicemail systems.  If detected, an event is sent via the actionHookf to the webapp.
