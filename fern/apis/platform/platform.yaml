@@ -35,7 +35,6 @@ tags:
     description: Routing of Phone numbers to Applications
   - name: Call Routing
     description: Least cost Call Routing
-
 paths:
   /Sbcs:
     get:
@@ -529,7 +528,7 @@ paths:
                 ipv4:
                   type: string
                 port:
-                  type: number
+                  type: integer
                 is_active:
                   type: boolean
                 inbound:
@@ -1299,22 +1298,19 @@ paths:
         name: page
         required: true
         schema:
-          type: number
-          format: integer
+          type: integer
           description: page number of data to retrieve
       - in: query
         name: count
         required: true
         schema:
-          type: number
-          format: integer
+          type: integer
           description: number of rows to retrieve in each page set
       - in: query
         name: days
         required: false
         schema:
-          type: number
-          format: integer
+          type: integer
           description: number of days back to retrieve, must be ge 1 and le 30
       - in: query
         name: start
@@ -1367,16 +1363,14 @@ paths:
                 type: object
                 properties:
                   total:
-                    type: number
-                    format: integer
+                    type: integer
                     description: total number of records in that database that match the filter criteria
                   batch:
-                    type: number
-                    format: integer
+                    type: integer
+                    format: 
                     description: total number of records returned in this page set
                   page:
-                    type: number
-                    format: integer
+                    type: integer
                     description: page number that was requested, and is being returned
                   data:
                     type: array
@@ -1398,20 +1392,15 @@ paths:
                         sip_call_id:
                           type: string
                         sip_status:
-                          type: number
-                          format: integer
+                          type: integer
                         duration:
-                          type: number
-                          format: integer
+                          type: integer
                         attempted_at:
-                          type: number
-                          format: integer
+                          type: integer
                         answered_at:
-                          type: number
-                          format: integer
+                          type: integer
                         terminated_at:
-                          type: number
-                          format: integer
+                          type: integer
                         termination_reason:
                           type: string
                         host:
@@ -1581,22 +1570,19 @@ paths:
         name: page
         required: true
         schema:
-          type: number
-          format: integer
+          type: integer
           description: page number of data to retrieve
       - in: query
         name: count
         required: true
         schema:
-          type: number
-          format: integer
+          type: integer
           description: number of rows to retrieve in each page set
       - in: query
         name: days
         required: false
         schema:
-          type: number
-          format: integer
+          type: integer
           description: number of days back to retrieve, must be ge 1 and le 30
       - in: query
         name: start
@@ -1643,16 +1629,13 @@ paths:
                 type: object
                 properties:
                   total:
-                    type: number
-                    format: integer
+                    type: integer
                     description: total number of records in that database that match the filter criteria
                   batch:
-                    type: number
-                    format: integer
+                    type: integer
                     description: total number of records returned in this page set
                   page:
-                    type: number
-                    format: integer
+                    type: integer
                     description: page number that was requested, and is being returned
                   data:
                     type: array
@@ -2459,7 +2442,6 @@ paths:
       responses:
         '204':
           description: least cost routing carrier set entry updated
-
         '400':
           description: bad request
           content:
@@ -3177,22 +3159,19 @@ paths:
           name: page
           required: true
           schema:
-            type: number
-            format: integer
+            type: integer
             description: page number of data to retrieve
         - in: query
           name: count
           required: true
           schema:
-            type: number
-            format: integer
+            type: integer
             description: number of rows to retrieve in each page set
         - in: query
           name: days
           required: false
           schema:
-            type: number
-            format: integer
+            type: integer
             description: number of days back to retrieve, must be ge 1 and le 30
         - in: query
           name: start
@@ -3252,16 +3231,13 @@ paths:
                   type: object
                   properties:
                     total:
-                      type: number
-                      format: integer
+                      type: integer
                       description: total number of records in that database that match the filter criteria
                     batch:
-                      type: number
-                      format: integer
+                      type: integer
                       description: total number of records returned in this page set
                     page:
-                      type: number
-                      format: integer
+                      type: integer
                       description: page number that was requested, and is being returned
                     data:
                       type: array
@@ -3286,20 +3262,15 @@ paths:
                           sip_call_id:
                             type: string
                           sip_status:
-                            type: number
-                            format: integer
+                            type: integer
                           duration:
-                            type: number
-                            format: integer
+                            type: integer
                           attempted_at:
-                            type: number
-                            format: integer
+                            type: integer
                           answered_at:
-                            type: number
-                            format: integer
+                            type: integer
                           terminated_at:
-                            type: number
-                            format: integer
+                            type: integer
                           termination_reason:
                             type: string
                           host:
@@ -3478,7 +3449,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  
   /MicrosoftTeamsTenants/{TenantSid}:
     parameters:
       - name: TenantSid
@@ -3550,8 +3520,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-
-
                 /ServiceProviders/{ServiceProviderSid}/Alerts:
                   parameters:
                     - name: ServiceProviderSid
@@ -3564,22 +3532,19 @@ paths:
                       name: page
                       required: true
                       schema:
-                        type: number
-                        format: integer
+                        type: integer
                         description: page number of data to retrieve
                     - in: query
                       name: count
                       required: true
                       schema:
-                        type: number
-                        format: integer
+                        type: integer
                         description: number of rows to retrieve in each page set
                     - in: query
                       name: days
                       required: false
                       schema:
-                        type: number
-                        format: integer
+                        type: integer
                         description: number of days back to retrieve, must be ge 1 and le 30
                     - in: query
                       name: start
@@ -3627,16 +3592,13 @@ paths:
                               type: object
                               properties:
                                 total:
-                                  type: number
-                                  format: integer
+                                  type: integer
                                   description: total number of records in that database that match the filter criteria
                                 batch:
-                                  type: number
-                                  format: integer
+                                  type: integer
                                   description: total number of records returned in this page set
                                 page:
-                                  type: number
-                                  format: integer
+                                  type: integer
                                   description: page number that was requested, and is being returned
                                 data:
                                   type: array
@@ -3803,8 +3765,7 @@ components:
         smpp_inbound_password:
           type: string
         smpp_enquire_link_interval:
-          type: number
-          format: integer
+          type: integer
       required:
         - voip_carrier_sid
         - name
@@ -3817,9 +3778,9 @@ components:
         ipv4:
           type: string
         port:
-          type: number
+          type: integer
         netmask:
-          type: number
+          type: integer
         voip_carrier_sid:
           type: string
           format: uuid
@@ -3842,9 +3803,9 @@ components:
         ipv4:
           type: string
         port:
-          type: number
+          type: integer
         netmask:
-          type: number
+          type: integer
         voip_carrier_sid:
           type: string
           format: uuid
@@ -4265,7 +4226,7 @@ components:
                 - USD
                 - EUR
             balance:
-              type: number
+              type: integer
             last_updated_at:
               type: string
               format: date-time
@@ -4375,7 +4336,7 @@ components:
           description: indicates whether user has validated their mobile phone
           example: true
         tutorial_completion:
-          type: number
+          type: integer
           description: bitmask indicating which tutorials have been completed
           example: 1
         jwt:
@@ -4424,16 +4385,13 @@ components:
           type: string
           format: uuid
         call_secs_billed:
-          type: number
-          format: integer
+          type: integer
         tts_chars_billed:
-          type: number
-          format: integer
+          type: integer
         stt_secs_billed:
-          type: number
-          format: integer
+          type: integer
         amount_charged:
-          type: number
+          type: integer
           format: double
       required:
         - account_sid
@@ -4457,20 +4415,15 @@ components:
         sip_call_id:
           type: string
         sip_status:
-          type: number
-          format: integer
+          type: integer
         duration:
-          type: number
-          format: integer
+          type: integer
         attempted_at:
-          type: number
-          format: integer
+          type: integer
         answered_at:
-          type: number
-          format: integer
+          type: integer
         terminated_at:
-          type: number
-          format: integer
+          type: integer
         termination_reason:
           type: string
         host:
@@ -4616,7 +4569,7 @@ components:
           description: out going call Phone number regex
           example: 1*
         priority:
-          type: number
+          type: integer
           example: 1
         description:
           type: string
@@ -4629,7 +4582,7 @@ components:
       type: object
       properties:
         workload:
-          type: number
+          type: integer
           example: 90
           description: traffic distribution value
         lcr_route_sid:
@@ -4639,7 +4592,7 @@ components:
           type: string
           example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
         priority:
-          type: number
+          type: integer
           example: 1
       required:
         - lcr_route_sid
@@ -4688,19 +4641,19 @@ components:
           type: string
           example: sip:0dluqjt6@od41sl9jfc9m.invalid;transport=ws
         expiryTime:
-          type: number
+          type: integer
           example: 1698981449173
         protocol:
           type: string
           example: wss
         allow_direct_app_calling:
-          type: number
+          type: integer
           example: 1
         allow_direct_queue_calling:
-          type: number
+          type: integer
           example: 1
         allow_direct_user_calling:
-          type: number
+          type: integer
           example: 1
         registered_status:
           type: string
@@ -4775,5 +4728,3 @@ components:
           type: array
           items:
             type: string
-
-
