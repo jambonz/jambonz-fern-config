@@ -1306,12 +1306,16 @@ paths:
         schema:
           type: integer
           description: number of rows to retrieve in each page set
+          minimum: 1
+          maximum: 500
       - in: query
         name: days
         required: false
         schema:
           type: integer
-          description: number of days back to retrieve, must be ge 1 and le 30
+          description: number of days back to retrieve,
+          minimum: 1
+          maximum: 30
       - in: query
         name: start
         required: false
@@ -1578,12 +1582,16 @@ paths:
         schema:
           type: integer
           description: number of rows to retrieve in each page set
+          minimum: 1
+          maximum: 500
       - in: query
         name: days
         required: false
         schema:
           type: integer
-          description: number of days back to retrieve, must be ge 1 and le 30
+          description: number of days back to retrieve, 
+          minimum: 1
+          maximum: 30
       - in: query
         name: start
         required: false
