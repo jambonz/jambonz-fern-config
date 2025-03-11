@@ -1431,7 +1431,7 @@ paths:
                         - duration
         '404':
           description: account not found
-  /Accounts/{AccountSid}/RecentCalls/{CallId}:
+  /Accounts/{AccountSid}/RecentCalls/trace/{CallId}:
     parameters:
       - name: AccountSid
         in: path
@@ -1447,11 +1447,11 @@ paths:
     get:
       tags:
         - Recent Calls
-      summary: retrieve sip trace detail for a call
+      summary: retrieve jaeger trace detail for a call
       operationId: getRecentCallTrace
       responses:
         '200':
-          description: retrieve sip trace data
+          description: retrieve trace data
           content:
             application/json:
               schema:
@@ -3305,7 +3305,7 @@ paths:
                           - duration
           '404':
             description: account not found
-  /ServiceProviders/{ServiceProviderSid}/RecentCalls/{CallId}:
+  /ServiceProviders/{ServiceProviderSid}/RecentCalls/trace/{CallId}:
     parameters:
       - name: ServiceProviderSid
         in: path
@@ -3321,12 +3321,12 @@ paths:
     get:
       tags:
         - Recent Calls
-      summary: retrieve sip trace detail for a call
+      summary: retrieve jaeger trace detail for a call
       description: <Error>This endpoint is only availble with an Admin level API key</Error>
       operationId: getRecentCallTraceByCallId
       responses:
         '200':
-          description: retrieve sip trace data
+          description: retrieve trace data
           content:
             application/json:
               schema:
