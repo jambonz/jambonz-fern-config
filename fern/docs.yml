@@ -98,6 +98,8 @@ navigation:
             path: ./docs/pages/features/using-dub-tracks.mdx
           - page: Filler Noise
             path: ./docs/pages/features/using-filler-noise.mdx
+          - page: Securing  HTTP Endpoints
+            path: ./docs/pages/features/securing-webhooks.mdx
       - section: Telephony integrations
         path: ./docs/pages/telephony/overview.mdx
         contents:
