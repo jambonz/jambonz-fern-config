@@ -1,0 +1,38 @@
+<Card title="0.9.3-9" icon="regular hands-holding-diamond" iconPosition="left">
+Point release
+</Card>
+
+## Additional log visibility, improvements to AMD, and more
+
+1. Adds log viewer to jambonz portal (AWS only) to enable easier troubleshooting of calls.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-webapp/pull/490), [Issue](https://github.com/jambonz/jambonz-webapp/issues/486)
+
+1. Improves answering machine detection by listening for strings of digits in addition to other heuristics.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1111)
+
+1. Add support for username and password authentication to redis.
+<br/><br/>[PR](https://github.com/jambonz/realtimedb-helpers/pull/64)
+
+1. Fixes crashing error with some media timeout scenarios
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1108)
+
+1. Adds support for pausing transcriptions on Listen and Transcribe verbs.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1107)
+
+1. When a session uses live call control and a session:adulting message is sent to the application, customer data is now included.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1110)
+
+1. Fixes an issue when a call is ended via the API live call control the call_terminated_by field is now 'jambonz'.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1104)
+
+1. Filters the carrier list by account when creating a new phone number.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-webapp/pull/492)
+
+1. Usability improvements when configure a websocket-based application URL in the jambonz portal.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-webapp/pull/489)
+
+1. Allows the Recent Calls API to return more than 25 calls at a time.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/396)
+
+1. Smooth outbound SIP registrations to avoid spikes.
+<br/><br/>[PR](https://github.com/jambonz/sbc-sip-sidecar/pull/80)
