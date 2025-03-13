@@ -196,6 +196,11 @@ sample rate over the websocket connection. You can specify both the sample rate 
 want to receive over the websocket as well as the sample rate that you want to send back audio, 
 and they do not need to be the same.  In the example below, we choose to receive 8k sampling 
 but send back 16K sampling.
+You can send any length of frame and jambonz will buffer the recieved audio to play it out at 
+the correct sample rate, however we reccomend sending a fixed length message (320 bytes at 8Khz, 640 bytes at 16Khz), 
+each sample is 16bit therefore takes 2 bytes so your frames should always be an even number of 
+bytes to ensure the best playback quality
+
 ```js
 {
   verb: 'listen',
