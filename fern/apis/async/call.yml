@@ -20,12 +20,12 @@ info:
     description: Learn more about using jambonz.
     url: https://docs.jambonz.org
 channels:
-  session: 
+  callControl: 
     description: >
-      The session channel conveys information about the state of the call session on jambonz
+      The call control channel conveys information about the state of a call session on jambonz
     messages: 
       sessionNew:
-        description: A session has been created on jambonz for a new call
+        description: A call session has been created on jambonz for a new call
         payload: 
           allOf: 
             - $ref: '#/components/schemas/session'
@@ -445,9 +445,9 @@ operations:
     action: receive
     x-ack-required: true
     channel:
-      $ref: '#/channels/session'
+      $ref: '#/channels/callControl'
     messages:
-      - $ref: '#/channels/session/messages/sessionNew'
+      - $ref: '#/channels/callControl/messages/sessionNew'
   receiveSessionRedirect:
     tags:
       - name: call control
@@ -455,9 +455,9 @@ operations:
     action: receive
     x-ack-required: true
     channel:
-      $ref: '#/channels/session'
+      $ref: '#/channels/callControl'
     messages:
-      - $ref: '#/channels/session/messages/sessionRedirect'
+      - $ref: '#/channels/callControl/messages/sessionRedirect'
   receiveSessionAdulting:
     tags:
       - name: call control
@@ -465,9 +465,9 @@ operations:
     action: receive
     x-ack-required: true
     channel:
-      $ref: '#/channels/session'
+      $ref: '#/channels/callControl'
     messages:
-      - $ref: '#/channels/session/messages/sessionAdulting'
+      - $ref: '#/channels/callControl/messages/sessionAdulting'
   receiveCallStatus:
     tags:
       - name: call control
@@ -475,18 +475,18 @@ operations:
     action: receive
     x-ack-required: false
     channel:
-      $ref: '#/channels/session'
+      $ref: '#/channels/callControl'
     messages:
-      - $ref: '#/channels/session/messages/callStatus'
+      - $ref: '#/channels/callControl/messages/callStatus'
   sendVerbs:
     tags:
       - name: call control
     description: Send verbs to jambonz in response to a session message or action hook.  Used for acknowledging messages that require a response.
     action: send
     channel:
-      $ref: '#/channels/session'
+      $ref: '#/channels/callControl'
     messages:
-      - $ref: '#/channels/session/messages/verbPayload'
+      - $ref: '#/channels/callControl/messages/verbPayload'
   receiveLlmToolCall:
     tags:
       - name: llm
