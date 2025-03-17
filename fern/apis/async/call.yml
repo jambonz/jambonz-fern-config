@@ -1,0 +1,626 @@
+asyncapi: 3.0.0
+info:
+  title: jambonz Websocket Specification
+  version: 1.0.0
+  description: >
+    jambonz is the open-source telephony platform for deploying Voice AI applications at scale.
+
+    You can use the jambonz Websocket API to control calls, speech and AI resources.
+  tags:
+    - name: call control
+      description: call control websocket api
+    - name: tts
+      description: tts-focused websocket api
+    - name: llm
+      description: llm-focused websocket api
+  contact:
+    name: jambonz support
+    email: support@jambonz.org
+  externalDocs:
+    description: Learn more about using jambonz.
+    url: https://docs.jambonz.org
+channels:
+  callControl: 
+    description: >
+      The call control channel conveys information about the state of a call session on jambonz
+    messages: 
+      sessionNew:
+        description: A call session has been created on jambonz for a new call
+        payload: 
+          allOf: 
+            - $ref: '#/components/schemas/session'
+            - type: object
+              properties: 
+                msgid:
+                  type: string
+                sip: 
+                  type: object 
+                  properties: 
+                    headers: 
+                      type: object
+                      description: SIP headers associated with the call
+                    raw: 
+                      type: string
+                      description: The raw SIP INVITE message for the call
+                    body: 
+                      type: string
+                      description: The body of the SIP INVITE message for the call
+                    method: 
+                      type: string
+                      description: The SIP method for the call
+                    uri: 
+                      type: string
+                      description: The SIP URI for the call
+                    payload: 
+                      type: array
+                      description: The SIP payloads for the call
+                  required: 
+                    - headers
+                    - raw
+                    - body
+                    - method
+                    - uri
+                    - payload
+                defaults: 
+                  type: object
+                  properties: 
+                    synthesizer: 
+                      type: object 
+                      properties: 
+                        vendor: 
+                          type: string
+                          description: The synthesizer vendor
+                        language: 
+                          type: string
+                          description: The language for the synthesizer
+                        voice: 
+                          type: string
+                          description: The voice for the synthesizer
+                      required: 
+                        - vendor
+                        - language
+                        - voice
+                    recognizer:
+                      type: object 
+                      properties: 
+                        vendor: 
+                          type: string
+                          description: The recognizer vendor
+                        language: 
+                          type: string
+                          description: The language for the recognizer
+                      required:
+                        - vendor
+                        - language
+              required: 
+                - sip
+      sessionRedirect:
+        description: An existing session has redirected to a new location for processing 
+        payload: 
+          allOf: 
+            - $ref: '#/components/schemas/session'
+            - type: object 
+              properties: 
+                msgid:
+                  type: string
+
+      sessionAdulting: 
+        description: A session created via a dial verb has been promoted to a standalone session
+        payload: 
+          allOf: 
+            - $ref: '#/components/schemas/session'
+            - type: object 
+              properties: 
+                msgid:
+                  type: string
+
+      callStatus: 
+        description: The state of a call has changed
+        payload: 
+          allOf: 
+            - $ref: '#/components/schemas/session'
+            - type: object 
+              properties: 
+                msgid:
+                  type: string
+                callStatus:
+                  type: string
+                  description: The new status of the call
+                  enum: 
+                    - trying
+                    - ringing
+                    - early-media
+                    - in-progress
+                    - queued
+                    - failed
+                    - busy
+                    - no-answer
+                    - completed
+                sipStatus:
+                  type: number
+                  description: The sip status for the INVITE transaction
+                sipReason:
+                  type: string
+                  description: The sip reason associated with sipStatus
+                duration:
+                  type: number
+                  description: The duration of the completed call in seconds
+
+      verbPayload:
+        description: A sequence of verbs for jambonz to execute
+        payload: 
+          type: object
+          properties:
+            type:
+              type: string
+              description: Indicates if the message is a response or an unsolicited command
+              enum:
+                - ack
+                - command
+            msgid:
+              type: string
+              description: The message ID this is in response to (included when type is "ack")
+            queueCommand:
+              type: boolean
+              description: Whether to queue the command or execute it immediately
+            command:
+              type: string
+              description: Command type
+              enum:
+                - redirect
+                - call:status
+                - config 
+                - dial 
+                - dub 
+                - record 
+                - mute:status 
+                - conf:mute-status 
+                - conf:hold-status 
+                - conf:particpant-action 
+                - listen:status 
+                - stream:status
+                - transcribe:status 
+                - whisper 
+                - sip:request 
+                - dtmf 
+                - boostAudioSignal
+                - media:path 
+                - llm:tool-output 
+                - llm:update 
+                - tts:tokens 
+                - tts:flush 
+                - tts:clear 
+            data:
+              type: array
+              description: Array of verb objects to execute
+              items:
+                type: object
+                properties:
+                  verb:
+                    type: string
+                    description: The verb to execute (using colon format, e.g., "say", "play")
+                  # Additional properties will vary by verb type
+                required:
+                  - verb
+          required:
+            - type
+  llm: 
+    description: >
+      The LLM channel handles communication related to large language models
+    messages:
+      llmToolCall:
+        description: Notification that an LLM has requested a tool call to be executed
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - llm:tool-call
+              description: Message type
+            hook:
+              type: string
+              description: The event hook value set by the application
+            data:
+              type: object
+              properties:
+                tool_call_id:
+                  type: string
+                  description: Unique identifier for the tool call provided by the LLM.  This is used to associate tool call results.
+                name:
+                  type: string
+                  description: The name of the tool, or function to call
+                arguments:
+                  type: object
+                  description: Arguments to pass to the tool
+          required:
+            - type
+            - hook
+            - data
+      llmEvent:
+        description: Event notification sent by an LLM
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - llm:event
+              description: Message type
+            hook:
+              type: string
+              description: The event hook value set by the application
+            data:
+              type: object
+              description: Event data from the LLM
+          required:
+            - type
+            - hook
+            - data
+      llmToolOutput:
+        description: Response to an LLM tool call with output data
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - command
+              description: Message type
+            command:
+              type: string
+              enum:
+                - llm:tool-output
+              description: Command type
+            data:
+              type: object
+              properties:
+                tool_call_id:
+                  type: string
+                  description: Identifier of the tool call being responded to
+                data:
+                  type: object
+                  description: Output data from the tool execution
+          required:
+            - type
+            - command
+            - data
+      llmUpdate:
+        description: An asynchronous request sent to an LLM to update its operational parameters
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - command
+              description: Message type
+            command:
+              type: string
+              enum:
+                - llm:update
+              description: Command type
+            data:
+              type: object
+              description: Update data for the LLM
+          required:
+            - type
+            - command
+            - data
+  tts:
+    description: >
+      The TTS channel handles communications related to text-to-speech operations
+    messages:
+      ttsStreamingEvent:
+        description: Events related to TTS streaming
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - tts:streaming-event
+              description: Message type
+            data:
+              type: object
+              properties:
+                event_type:
+                  type: string
+                  description: Type of the streaming event
+                  enum:
+                    - stream_paused
+                    - stream_resumed
+                    - user_interruption
+                    - stream_open 
+                    - stream_closed
+              required:
+                - event_type
+          required:
+            - type
+            - data
+      ttsTokensResult:
+        description: Result of a TTS tokens request
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - tts:tokens-result
+              description: Message type
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: ID of the tokens request
+                status:
+                  type: string
+                  description: Status of the tokens request
+                  enum:
+                    - ok
+                    - failed
+                    - error
+                reason:
+                  type: string
+                  description: Reason for the status (e.g., 'full' when buffer is full)
+              required:
+                - id
+                - status
+          required:
+            - type
+            - data
+      ttsTokens:
+        description: Send text tokens to be synthesized
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - command
+              description: Message type
+            command:
+              type: string
+              enum:
+                - tts:tokens
+              description: Command type
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: Unique identifier for this tokens request
+                tokens:
+                  type: string
+                  description: Text to be synthesized
+              required:
+                - id
+                - tokens
+          required:
+            - type
+            - command
+            - data
+      ttsFlush:
+        description: Flush the TTS buffer and complete the current synthesis
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - command
+              description: Message type
+            command:
+              type: string
+              enum:
+                - tts:flush
+              description: Command type
+          required:
+            - type
+            - command
+      ttsClear:
+        description: Clear the TTS buffer and cancel the current synthesis
+        payload:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - command
+              description: Message type
+            command:
+              type: string
+              enum:
+                - tts:clear
+              description: Command type
+          required:
+            - type
+            - command
+operations:
+  receiveSessionNew:
+    tags:
+      - name: call control
+    description: Receive notification of a new session from jambonz.  Requires an acknowledgement response.
+    action: receive
+    x-ack-required: true
+    channel:
+      $ref: '#/channels/callControl'
+    messages:
+      - $ref: '#/channels/callControl/messages/sessionNew'
+  receiveSessionRedirect:
+    tags:
+      - name: call control
+    description: Receive notification of a session redirect from jambonz. Requires an acknowledgement response.
+    action: receive
+    x-ack-required: true
+    channel:
+      $ref: '#/channels/callControl'
+    messages:
+      - $ref: '#/channels/callControl/messages/sessionRedirect'
+  receiveSessionAdulting:
+    tags:
+      - name: call control
+    description: Receive notification a child session has been promoted to a standalone session. Requires an acknowledgement response.
+    action: receive
+    x-ack-required: true
+    channel:
+      $ref: '#/channels/callControl'
+    messages:
+      - $ref: '#/channels/callControl/messages/sessionAdulting'
+  receiveCallStatus:
+    tags:
+      - name: call control
+    description: Receive notification about a call status change. This is notification-only and does not require an acknowledgement response.
+    action: receive
+    x-ack-required: false
+    channel:
+      $ref: '#/channels/callControl'
+    messages:
+      - $ref: '#/channels/callControl/messages/callStatus'
+  sendVerbs:
+    tags:
+      - name: call control
+    description: Send verbs to jambonz in response to a session message or action hook.  Used for acknowledging messages that require a response.
+    action: send
+    channel:
+      $ref: '#/channels/callControl'
+    messages:
+      - $ref: '#/channels/callControl/messages/verbPayload'
+  receiveLlmToolCall:
+    tags:
+      - name: llm
+    description: Receive a tool call request from an LLM
+    action: receive
+    channel:
+      $ref: '#/channels/llm'
+    messages:
+      - $ref: '#/channels/llm/messages/llmToolCall'
+  receiveLlmEvent:
+    tags:
+      - name: llm
+    description: Receive an event notification from an LLM
+    action: receive
+    channel:
+      $ref: '#/channels/llm'
+    messages:
+      - $ref: '#/channels/llm/messages/llmEvent'
+  sendLlmToolOutput:
+    tags:
+      - name: llm
+    description: Send the output of a tool call back to jambonz
+    action: send
+    channel:
+      $ref: '#/channels/llm'
+    messages:
+      - $ref: '#/channels/llm/messages/llmToolOutput'
+  sendLlmUpdate:
+    tags:
+      - name: llm
+    description: Send an update to an ongoing LLM interaction
+    action: send
+    channel:
+      $ref: '#/channels/llm'
+    messages:
+      - $ref: '#/channels/llm/messages/llmUpdate'
+  receiveTtsStreamingEvent:
+    tags:
+      - name: tts
+    description: Receive streaming events from the TTS engine
+    action: receive
+    channel:
+      $ref: '#/channels/tts'
+    messages:
+      - $ref: '#/channels/tts/messages/ttsStreamingEvent'
+  receiveTtsTokensResult:
+    tags:
+      - name: tts
+    description: Receive result of a TTS tokens request. This is always sent in response to a sendTtsTokens operation.
+    action: receive
+    channel:
+      $ref: '#/channels/tts'
+    messages:
+      - $ref: '#/channels/tts/messages/ttsTokensResult'
+  sendTtsTokens:
+    tags:
+      - name: tts
+    description: Send text tokens to be synthesized by the TTS engine. Each sendTtsTokens operation will receive a corresponding receiveTtsTokensResult response.
+    action: send
+    channel:
+      $ref: '#/channels/tts'
+    messages:
+      - $ref: '#/channels/tts/messages/ttsTokens'
+  sendTtsFlush:
+    tags:
+      - name: tts
+    description: Instruct the TTS engine to flush the current buffer and complete synthesis. This operation does not receive a direct response.
+    action: send
+    channel:
+      $ref: '#/channels/tts'
+    messages:
+      - $ref: '#/channels/tts/messages/ttsFlush'
+  sendTtsClear:
+    tags:
+      - name: tts
+    description: Instruct the TTS engine to clear the current buffer and cancel synthesis. This operation does not receive a direct response.
+    action: send
+    channel:
+      $ref: '#/channels/tts'
+    messages:
+      - $ref: '#/channels/tts/messages/ttsClear'
+components:
+  schemas:
+    session:
+      type: object
+      properties: 
+        call_sid: 
+          type: string
+          description: The unique identifier for the call session
+        b3: 
+          type: string
+          description: The open telemetry trace identifier for the session 
+        direction: 
+          type: string
+          enum: 
+            - inbound
+            - outbound
+          description: The direction of the call 
+        trace_id:
+          type: string
+          description: The open telemetry trace identifier for the session 
+        caller_name: 
+          type: string
+          description: The caller id of the calling party
+        account_sid: 
+          type: string
+          description: The unique identifier for the account associated with the call
+        application_sid: 
+          type: string
+          description: The unique identifier for the application associated with the call
+        from: 
+          type: string
+          description: The calling party phone number or identifier 
+        to: 
+          type: string
+          description: The called party phone number or identifier
+        call_id: 
+          type: string
+          description: The SIP call-id for the feature server leg of the call  
+        sbc_callid: 
+          type: string
+          description: The SIP call-id for the external-facing leg of the call
+        originating_sip_ip:
+          type: string
+          description: The IP address of the originating SIP device for inbound calls
+        originating_sip_trunk_name:
+          type: string
+          description: The name of the originating SIP trunk for inbound calls
+        local_sip_address:
+          type: string
+          description: The local SIP address for the call
+        public_ip: 
+          type: string
+          description: The public IP address of the jambonz SBC SIP instance handling the call
+        service_provider_sid: 
+          type: string
+          description: The unique identifier for the jambonz service provider associated with the call
