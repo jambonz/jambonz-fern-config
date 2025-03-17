@@ -7,8 +7,8 @@ info:
 
     You can use the jambonz Websocket API to control calls, speech and AI resources.
   tags:
-    - name: session
-      description: session-level websocket api
+    - name: call control
+      description: call control websocket api
     - name: tts
       description: tts-focused websocket api
     - name: llm
@@ -440,7 +440,7 @@ channels:
 operations:
   receiveSessionNew:
     tags:
-      - name: session
+      - name: call control
     description: Receive notification of a new session from jambonz.  Requires an acknowledgement response.
     action: receive
     x-ack-required: true
@@ -450,7 +450,7 @@ operations:
       - $ref: '#/channels/session/messages/sessionNew'
   receiveSessionRedirect:
     tags:
-      - name: session
+      - name: call control
     description: Receive notification of a session redirect from jambonz. Requires an acknowledgement response.
     action: receive
     x-ack-required: true
@@ -460,7 +460,7 @@ operations:
       - $ref: '#/channels/session/messages/sessionRedirect'
   receiveSessionAdulting:
     tags:
-      - name: session
+      - name: call control
     description: Receive notification a child session has been promoted to a standalone session. Requires an acknowledgement response.
     action: receive
     x-ack-required: true
@@ -470,7 +470,7 @@ operations:
       - $ref: '#/channels/session/messages/sessionAdulting'
   receiveCallStatus:
     tags:
-      - name: session
+      - name: call control
     description: Receive notification about a call status change. This is notification-only and does not require an acknowledgement response.
     action: receive
     x-ack-required: false
@@ -480,7 +480,7 @@ operations:
       - $ref: '#/channels/session/messages/callStatus'
   sendVerbs:
     tags:
-      - name: session
+      - name: call control
     description: Send verbs to jambonz in response to a session message or action hook.  Used for acknowledging messages that require a response.
     action: send
     channel:
