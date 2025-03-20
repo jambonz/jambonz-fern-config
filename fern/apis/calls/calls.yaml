@@ -43,7 +43,7 @@ paths:
                 application_sid:
                   type: string
                   format: uuid
-                  description: The application to use to control this call.  Either applicationSid or url is required.
+                  description: The application to use to control this call.  Either application_sid or call_hook is required.
                 answerOnBridge:
                   type: boolean
                   description: If set to true, the inbound call will ring until the number that was dialed answers the call, and at that point a 200 OK will be sent on the inbound leg.  If false, the inbound call will be answered immediately as the outbound call is placed.
