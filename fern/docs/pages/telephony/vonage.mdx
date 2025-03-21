@@ -83,18 +83,18 @@ In case you've misplaced these credentials, head back to your Vonage dashboard a
 You'll need to create inbound SIP gateways for traffic coming from [Vonage's IP addresses](https://api.support.vonage.com/hc/en-us/articles/360035471331-Which-IP-addresses-should-I-allow-when-using-Communication-APIs-and-SIP-Trunking).
 
 It's recommended that you add the following IP addresses one by one. Choose port 5060 and netmask 32 in this case.
-216.147.0.1
-216.147.0.2
-216.147.1.1
-216.147.1.2
-216.147.2.1
-216.147.2.2
-216.147.3.1
-216.147.3.2
-216.147.4.1
-216.147.4.2
-216.147.5.1
-216.147.5.2
+- 216.147.0.1
+- 216.147.0.2
+- 216.147.1.1
+- 216.147.1.2
+- 216.147.2.1
+- 216.147.2.2
+- 216.147.3.1
+- 216.147.3.2
+- 216.147.4.1
+- 216.147.4.2
+- 216.147.5.1
+- 216.147.5.2
 
 Alternatively, you can add their primary subnets: 216.147.0.0/18 and 168.100.64.0/18.
 
@@ -113,7 +113,7 @@ Paste in the Vonage number linked to your Vonage SIP trunk, using international 
 Next, ensure your jambonz account is selected from the "Account" drop-down, select "Vonage" as the "Carrier", and select "hello world" as the linked "Application". This way you can test that you've set up everything successfully, then update the linked application later to the project of your choice.
 
 <Frame caption="">
-  <img src="../../assets/images/vonage/add-vonage-number-jambonz" alt=""/>
+  <img src="../../assets/images/vonage/add-vonage-number-jambonz.png" alt=""/>
 </Frame>
 
 To finish, click "Save". Call the number you just added and test it out!
