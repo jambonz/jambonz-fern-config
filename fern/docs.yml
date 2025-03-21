@@ -105,6 +105,8 @@ navigation:
         contents:
           - page: 3CX
             path: ./docs/pages/telephony/3cx.mdx
+          - page: Vonage
+            path: ./docs/pages/telephony/vonage.mdx
   - tab: verbs
     layout: 
       - section: Verbs
