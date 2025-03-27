@@ -42,7 +42,7 @@ router.post('/', (req, res) => {
   app
     .pause({length: 1.5})
     .say({
-      text 'hi there, and welcome to jambonz!'
+      text: 'hi there, and welcome to jambonz!'
     });
   res.status(200).json(app);
 ```
