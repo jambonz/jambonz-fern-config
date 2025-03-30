@@ -1,0 +1,28 @@
+<Card title="0.9.3-10" icon="regular hands-holding-diamond" iconPosition="left">
+Point release
+</Card>
+
+## Add support for OpenAI Streaming STT and other improvements
+
+1. Adds support for [OpenAI Speech-to-text](https://platform.openai.com/docs/guides/realtime-transcription). Please see related options [here](http://localhost:3000/verbs/verbs/recognizer#openaioptions).
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1127), [PR](https://github.com/jambonz/jambonz-api-server/pull/402), and [PR](https://github.com/jambonz/jambonz-webapp/pull/496).
+
+1. Support Cartesia sonic-2 and sonic-turbo models.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/403)
+
+1. Fixes issue with use of streaming say in gather verb.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1128)
+
+1. Better support for passing webrtc video calls.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1124)
+
+1. Fixes issue when using language detection feature with Deepgram.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1116)
+
+1. Fixes an issue showing incorrect speech synthesizer in applications view in the portal.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-webapp/pull/493)
+
+1. Write options ping failure alert once instead of repeatedly.
+<br/><br/>[PR](https://github.com/jambonz/sbc-sip-sidecar/pull/88)
+
+1. Fixes issue where lengthy LLM prompts for ultravox, elevenlabs, and deepgram were being truncated.

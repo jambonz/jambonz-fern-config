@@ -528,6 +528,79 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
 
   </Accordion>
 
+  <Accordion title="openaiOptions">
+    <ParamField path="apiKey" type="string" required={false}>
+      OpenAI API key to authenticate with (if provided, this overrides the setting in Jambonz portal).
+    </ParamField>
+
+    <ParamField path="language" type="string" required={false}>
+      OpenAI language code.  Language could also be set at the recognizer level, but if set here this value will take precedence. Note that language code is supplied in ISO-639-1 (e.g. en) format.
+    </ParamField>
+
+    <ParamField path="model" type="string" required={false}>
+      OpenAI model.  Currently 'whisper-1', 'gpt-4o-mini-transcribe', and 'gpt-4o-transcribe' are supported.
+    </ParamField>
+
+    <ParamField path="prompt" type="string" required={false}>
+      An optional text to guide the model's style or continue a previous audio segment.  Note that if you do not set a value here but you do provide hints, a prompt will automatically be generated to convey the hints to the OpenAI model.
+    </ParamField>
+
+    <ParamField path="input_audio_noise_reduction" type="object" required={false}>
+      Governs whether noise reduction is applied to the input audio.
+    </ParamField>
+
+    <ParamField path="input_audio_noise_reduction.type" type="string" required={true}>
+      'near_field' or 'far_field'.
+    </ParamField>
+
+    <ParamField path="promptTemplates" type="object" required={false}>
+      Templates that can be used to dynamically construct the prompt to be sent to OpenAI.
+    </ParamField>
+
+    <ParamField path="promptTemplates.hintsTemplate" type="string" required={false}>
+      A template that be be used to construct a prompt to convey hints.  Use the placeholder "{{hints}}", e.g.
+
+      "Please transcribe the following audio, making sure to spell the following words correctly: {{hints}}"
+    </ParamField>
+
+    <ParamField path="promptTemplates.conversationHistoryTemplate" type="string" required={false}>
+      A template that can be used to construct a prompt based on the recent conversation.  Use the placeholder "{{turns}}", e.g.
+
+      "Here is the recent conversation history: {{turns}}".  
+      
+      By default, the last 4 turns of the conversation will be used, but you can change this as follows: 
+      
+      "Here is the recent conversation history: {{turns:3}}".
+    </ParamField>
+
+    <ParamField path="turn_detection" type="object" required={false}>
+      Specifies how to detect when a speaker has finished speaking.
+    </ParamField>
+
+    <ParamField path="turn_detection.type" type="string" required={true}>
+      'none', 'server_vad', or 'semantic_vad'.
+    </ParamField>
+
+    <ParamField path="turn_detection.eagerness" type="string" required={false}>
+      'low', 'medium', 'high, or 'auto'. Used only for semantic_vad mode. 
+      The eagerness of the model to respond. low will wait longer for the user to continue speaking, high will respond more quickly. auto is the default and is equivalent to medium.
+    </ParamField>
+
+    <ParamField path="turn_detection.threshold" type="number" required={false}>
+      Used only for server_vad mode. Activation threshold for VAD (0.0 to 1.0), this defaults to 0.5. 
+      A higher threshold will require louder audio to activate the model, and thus might perform better in noisy environments.
+    </ParamField>
+
+    <ParamField path="turn_detection.prefix_padding_ms" type="number" required={false}>
+     Used only for server_vad mode. Amount of audio to include before the VAD detected speech (in milliseconds). Defaults to 300ms.
+    </ParamField>
+
+    <ParamField path="turn_detection.silence_duration_ms" type="number" required={false}>
+      Used only for server_vad mode. Duration of silence to detect speech stop (in milliseconds). Defaults to 500ms. With shorter values the model will respond more quickly, but may jump in on short pauses from the user.
+    </ParamField>
+
+  </Accordion>
+
   <Accordion title="sonioxOptions">
     <ParamField path="api_key" type="string" required={false}>
       Soniox API key.
