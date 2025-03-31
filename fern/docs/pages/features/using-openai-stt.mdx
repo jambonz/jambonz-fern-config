@@ -57,7 +57,7 @@ then the hints will simply be used as the prompt.
   }
 }
 
-// prompt => "DaLL-E, GPT-4, ChatGPT, jambonz"
+// prompt => DaLL-E, GPT-4, ChatGPT, jambonz
 ```
 
 The reason for this is that the 'whisper-1' model supports a limited number of tokens in the prompt so it 
@@ -79,7 +79,7 @@ You can also simply provide the prompt using the prompt setting.
   }
 }
 
-// prompt => "The user is providing a credit card number"
+// prompt => The user is providing a credit card number
 ```
 
 ## Using promptTemplates
@@ -101,7 +101,7 @@ is interpolated with either the hints or the conversation history to create a fi
   }
 }
 
-// prompt => "Please spell the following words properly: DaLL-E, GPT-4, ChatGPT, jambonz"
+// prompt => Please spell the following words properly: DaLL-E, GPT-4, ChatGPT, jambonz
 ```
 
 or, using conversation history:
@@ -119,7 +119,7 @@ or, using conversation history:
   }
 }
 
-// prompt => "Here is the recent conversation history:
+// prompt => Here is the recent conversation history:
 // assistant: Hello, how can I help you today?
 // user: My internet is broken.
 // assistant: Could you please tell me your address?
@@ -141,7 +141,7 @@ By default, the conversation history is limited to the last 4 turns you can adju
   }
 }
 
-// prompt => "Here is the recent conversation history:
+// prompt => Here is the recent conversation history:
 // assistant: Could you please tell me your address?
 // user:
 ```
