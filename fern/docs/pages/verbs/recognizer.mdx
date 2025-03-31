@@ -534,7 +534,8 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
     </ParamField>
 
     <ParamField path="language" type="string" required={false}>
-      OpenAI language code.  Language could also be set at the recognizer level, but if set here this value will take precedence. Note that language code is supplied in ISO-639-1 (e.g. en) format.
+      OpenAI language code.  Language could also be set at the recognizer level, 
+      but if set here this value will take precedence. Note that language code is supplied in ISO-639-1 (e.g. en) format.
     </ParamField>
 
     <ParamField path="model" type="string" required={false}>
@@ -542,7 +543,8 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
     </ParamField>
 
     <ParamField path="prompt" type="string" required={false}>
-      An optional text to guide the model's style or continue a previous audio segment.  Note that if you do not set a value here but you do provide hints, a prompt will automatically be generated to convey the hints to the OpenAI model.
+      An optional text to guide the model's style or continue a previous audio segment. 
+      Note that if you do not set a value here but you do provide hints, a prompt will automatically be generated to convey the hints to the OpenAI model.
     </ParamField>
 
     <ParamField path="input_audio_noise_reduction" type="object" required={false}>
@@ -554,7 +556,8 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
     </ParamField>
 
     <ParamField path="promptTemplates" type="object" required={false}>
-      Templates that can be used to dynamically construct the prompt to be sent to OpenAI. See [here](/guides/features/using-open-ai-stt) for details on constructing prompts.
+      Templates that can be used to dynamically construct the prompt to be sent to OpenAI. 
+      See [here](/guides/features/using-open-ai-stt) for details on constructing prompts.
     </ParamField>
 
     <ParamField path="promptTemplates.hintsTemplate" type="string" required={false}>
@@ -579,20 +582,24 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
 
     <ParamField path="turn_detection.eagerness" type="string" required={false}>
       'low', 'medium', 'high, or 'auto'. Used only for semantic_vad mode. 
-      The eagerness of the model to respond. low will wait longer for the user to continue speaking, high will respond more quickly. auto is the default and is equivalent to medium.
+      The eagerness of the model to respond. low will wait longer for the user to continue speaking, 
+      high will respond more quickly. auto is the default and is equivalent to medium.
     </ParamField>
 
     <ParamField path="turn_detection.threshold" type="number" required={false}>
       Used only for server_vad mode. Activation threshold for VAD (0.0 to 1.0), this defaults to 0.5. 
-      A higher threshold will require louder audio to activate the model, and thus might perform better in noisy environments.
+      A higher threshold will require louder audio to activate the model, 
+      and thus might perform better in noisy environments.
     </ParamField>
 
     <ParamField path="turn_detection.prefix_padding_ms" type="number" required={false}>
-     Used only for server_vad mode. Amount of audio to include before the VAD detected speech (in milliseconds). Defaults to 300ms.
+     Used only for server_vad mode. Amount of audio to include before the VAD detected speech (in milliseconds). 
+     Defaults to 300ms.
     </ParamField>
 
     <ParamField path="turn_detection.silence_duration_ms" type="number" required={false}>
-      Used only for server_vad mode. Duration of silence to detect speech stop (in milliseconds). Defaults to 500ms. With shorter values the model will respond more quickly, but may jump in on short pauses from the user.
+      Used only for server_vad mode. Duration of silence to detect speech stop (in milliseconds). 
+      Defaults to 500ms. With shorter values the model will respond more quickly, but may jump in on short pauses from the user.
     </ParamField>
 
   </Accordion>
