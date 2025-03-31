@@ -1,0 +1,150 @@
+---
+title: Using OpenAI STT 
+subtitle: Taking advantage of OpenAI's prompt feature with jambonz
+hidden: false
+---
+
+jambonz supports a wide range of speech recognition vendors, and when we add support for new speech 
+vendor we try to support and expose all of their options so that you can fully utilize their capabilities. 
+
+OpenAI is rather unique in that it supports a prompt feature that allows you to pass in a custom prompt 
+to help guide the recognizer.  
+
+<Info>
+This is something [we have been asking STT vendors](https://blog.jambonz.org/speech-companies-are-failing-at-conversational-ai) for a while.
+</Info>
+
+In this article we explore the different ways to exploit the prompt feature of OpenAI STT.
+
+To begin with, here are the possible options that you use with OpenAI STT:
+
+```
+  recognizer: {
+    vendor: 'openai',
+    ..other recognition options
+    openaiOptions: {
+      model: 'gpt-4o-transcribe', // or 'gpt-4o-mini-transcribe' or 'whisper-1'
+      input_audio_noise_reduction: 'near_field', // or 'far_field'
+      prompt: 'string',
+      turn_detection: {
+        type: 'server_vad', // or 'semantic_vad' or 'none'
+        prefix_padding_ms: 300,
+        silence_duration_ms: 800
+      },
+      promptTemplates: {
+        hintsTemplate: 'string',
+        conversationHistoryTemplate: 'string',
+      }
+    }
+  }
+```
+
+In this article we want to explore the various ways to construct a prompt for OpenAI STT.  
+
+## Providing hints
+
+To start with the simplest method, if you provide hints and you are using 'whisper-1' as the model, 
+then the hints will simply be used as the prompt. 
+
+```
+{
+  recognizer: {
+    vendor: 'openai',
+    hints: ['DaLL-E', 'GPT-4', 'ChatGPT', 'jambonz'],
+    openaiOptions: {
+      model: 'whisper-1',
+    }
+  }
+}
+
+// prompt => "DaLL-E, GPT-4, ChatGPT, jambonz"
+```
+
+The reason for this is that the 'whisper-1' model supports a limited number of tokens in the prompt so it 
+is recommended to simply use the hints as the prompt.  Note that this is the default behavior, but if you 
+specify either 'prompt' or 'promptTemplates' then the prompt will be generated from those settings and not the hints.
+
+## Using the prompt setting
+
+You can also simply provide the prompt using the prompt setting.
+
+```
+{
+    recognizer: {
+    vendor: 'openai',
+    openaiOptions: {
+      model: 'gpt-4o-transcribe',
+      prompt: 'The user is providing a credit card number',
+    }
+  }
+}
+
+// prompt => "The user is providing a credit card number"
+```
+
+## Using promptTemplates
+
+A further option is to use the promptTemplates options.  These give you the ability to provide a template that 
+is interpolated with either the hints or the conversation history to create a final prompt.
+
+```
+{
+  recognizer: {
+    vendor: 'openai',
+    hints: ['DaLL-E', 'GPT-4', 'ChatGPT', 'jambonz'],
+    openaiOptions: {
+      model: 'gpt-4o-transcribe',
+      promptTemplates: {
+        hintsTemplate: 'Please spell the following words properly: {{hints}}',
+      }
+    }
+  }
+}
+
+// prompt => "Please spell the following words properly: DaLL-E, GPT-4, ChatGPT, jambonz"
+```
+
+or, using conversation history:
+
+```
+{
+  recognizer: {
+    vendor: 'openai',
+    openaiOptions: {
+      model: 'gpt-4o-transcribe',
+      promptTemplates: {
+         conversationHistoryTemplate: 'Here is the recent conversation history: {{turns}}',
+      }
+    }
+  }
+}
+
+// prompt => "Here is the recent conversation history:
+// assistant: Hello, how can I help you today?
+// user: My internet is broken.
+// assistant: Could you please tell me your address?
+// user:
+```
+
+By default, the conversation history is limited to the last 4 turns you can adjust this as well.
+
+```
+{
+  recognizer: {
+    vendor: 'openai',
+    openaiOptions: {
+      model: 'gpt-4o-transcribe',
+      promptTemplates: {
+         conversationHistoryTemplate: 'Here is the recent conversation history: {{turns:1}}',
+      }
+    }
+  }
+}
+
+// prompt => "Here is the recent conversation history:
+// assistant: Could you please tell me your address?
+// user:
+```
+
+Note that you can provide both hintsTemplate and conversationHistoryTemplate and the final prompt will 
+concatenate the two interpolated strings.
