@@ -561,15 +561,15 @@ subtitle: A **property** that can be used in `gather`, `transcribe` or other ver
     </ParamField>
 
     <ParamField path="promptTemplates.hintsTemplate" type="string" required={false}>
-      A template that be be used to construct a prompt to convey hints.  Use the placeholder "{{hints}}", e.g. 
-      "Please transcribe the following audio, making sure to spell the following words correctly: {{hints}}"
+      A template that be be used to construct a prompt to convey hints.  Use the placeholder "\{\{hints}}", e.g. 
+      "Please transcribe the following audio, making sure to spell the following words correctly: \{\{hints}}"
     </ParamField>
 
     <ParamField path="promptTemplates.conversationHistoryTemplate" type="string" required={false}>
-      A template that can be used to construct a prompt based on the recent conversation.  Use the placeholder "{{turns}}", e.g. 
-      "Here is the recent conversation history: {{turns}}".  
+      A template that can be used to construct a prompt based on the recent conversation.  Use the placeholder "\{\{turns}}", e.g. 
+      "Here is the recent conversation history: \{\{turns}}".  
       By default, the last 4 turns of the conversation will be used, but you can change this as follows: 
-      "Here is the recent conversation history: {{turns:3}}".
+      "Here is the recent conversation history: \{\{turns:3}}".
     </ParamField>
 
     <ParamField path="turn_detection" type="object" required={false}>
