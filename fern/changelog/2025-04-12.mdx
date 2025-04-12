@@ -1,0 +1,46 @@
+<Card title="0.9.3-12" icon="regular hands-holding-diamond" iconPosition="left">
+Point release
+</Card>
+
+## Elevenlab conversational AI bug fixes, readonly portal users and stability improvements
+
+1. Fixes an issue where the initial [client configuration message](https://elevenlabs.io/docs/conversational-ai/api-reference/conversational-ai/websocket#send.Conversation%20Initiation%20Client%20Data) for Elevenlabs Conversational AI was improperly formatted.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1144)
+
+1. Adds support for [speed](https://elevenlabs.io/docs/api-reference/text-to-speech/v-1-text-to-speech-voice-id-stream-input#send.Initialize%20Connection.voice_settings.speed)
+ and [pronunciation_dictionary_locators](https://elevenlabs.io/docs/api-reference/text-to-speech/v-1-text-to-speech-voice-id-stream-input#send.Initialize%20Connection.pronunciation_dictionary_locators) for Elevenlabs TTS.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1144)
+
+1. Addresses memory allocation issue in freeswitch modules that could lead to intermittent crashes.
+(Fixed in freeswitch-modules@2.2.26).
+
+1. Add support for throttling outbound registrations and disabling. Also added support for disabling outbound 
+REGISTERs or NOTIFYs based on specific failure codes returned from the far end trunk.
+<br/><br/>[PR](https://github.com/jambonz/sbc-sip-sidecar/pull/95), [PR](https://github.com/jambonz/sbc-sip-sidecar/pull/96)
+
+1. Fixes issue where confirm hook on a dial verb was not working over a websocket connection.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1143)
+
+1. Adds support for creating portal users with readonly access.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/381)
+
+1. Disable password managers (e.g. LastPass, etc) on some forms where they were incorrectly auto-filling data, 
+leading to confusion over why the form was not submitting.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-webapp/pull/503)
+
+1. Fixes issue with failing re-INVITE due to unsupported codec.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1131)
+
+1. Allows hangup verb to be used in a siprec call.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1136)
+
+1. Fixes scenario where we have two config verbs, first config having hints, but second one not having hints, 
+then the transcribe verb generating a rutime error.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1139)
+
+1. Reject portal logins with better error message if a user that signed up using ouath tries to sign in using email and password.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/408)
+
+1. Allow a readonly portal user to change their password.
+<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/407)
+
