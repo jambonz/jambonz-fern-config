@@ -184,7 +184,7 @@ By default the feature is off (digitCount = 0) so won't trigger. The length is a
 There are some humans (in the UK at least) that still answer their landlines with the phone number eg "London 212555" so you may need to consider your audience with this feature.
 
 ### Beep detection
-The feature also attempts to detect audio tones, or beeps that are commonly used on voicemail systems.  If detected, an event is sent via the actionHookf to the webapp.
+The feature also attempts to detect audio tones, or beeps that are commonly used on voicemail systems.  If detected, an event is sent via the actionHook to the webapp.
 
 ### Determining when to leave a voicemail
 For an application that wishes to leave a message on a voicemail system, it is necessary to know when the voicemail greeting has completed and the voicemail system is now ready to record the message.  If the feature determines that the remote party is a machine, it will continue listening to the greeting until it completes and then send an event via the `actionHook` to the application.  This can be used as a cue to let the application know that it is time to start leaving the message.
