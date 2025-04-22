@@ -527,6 +527,8 @@ paths:
                   format: uuid
                 ipv4:
                   type: string
+                netmask:
+                  type: integer
                 port:
                   type: integer
                 is_active:
