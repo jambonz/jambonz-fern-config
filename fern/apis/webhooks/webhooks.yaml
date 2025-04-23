@@ -150,7 +150,7 @@ webhooks:
           description: |
             Your callback should return this HTTP status code in all cases.
             if the request was authenticated and you wish to admit 
-            the client to the network, this is indicated by setting the 'response' 
+            the client to the network, this is indicated by setting the 'status' 
             attribute in the body to 'ok'
           content:
             application/json:
@@ -185,6 +185,46 @@ webhooks:
                     description: |
                       If provided, represents a period in seconds during which the source IP 
                       address should be blacklisted by the platform (0 means forever).
+  toolHook:
+    post:
+      operationId: toolHookPost
+      summary: New Client Tool Request
+      requestBody:
+        description: The details of the tool request
+        content:
+          application/json:
+            schema:
+              required:
+                - tool_call_id
+                - name
+              properties:
+                tool_call_id:
+                  type: string
+                  example: "chatcmpl-tool-4a231898ff8a4d24bce8146124c3bf5e"
+                  description: a unique identifier for the tool request.
+                name:
+                  type: string
+                  example: client-get-time
+                  description: The unique name of the client tool being requested
+                args:
+                  type: object
+                  description: Object containing key/value pairs of the parameters specified in the client tool
+      responses:
+        '200':
+          description: |
+            Your callback should return this HTTP status code in all cases.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: object
+                    description: contains data to be retrurned to the LLM, can contain either a string or an object.
+                    
+        
 components:
   schemas:
     CallHook:
