@@ -3862,7 +3862,7 @@ components:
         application_sid:
           type: string
           format: uuid
-          readOnly: true
+          #readOnly: true
         name:
           type: string
         account_sid:
