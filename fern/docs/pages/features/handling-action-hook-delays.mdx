@@ -37,6 +37,7 @@ in either the gather or [config](/verbs/verbs/config) verbs.
 
 <ParamField path="retries" type="number" required={false}>
   Number of times to perform actions, with a `noResponseTimeout` between each retry.  
+  This count applies to each verb in the actions array, so if you have 2 actions and set retries to 3 it will play the first, then the 2nd, then the first  again. If it is not set or is less than the length of the array then each verb in the array will run only once.
   Default: `1`.
 </ParamField>
 ## Examples
