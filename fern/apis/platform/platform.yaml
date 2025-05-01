@@ -1022,36 +1022,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /Accounts/{AccountSid}/ApiKeys:
-    parameters:
-      - name: AccountSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      tags:
-        - Accounts
-      summary: get all api keys for an account
-      operationId: getAccountApiKeys
-      responses:
-        '200':
-          description: list of api keys
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ApiKey'
-        '404':
-          description: account not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
   /Accounts/{AccountSid}/SipRealms/{SipRealm}:
     parameters:
       - name: AccountSid
@@ -1970,6 +1940,75 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /ApiKeys:
+    parameters:
+      - name: AccountSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Accounts
+      summary: get all api keys for an account
+      operationId: getAccountApiKeys
+      responses:
+        '200':
+          description: list of api keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiKey'
+        '404':
+          description: account not found
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    post:
+      tags:
+        - Accounts
+      summary: create an API key for an account
+      operationId: createApiKey
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: 
+                -  account_sid
+              properties:
+                account_sid:
+                  type: string
+                  format: uuid
+                  example: '9d26a637-1679-471f-8da8-7150266e1254'
+      responses:
+        '200':
+          description: new API key
+          content:
+            application/json:
+             schema: 
+               type: object
+               properties:
+                  sid:
+                    type: string
+                    format: uuid
+                  token:
+                    type: string
+                    format: uuid
+        '404':
+          description: account not found
         '500':
           description: system error
           content:
