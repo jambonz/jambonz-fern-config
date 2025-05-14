@@ -5,8 +5,8 @@ hidden: false
 
 The API server applies rate limiting to protect the application from exessive load.
 
-The limit applies to each client IP address regardless of the API key or Account in use, requests are limited using a fixed window (as opposed to a sliding window) 
-At the start of each winder period the limit is reset, The default values for jambonz (and used on jambonz.cloud) are 600 requests per 5 minute window.
+The limit applies to each client IP address regardless of the API key or Account in use, requests are limited using a fixed window (as opposed to a sliding window). 
+At the start of each window period the limit is reset, The default values for jambonz (and used on jambonz.cloud) are 600 requests per 5 minute window.
 
 The use of a fixed window means that you could theoretically send more than 600 requests within a 5 min period if you were to send 600 just before the window reset and 600 just after.
 
