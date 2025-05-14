@@ -18,7 +18,7 @@ This header indicates the servers current policy, that shows a 600 request limit
 `ratelimit-remaining: "580"`
 This header indicates to the client how many request they have left in the current window, in this case 580
 
-`ratelimit-reset: :39"`
+`ratelimit-reset: "39"`
 This indicates to the client how many seconds remain in the current window until the limit will be reset. Here its 39 seconds
 
 Self hosted customers can adjust their limits by setting the follwing environment variables in their API server `ecosystem.config.js`
