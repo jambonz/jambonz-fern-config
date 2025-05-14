@@ -104,6 +104,8 @@ navigation:
             path: ./docs/pages/features/using-filler-noise.mdx
           - page: Securing  HTTP Endpoints
             path: ./docs/pages/features/securing-webhooks.mdx
+          - page: API Rate Limits
+            path: ./docs/pages/features/api-rate-limits.mdx
       - section: Telephony integrations
         path: ./docs/pages/telephony/overview.mdx
         contents:
