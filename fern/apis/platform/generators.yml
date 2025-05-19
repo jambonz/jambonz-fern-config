@@ -1,3 +1,4 @@
 api:
-  - ./platform.yaml
+  specs: 
+    - openapi: ./platform.yaml
   

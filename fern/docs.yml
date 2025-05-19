@@ -281,3 +281,6 @@ typography:
     paths: 
       - path: ./docs/assets/fonts/objectivity-bold-webfont.woff2
         weight: 600
+
+experimental: 
+  openapi-parser-v3: true
