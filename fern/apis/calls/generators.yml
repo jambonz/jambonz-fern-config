@@ -1,4 +1,5 @@
 api:
-  - ./calls.yaml
+  specs: 
+    - openapi: ./calls.yaml
 
   

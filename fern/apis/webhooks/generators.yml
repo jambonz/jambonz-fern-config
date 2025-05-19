@@ -1,2 +1,3 @@
 api:
-  - ./webhooks.yaml
+  specs: 
+    - openapi: ./webhooks.yaml
