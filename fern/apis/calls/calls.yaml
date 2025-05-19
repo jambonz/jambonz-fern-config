@@ -111,6 +111,8 @@ paths:
                   type: string
                   description: The language for Speech to Text (required if application_sid is not used)
                   example: en-US
+                amd:
+                  $ref: '#/components/schemas/amd'
       responses:
         '201':
           description: call successfully created
@@ -560,3 +562,34 @@ components:
       example:
         type: phone
         number: '+16172375080'
+    amd:
+      type: object
+      properties:
+        actionHook:
+          type: string
+          description: Webhook to send AMD events.
+        thresholdWordCount:
+          type: number
+          description: Number of spoken words in a greeting that result in an amd_machine_detected result.
+        digitCount:
+          type: number
+          description: Number of digits in a greeting to trigger a amd_machine_detected result. 0 is off
+        timers:
+          type: object
+          properties: 
+            decisionTimeoutMs:
+              type: number
+              default: 15000
+              description: Time in milliseconds to wait before returning amd_decision_timeout.
+            greetingCompletionTimeoutMs:
+              type: number
+              default: 2000
+              description: Silence in milliseconds to wait for during greeting before returning amd_machine_stopped_speaking.
+            noSpeechTimeoutMs:
+              type: number
+              default: 5000
+              description: Time in milliseconds to wait for speech before returning amd_no_speech_detected.
+            toneTimeoutMs:
+              type: number
+              default: 20000
+              description: Time in milliseconds to wait to hear a tone.
