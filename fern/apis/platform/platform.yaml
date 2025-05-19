@@ -76,6 +76,50 @@ paths:
         required: true
         schema:
           type: string
+  /Users:
+    post:
+      tags:
+        - Users
+      summary: create a new user
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                is_active:
+                  type: boolean
+                force_change:
+                  type: boolean
+                scope:
+                  type: string
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                old_password:
+                  type: string
+                  description: existing password, which is to be replaced
+      responses:
+        '204':
+          description: user created
+        '403':
+          description: user creation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+        '500':
+          description: system error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
   /Users/{UserSid}:
     parameters:
       - name: UserSid
@@ -147,49 +191,6 @@ paths:
           description: user updated
         '403':
           description: user update failed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    post:
-      tags:
-        - Users
-      summary: create a new user
-      operationId: createUser
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                email:
-                  type: string
-                is_active:
-                  type: boolean
-                force_change:
-                  type: boolean
-                scope:
-                  type: string
-                permissions:
-                  type: array
-                  items:
-                    type: string
-                old_password:
-                  type: string
-                  description: existing password, which is to be replaced
-      responses:
-        '204':
-          description: user created
-        '403':
-          description: user creation failed
           content:
             application/json:
               schema:
@@ -1343,7 +1344,6 @@ paths:
                     description: total number of records in that database that match the filter criteria
                   batch:
                     type: integer
-                    format: 
                     description: total number of records returned in this page set
                   page:
                     type: integer
@@ -1947,13 +1947,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeneralError'
   /ApiKeys:
-    parameters:
-      - name: AccountSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
     get:
       tags:
         - Accounts
