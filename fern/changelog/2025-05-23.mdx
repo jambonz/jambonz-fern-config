@@ -3,47 +3,35 @@ Major release
 </Card>
 
 #### New Features
-- Adds support for Google Gemini speech-to-speech LLM.  See example application [here](https://github.com/jambonz/gemini-s2s-example).
+1. Adds support for Google Gemini speech-to-speech LLM.  See example application [here](https://github.com/jambonz/gemini-s2s-example).
 Speech-to-speech LLMs now supported include: Gemini, Ultravox, OpenAI, Deepgram, and elevenlabs.
-- Added MCP client support to the `llm` verb.  You can now specify an array of one or more MCP servers in 
+1. Added MCP client support to the `llm` verb.  You can now specify an array of one or more MCP servers in 
 the `mcpServers` property of the llm verb and jambonz will query those MCP servers and automatically create tools for the LLM to call 
 based on the tools exposed by each of the MCP servers.  For an example, see the [google gemini sample app](https://github.com/jambonz/gemini-s2s-example?tab=readme-ov-file#testing-with-mcp-server-tools).
-- Added support for application environment variables, which are special configuration variables that can be set in the jambonz portal for 
+1. Added support for application environment variables, which are special configuration variables that can be set in the jambonz portal for 
 an application to customize the application behavior.  This enables hosting of a single application that can then be customized for different 
 customers without having to modify source code.
-- Added support for Deepgram Aura-2 TTS model and voices
-- Added support for Rime Arcana model
-- Added support for PlayHT on-prem deployments.
-- Added support for using outbound sip proxy when registering
-- Added support for providing instructions to Whisper TTS
-- Added new voice for nvidia TTS
+1. Added support for Deepgram Aura-2 TTS model and voices
+1. Added support for Rime Arcana model
+1. Added support for PlayHT on-prem deployments.
+1. Added support for using outbound sip proxy when registering
+1. Added support for providing instructions to Whisper TTS
+1. Added new voice for nvidia TTS
 
 #### Bug fixes
-- Fixed issue causing intermittent Freeswitch crashes
-- Fixed deepgram gather cannot be timeout on empty transcription with continueAsr.
-<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1171)
-- Fixed say verb cannot failover if tts_response-code != 2xx
-<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1174)
-- Fixed microsoft stt max client buffer size error for transcribe verb
-<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1173)
-- sip_decline release callSession if ws requestor is used
-<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1182)
-- Send stop-playback event
-<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1186)
-- Fixed tts streaming buffer cannot reset timeoutwhen lastUpdateTime is short
-<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1184)
-- Fixed issue with Deepgram STT not returning transcript when last_word_end is -1
-<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1196)
-- Fixed issue muting member in conferenceq
-<br/><br/>[PR](https://github.com/jambonz/jambonz-feature-server/pull/1048)
-- Fixed API server crash when admin query voip-carrier
-<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/442)
-- Fixed issue where we incorrectly saved an obscured API credential for recording, leading to failures authenticating 
-<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/443)
-- Fixed an issue where updateCall responding with 202 caused an error
-<br/><br/>[PR](https://github.com/jambonz/jambonz-api-server/pull/451)
-- Fixed an issue in the portal where the wrong recording bucket region was displayed
-<br/><br/>[PR](https://github.com/jambonz/jambonz-webapp/pull/522)
+- Various stability fixes including for issues which caused intermittent Freeswitch crashes.
+- Fixed deepgram gather cannot be timeout on empty transcription with continueAsr. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1171)
+- Fixed say verb cannot failover if tts_response-code != 2xx. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1174)
+- Fixed microsoft stt max client buffer size error for transcribe verb. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1173)
+- sip_decline release callSession if ws requestor is used. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1182)
+- Send stop-playback event. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1186)
+- Fixed tts streaming buffer cannot reset timeoutwhen lastUpdateTime is short. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1184)
+- Fixed issue with Deepgram STT not returning transcript when last_word_end is -1. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1196)
+- Fixed issue muting member in conference. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1048)
+- Fixed API server crash when admin query voip-carrier. [PR](https://github.com/jambonz/jambonz-api-server/pull/442)
+- Fixed issue where we incorrectly saved an obscured API credential for recording, leading to failures authenticating. [PR](https://github.com/jambonz/jambonz-api-server/pull/443)
+- Fixed an issue where updateCall responding with 202 caused an error. [PR](https://github.com/jambonz/jambonz-api-server/pull/451)
+- Fixed an issue in the portal where the wrong recording bucket region was displayed. [PR](https://github.com/jambonz/jambonz-webapp/pull/522)
 
 
 #### SQL changes
