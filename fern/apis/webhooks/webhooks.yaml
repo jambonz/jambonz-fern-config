@@ -3,11 +3,11 @@ info:
   title: Webhooks
   version: 0.9.3
 servers:
-  - url: /
+  - url: https://{yourserver}.com
 security:
   - basicAuth: []
-webhooks:
-  callHook:
+paths:
+  /webhooks/call:
     post:
       operationId: callHookPost
       summary: New Call
@@ -74,7 +74,7 @@ webhooks:
       responses:
         '200':
           description: Return a 200 containing a JSON payload consisting of an array of verbs
-  registrationHook:
+  /webhooks/registration:
     post:
       operationId: registrationHookPost
       summary: Client Registration
@@ -185,7 +185,7 @@ webhooks:
                     description: |
                       If provided, represents a period in seconds during which the source IP 
                       address should be blacklisted by the platform (0 means forever).
-  toolHook:
+  /webhooks/tool:
     post:
       operationId: toolHookPost
       summary: New Client Tool Request
