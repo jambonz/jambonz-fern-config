@@ -4679,34 +4679,44 @@ components:
         name:
           type: string
           example: xhoaluu
+          description: the client username
         contact:
           type: string
           example: sip:0dluqjt6@od41sl9jfc9m.invalid;transport=ws
+          description: The value in the contact header of the registration
         expiryTime:
           type: integer
           example: 1698981449173
+          description: The timestamp (in ms since 00:00:00.000 01/01/1970) that the current registraion will expire
         protocol:
           type: string
-          example: wss
+          enum: 
+            - wss
+            - udp
+            - tcp 
+            - tls
         allow_direct_app_calling:
           type: integer
           example: 1
+          description: set to 1 if client is allowed to call app sids directly
         allow_direct_queue_calling:
           type: integer
           example: 1
+          description: set to 1 if client is allowed to dial into queues to dequeue calls
         allow_direct_user_calling:
           type: integer
           example: 1
+          description: set to 1 if client is allowed to call other users by name directly.
         registered_status:
           type: string
           enum:
             - active
             - inactive
-      required:
-        - speech_credential_sid
-        - name
-        - reported_usage
-        - model
+          description: if there is a current registered session from the client
+        proxy:
+          type: string
+          example: sip:192.0.0.1:12345
+          description: The source IP and Port used for the registration request.
     TtsModel:
       type: object
       properties:
