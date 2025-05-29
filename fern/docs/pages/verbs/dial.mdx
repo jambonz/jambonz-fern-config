@@ -7,7 +7,7 @@ subtitle: Create a new call by dialing out to a telephone number, a registered s
 {
   "verb": "dial",
   "actionHook": "/outdial",
-  "callerId": "+16173331212",
+  "callerId": "+161755511234",
   "answerOnBridge": true,
   "dtmfCapture": ["*2", "*3"],
   "dtmfHook": {
@@ -21,16 +21,17 @@ subtitle: Create a new call by dialing out to a telephone number, a registered s
   "target": [
     {
       "type": "phone",
-      "number": "+15083084809",
+      "number": "+15085551000",
       "trunk": "Twilio"
     },
     {
       "type": "sip",
-      "sipUri": "sip:1617333456@sip.trunk1.com",
+      "sipUri": "sip:16175551212@sip.trunk1.com",
       "auth": {
         "username": "foo",
         "password": "bar"
-      }
+      },
+      "proxy" : "sip:192.0.0.1:5060"
     },
     {
       "type": "user",
@@ -220,3 +221,7 @@ This webhook that is invoked when amd property is included and jambonz has eithe
 The purpose of the `exitMediaPath` is to support use cases where it is important that the media path not touch the jambonz system at all.  The common use case is the need to transfer a call to a human agent or credit card system where the caller will be giving their credit card details over the phone.  In order to have a PCI-Compliant transaction it is necessary that this conversation not be able to be recorded, stored, or in any way reach the jambonz system.  Performing the `dial` verb using the `exitMediaPath` property ensures this happens.
 
 For more details on controlling the media path during a call, please see [Controlling media path during call](/guides/features/managing-media-anchors).
+
+#### proxy
+
+If you set a `proxy` value on the target then jambonz will use this as a SIP Proxy for the outgoing INVITE, for example `sip:192.168.0.1:5060`
