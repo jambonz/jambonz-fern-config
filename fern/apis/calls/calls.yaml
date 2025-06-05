@@ -557,6 +557,10 @@ components:
             password:
               type: string
               description: The password to use for SIP authentication, if challenged
+        proxy:
+          type: string
+          description: SIP Proxy to use for the outgoing INVITE
+          example: sip:192.0.0.1:5080
       required:
         - type
       example:
