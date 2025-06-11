@@ -1535,67 +1535,67 @@ paths:
         '404':
           description: account or call not found
   /Accounts/{AccountSid}/Alerts:
-    parameters:
-      - name: AccountSid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - in: query
-        name: page
-        required: true
-        schema:
-          type: integer
-          description: page number of data to retrieve
-      - in: query
-        name: count
-        required: true
-        schema:
-          type: integer
-          description: number of rows to retrieve in each page set
-          minimum: 1
-          maximum: 500
-      - in: query
-        name: days
-        required: false
-        schema:
-          type: integer
-          description: number of days back to retrieve, 
-          minimum: 1
-          maximum: 30
-      - in: query
-        name: start
-        required: false
-        schema:
-          type: string
-          format: date-time
-          description: start date to retrieve
-      - in: query
-        name: end
-        required: false
-        schema:
-          type: string
-          format: date-time
-          description: end date to retrieve
-      - in: query
-        name: alert_type
-        required: false
-        schema:
-          type: string
-          enum:
-            - webhook-failure
-            - webhook-connection-failure
-            - webhook-auth-failure
-            - no-tts
-            - no-stt
-            - tts-failure
-            - stt-failure
-            - no-carrier
-            - call-limit
-            - device-limit
-            - api-limit
-    get:
+    get: 
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+            description: page number of data to retrieve
+        - name: count
+          in: query
+          required: true
+          schema:
+            type: integer
+            description: number of rows to retrieve in each page set
+            minimum: 1
+            maximum: 500
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: number of days back to retrieve, 
+            minimum: 1
+            maximum: 30
+        - name: start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            description: start date to retrieve
+        - name: end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            description: end date to retrieve
+        - name: alert_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - webhook-failure
+              - webhook-connection-failure
+              - webhook-auth-failure
+              - no-tts
+              - no-stt
+              - tts-failure
+              - stt-failure
+              - no-carrier
+              - call-limit
+              - device-limit
+              - api-limit
       tags:
         - Alerts
       summary: retrieve alerts for an account
