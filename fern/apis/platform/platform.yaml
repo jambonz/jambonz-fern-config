@@ -2008,6 +2008,282 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+  /Clients:
+    get: 
+      summary: List Clients
+      description: Returns a list of clients 
+      operationId: getClients
+      tags:
+        - Clients
+      security:
+        - bearerAuth: [] 
+      responses:
+        '200':
+          description: retrieve online sip users for an account
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    account_sid:
+                      type: string
+                      format: uuid
+                      example: '9d26a637-1679-471f-8da8-7150266e1254'
+                    client_sid:
+                      type: string
+                      format: uuid
+                      example: 'f8d264b7-c26d-4829-be15-299e97b4ba8a'              
+                    username: 
+                      type: string
+                      example: "1234"
+                    password: 
+                      type: string
+                      example: "sxxxxxxxxxx"
+                      description: in the response the password will only show the first character with subsequnet ones replaces by an x
+                    is_active: 
+                      type: number
+                      example: 1
+                      default: 1
+                      enum: 
+                        - 1
+                        - 0
+                    allow_direct_app_calling: 
+                      type: number
+                      example: 1
+                      default: 1
+                      enum: 
+                        - 1
+                        - 0
+                    allow_direct_queue_calling: 
+                      type: number
+                      example: 1
+                      default: 1
+                      enum: 
+                        - 1
+                        - 0
+                    allow_direct_user_calling: 
+                      type: number
+                      example: 1
+                      default: 1
+                      enum: 
+                        - 1
+                        - 0
+    post:
+      summary: Create a new client
+      description: Creates a new sip client 
+      operationId: createClient
+      tags:
+        - Clients
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: 
+                -  account_sid
+                - username
+                - password
+              properties:
+                account_sid:
+                  type: string
+                  format: uuid
+                  example: '9d26a637-1679-471f-8da8-7150266e1254'                
+                username: 
+                  type: string
+                  example: "1234"
+                password: 
+                  type: string
+                  example: "secure_password_123"
+                is_active: 
+                  type: number
+                  example: 1
+                  default: 1
+                  enum: 
+                    - 1
+                    - 0
+                allow_direct_app_calling: 
+                  type: number
+                  example: 1
+                  default: 1
+                  enum: 
+                    - 1
+                    - 0
+                allow_direct_queue_calling: 
+                  type: number
+                  example: 1
+                  default: 1
+                  enum: 
+                    - 1
+                    - 0
+                allow_direct_user_calling: 
+                  type: number
+                  example: 1
+                  default: 1
+                  enum: 
+                    - 1
+                    - 0
+      responses:
+        '201':
+          description: Client created successfully
+          content:
+            application/json:
+              schema: 
+               type: object
+               properties:
+                  sid:
+                    type: string
+                    format: uuid
+              example:
+                sid: "a691e220-80cd-4949-829b-2033e135e30a"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema: 
+               type: object
+               properties:
+                  msg:
+                    type: string
+                    format: text
+              example:
+                msg: "the client's username already exists"
+  /Clients/{ClientSid}:
+    parameters:
+      - name: ClientSid
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+    get:
+      summary: Get a client
+      description: Get details of a single client
+      operationId: getClient
+      tags:
+        - Clients
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: details of a client
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account_sid:
+                    type: string
+                    format: uuid
+                    example: '9d26a637-1679-471f-8da8-7150266e1254'
+                  client_sid:
+                    type: string
+                    format: uuid
+                    example: 'f8d264b7-c26d-4829-be15-299e97b4ba8a'              
+                  username: 
+                    type: string
+                    example: "1234"
+                  password: 
+                    type: string
+                    example: "sxxxxxxxxxx"
+                    description: in the response the password will only show the first character with subsequnet ones replaces by an x
+                  is_active: 
+                    type: number
+                    example: 1
+                    default: 1
+                    enum: 
+                      - 1
+                      - 0
+                  allow_direct_app_calling: 
+                    type: number
+                    example: 1
+                    default: 1
+                    enum: 
+                      - 1
+                      - 0
+                  allow_direct_queue_calling: 
+                    type: number
+                    example: 1
+                    default: 1
+                    enum: 
+                      - 1
+                      - 0
+                  allow_direct_user_calling: 
+                    type: number
+                    example: 1
+                    default: 1
+                    enum: 
+                      - 1
+                      - 0 
+    put: 
+      summary: Update a client
+      description: Changes properties on an existing client 
+      operationId: updateClient
+      tags:
+        - Clients
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: 
+                -  account_sid
+                - username
+                - password
+              properties:
+                is_active: 
+                  type: number
+                  example: 1
+                  default: 1
+                  enum: 
+                    - 1
+                    - 0
+                allow_direct_app_calling: 
+                  type: number
+                  example: 1
+                  default: 1
+                  enum: 
+                    - 1
+                    - 0
+                allow_direct_queue_calling: 
+                  type: number
+                  example: 1
+                  default: 1
+                  enum: 
+                    - 1
+                    - 0
+                allow_direct_user_calling: 
+                  type: number
+                  example: 1
+                  default: 1
+                  enum: 
+                    - 1
+                    - 0
+      responses:
+        '204':
+          description: Client updated
+        '404':
+          description: ClientSid not found 
+    delete:
+      summary: delete a client
+      description: removes an existing client 
+      operationId: deleteClient
+      tags:
+        - Clients 
+      responses:
+        '204':
+          description: Client deleted
+        '404':
+          description: ClientSid not found
+        
   /Lcrs:
     post:
       tags:
