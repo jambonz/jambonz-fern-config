@@ -1,0 +1,37 @@
+<Card title="0.9.4-4" icon="regular hands-holding-diamond" iconPosition="left">
+Point release
+</Card>
+
+#### New Features
+1. Adds support for Cartesia Speech to text [Ink-Whisper model](https://cartesia.ai/ink).  You can now use Cartesia for both TTS and STT.
+1. Adds support for creating an [Agent Call](https://docs.ultravox.ai/api-reference/agents/agents-calls-post) on Ultravox.  To enable this 
+feature, you must set the `agent_id` property  in the ultravox llm verb as described here.  This is an optional property, and 
+if not set the [Create Call](https://docs.ultravox.ai/api-reference/calls/calls-post) API will be used instead (i.e. legacy behavior).
+1. The `say` verb now supports a TTS streaming mode where you can supply the full prompt at once in the `text` property.
+1. Adds additional support for Italian voicemail detection based on common operator messages.
+1. When registering with an outbound SIP trunk, use the account-level sip realm in the Contact header if provided.
+
+#### Bug fixes
+- error if app does not specify a speech synthesis voice [issue](https://github.com/jambonz/jambonz-feature-server/issues/1230).
+- unhandled exception [issue](https://github.com/jambonz/jambonz-feature-server/issues/1229)
+- remove unnecessary logging [PR](https://github.com/jambonz/jambonz-feature-server/pull/1238)
+- embedded urls in `createCall` REST call createCall verb caused parsing issue [PR](https://github.com/jambonz/jambonz-feature-server/pull/1235)
+- unhandled exception in `dial` verb [PR](https://github.com/jambonz/jambonz-feature-server/pull/1239)
+- in certain dial scenarios, the A leg could be left connected after a successful REFER on the B leg [PR](https://github.com/jambonz/jambonz-feature-server/pull/1243)
+- remove video SDP when making outbound call [PR](https://github.com/jambonz/jambonz-feature-server/pull/1242)
+- fix issue with `dub` verb where `loop: false` caused the audio to incorrectly loop [PR](https://github.com/jambonz/jambonz-feature-server/pull/1247)
+- fix potential looping behavior in background sticky bargeIn task [PR](https://github.com/jambonz/jambonz-feature-server/pull/1253)
+- fix snyk warning in drachtio-fsmrf [PR](https://github.com/jambonz/jambonz-feature-server/pull/1255)
+- route logs for jambonz-api-server to the correct log file [PR](https://github.com/jambonz/jambonz-api-server/pull/465)
+- creating new application in the webapp does not save a TTS voice by default [PR](https://github.com/jambonz/jambonz-webapp/pull/535)
+- fix issue when wild cards or regex is used in phone number for multiple carriers [PR](https://github.com/jambonz/sbc-inbound/pull/202)
+
+
+#### SQL changes
+None.
+
+#### Availability
+- Available now on jambonz.cloud
+- Available now with devops scripts for subscription customers
+
+**Questions?** Contact us at <a href="mailto:support@jambonz.org">support@jambonz.org</a>
