@@ -41,11 +41,14 @@ for this hosted application. We'll go through how you should configure these nex
 This is the API key for your ultravox account, by default the value will be hidden in the UI but you can check it using the eye icon
 
 ### ULTRAVOX_PROMPT
-The the system prompt given to the agent at the start of the call instructing it what to do, see [https://docs.ultravox.ai/gettingstarted/prompting]for more details.
+The the system prompt given to the agent at the start of the call instructing it what to do, see [https://docs.ultravox.ai/gettingstarted/prompting]() for more details.
+
+You can either upload a pre-existing text file using the `Choose a file` picker or you can type directing into the text area.
+
 Note: You cannot use additional tools with the hosted application, if you wish to expose tooling to the agent you will need to run your own application.
 
 ### ULTRAVOX_VOICE
-The  voice ultravox will use to respond to the caller, see [https://docs.ultravox.ai/voices/overview] for details, we default to the `Tanya-English` voice
+The  voice ultravox will use to respond to the caller, see [https://docs.ultravox.ai/voices/overview]() for details, we default to the `Tanya-English` voice
 
 ### FIRST_SPEAKER
 Who is expected to speak first on the call, typically this would be the **Agent** for an inbound call or the **User** for an outbound call.
@@ -79,7 +82,7 @@ If using a Dial this is the Carrier Jambonz will use for the new outbound call.
 
 
 ## Other Configuration
-Finally, set the other Jambonz applicaiton parameters, if you are using the Warm Transfer option then you will need to select a Speech Provider here that you have configured settings for, the other parameters can be left as default.
+Finally, set the other Jambonz application parameters, if you are using the Warm Transfer option then you will need to select a Speech Provider here that you have configured settings for, the other parameters can be left as default.
 
 Optionally you may want to enable call recording for this application.
 
