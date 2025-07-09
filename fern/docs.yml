@@ -113,6 +113,11 @@ navigation:
             path: ./docs/pages/telephony/3cx.mdx
           - page: Vonage
             path: ./docs/pages/telephony/vonage.mdx
+      - section: Hosted applications
+        path: ./docs/pages/hostedapps/overview.mdx
+        contents:
+          - page: Ultravox
+            path: ./docs/pages/hostedapps/ultravox.mdx
   - tab: verbs
     layout: 
       - section: Verbs
