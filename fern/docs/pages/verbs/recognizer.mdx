@@ -161,6 +161,25 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 ### Vendor-specific options
 
 <AccordionGroup>
+
+  <Accordion title="assemblyAiOptions">
+    <ParamField path="serviceVersion" type="string" required={false}>
+      the version of the streaming API to use, example `v3`
+    </ParamField>
+   <ParamField path="formatTurns" type="boolean" required={false}>
+      Format each speaker turn
+   </ParamField>
+   <ParamField path="endOfTurnConfidenceThreshold" type="number" required={false}>
+      determines how confident the model must be before it triggers an end-of-turn, example `0.5`
+   </ParamField>
+   <ParamField path="minEndOfTurnSilenceWhenConfident" type="number" required={false}>
+      the minimum amount of silence (in milliseconds) required after the last spoken word before the system will trigger an end-of-turn (EOT) event, when the model is confident an EOT should occur, example `500`
+   </ParamField>
+   <ParamField path="maxTurnSilence" type="number" required={false}>
+      the maximum amount of silence (in milliseconds) allowed in a turn before an end-of-turn (EOT) is automatically triggered, example `2000`
+   </ParamField>
+  </Accordion>
+
   <Accordion title="azureOptions">
     <ParamField path="speechSegmentationSilenceTimeoutMs" type="number" required={false}>
       Duration (in milliseconds) of non-speech audio within a phrase that's currently being spoken before that phrase is considered "done."  
