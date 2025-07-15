@@ -92,3 +92,47 @@ They are only sent on the initial callHook not on any subsequent hooks or on the
 App Env Vars may also be created, read and modified on an application via the [REST API](/reference/rest-platform-management/applications/create-application#request.body.env_vars)
 
 You can also invoke the OPTIONS request to fetch a scheme from an endpoint using the [API](http://127.0.0.1:3002/reference/rest-platform-management/applications/get-app-env-schema) 
+
+
+## Sample Applicaiton
+Below is a minimal applicaiton showing App Env Vars in practice, when the app is created a Name will be defined 
+and then when the app runs that Name value will be used to greet the caller, The app requires `express` to be installed in order to run (`npm install express`)
+
+```js
+const express = require('express');
+const app = express();
+const PORT = 3000;
+
+// Middleware to parse JSON bodies
+app.use(express.json());
+
+// Handle OPTIONS request
+app.options('/call', (req, res) => {
+  const schema = {
+	"NAME": {
+    "description": "Your name to be played in the greeting",
+    "required": true,
+    "type": "string"
+  }
+  }
+  res.json(schema);
+})
+
+// Handle POST request
+app.post('/call', (req, res) => {
+  console.log(req.body.env_vars)
+  const name = req.body.env_vars.NAME
+  const verbs = [
+    {
+      "verb": "say",
+      "text": `Hello ${name}`
+    }
+  ]
+  res.json(verbs);
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+```
