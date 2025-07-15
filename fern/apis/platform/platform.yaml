@@ -1679,6 +1679,9 @@ paths:
                   type: string
                 speech_recognizer_language:
                   type: string
+                env_vars:
+                  type: object
+                  description: Object containing the Application Environment Variables as key/value to be sent with the call_hook payload
               required:
                 - name
                 - account_sid
@@ -2283,7 +2286,7 @@ paths:
           description: Client deleted
         '404':
           description: ClientSid not found
-        
+       
   /Lcrs:
     post:
       tags:
@@ -3945,6 +3948,32 @@ paths:
                                       - message
                       '404':
                         description: service provider not found     
+  /AppEnv:
+    get:
+      summary: Get App Env Schema
+      operationId: getAppEnvSchema
+      tags:
+        - Applications
+      parameters:
+      - name: url
+        in: query
+        required: true
+        schema:
+            type: string
+      responses:
+        '200':
+          description: App Env Schema
+          content:
+            application/json:
+              schema:
+                type: object
+        '204':
+          description: No App Env Schema was found at the url
+        '400':
+          description: The App Env Schma that was returned was invalid
+          
+      
+
 components:
   securitySchemes:
     bearerAuth:
@@ -4193,6 +4222,9 @@ components:
           type: string
         speech_recognizer_language:
           type: string
+        env_vars:
+          type: object
+          description: Object containing the Application Environment Variables as key/value to be sent with the call_hook payload
       required:
         - name
         - account_sid

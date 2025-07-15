@@ -320,6 +320,10 @@ components:
         sip:
           description: The SIP request for the call
           $ref: '#/components/schemas/sipRequest'
+        env_vars:
+          description: Application Environment Variables configured for the applicaiton
+          type: object
+        
     sipRequest:
       required:
         - raw
