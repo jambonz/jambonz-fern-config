@@ -106,6 +106,8 @@ navigation:
             path: ./docs/pages/features/securing-webhooks.mdx
           - page: API Rate Limits
             path: ./docs/pages/features/api-rate-limits.mdx
+          - page: Application Environment Variables
+            path: ./docs/pages/features/app-env-vars.mdx
   - tab: verbs
     layout: 
       - section: Verbs

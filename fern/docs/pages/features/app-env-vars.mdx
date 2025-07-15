@@ -1,0 +1,88 @@
+---
+title: Application Environment Variables
+hidden: false
+---
+
+## Background
+Application Environment Variables (app-env vars) are a feature in Jambonz that allows you to pass custom values to your applicaiton in the call webhook. 
+This allows for you to  have one instance of your application running but pass in specific customisation parameters with the call, it also allows us to offer the [Hosted Applications] 
+with users supplying their own parameters to the application.
+
+
+The parameters are discovered by jambonz when you setup the call webhook and then the WebUI will create additional fields based on the schema that is returned. 
+
+The values for the parameters are then entered during application setup and stored in encrypted in the database.
+
+When a call is routed to the applicaiton these parameters are sent in the calling webhook.
+
+## Discovery
+Whenever a user creates a new calling webhook in the jambonz webUI (either webhook or websocket) jambons will make an HTTP OPTIONS request to that endpoint, 
+If the application offers App-Env Vars it should respond with a JSON schema defining these parameters.
+
+If the applicaiton does not respond with a valid JSON schema or does not handle the OPTIONS request then Jambonz will silently ignore the error and the application configuration can continue as normal.
+
+## Schema
+The schema is a JSON object, with each parameter name as a key and then an object containing the attributes of that parameter.
+For example the below schema would define a parameter of `NAME` as a `string` type that is not required, and has a description
+
+```JSON
+{
+  "NAME": {
+    "description": "Your Name",
+    "type": "string",
+    "required": true,
+    "default": "Bob",
+    "obscure": false,
+    "uiHint": "input"
+  }
+
+}
+```
+
+A schema can contain multiple parameters, but each one must have a unique name.
+
+### Attributes
+The following attributes can be defined for a parameter in the schema
+
+<ParamField path="description" type="string" required={true}>
+  A description of the parameter, this will be visible to the user when then mouseover the ? icon next to the parameter in the UI
+</ParamField>
+
+<ParamField path="type" type="string" required={true}>
+One of:
+- `string`
+- `boolean`
+- `number`
+  The type of parameter, this is how the parameter will be sent in the callHook so a number would be sent as `5` whereas a string would be sent as `"5"`
+</ParamField>
+
+<ParamField path="required" type="boolean" required={false}>
+If set to True then the parameter must be defined in order for the applicaiton to be created
+</ParamField>
+
+<ParamField path="default" type="string|number|boolean" required={false}>
+A default value to pre-fill for the parameter
+</ParamField>
+
+<ParamField path="enum" type="array" required={false}>
+An array of values, if set then the UI will show a dropdown asking the user to select a value.
+</ParamField>
+
+<ParamField path="obscure" type="boolean" required={false}>
+If set then the value will be obscured in the UI, useful for passwords and API keys. 
+</ParamField>
+
+<ParamField path="uiHint" type="string" required={false}>
+One of:
+- `input`
+- `textarea`
+- `filepicker`
+When type is set to string the defualt is a simple one line text box, `textarea` allows for a larger multiline input 
+and `filepicker` will allow the user to upload a text file directly into the textarea. All values are still stored and passed as a string.
+</ParamField>
+
+## Call Hook
+
+Once an application has been created with its app-env vars defined and stored when a call is made either inbound or outbound these values 
+will be added to the callHook as a new object under the `env-vars` key.
+They are only sent on the initial callHook not on any subsequent hooks or on the call Status hook.
