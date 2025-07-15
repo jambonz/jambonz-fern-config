@@ -86,3 +86,9 @@ and `filepicker` will allow the user to upload a text file directly into the tex
 Once an application has been created with its app-env vars defined and stored when a call is made either inbound or outbound these values 
 will be added to the callHook as a new object under the `env-vars` key.
 They are only sent on the initial callHook not on any subsequent hooks or on the call Status hook.
+
+## API
+
+App Env Vars may also be created, read and modified on an applicaiton via the [REST API](/reference/rest-platform-management/applications/create-application#request.body.env_vars)
+
+You can also invoke the OPTIONS request to fetch a scheme from an endpoint using the [API](http://127.0.0.1:3002/reference/rest-platform-management/applications/get-app-env-schema) 
