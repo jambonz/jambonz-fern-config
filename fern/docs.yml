@@ -106,18 +106,6 @@ navigation:
             path: ./docs/pages/features/securing-webhooks.mdx
           - page: API Rate Limits
             path: ./docs/pages/features/api-rate-limits.mdx
-      - section: Telephony integrations
-        path: ./docs/pages/telephony/overview.mdx
-        contents:
-          - page: 3CX
-            path: ./docs/pages/telephony/3cx.mdx
-          - page: Vonage
-            path: ./docs/pages/telephony/vonage.mdx
-      - section: Hosted applications
-        path: ./docs/pages/hostedapps/overview.mdx
-        contents:
-          - page: Ultravox
-            path: ./docs/pages/hostedapps/ultravox.mdx
   - tab: verbs
     layout: 
       - section: Verbs
@@ -223,8 +211,15 @@ navigation:
       - page: npx
         path: ./docs/pages/sdks/npx.mdx
   - tab: tutorials
-    layout: 
-      - section: Voice AI
+    layout:
+      - section: Hosted applications
+        path: ./docs/pages/hostedapps/overview.mdx
+        contents:
+          - page: Ultravox
+            path: ./docs/pages/hostedapps/ultravox.mdx
+          - page: Retell
+            path: ./docs/pages/hostedapps/retell.mdx
+      - section: Voice AI Examples
         contents:
           - page: Deepgram Voice Agent
             path: ./docs/pages/tutorials/deepgram.mdx
@@ -232,10 +227,15 @@ navigation:
             path: ./docs/pages/tutorials/elevenlabs.mdx
           - page: OpenAI Realtime API
             path: ./docs/pages/tutorials/openai.mdx
-          - page: Retell.ai
-            path: ./docs/pages/tutorials/retell.mdx
           - page: Ultravox
             path: ./docs/pages/tutorials/ultravox.mdx
+      - section: Telephony integrations
+        path: ./docs/pages/telephony/overview.mdx
+        contents:
+          - page: 3CX
+            path: ./docs/pages/telephony/3cx.mdx
+          - page: Vonage
+            path: ./docs/pages/telephony/vonage.mdx
   - tab: changelog
 
   
