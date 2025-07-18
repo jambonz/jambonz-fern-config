@@ -249,7 +249,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-    post:
+    put:
       tags:
         - Calls
       summary: update a call
@@ -296,7 +296,23 @@ paths:
                     - pause
                     - resume    
                 whisper:
-                  $ref: '#/components/schemas/Webhook'
+                  oneOf:
+                  - type: object
+                    properties:
+                      verb:
+                        enum:
+                          - say 
+                          - play
+                        description: See [Say](/verbs/verbs/say) or [Play](/verbs/verbs/play) for details of the properties
+                  - type: array
+                    items:
+                          type: object
+                          properties:
+                            verb:
+                              enum:
+                                - say 
+                                - play
+                              description: See [Say](/verbs/verbs/say) or [Play](/verbs/verbs/play) for details of the properties
                 sip_request:
                   type: object
                   properties:

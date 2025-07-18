@@ -1,0 +1,55 @@
+components:
+  Schemas:
+    VerbSay:
+      type: object
+      properties:
+        verb:
+          type: string
+          const: say
+        text:
+          type: string
+        loop:
+          type: number
+        stream:
+          type: boolean
+        earlyMeida:
+          type: boolean
+        synthesizer:
+          type: object
+          properties:
+            gender:
+              type: string
+              enum:
+                - MALE
+                - FEMALE
+                - NEUTRAL
+            language:
+              type: string
+            vendor:
+              type: string
+            voice:
+              type: string
+    VerbPlay:
+      type: object
+      properties:
+        verb:
+          type: string
+          const: play
+        url:
+          type: string
+        actionHook:
+          type: string
+        earlyMedia:
+          type: boolean
+        loop:
+          type: number
+        seekOffset:
+          type: number
+        timeoutSecs:
+          number
+      required:
+        - verb
+        - url
+
+
+
