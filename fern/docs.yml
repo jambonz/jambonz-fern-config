@@ -114,6 +114,8 @@ navigation:
         contents:
           - page: Overview
             path: ./docs/pages/verbs/overview.mdx
+          - page: Alert
+            path: ./docs/pages/verbs/alert.mdx
           - page: Answer
             path: ./docs/pages/verbs/answer.mdx
           - page: Conference
