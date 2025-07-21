@@ -74,11 +74,11 @@ paths:
       responses:
         '200':
           description: Return a 200 containing a JSON payload consisting of an array of verbs
-  /webhooks/registration:
+  /webhooks/auth:
     post:
       operationId: registrationHookPost
-      summary: Client Registration
-      description: This webhook is sent when a SIP client tries to register, it is configured at the account level
+      summary: Client Authentication
+      description: This webhook is sent when a SIP client tries to authenticate, it is configured at the account level
       requestBody:
         description: |
           provides details of the authentication request.  The receiving server is responsible for authenticating the 
@@ -170,10 +170,10 @@ paths:
                     type: string
                     description: a human-readable message
                     example: authentication granted
-                  call_hook:
+                  application_sid:
                     type: string
-                    format: url
-                    description: url of application to invoke when this device places a call
+                    format: uuid
+                    description: sid of application to invoke when this device places a call
                   expires:
                     type: number
                     description: |
