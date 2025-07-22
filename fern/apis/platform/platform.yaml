@@ -82,32 +82,61 @@ paths:
         - Users
       summary: create a new user
       operationId: createUser
-      requestBody:
+      requestBody:        
         content:
           application/json:
             schema:
               type: object
+              required: 
+                - name
+                - is_active
+                - force_change
+                - is_view_only
+                - initial_password
+                - email
               properties:
                 name:
                   type: string
+                  description: username
+                  example: my_user
                 email:
                   type: string
+                  description: user email address
+                  example: user@example.com
                 is_active:
                   type: boolean
+                  description: user account is active
                 force_change:
                   type: boolean
-                scope:
+                  description: require the user to change password on next login
+                initial_password:
                   type: string
-                permissions:
-                  type: array
-                  items:
-                    type: string
-                old_password:
+                  description: users password
+                  example: MySecurePassword
+                account_sid:
                   type: string
-                  description: existing password, which is to be replaced
+                  format: uuid
+                  description: account sid the account the user will have access to, if not set will create a Service Provider account
+                service_provider_sid:
+                  type: string
+                  format: uuid
+                  description: The service provider sid, the account is under, if not set account will be admin level
+                is_view_only:
+                  type: boolean
+                  description: if set to true the user will not be able to make changes
       responses:
-        '204':
+        '200':
           description: user created
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  user_sid:
+                    type: string
+                    format: uuid
+                    description: The sid of the newly created user
+                    example: "58b8ec3a-6fcc-4fd7-8f45-cff054c2ebe9"
         '403':
           description: user creation failed
           content:
@@ -140,7 +169,76 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
+               type: object
+               properties:
+                user_sid:
+                  type: string
+                  format: uuid
+                  example: "58b8ec3a-6fcc-4fd7-8f45-cff054c2ebe9"
+                name:
+                  type: string
+                  description: username
+                  example: my_user
+                email:
+                  type: string
+                  description: user email address
+                  example: user@example.com
+                is_active:
+                  type: number
+                  description: user account is active
+                  enum:
+                    - 0
+                    - 1
+                force_change:
+                  type: number
+                  description: require the user to change password on next login
+                  enum:
+                    - 0
+                    - 1
+                account_sid:
+                  type: string
+                  format: uuid
+                  description: account sid the account the user will have access to, if not set will create a Service Provider account
+                service_provider_sid:
+                  type: string
+                  format: uuid
+                  description: The service provider sid, the account is under, if not set account will be admin level
+                is_view_only:
+                  type: boolean
+                  description: If set to true the user will not be able to make changes
+                provider:
+                  type: string
+                  enum: 
+                    - local
+                provider_user_id:
+                  type: string
+                scope:
+                  type: string
+                  enum:
+                    - read-write
+                phone_activation_code:
+                  type: string
+                email_activation_code:
+                  type: string
+                email_validated:
+                  type: number
+                  enum:
+                    - 0
+                    - 1
+                phone_validated:
+                  type: number
+                  enum:
+                    - 0
+                    - 1
+                email_content_opt_out:
+                  type: number
+                  enum:
+                    - 0
+                    - 1
+                pending_email:
+                  type: string
+                phone:
+                  type: string
         '403':
           description: user information
           content:
@@ -180,12 +278,9 @@ paths:
                   type: boolean
                 force_change:
                   type: boolean
-                scope:
-                  type: string
-                permissions:
-                  type: array
-                  items:
-                    type: string
+                is_view_only:
+                  type: boolean
+                  description: if set to true the user will not be able to make changes
       responses:
         '204':
           description: user updated
@@ -213,25 +308,6 @@ paths:
           description: unauthorized
         '404':
           description: user not found
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /Users/me:
-    get:
-      tags:
-        - Users
-      summary: retrieve details about logged-in user and associated account
-      operationId: getMyDetails
-      responses:
-        '200':
-          description: full-ish detail about the logged-in user and account
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserAndAccountDetail'
         '500':
           description: system error
           content:
