@@ -1506,6 +1506,57 @@ paths:
                 type: object
         '404':
           description: account or call not found
+  /Accounts/{AccountSid}/RecentCalls/{CallSid}/record/{YYYY}/{MM}/{DD}/{FORMAT}:
+    parameters:
+      - name: AccountSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: CallSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: YYYY
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: MM
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: DD
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: FORMAT
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+            - wav
+            - mp3
+    get:
+      tags:
+        - Recent Calls
+      summary: retrieve recording for a call
+      operationId: getRecentCallRecording
+      responses:
+        '200':
+          description: call audio file
+          content:
+            application/octet-stream:
+              schema:
+                type: object
+        '404':
+          description: recording or call not found
   /Accounts/{AccountSid}/PredefinedCarriers/{PredefinedCarrierSid}:
     parameters:
       - name: AccountSid
@@ -4265,6 +4316,33 @@ components:
         service_provider_sid:
           type: string
           format: uuid
+        record_all_calls:
+          type: boolean
+        record_format:
+          type: string
+          enum: 
+            - wav
+            - mp3
+        bucket_credential:
+            type: object
+            description: Credentials for recording storage
+            properties:
+              vendor:
+                type: string
+                enum:
+                  - aws_s3
+                  - s3_compatible
+                  - azure
+                  - google
+              region:
+                type: string
+              name:
+                type: string
+                description: name of the bucket
+              access_key_id:
+                type: string
+              secret_access_key:
+                type: string
       required:
         - account_sid
         - name
@@ -4301,6 +4379,8 @@ components:
         env_vars:
           type: object
           description: Object containing the Application Environment Variables as key/value to be sent with the call_hook payload
+        record_all_calls:
+          type: boolean
       required:
         - name
         - account_sid
