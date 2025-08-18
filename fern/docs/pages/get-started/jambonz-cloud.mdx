@@ -1,8 +1,8 @@
 ---
-title: jambonz.cloud Interoperability Specification
+title: Interoperability Spec
 ---
 
-This document outlines the SIP and RTP Interoperability details of the jambonz.cloud hosted system.
+This document outlines the SIP and RTP Interoperability details of the [jambonz.cloud](https://jambonz.cloud) hosted system.
 
 # SIP specification
 
@@ -13,19 +13,21 @@ The following protocols are supported:
 - UDP, port 5060
 - TCP, port 5060
 - TLS, port 5061
-- SIP over websockets (webrtc clients), port 8443
+- SIP over websockets (for WebRTC clients), port 8443
 
-As part of your jambonz.cloud account you have a dedicated SIP FQDN; e.g. something along the lines of "mysubdomain.jambonz.cloud". 
-You can have your carriers send to that FQDN or to the static IP address directly.  If you are registering a SIP client device to 
-jambonz.cloud then you must REGISTER with your FQDN.
+As part of your jambonz.cloud account you have a dedicated SIP FQDN that you chose during signup; e.g. something along the lines of "mysubdomain.jambonz.cloud". 
+
+You should have your carriers send to that FQDN or, if they do not support FQDN, to the static IP address above.  
+
+If you are registering a SIP client device to jambonz.cloud, then you must REGISTER with your FQDN as the sip realm.
 
 # RTP specification
 
-The RTP media address(es) for jambonz.cloud are shown below.  You should make sure your firewall allows traffic from and to these addresses.
+The RTP media address(es) on jambonz.cloud are shown below.  You should make sure your firewall allows traffic from and to these addresses.
 - 54.144.249.44
 - 3.218.246.146
 
-The RTP port range on the jambonz.cloud side is 40000-60000.
+The RTP port range on jambonz.cloud is 40000-60000/udp.
 
 The following codecs are supported:
 - PCMU
