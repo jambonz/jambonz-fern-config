@@ -2667,6 +2667,12 @@ paths:
         - Call Routing
       summary: list least cost routings routes
       operationId: listLeastCostRoutingRoutes
+      parameters: 
+        - in: query 
+          name: lcr_sid
+          schema:
+            type: string
+          required: true
       responses:
         '200':
           description: list of least cost routing routes
