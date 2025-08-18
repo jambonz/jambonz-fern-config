@@ -58,6 +58,8 @@ navigation:
             path: ./docs/pages/get-started/deployment.mdx
           - page: Support Plans 
             path: ./docs/pages/get-started/support.mdx
+          - page: jambonz.cloud
+            path: ./docs/pages/get-started/jambonz-cloud.mdx
       - section: Using the jambonz portal
         contents:
           - section: Basic Concepts
