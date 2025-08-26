@@ -385,7 +385,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /VoipCarriers:
+  /ServiceProviders/{ServiceProviderSid}/VoipCarriers:
+    parameters:
+      - name: ServiceProviderSid
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
     post:
       tags:
         - Carriers
