@@ -385,127 +385,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /ServiceProviders/{ServiceProviderSid}/VoipCarriers:
-    parameters:
-      - name: ServiceProviderSid
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-    post:
-      tags:
-        - Carriers
-      summary: create voip carrier
-      operationId: createVoipCarrier
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: voip carrier name
-                  example: fastco
-                description:
-                  type: string
-                  example: my US sip trunking provider
-                account_sid:
-                  type: string
-                application_sid:
-                  type: string
-                e164_leading_plus:
-                  type: boolean
-                  description: whether a leading + is required on INVITEs to this provider
-                  example: true
-                requires_register:
-                  type: boolean
-                  description: wehther this provider requires us to send a REGISTER to them in order to receive calls
-                register_use_tls:
-                  type: boolean
-                  description: wehther this provider requires us to send a REGISTER use TLS protocol
-                register_username:
-                  type: string
-                  description: sip username to authenticate with, if registration is required
-                  example: foo
-                register_sip_realm:
-                  type: string
-                  description: sip realm to authenticate with, if registration is required
-                  example: sip.fastco.com
-                register_password:
-                  type: string
-                  description: sip password to authenticate with, if registration is required
-                  example: bar
-                register_from_user:
-                  type: string
-                  description: optional username to apply in From header
-                register_from_domain:
-                  type: string
-                  description: optional domain to apply in From header
-                register_public_ip_in_contact:
-                  type: boolean
-                  description: if true, use our public ip in Contact header; otherwise, use sip realm
-                tech_prefix:
-                  type: string
-                  description: prefix to be applied to the called number for outbound call attempts
-                inbound_auth_username:
-                  type: string
-                  description: challenge inbound calls with this username/password if supplied
-                inbound_auth_password:
-                  type: string
-                  description: challenge inbound calls with this username/password if supplied
-                diversion:
-                  type: string
-                  description: Diversion header or phone number to apply to outbound calls
-              required:
-                - name
-      responses:
-        '201':
-          description: voip carrier successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessfulAdd'
-        '400':
-          description: bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '422':
-          description: unprocessable entity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-    get:
-      tags:
-        - Carriers
-      summary: list voip carriers
-      operationId: listVoipCarriers
-      responses:
-        '200':
-          description: list of voip carriers
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VoipCarrier'
-        '500':
-          description: system error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
   /VoipCarriers/{VoipCarrierSid}:
     parameters:
       - name: VoipCarrierSid
@@ -1584,7 +1463,7 @@ paths:
       tags:
         - Accounts
       summary: create a limit for an account
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: addLimitForAccount
       parameters:
         - name: AccountSid
@@ -3085,7 +2964,7 @@ paths:
       tags:
         - Service Providers
       summary: create service provider 
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: createServiceProvider
       requestBody:
         content:
@@ -3129,7 +3008,7 @@ paths:
       tags:
         - Service Providers
       summary: list service providers
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: listServiceProviders
       responses:
         '200':
@@ -3159,7 +3038,7 @@ paths:
       tags:
         - Service Providers
       summary: delete a service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: deleteServiceProvider
       responses:
         '204':
@@ -3182,7 +3061,7 @@ paths:
       tags:
         - Service Providers
       summary: retrieve service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: getServiceProvider
       responses:
         '200':
@@ -3203,7 +3082,7 @@ paths:
       tags:
         - Service Providers
       summary: update service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: updateServiceProvider
       requestBody:
         content:
@@ -3239,7 +3118,7 @@ paths:
       tags:
         - Service Providers
       summary: get all accounts for a service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: getServiceProviderAccounts
       responses:
         '200':
@@ -3265,8 +3144,7 @@ paths:
     get:
       tags:
         - Carriers
-      summary: get all carriers for a service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      summary: get all carriers availlble to the account
       operationId: getServiceProviderCarriers
       responses:
         '200':
@@ -3284,9 +3162,54 @@ paths:
     post:
       tags:
         - Carriers
-      summary: create a carrier
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      summary: create a carrier as a service provider
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: createCarrierForServiceProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoipCarrier'
+      responses:
+        '201':
+          description: service provider successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '404':
+          description: service provider not found
+  /Accounts/{AccountSid}/VoipCarriers:
+    parameters:
+      - name: AccountSid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - Carriers
+      summary: get all carriers for an account
+      operationId: getAccountCarriers
+      responses:
+        '200':
+          description: carrier listing
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VoipCarrier'
+        '403':
+          description: unauthorized
+        '404':
+          description: service provider not found
+    post:
+      tags:
+        - Carriers
+      summary: create a carrier for an account
+      operationId: createCarrierForAccount
       requestBody:
         content:
           application/json:
@@ -3318,8 +3241,8 @@ paths:
     post:
       tags:
         - Carriers
-      summary: add a Carrier to a service provider using a template
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      summary: add a carrier to a service provider using a template
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: createVoipCarrierFromTemplateBySP
       responses:
         '201':
@@ -3346,7 +3269,7 @@ paths:
       tags:
         - Speech
       summary: create a speech credential for a service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: addSpeechCredentialForSeerviceProvider
       requestBody:
         content:
@@ -3380,7 +3303,7 @@ paths:
       tags:
         - Speech
       summary: get a specific speech credential
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: getSpeechCredential
       responses:
         '200':
@@ -3395,7 +3318,7 @@ paths:
       tags:
         - Speech
       summary: update a speech credential
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: updateSpeechCredential
       requestBody:
         content:
@@ -3417,7 +3340,7 @@ paths:
       tags:
         - Speech
       summary: delete a speech credential
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: deleteSpeechCredential
       responses:
         '204':
@@ -3429,7 +3352,7 @@ paths:
       tags:
         - Speech
       summary: get supported languages, voices and models
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: supportedLanguagesAndVoices
       parameters:
         - name: ServiceProviderSid
@@ -3465,7 +3388,7 @@ paths:
       tags:
         - Speech
       summary: test a speech credential
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: testSpeechCredential
       parameters:
         - name: ServiceProviderSid
@@ -3522,7 +3445,7 @@ paths:
       tags:
         - Service Providers
       summary: create a limit for a service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: addLimitForServiceProvider
       parameters:
         - name: ServiceProviderSid
@@ -3555,7 +3478,7 @@ paths:
       tags:
         - Service Providers
       summary: retrieve call capacity and other limits from the service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: getServiceProviderLimits
       parameters:
         - name: ServiceProviderSid
@@ -3598,7 +3521,7 @@ paths:
         tags:
           - Recent Calls
         summary: retrieve pcap for a call
-        description: <Error>This endpoint is only availble with an Admin level API key</Error>
+        description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
         operationId: getRecentCallTraceBySP
         responses:
           '200':
@@ -3682,7 +3605,7 @@ paths:
         tags:
           - Recent Calls
         summary: retrieve recent calls for an account
-        description: <Error>This endpoint is only availble with an Admin level API key</Error>
+        description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
         operationId: listRecentCallsBySP
         responses:
           '200':
@@ -3776,7 +3699,7 @@ paths:
       tags:
         - Recent Calls
       summary: retrieve jaeger trace detail for a call
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: getRecentCallTraceByCallId
       responses:
         '200':
@@ -3799,7 +3722,7 @@ paths:
       tags:
         - Call Routing
       summary: get all Least Cost Routings for a service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: getServiceProviderLcrs
       responses:
         '200':
@@ -3818,7 +3741,7 @@ paths:
       tags:
         - Call Routing
       summary: create a Lest cost routing for a service provider
-      description: <Error>This endpoint is only availble with an Admin level API key</Error>
+      description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
       operationId: createLcrForServiceProvider
       requestBody:
         content:
@@ -4043,7 +3966,7 @@ paths:
                     tags:
                       - Recent Calls
                     summary: retrieve alerts for a service provider
-                    description: <Error>This endpoint is only availble with an Admin level API key</Error>
+                    description: <Error>This endpoint is only availble with an Admin or Service Provider API key</Error>
                     operationId: listAlerts
                     responses:
                       '200':
