@@ -60,7 +60,7 @@ paths:
           in: query
           required: true
           schema:
-              $ref: '#/components/schemas/CallHook/properties/caller_id'
+              $ref: '#/components/schemas/CallHook/properties/caller_name'
         - name: call_status
           in: query
           required: true
