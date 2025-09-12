@@ -208,6 +208,42 @@ navigation:
           - callControl:
             - page: Overview
               path: ./docs/pages/ws_api/overview.mdx
+            - page: session:new
+              path: ./docs/pages/ws_api/session-new.mdx
+            - page: session:redirect
+              path: ./docs/pages/ws_api/session-redirect.mdx
+            - page: session:reconnect
+              path: ./docs/pages/ws_api/session-reconnect.mdx
+            - page: call:status
+              path: ./docs/pages/ws_api/call-status.mdx
+            - page: verb:hook
+              path: ./docs/pages/ws_api/verb-hook.mdx
+            - page: verb:status
+              path: ./docs/pages/ws_api/verb-status.mdx
+            - page: llm:event
+              path: ./docs/pages/ws_api/llm-event.mdx
+            - page: llm:tool-call
+              path: ./docs/pages/ws_api/llm-tool-call.mdx
+            - page: tts:tokens-result
+              path: ./docs/pages/ws_api/tts-tokens-result.mdx
+            - page: tts:streaming-event
+              path: ./docs/pages/ws_api/tts-streaming-event.mdx
+            - page: dial:confirm
+              path: ./docs/pages/ws_api/dial-confirm.mdx
+            - page: ack
+              path: ./docs/pages/ws_api/ack.mdx
+            - page: command
+              path: ./docs/pages/ws_api/command.mdx
+            - page: llm:tool-output
+              path: ./docs/pages/ws_api/llm-tool-output.mdx
+            - page: llm:update
+              path: ./docs/pages/ws_api/llm-update.mdx
+            - page: tts:tokens
+              path: ./docs/pages/ws_api/tts-tokens.mdx
+            - page: tts:flush
+              path: ./docs/pages/ws_api/tts-flush.mdx
+            - page: tts:clear
+              path: ./docs/pages/ws_api/tts-clear.mdx
   - tab: sdks
     layout: 
       - page: SDKs
