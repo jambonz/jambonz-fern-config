@@ -204,6 +204,10 @@ navigation:
         api-name: webhooks
       - api: Websocket API
         api-name: async
+        layout: 
+          - WS Call Control:
+          - page: Overview
+          - path: ./pages/ws_api/overview.mdx
   - tab: sdks
     layout: 
       - page: SDKs
