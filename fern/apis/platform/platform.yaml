@@ -3200,7 +3200,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VoipCarrier'
+                  allOf:
+                    - $ref: '#/components/schemas/VoipCarrier'
+                    - type: object
+                      properties:
+                        voip_carrier_sid:
+                          type: string
+                          format: uuid
         '403':
           description: unauthorized
         '404':
@@ -4132,10 +4138,10 @@ components:
     VoipCarrier:
       type: object
       properties:
-        voip_carrier_sid:
+        service_provider_sid:
           type: string
           format: uuid
-          example: da6bc389-62fb-123e-209c-4201ac180045
+          example: 6072f617-6151-4c15-8eb9-74a4967ab701
         name:
           type: string
           example: my carrier
@@ -4178,7 +4184,7 @@ components:
         smpp_enquire_link_interval:
           type: integer
       required:
-        - voip_carrier_sid
+        - service_provider_sid
         - name
     SipGateway:
       type: object
