@@ -115,6 +115,11 @@ There are several types of endpoints that you can dial:
   Defaults to false.
 </ParamField>
 
+<ParamField path="forwardPAI" type="boolean" required={false}>
+  Controls if the `P-Asserted-Identity` & `Privacy` headers from the inbound call are forward to the outbound leg.
+  Defaults to true.
+</ParamField>
+
 <ParamField path="headers" type="object" required={false}>
   an object containing arbitrary SIP headers to apply to the outbound call attempt(s).
 </ParamField>
