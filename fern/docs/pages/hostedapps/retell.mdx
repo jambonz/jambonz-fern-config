@@ -102,6 +102,29 @@ In the SIP Trunk Password enter the password of the client you created.
 
 Now you can associate that number with your retell agent and process calls.
 
+## Retell Call Transfer
+
+The Retell agent has the ability to transfer either an inbound or outbound call to another number, There are a few configuration options within retel that will impact how this transfer is passed to Jambonz.
+
+You can choose a Cold or Warm Transfer, and within a Cold Transfer you can choose to send the Agents Number or the Original Callers Number.
+
+A Cold Transfer with the Retell Agent`s Number or a Warm Transfer will initiate a new outbound call leg from retell through Jambonz, this will be seen to Jambonz as a brand new call and will use a 2nd instance of your availble channels.
+Retell and Jambonz remain in the call path for the duration of the call, if you have selected a Warm Transfer there are some additional options where retell will play messages to either of the parties on the call.
+
+If you select a Cold Transfer with the Transferee's Number then retell will send a SIP REFER message back to Jambonz, at this stage you have 2 options depending on the configuration of the PASS REFER flag in your application configuration at jambonz.
+If set to True then jambonz will send the SIP REFER on to your originating carrier, if they support SIP REFER then they will transfer the call from jambonz to the new destination, once this is completed both Retell and Jambonz are completely out of the call path.
+
+If PASS REFER is set to false then jambonz will turn the SIP refer into a new outbound call leg from Jambonz via your carrier, this will then remove retell from the call path but keep the call in Jambonz, it will only use one of your availble channels.
+
+### Overide Carrier & Number
+Sometimes you may want to transfer the call to an internal number like on your PBX, Retell only allows you to enter full valid phone numbers here and not to use a private mnumber like 1000,
+The application provides the ability to overide these by sending custom SIP headers from Retell in teh call transfer. 
+
+If you set a header of `X-Overide-Carrier` then value should contain the name of the trunk you want to use for for the call, this will overide the PSTN_TRUNK_NAME in your application configuration
+If you set a header of `X-Overide-Number` then the value will contain a number to be sent to the carrier instead of the destination number set in the Retell transfer node
+
+These headers can be used independently to overide either the carrier or the number.
+
 
 # Help & support
 If you experience any issues with using the Hosted application via Jambonz.cloud then please email support@jambonz.org and include a call_sid for an example call that shows the issue along with the date & time of the call.
