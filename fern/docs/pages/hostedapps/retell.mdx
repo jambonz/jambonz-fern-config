@@ -76,6 +76,8 @@ rewrite the number into the proper International e.164 format expected by Retell
 ### OVERIDE_FROM_USER
 When making calls from Retell to then PSTN your carrier may want you to use a custom value in the From header, if so set this here. Sipgate is one such carrier.
 
+### PASS_REFER
+Controls if a refer is sent to the originating carrier or treated as a new outbound leg, see the Call Transfer section.
 
 ## Other Configuration
 The other parameters can be left as default.
@@ -116,14 +118,14 @@ If set to True then jambonz will send the SIP REFER on to your originating carri
 
 If PASS REFER is set to false then jambonz will turn the SIP refer into a new outbound call leg from Jambonz via your carrier, this will then remove retell from the call path but keep the call in Jambonz, it will only use one of your availble channels.
 
-### Overide Carrier & Number
+### Override Carrier & Number
 Sometimes you may want to transfer the call to an internal number like on your PBX, Retell only allows you to enter full valid phone numbers here and not to use a private mnumber like 1000,
-The application provides the ability to overide these by sending custom SIP headers from Retell in teh call transfer. 
+The application provides the ability to override these by sending custom SIP headers from Retell in the call transfer. 
 
-If you set a header of `X-Overide-Carrier` then value should contain the name of the trunk you want to use for for the call, this will overide the PSTN_TRUNK_NAME in your application configuration
-If you set a header of `X-Overide-Number` then the value will contain a number to be sent to the carrier instead of the destination number set in the Retell transfer node
+If you set a header of `X-Override-Carrier` then value should contain the name of the trunk you want to use for for the call, this will override the PSTN_TRUNK_NAME in your application configuration
+If you set a header of `X-Override-Number` then the value will contain a number to be sent to the carrier instead of the destination number set in the Retell transfer node
 
-These headers can be used independently to overide either the carrier or the number.
+These headers can be used independently to override either the carrier or the number.
 
 
 # Help & support
