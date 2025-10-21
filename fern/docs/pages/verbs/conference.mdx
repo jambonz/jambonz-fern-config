@@ -27,6 +27,10 @@ subtitle: Places a call into a conference.
   if true, play a beep tone to the conference when caller enters (default: false)
 </ParamField>
 
+<ParamField path="distributeDtmf" type="boolean" required={false}>
+  if true, DTMF events from this participant will be sent to other partipants on the call. (default: false)
+</ParamField>
+
 <ParamField path="endConferenceOnExit" type="boolean" required={false}>
   if true, end the conference when this caller hangs up (default: false)
 </ParamField>
