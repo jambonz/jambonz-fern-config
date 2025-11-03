@@ -354,6 +354,31 @@ paths:
                         - unhold
                     tag:
                       type: string
+                dtmf:
+                  type: object
+                  properties:
+                    digit:
+                      type: string
+                      enum: 
+                        - "1"
+                        - "2"
+                        - "3"
+                        - "4"
+                        - "5"
+                        - "6"
+                        - "7"
+                        - "8"
+                        - "9"
+                        - "0"
+                        - "*"
+                        - "#"
+                      description: "Single digit to send"
+                    duration:
+                      type: integer
+                      default: 250
+                      description: "Duration of the tone in ms"
+                  required: 
+                    -  digit
       responses:
         '200':
           description: Accepted

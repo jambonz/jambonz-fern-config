@@ -10,7 +10,7 @@ Either way (http or websocket) the details of the JSON payloads are the same.
 
 When an incoming call for your account is received, jambonz makes an HTTP request to a URL that you have configured and your webapp will then return a response containing a JSON body that indicates how you want the call handled.
 
-> You can develop your webapp using whatever language or framework you like, but the quickest way to scaffold up a webapp is by using our [Node.js framework](http://localhost:3000/docs/sdks/nodeclient)
+> You can develop your webapp using whatever language or framework you like, but the quickest way to scaffold up a webapp is by using our [Node.js framework](/sdks/nodeclient)
 
 If you want to generate an outbound call it works similarly: you will make an HTTP request using the [REST API](/reference/rest-call-control/calls/create-call) and in it you will specify a URL or application identifier that will be invoked once the call is answered.  Once again, your response to that HTTP request will contain a JSON body that indicates how you want the call handled.
 
