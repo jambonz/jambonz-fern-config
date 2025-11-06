@@ -1,0 +1,76 @@
+<Card title="0.9.5" icon="regular box-open" iconPosition="left">
+Major release
+</Card>
+
+#### New Features
+1. Redesigned and simplifed the Carrier page in the portal, adding support for additional carrier authentication features.
+1. Add support for [STT Latency metrics](https://github.com/jambonz/jambonz-feature-server/issues/1204)
+1. Add support for Deepgram Flux STT.
+1. Add support for Gladia STT.
+1. Add support for Soundhound STT.
+1. Add support for AssemblyAI v3 STT.
+1. Add support for Deepgram EU hosted endpoint.
+1. Add support for additinonal ElevenLabs hosted endpoints.
+1. Add support for Cartesia Sonic-3 streaming TTS model.
+1. Add support for Resemble TTS.
+1. Add [additional languages and phrases](https://github.com/jambonz/jambonz-feature-server/pull/1367) to voicemail greeting file.
+1. Config verb can now be used to disable tts caching for the entire call.
+1. New `distributeDtmf` property added to conference verb to enable DTMF distribution to all conference members.
+1. Add support for tel scheme in referTo property of dial verb.
+1. Add new Alert verb
+
+#### Bug fixes
+- A significant number of stability and performance improvements have been made in this release to improve overall system reliability.
+- fixed gather does not start timeout on bargein [PR](https://github.com/jambonz/jambonz-feature-server/pull/1421)
+- should not send only whitespace to streaming tts engine [PR](https://github.com/jambonz/jambonz-feature-server/pull/1415)
+- add customerData on transferred calls [PR](https://github.com/jambonz/jambonz-feature-server/pull/1391)
+- don't encode querystring if its the filename [PR](https://github.com/jambonz/jambonz-feature-server/pull/1395)
+- fixed does not send final status call back if call canceled quickly [PR](https://github.com/jambonz/jambonz-feature-server/pull/1393)
+- 1385: Gather - dont start the continuous asr timer when we first start listening if this is a background gather [PR](https://github.com/jambonz/jambonz-feature-server/pull/1386)
+- if call is transferred from another FS then always answer [PR](https://github.com/jambonz/jambonz-feature-server/pull/1383)
+- If an error occurs during initial TTS request, propagate the error [PR](https://github.com/jambonz/jambonz-feature-server/pull/1369)
+- add event handler for when deepgram closes with an error [PR](https://github.com/jambonz/jambonz-feature-server/pull/1372)
+- Fix for sending synthesized-audio verb:status event when using TTS streaming [PR](https://github.com/jambonz/jambonz-feature-server/pull/1366)
+- clear main timout when interdigit timeout is started, [PR](https://github.com/jambonz/jambonz-feature-server/pull/1351)
+- catch exceptions from req.cancel() [PR](https://github.com/jambonz/jambonz-feature-server/pull/1359)
+- speech_util v0.2.23 [PR](https://github.com/jambonz/jambonz-feature-server/pull/1358)
+- singleDialer should create ConfirmCallSession with correct tmpFiles [PR](https://github.com/jambonz/jambonz-feature-server/pull/1357)
+- fix ConfirmCallSession in placeCall does not have access to tmpFiles for removing tmp file later [PR](https://github.com/jambonz/jambonz-feature-server/pull/1356)
+- Fixed token missing log line. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1354)
+- fix exception when receiving REFER but dial task ended [PR](https://github.com/jambonz/jambonz-feature-server/pull/1353)
+- tts stream should not print speech credential [PR](https://github.com/jambonz/jambonz-feature-server/pull/1352)
+- LCR was being ignored for certain scenarios [PR](https://github.com/jambonz/jambonz-feature-server/pull/1349)
+- Fixed issue for punctuation [PR](https://github.com/jambonz/jambonz-feature-server/pull/1344)
+- Fix/playback race by fs generates playback [PR](https://github.com/jambonz/jambonz-feature-server/pull/1331)
+- fix uncaught exception with llm streaming [PR](https://github.com/jambonz/jambonz-feature-server/pull/1312)
+- start timeout on bargein digits [PR](https://github.com/jambonz/jambonz-feature-server/pull/1312)
+- Sending synthesized-audio notification for servedFromCache as false  [PR](https://github.com/jambonz/jambonz-feature-server/pull/1320)
+- fix bug where task.kill is not passed cs [PR](https://github.com/jambonz/jambonz-feature-server/pull/1315)
+- pass recogniser opts in amd to stt [PR](https://github.com/jambonz/jambonz-feature-server/pull/1308)
+- use tmpFiles list of parent call-session [PR](https://github.com/jambonz/jambonz-feature-server/pull/1301)
+- allow pause/resume background listen with silence/blank [PR](https://github.com/jambonz/jambonz-feature-server/pull/1300)
+- urlencode the . in a url querystring on play [PR](https://github.com/jambonz/jambonz-feature-server/pull/1293)
+- don't fetch if whisper is an object with a single verb in it [PR](https://github.com/jambonz/jambonz-feature-server/pull/1290)
+- Control forwarding of P-Asserted-Identity header [PR](https://github.com/jambonz/jambonz-feature-server/pull/1278)
+- Fix for issue where we should not delay from gather when JAMBONES_TRANSCRIBE_EP_DESTROY_DELAY_MS is set [PR](https://github.com/jambonz/jambonz-feature-server/pull/1283)
+- fixed gather cannot timeout if listenDuringPrompt is true [PR](https://github.com/jambonz/jambonz-feature-server/pull/1276)
+- fix TTS cache issues [PR](https://github.com/jambonz/jambonz-feature-server/pull/1286)
+- fixes for LCC dial where a relative url is given as actionhook [PR](https://github.com/jambonz/jambonz-feature-server/pull/1282)
+- Fix/cached audio race [PR](https://github.com/jambonz/jambonz-feature-server/pull/1279)
+- fixed transcription is not received when call is terminated [PR](https://github.com/jambonz/jambonz-feature-server/pull/1259)
+- if no payload returned from referHook in dial then dont do anything [PR](https://github.com/jambonz/jambonz-feature-server/pull/1271)
+- tts modules response_code = 0 should make say fail to exec. [PR](https://github.com/jambonz/jambonz-feature-server/pull/1269)
+- Fix/dial refer [PR](https://github.com/jambonz/jambonz-feature-server/pull/1264)
+
+#### SQL changes
+```
+UPDATE applications SET speech_synthesis_voice = 'en-US-Standard-C' WHERE speech_synthesis_voice IS NULL AND speech_synthesis_vendor = 'google' AND speech_synthesis_language = 'en-US';
+ALTER TABLE applications MODIFY COLUMN speech_synthesis_voice VARCHAR(255) DEFAULT 'en-US-Standard-C';
+ALTER TABLE voip_carriers ADD COLUMN trunk_type ENUM('static_ip','auth','reg') NOT NULL DEFAULT 'static_ip';
+```
+
+#### Availability
+- Available now on jambonz.cloud
+- Available now with devops scripts for subscription customers
+
+**Questions?** Contact us at <a href="mailto:support@jambonz.org">support@jambonz.org</a>
