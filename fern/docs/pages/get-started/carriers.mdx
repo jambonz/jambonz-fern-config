@@ -28,14 +28,18 @@ by creating a "Carrier" in jambonz.
 ## First step: authentication
 
 A big part of establishling a two-way SIP trunk is agreeing on how each side will authenticate the other. 
-There are generally two ways to do this:
-1. IP whitelisting
-2. user/pasword authentication
+Jambonz supports three alternative methods for this:
+1. IP whitelisting; we call this an "IP trunk"
+2. The remote side authenticates to us with a username and password we give them; we call this an "Auth trunk"
+3. We authenticate to the remote side with a username and password they give us; we call this a "Registration trunk"
 
-### IP whitelisting
+### IP trunks
 
-This approach is quite simple.  Basically, you exchange information about IP addresses with whoever is managing the 
-remote side of the connection: you tell them the IPs your SIP signaling will be coming from, and they respond in kind.  
+This approach is the most commonly used and quite simple.  When your SIP trunking provider support IP whitelisting (sometimes referred to as "static IPs")
+this is the preferred approach.
+
+Basically, you exchange information about IP addresses with whoever is managing the 
+remote side of the connection: you tell them the IPs your SIP signaling will be coming from, and they tell you their SIP signaling IPs.  
 
 You can find your IP addresses quite easily in the jambonz portal.  When you click to add a Carrier you can see the jambonz SIP 
 signaling IPs by expanding the "Have your carriers whitelist our SIP signaling IPs" dropdown.
@@ -47,52 +51,76 @@ signaling IPs by expanding the "Have your carriers whitelist our SIP signaling I
 That gives you the IP addresses that you need to communicate to your carrier; or, if they provide a self-service 
 portal (or you are managing the remote side yourself), you configure those IPs yourself on the remote end.
 
-Next, you need to learn from them the SIP signaling IPs that they will sending you traffic from.  These need 
+Next, you need to learn from them the SIP signaling IPs that they will sending you traffic from, and those IPs they 
+want you to send traffic to; we call these respectively the "inbound" and "outbound" gateways.  These need 
 to be static IPs that are well-known and generally don't change over time.  Many carriers will post these IP 
 addresses on their website (e.g. 
 [Twilio](https://www.twilio.com/docs/sip-trunking/ip-addresses), 
 [Simwood](https://support.simwood.com/hc/en-us/articles/360018812579-IP-Addresses-and-Whitelisting)), but if not 
 you can ask them directly or enter a support ticket with them.
 
-Once you have their IPs you will add them into the SIP gateways section of Add Carrier page. Note that 
-the far end may give you one or more specific IP addresses, or they may also give you a CIDR for a network 
-range they own.  In either case, you will click the "plus" sign to add each IP address or CIDR to the list.
+Now select the "IP trunk" option on the Add Carrier page in the jambonz portal.
+<Frame caption="IP trunk Carrier type">
+  <img src="../../assets/images/trunk-type-ip.jpg" alt="Select IP Trunk type"/>
+</Frame>
 
-We group these far end SIP signaling IPs into two buckets: those that will send jambonz SIP signaling 
-traffic for incoming calls (we call these inbound gateways) and those that jambonz will send SIP signaling to 
-in order to generate an outbound call (we call these outbound gateways).  
 
-In simple cases, the far end may have a 
-single IP that we can use as both an inbound and outbound sip gateway; in that case, we simply  add that IP as a 
-sip gateway and check both the inbound and outbound boxes.  In more complex cases, the far end may have a set of 
+Next, add their inbound signaling IPs on the Inbound page, and their outbound signaling IPs on the Outbound page.
+In simple cases, the far end may have a single IP that we can use as both an inbound and outbound sip gateway; in that case, 
+simply  add that IP on both the inbound and outbound pages.
+
+In more complex cases, the far end may have a set of 
 IPs that they will send us traffic from, but others they want us to use when we send them traffic.  Or, they may 
 want us to send to a DNS name when sending them traffic.  In this case, we would add some inbound sip gateways and 
 some outbound sip gateways.
 
 <Note>
 When you add an outbound sip gateway, you can specify either the far end IP address or a DNS name. 
-When adding an inbound sip gateway, though, you must specify an IP address.
+When adding an inbound sip gateway, though, you must specify an IP address or CIDR range
 </Note>
 
-### User/password authentication
+### Auth trunks
 
-Some SIP trunking providers do not support whitelisting their static IPs.  In such cases, what they usually want 
-you to do is to have your SIP gear "register" to them periodically with a username, password, and sip realm value 
-that they give you.  Jambonz supports this model as well. 
+Some SIP trunking providers do not support whitelisting their static IPs.  In such cases, what they sometimes can 
+do is use a username, password and SIP realm that you give them to authenticate to jambonz.  When they send us 
+a SIP INVITE for a new call, we will challenge them for those credentials using SIP Digest authentication.
 
-The way this works is that jambonz periodically authenticates with the far end by sending a SIP REGISTER message, 
-using those credentials.  This identifies your end of the SIP trunk to the provider, and thus they know where to 
-send your calls.
+If your carrier/SIP trunking provider works this way, they select the "Auth trunk" option for the Trunk Type on the 
+Add Carrier page in the jambonz portal.  Then select the "Inbound" tab and enter a username and password that you will 
+give them to authenticate with.  You will also tell them the SIP realm associated with your jambonz account, as they 
+will need this as well.
 
-To enable this method, you will not enter any SIP inbound gateways as you did above, but you will still enter at least 
-one outbound gateway.  In most cases, this will be a DNS name that they give you to send the REGISTER to. Then, click 
-on "Outbound authentication" and also "Require SIP Register" and fill in the username, password, and sip realm 
-value that they gave you. Save those changes and after a short delay jambonz will begin registering with the far end. 
-You can see the registation status in the portal.
-
-<Frame caption="Configure sip username/password authentication">
-  <img src="../../assets/images/outbound-auth.jpg" alt="sip authentication"/>
+<Frame caption="SIP Digest credentials for Auth trunk">
+  <img src="../../assets/images/auth-trunk-creds.jpg" alt="Auth trunk credentials"/>
 </Frame>
+
+You can optionally add outbound gateways as well for an Auth trunk.
+
+### Registration trunks
+
+Finally, some SIP trunking providers do not support IP whitelisting, and instead require us to authenticate to them. 
+In this case, they will provide you with the SIP digest credentials (username, password, and sip realm). 
+
+To support this method, select the "Registration trunk" option for the Trunk Type on the Add Carrier page in the 
+jambonz portal.  Then, on the Outbound & Registration tab, select "Authentication" and add the username and password 
+they have provided.  Next, select "Require SIP Register" and enter the sip realm they have provided.  
+
+<Frame caption="Registration trunk credentials">
+  <img src="../../assets/images/reg-trunk-1.jpg" alt="Registration trunk credentials"/>
+</Frame>
+
+Finally, add at least 
+one outbound sip gateway that jambonz will send the REGISTER messages to.  This is typically a DNS name that they will have provided you, 
+and it may be the same or different from the SIP realm.
+
+<Frame caption="Registration trunk outbound gateways">
+  <img src="../../assets/images/reg-trunk-2.jpg" alt="Registration trunk outbound gateways"/>
+</Frame>
+
+Once we successfully register with the remote system, we will do a DNS lookup on the DNS name we are registering to in order to 
+resolve to a set of IP addresses.  Any INVITEs received from those IPs will automatically be accepted as coming from the remote
+side of the SIP trunk.
+
 
 ## Advanced features
 The Carrier panel in the jambonz portal has a number of advanced features that you may need for from time to time, 
