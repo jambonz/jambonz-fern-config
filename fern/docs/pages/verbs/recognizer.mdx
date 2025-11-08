@@ -623,6 +623,137 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
   </Accordion>
 
+  <Accordion title="houndifyOptions">
+    <ParamField path="latitude" type="number" required={false}>
+      Latitude coordinate for location-based queries.
+    </ParamField>
+
+    <ParamField path="longitude" type="number" required={false}>
+      Longitude coordinate for location-based queries.
+    </ParamField>
+
+    <ParamField path="city" type="string" required={false}>
+      City name for location context.
+    </ParamField>
+
+    <ParamField path="state" type="string" required={false}>
+      State or province for location context.
+    </ParamField>
+
+    <ParamField path="country" type="string" required={false}>
+      Country for location context.
+    </ParamField>
+
+    <ParamField path="timeZone" type="string" required={false}>
+      Time zone identifier (e.g., 'America/New_York').
+    </ParamField>
+
+    <ParamField path="domain" type="string" required={false}>
+      Houndify domain to enable specific capabilities.
+    </ParamField>
+
+    <ParamField path="audioEndpoint" type="string" required={false}>
+      Custom audio streaming endpoint URL.
+    </ParamField>
+
+    <ParamField path="maxSilenceSeconds" type="number" required={false}>
+      Maximum silence duration (in seconds) before ending the request.
+    </ParamField>
+
+    <ParamField path="maxSilenceAfterFullQuerySeconds" type="number" required={false}>
+      Maximum silence duration (in seconds) after detecting a complete query.
+    </ParamField>
+
+    <ParamField path="maxSilenceAfterPartialQuerySeconds" type="number" required={false}>
+      Maximum silence duration (in seconds) after detecting a partial query.
+    </ParamField>
+
+    <ParamField path="vadSensitivity" type="number" required={false}>
+      Voice activity detection sensitivity level.
+    </ParamField>
+
+    <ParamField path="vadTimeout" type="number" required={false}>
+      Voice activity detection timeout value.
+    </ParamField>
+
+    <ParamField path="vadMode" type="string" required={false}>
+      Voice activity detection mode.
+    </ParamField>
+
+    <ParamField path="vadVoiceMs" type="number" required={false}>
+      Minimum voice duration (in milliseconds) for VAD detection.
+    </ParamField>
+
+    <ParamField path="vadSilenceMs" type="number" required={false}>
+      Minimum silence duration (in milliseconds) for VAD detection.
+    </ParamField>
+
+    <ParamField path="vadDebug" type="boolean" required={false}>
+      Enable VAD debugging information.
+    </ParamField>
+
+    <ParamField path="audioFormat" type="string" required={false}>
+      Audio format specification for the audio stream.
+    </ParamField>
+
+    <ParamField path="enableNoiseReduction" type="boolean" required={false}>
+      Enable audio noise reduction processing.
+    </ParamField>
+
+    <ParamField path="enableProfanityFilter" type="boolean" required={false}>
+      Filter profanity from transcription results.
+    </ParamField>
+
+    <ParamField path="enablePunctuation" type="boolean" required={false}>
+      Enable automatic punctuation in transcripts.
+    </ParamField>
+
+    <ParamField path="enableCapitalization" type="boolean" required={false}>
+      Enable automatic capitalization in transcripts.
+    </ParamField>
+
+    <ParamField path="confidenceThreshold" type="number" required={false}>
+      Minimum confidence threshold for accepting recognition results.
+    </ParamField>
+
+    <ParamField path="enableDisfluencyFilter" type="boolean" required={false}>
+      Filter disfluencies (um, uh, etc.) from transcription results.
+    </ParamField>
+
+    <ParamField path="maxResults" type="number" required={false}>
+      Maximum number of results to return.
+    </ParamField>
+
+    <ParamField path="enableWordTimestamps" type="boolean" required={false}>
+      Include word-level timestamps in transcription results.
+    </ParamField>
+
+    <ParamField path="maxAlternatives" type="number" required={false}>
+      Maximum number of alternative transcriptions to return.
+    </ParamField>
+
+    <ParamField path="partialTranscriptInterval" type="number" required={false}>
+      Interval (in milliseconds) for sending partial transcript updates.
+    </ParamField>
+
+    <ParamField path="sessionTimeout" type="number" required={false}>
+      Session timeout duration (in seconds).
+    </ParamField>
+
+    <ParamField path="connectionTimeout" type="number" required={false}>
+      Connection timeout duration (in seconds).
+    </ParamField>
+
+    <ParamField path="customVocabulary" type="array" required={false}>
+      Array of custom words or phrases to improve recognition accuracy.
+    </ParamField>
+
+    <ParamField path="languageModel" type="string" required={false}>
+      Custom language model identifier to use for recognition.
+    </ParamField>
+
+  </Accordion>
+
   <Accordion title="sonioxOptions">
     <ParamField path="api_key" type="string" required={false}>
       Soniox API key.
