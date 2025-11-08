@@ -4165,10 +4165,6 @@ components:
           type: string
         tech_prefix:
           type: string
-        inbound_auth_username:
-          type: string
-        inbound_auth_password:
-          type: string
         diversion:
           type: string
         is_active:
@@ -4183,6 +4179,22 @@ components:
           type: string
         smpp_enquire_link_interval:
           type: integer
+        trunk_type:
+          type: string
+          enum:
+            - static_ip
+            - auth
+            - reg
+          default: static_ip
+          description: The type of trunk to create, see the [guide](/guides/using-the-jambonz-portal/basic-concepts/creating-carriers) for details
+        inbound_auth_username:
+          type: string
+          maxLength: 64
+          description: username for an auth trunk
+        inbound_auth_password:
+          type: string
+          maxLength: 64
+          description: password for an auth trunk
       required:
         - service_provider_sid
         - name
