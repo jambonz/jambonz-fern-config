@@ -185,6 +185,10 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Duration (in milliseconds) of non-speech audio within a phrase that's currently being spoken before that phrase is considered "done."  
       See [here](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-recognize-speech?pivots=programming-language-csharp#change-how-silence-is-handled) for details.
     </ParamField>
+    <ParamField path="audioLogging" type="boolean" required={false}>
+      Enable audio logging.
+      See [here](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/logging-audio-transcription?pivots=programming-language-cpp) for details
+    </ParamField>
   </Accordion>
 
   <Accordion title="deepgramOptions">
