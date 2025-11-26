@@ -118,8 +118,9 @@ and it may be the same or different from the SIP realm.
 </Frame>
 
 Once we successfully register with the remote system, we will do a DNS lookup on the DNS name we are registering to in order to 
-resolve to a set of IP addresses.  Any INVITEs received from those IPs will automatically be accepted as coming from the remote
-side of the SIP trunk.
+resolve to a set of IP addresses, if the Outbound Gateway has a port number set then we will do an A record lookup for the IPs 
+if there is no port number defined then  we will do a SIP SRV lookup.
+Any INVITEs received from those IPs will automatically be accepted as coming from the remote side of the SIP trunk.
 
 
 ## Advanced features
