@@ -1223,7 +1223,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeneralError'
   /Accounts/{AccountSid}/RecentCalls:
-    parameters:
+    get:
+      tags:
+        - Recent Calls
+      summary: retrieve recent calls for an account
+      operationId: listRecentCalls
+      parameters:
       - name: AccountSid
         in: path
         required: true
@@ -1289,11 +1294,6 @@ paths:
         schema:
           type: string
         description: Filter value can be caller ID, callee ID or call Sid
-    get:
-      tags:
-        - Recent Calls
-      summary: retrieve recent calls for an account
-      operationId: listRecentCalls
       responses:
         '200':
           description: retrieve recent call records for a specified account
