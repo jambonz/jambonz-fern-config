@@ -40,6 +40,12 @@ in either the gather or [config](/verbs/verbs/config) verbs.
   This count applies to each verb in the actions array, so if you have 2 actions and set retries to 3 it will play the first, then the 2nd, then the first  again. If it is not set or is less than the length of the array then each verb in the array will run only once.
   Default: `1`.
 </ParamField>
+
+<Warning>
+If you are using Webhooks as opposed to Websockets then the HTTP_TIMEOUT parameter of the system will limit the maximum length the `noResponseGiveUpTimeout` can be, as if no response is received within the HTTP TIMEOUT the webhook will fail.
+The Default value for HTTP_TIMEOUT on Jambonz.cloud is 10seconds.
+</Warning>
+
 ## Examples
 #### Providing filler noise
 
