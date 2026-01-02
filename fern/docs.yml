@@ -94,8 +94,8 @@ navigation:
             path: ./docs/pages/features/handling-action-hook-delays.mdx 
           - page: Managing media anchors 
             path: ./docs/pages/features/managing-media-anchors.mdx
-          - page: SIPREC Client
-            path: ./docs/pages/features/siprec-client.mdx
+          - page: Call Recording
+            path: ./docs/pages/features/call-recording.mdx
           - page: SIPREC Server
             path: ./docs/pages/features/siprec-server.mdx
           - page: TTS Streaming
