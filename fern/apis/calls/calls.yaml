@@ -334,10 +334,22 @@ paths:
                         - stopCallRecording
                         - pauseCallRecording
                         - resumeCallRecording
+                    type:
+                      type: string
+                      default: siprec
+                      enum: 
+                        - cloud
+                        - siprec
                     recordingID:
                       type: string
+                      description: used with startCallRecording and SIPREC
                     siprecServerURL:
                       type: string
+                      description: used with startCallRecording and SIPREC
+                    silence:
+                      type: boolean
+                      default: false
+                      description: when pausing recording the file will be padded with silence
                 conferenceParticipantAction:
                   type: object
                   properties:

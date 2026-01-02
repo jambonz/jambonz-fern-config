@@ -116,19 +116,33 @@ The `config` verb is non-blocking.
 </ParamField>
 
 <ParamField path="record" type="object" required={false}>
-  options to manage [call recording using SIPREC](/guides/features/siprec-client).
+  options to manage [call recording](/guides/features/call-recording).
 </ParamField>
 
 <ParamField path="record.action" type="string" required={true}>
   "startCallRecording", "stopCallRecording", "pauseCallRecording", or "resumeCallRecording".
 </ParamField>
 
-<ParamField path="record.siprecServerURL" type="string" required={true}>
-  sip uri for SIPREC server (required if action is "startCallRecording").
+<ParamField path="record.type" type="string" required={false}>
+  Specifies the recording type.  
+  Allowed values: 
+  - siprec (default)
+  - cloud
+</ParamField>
+
+<ParamField path="record.silence" type="boolean" required={false}>
+  When `action : pauseCallRecording` setting this to true will pad the recording with silence.
+  Defaults to false meaning the recording file is truncated during the pause.
+</ParamField>
+
+<ParamField path="record.siprecServerURL" type="string" required={false}>
+  SIP URI for SIPREC server.  
+  Note: Required if `action` is `"startCallRecording"` and `type` is not `"cloud"`.
 </ParamField>
 
 <ParamField path="record.recordingID" type="string" required={false}>
-  user-supplied string to identify the recording.
+   User-supplied string to identify the recording.
+  Note: Only used with siprec recording
 </ParamField>
 
 <ParamField path="transcribe" type="object" required={false}>
