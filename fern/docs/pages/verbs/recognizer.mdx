@@ -799,6 +799,135 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
   </Accordion>
 
+  <Accordion title="gladiaOptions">
+    <ParamField path="model" type="string" required={false}>
+      The processing model to use.
+      Default: `'solaria-1'`.
+    </ParamField>
+
+    <ParamField path="endpointing" type="number" required={false}>
+      Duration of silence (in seconds) that triggers utterance completion.
+      Value must be between `0.01` and `10`.
+      Default: `0.05`.
+    </ParamField>
+
+    <ParamField path="maximum_duration_without_endpointing" type="number" required={false}>
+      Maximum duration (in seconds) without endpointing detection.
+      Value must be between `5` and `60`.
+      Default: `5`.
+    </ParamField>
+
+    <ParamField path="custom_metadata" type="object" required={false}>
+      Attach custom metadata to the transcription session.
+    </ParamField>
+
+    <ParamField path="language_config" type="object" required={false}>
+      Language configuration for the transcription.
+    </ParamField>
+
+    <ParamField path="language_config.languages" type="array" required={false}>
+      Array of language codes to use for transcription.
+    </ParamField>
+
+    <ParamField path="language_config.code_switching" type="boolean" required={false}>
+      Enable automatic language switching within the audio stream.
+    </ParamField>
+
+    <ParamField path="pre_processing" type="object" required={false}>
+      Audio pre-processing configuration.
+    </ParamField>
+
+    <ParamField path="pre_processing.audio_enhancer" type="boolean" required={false}>
+      Enable audio enhancement processing.
+    </ParamField>
+
+    <ParamField path="pre_processing.speech_threshold" type="number" required={false}>
+      Speech detection threshold value.
+    </ParamField>
+
+    <ParamField path="realtime_processing" type="object" required={false}>
+      Real-time processing configuration.
+    </ParamField>
+
+    <ParamField path="realtime_processing.custom_vocabulary" type="array" required={false}>
+      Array of custom vocabulary terms to improve recognition accuracy.
+    </ParamField>
+
+    <ParamField path="realtime_processing.custom_vocabulary_config" type="object" required={false}>
+      Configuration for custom vocabulary behavior.
+    </ParamField>
+
+    <ParamField path="realtime_processing.custom_spelling" type="array" required={false}>
+      Array of custom spelling rules.
+    </ParamField>
+
+    <ParamField path="realtime_processing.custom_spelling_config" type="object" required={false}>
+      Configuration for custom spelling behavior.
+    </ParamField>
+
+    <ParamField path="realtime_processing.translation" type="boolean" required={false}>
+      Enable real-time translation.
+    </ParamField>
+
+    <ParamField path="realtime_processing.translation_config" type="object" required={false}>
+      Translation configuration including target languages.
+    </ParamField>
+
+    <ParamField path="realtime_processing.named_entity_recognition" type="boolean" required={false}>
+      Enable named entity recognition (NER).
+    </ParamField>
+
+    <ParamField path="realtime_processing.sentiment_analysis" type="boolean" required={false}>
+      Enable sentiment analysis on transcriptions.
+    </ParamField>
+
+    <ParamField path="post_processing" type="object" required={false}>
+      Post-processing configuration.
+    </ParamField>
+
+    <ParamField path="post_processing.summarization" type="boolean" required={false}>
+      Enable automatic summarization.
+    </ParamField>
+
+    <ParamField path="post_processing.summarization_config" type="object" required={false}>
+      Configuration for summarization behavior.
+    </ParamField>
+
+    <ParamField path="post_processing.chapterization" type="boolean" required={false}>
+      Enable automatic chapter detection.
+    </ParamField>
+
+    <ParamField path="messages_config" type="object" required={false}>
+      Control which event types are received during the session.
+    </ParamField>
+
+    <ParamField path="messages_config.receive_pre_final" type="boolean" required={false}>
+      Receive pre-final transcription events.
+    </ParamField>
+
+    <ParamField path="messages_config.receive_final" type="boolean" required={false}>
+      Receive final transcription events.
+    </ParamField>
+
+    <ParamField path="messages_config.receive_speech_recognition" type="boolean" required={false}>
+      Receive speech recognition events.
+    </ParamField>
+
+    <ParamField path="callback" type="boolean" required={false}>
+      Enable callback delivery for transcription events.
+      Default: `false`.
+    </ParamField>
+
+    <ParamField path="callback_config" type="object" required={false}>
+      Callback configuration when callback is enabled.
+    </ParamField>
+
+    <ParamField path="callback_config.url" type="string" required={false}>
+      URL to receive callback events.
+    </ParamField>
+
+  </Accordion>
+
   <Accordion title="speechmaticsOptions">
     <ParamField path="sm_audioEventsConfig" type="object" required={false}>
       Audio events to report.
