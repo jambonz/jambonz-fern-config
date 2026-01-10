@@ -4,5 +4,30 @@ subtitle: Running jambonz on your own infrastructure
 ---
 
 This section provides information on how to deploy jambonz on your own hosting provider or data center.
-Currently, we are providing support for self-hosting on AWS, but check back frequently as we will be adding 
-more detailed documentation and guides for other hosting providers soon.
+
+Currently, we are providing support for self-hosting on AWS, but check back soon as we will be adding 
+documentation and devops scripts for many other hosting environments soon.
+
+## Choosing a Deployment Size
+
+When self-hosting jambonz, it's important to choose a deployment size that matches your expected call volume and usage patterns. 
+In our VM-based deployments, we offer three standard deployment sizes:
+- **jambonz mini**: A single server suitable for development, testing, and small production workloads (up to 50 concurrent calls).
+- **jambonz medium**: A clustered deployment designed for growing businesses and production environments (up to 1,500 concurrent calls).
+- **jambonz large**: A clustered deployment designed for high-volume applications (unlimited concurrent calls).
+
+If you are new to jambonz, we recommend starting with a jambonz mini deployment to 
+familiarize yourself with the platform and minimize costs.
+You can deploy a medium or large deployment later as your needs grow, and you may want to keep the jambonz mini for 
+development and staging purposes.
+
+## Licensing
+
+Running a self-hosted jambonz system requires a license key. Licenses are keyed to the domain name that you choose for your jambonz server or cluster during the deployment process. 
+Once you have followed the steps to
+deploy jambonz on your self-hosted infrastructure, you can obtain a license key as described in the 
+[Licensing](/self-hosting/licensing) section.
+
+Free trial licenses are available for evaluation and testing purposes. 
+Additionally, pre-revenue startups and those using jambonz for educational purposes 
+can qualify for extended free licenses. Please contact us for more information at support@jambonz.org.
