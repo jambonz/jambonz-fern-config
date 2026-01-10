@@ -87,14 +87,19 @@ a SIP INVITE for a new call, we will challenge them for those credentials using 
 
 If your carrier/SIP trunking provider works this way, they select the "Auth trunk" option for the Trunk Type on the 
 Add Carrier page in the jambonz portal.  Then select the "Inbound" tab and enter a username and password that you will 
-give them to authenticate with.  You will also tell them the SIP realm associated with your jambonz account, as they 
-will need this as well.
+give them to authenticate with.  
 
 <Frame caption="SIP Digest credentials for Auth trunk">
   <img src="../../assets/images/auth-trunk-creds.jpg" alt="Auth trunk credentials"/>
 </Frame>
 
-You can optionally add outbound gateways as well for an Auth trunk.
+You will also tell them the SIP realm associated with your jambonz account, as they 
+will need this as well.  You can find your SIP realm in the jambonz portal on the Account page.
+
+<Frame caption="SIP realm for an account">
+  <img src="../../assets/images/sip-realm.jpg" alt="Finding sip realm value"/>
+</Frame>
+
 
 ### Registration trunks
 
