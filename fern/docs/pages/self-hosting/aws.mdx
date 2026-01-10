@@ -1,0 +1,43 @@
+---
+title: Deploying jambonz on AWS
+subtitle: Deploying jambonz on AWS using EC2 instances and autoscaling
+---
+
+# Deploying jambonz on AWS
+
+This guide covers deploying jambonz on Amazon Web Services.
+
+## Architecture Overview
+
+A typical jambonz deployment on AWS includes:
+- EC2 instances for jambonz components
+- RDS for MySQL/MariaDB database
+- ElastiCache for Redis
+- Load balancers for traffic distribution
+- VPC for network isolation
+
+## Deployment Options
+
+### Manual EC2 Deployment
+Deploy jambonz components on EC2 instances with full control over configuration.
+
+### Kubernetes (EKS)
+Use Amazon EKS for container orchestration and auto-scaling.
+
+### Terraform
+Infrastructure as code deployment for reproducible infrastructure.
+
+## Prerequisites
+
+- AWS account with appropriate permissions
+- SSH key pair for EC2 access
+- Domain name for SIP and HTTP endpoints
+
+## Getting Started
+
+Detailed deployment instructions coming soon.
+
+## Resources
+
+- [jambonz GitHub](https://github.com/jambonz)
+- [AWS Documentation](https://aws.amazon.com/documentation/)

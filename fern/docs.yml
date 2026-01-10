@@ -252,6 +252,15 @@ navigation:
     layout:
       - page: Overview
         path: ./docs/pages/self-hosting/overview.mdx
+      - section: AWS
+        path: ./docs/pages/self-hosting/aws.mdx
+        contents:
+          - page: Mini
+            path: ./docs/pages/self-hosting/aws-mini.mdx
+          - page: Medium
+            path: ./docs/pages/self-hosting/aws-medium.mdx
+          - page: Large
+            path: ./docs/pages/self-hosting/aws-large.mdx
   - tab: sdks
     layout:
       - page: SDKs
