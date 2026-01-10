@@ -1,20 +1,83 @@
 ---
-title: Self-Hosting Licenses
-subtitle: Licensing options for self-hosted jambonz deployments
+title: Jambonz Self-Hosted Licenses
+subtitle: Obtaining a software license key
 ---
 
-# Self-Hosting Licenses
+## Licensing overview
+Jambonz version 10 and later requires a software license key for self-hosted deployments.  The license key is tied to the domain name 
+used to access your jambonz server or cluster.  This domain name is specified by you during the deployment process.
 
-Information about licensing for self-hosted jambonz deployments.
+Before obtaining a license key, you must first deploy jambonz on your self-hosted infrastructure, following the 
+instructions we provide here.  As part of the deployment you will choose a domain name for your jambonz 
+system and you will then create some related DNS records: all of this is described in the deployment guides.
 
-## License Types
+Once you have done that, you are ready to license your system. When you first log into your jambonz portal after deployment, 
+you will see a banner indicating the system is unlicensed.
 
-Details coming soon.
+(insert image 1 here)
 
-## Obtaining a License
+Clicking on that link will take you to the settings page where you can enter a license key. 
+You will see there a link to the [licensing portal](https://licensing.jambonz.org).
 
-Contact information and purchasing details coming soon.
+### Creating an account on the licensing portal
+(insert image 2 here)
 
-## License Management
+Clicking on that link will take you to the licensing portal. Create an account on the licensing portal and then sign in.
+You will see a page listing the jambonz domains that you have deployed.  It will initially be empty.
 
-Instructions for license installation and management coming soon.
+(insert image 3 here)
+
+### Adding your deployed domain
+Click on the "Add Domain" button to add your deployed jambonz domain.  You will be prompted to enter the domain name at the top 
+of the page.  Enter the domain name you specified during deployment and then click the Add button.  You will see your 
+domain has been added to the list with a status of "Unlicensed".
+
+### Obtaining a license key
+Click on the "Buy license key" button for the domain that you just added. 
+
+#### Free trial license
+You can obtain a free trial license key for evaluation purposes that is good for 30 days. 
+To do so, click on the "Request Trial License" at the bottom of the Add License popup.
+This will bring you to the Free trial form as shown below.
+
+(insert image 4 here)
+
+Note that by default trial licenses are restricted to 10 concurrent sessions. 
+If you feel you need a higher concurrent session limit for your evaluation, please contact us to request that.
+
+Click on the Proceed button and you will see your trial license key displayed.
+
+<Note>
+Trial licenses are limited to one per domain. Once you have used your free trial, you will need 
+to purchase a paid license to continue; if you need an extended trial for evaluation purposes or 
+non-commercial use, please contact us at support@jambonz.org.
+</Note>
+
+#### Monthly subscription license
+To purchase a production license, select or enter the desired number of concurrent sessions or "Unlimited".
+Click on the Proceed to purchase button to review and accept the license terms.
+ Once you have accepted the terms you will be taken to the payment page to enter your payment details.
+After entering your payment details and pressing the Pay button, you will see your license key displayed.
+
+<Note>
+Subscription licenses are billed monthly. 
+Once the initial license key is installed in your jambonz system, it will automatically update 
+monthly with no interruption in service as long as your payment method is valid.  
+
+You will 
+be notified via email if a recurring payment fails for any reason and will have an opportunity to
+update your payment method before service is interrupted.
+</Note>
+
+### Installing your license key
+Copy the license key from the licensing portal and return to your jambonz portal settings page.
+Paste the license key into the License Key field and click the Update button.
+
+(insert image 5 here)
+
+Voila!  Your jambonz system is now licensed and ready for production use.
+
+<Note>
+It may take thirty seconds or so for the jambonz SIP server to recognize the new license key and begin accepting calls.
+</Note>
+
