@@ -3,17 +3,20 @@ title: Deploying jambonz on AWS
 subtitle: Deploying jambonz on AWS using EC2 instances and autoscaling
 ---
 
-# Deploying jambonz on AWS
-
-This guide covers deploying jambonz on Amazon Web Services.
-
-## Prerequisites
+# Prerequisites
+jambonz is deployed on Amazon Web Services (AWS) using CloudFormation templates. 
+You will need:
 - An AWS account with appropriate permissions to create and manage resources
+- AWS CLI installed and configured with your credentials
+- An AWS SSH key pair for your desired region 
 
-
+# Obtain the CloudFormation templates
+The CloudFormation templates for deploying jambonz on AWS [are available here](https://github.com/jambonz-selfhosting/cloudformation).
+- Clone the repository to your local machine.
+- Navigate to the `mini`, `medium`, or `large` directory depending on your desired deployment size.
+- Follow the instructions in the README file for that directory to deploy the jambonz system.
 
 
 ## Resources
 
-- [jambonz GitHub](https://github.com/jambonz)
-- [AWS Documentation](https://aws.amazon.com/documentation/)
+- [jambonz self-hosting devops scripts](https://github.com/jambonz-selfhosting)

@@ -250,12 +250,13 @@ navigation:
               path: ./docs/pages/ws_api/tts-clear.mdx
   - tab: selfhosting
     layout:
-      - page: Overview
+      - section: Overview
         path: ./docs/pages/self-hosting/overview.mdx
-      - page: Licensing
-        path: ./docs/pages/self-hosting/licensing.mdx
-      - page: Post-Install Steps
-        path: ./docs/pages/self-hosting/post-install.mdx
+        contents:
+          - page: Licensing
+            path: ./docs/pages/self-hosting/licensing.mdx
+          - page: Post-Install Steps
+            path: ./docs/pages/self-hosting/post-install.mdx
       - page: AWS
         path: ./docs/pages/self-hosting/aws.mdx
   - tab: sdks
