@@ -1,0 +1,48 @@
+---
+title: Post-Install Steps
+subtitle: Complete these steps after deploying jambonz
+---
+
+# Overview
+Once you have deployed jambonz on VM-based infrastructure such as AWS EC2, you will need to create 
+some DNS records and enable HTTPS for the web portal.
+
+# Create DNS records
+
+The output of the deployment will have included the IP addresses of the Web/Monitoring server and the SBC server.
+
+<Note>
+On a jambonz mini, these will be the same IP address since it is a single server deployment.
+</Note>
+
+Using the DNS name that you specified during deployment (e.g. `my-domain.example.com`), create the following DNS A records:
+
+**Pointing to WebServerIP:**
+- `my-domain.example.com`
+- `api.my-domain.example.com`
+- `grafana.my-domain.example.com`
+- `homer.my-domain.example.com`
+- `public-apps.my-domain.example.com`
+
+**Pointing to SbcServerIP:**
+- `sip.my-domain.example.com`
+
+# Enable HTTPS for the portal
+
+SSH into the Web/Monitoring server and install TLS certificates:
+
+1. `ssh -i <yuour-ssh-keypair> jambonz@<WebServerIP>` - ssh into the server
+2. `sudo certbot --nginx` - generate TLS certs
+3. `cd ~/apps/webapp && vi .env` - edit the VITE_API_BASE_URL param to use https
+4. `npm run build && pm2 restart webapp` - restart the webapp under https
+
+## First time login
+
+Now log into the portal for the first time.
+
+The user is 'admin' and the password will have been listed as part of the outputs from the deployment script.
+You will be prompted to change the password on first login.
+
+<Note>
+The grafana login is also 'admin' and the password is 'admin', which you will be prompted to change on first login as well.
+</Note>

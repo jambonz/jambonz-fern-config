@@ -254,16 +254,10 @@ navigation:
         path: ./docs/pages/self-hosting/overview.mdx
       - page: Licensing
         path: ./docs/pages/self-hosting/licensing.mdx
-      - section: AWS
+      - page: Post-Install Steps
+        path: ./docs/pages/self-hosting/post-install.mdx
+      - page: AWS
         path: ./docs/pages/self-hosting/aws.mdx
-        collapsed: true
-        contents:
-          - page: Mini
-            path: ./docs/pages/self-hosting/aws-mini.mdx
-          - page: Medium
-            path: ./docs/pages/self-hosting/aws-medium.mdx
-          - page: Large
-            path: ./docs/pages/self-hosting/aws-large.mdx
   - tab: sdks
     layout:
       - page: SDKs
