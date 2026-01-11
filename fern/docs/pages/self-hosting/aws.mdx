@@ -1,21 +1,22 @@
 ---
-title: Deploying jambonz on AWS
+title: AWS Deployment
 subtitle: Deploying jambonz on AWS using EC2 instances and autoscaling
 ---
 
-# Prerequisites
+## Prerequisites
 jambonz is deployed on Amazon Web Services (AWS) using CloudFormation templates. 
 You will need:
 - An AWS account with appropriate permissions to create and manage resources
 - AWS CLI installed and configured with your credentials
 - An AWS SSH key pair for your desired region 
 
-# Obtain the CloudFormation templates
+## Obtain the CloudFormation templates
 The CloudFormation templates for deploying jambonz on AWS [are available here](https://github.com/jambonz-selfhosting/cloudformation).
 - Clone the repository to your local machine.
 - Navigate to the `mini`, `medium`, or `large` directory depending on your desired deployment size.
 - Follow the instructions in the README file for that directory to deploy the jambonz system.
-
+- Once the Cloudformation stack is created, follow the post-install steps outlined in the [Post-Install Steps](/self-hosting/post-install) article to complete the setup.
+- Generate a software license key as described in the [Software Licensing](/self-hosting/licensing) article.
 
 ## Resources
 
