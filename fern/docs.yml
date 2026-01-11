@@ -256,6 +256,7 @@ navigation:
         path: ./docs/pages/self-hosting/licensing.mdx
       - section: AWS
         path: ./docs/pages/self-hosting/aws.mdx
+        collapsed: true
         contents:
           - page: Mini
             path: ./docs/pages/self-hosting/aws-mini.mdx
