@@ -37,10 +37,10 @@ Contact us at support@jambonz.org for details.
 </Note>
 
 ## Architecture
-The architecture of your self-hosted jambonz deployment will depend on the deployment size you choose.
-In every case, the jambonz system consists of several key components:
+The physical architecture of your self-hosted jambonz deployment will depend on the deployment size you choose.
+In each case, however, the jambonz system will contain the same logical components:
 - **Session Border Controller (SBC)**: A session border controller function that handles SIP and RTP media processing with the outside world.
-- **Feature Server**: The central application processing logic that connects to speech and AI services as well as your application.
+- **Feature Server**: The central application processing function that connects to speech and AI services as well as your application.
 - **Web / Monitoring Server**: Supports the jambonz portal and grafana monitoring dashboards as well as exposing a REST API for management and configuration.
 - **Recording Server**: (optional) Handles call recording uploading to your S3 or other cloud storage.
 - **Databases**: A mysql database that stores configuration, call detail records, and other data, as well as an InfluxDB time-series database for monitoring data.
