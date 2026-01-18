@@ -17,11 +17,12 @@ You will need:
 ## Obtain the CloudFormation templates
 The CloudFormation templates for deploying jambonz on AWS [are available here](https://github.com/jambonz-selfhosting/cloudformation).
 - Clone the repository to your local machine.
-- Navigate to the `mini`, `medium`, or `large` directory depending on your desired deployment size.
-- Follow the instructions in the README file for that directory to deploy the jambonz system.
+- Decide on the AWS region you want to deploy in and the jambonz configuration (mini, medium, large)
+- Run the `generate-cf.sh` script to copy the EC2 amis to your account and generate the CloudFormation template
+- Follow the instructions generated to deploy the Cloudformation stack.
 - Once the Cloudformation stack is created, follow the post-install steps outlined in the [Post-Install Steps](/self-hosting/overview/post-install) article to complete the setup.
 - Generate a software license key as described in the [Software Licensing](/self-hosting/overview/licensing) article.
 
 ## Resources
 
-- [jambonz self-hosting devops scripts](https://github.com/jambonz-selfhosting)
+- [public repo for CloudFormation templates](https://github.com/jambonz-selfhosting/cloudformation)
