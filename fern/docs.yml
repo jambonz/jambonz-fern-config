@@ -2,7 +2,7 @@ instances:
   - url: jambonz-12u348932.docs.buildwithfern.com
     custom-domain: docs.jambonz.org
     edit-this-page:
-      github: 
+      github:
         owner: jambonz
         repo: jambonz-fern-config
         branch: main
@@ -32,6 +32,10 @@ tabs:
     display-name: WebSocket API
     icon: fa-regular fa-signal-stream
     slug: reference
+  selfhosting:
+    display-name: Self-Hosting
+    icon: fa-regular fa-server
+    slug: self-hosting
   sdks:
     display-name: Client SDKs
     icon: fa-regular fa-signal-stream
@@ -244,8 +248,19 @@ navigation:
               path: ./docs/pages/ws_api/tts-flush.mdx
             - page: tts:clear
               path: ./docs/pages/ws_api/tts-clear.mdx
+  - tab: selfhosting
+    layout:
+      - section: Overview
+        path: ./docs/pages/self-hosting/overview.mdx
+        contents:
+          - page: Licensing
+            path: ./docs/pages/self-hosting/licensing.mdx
+          - page: Post-Install Steps
+            path: ./docs/pages/self-hosting/post-install.mdx
+      - page: AWS
+        path: ./docs/pages/self-hosting/aws.mdx
   - tab: sdks
-    layout: 
+    layout:
       - page: SDKs
         path: ./docs/pages/sdks/index.mdx
       - page: nodeclient

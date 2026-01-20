@@ -1,0 +1,238 @@
+---
+title: AWS Deployment
+subtitle: Deploying jambonz on AWS using EC2 instances and autoscaling
+---
+
+<div class="video-wrap">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/zqfcsnijp-s" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+## Prerequisites
+jambonz is deployed on Amazon Web Services (AWS) using CloudFormation templates. 
+You will need:
+- An AWS account with appropriate permissions
+- AWS CLI installed and configured with your credentials
+- An AWS SSH key pair for your desired region 
+
+## Generate and run the CloudFormation templates
+The CloudFormation templates for deploying jambonz on AWS [are available here](https://github.com/jambonz-selfhosting/cloudformation).
+- Clone the repository to your local machine.
+- Decide on the AWS region you want to deploy in and the jambonz configuration (mini, medium, large)
+- Run the `generate-cf.sh` script to copy the EC2 amis to your account and generate the CloudFormation template
+- Follow the instructions generated to deploy the Cloudformation stack.
+- Once the Cloudformation stack is created, follow the post-install steps outlined in the [Post-Install Steps](/self-hosting/overview/post-install) article to complete the setup.
+- Generate a software license key as described in the [Software Licensing](/self-hosting/overview/licensing) article.
+
+## Example
+Here is an example of generating a Cloudformation template for a jambonz-mini in us-west-1.
+
+```bash
+./generate-cf.sh
+================================================
+jambonz CloudFormation Generator
+================================================
+
+Checking AWS credentials...
+✓ Authenticated successfully
+  Account ID: 376029039764
+  User/Role:  arn:aws:iam::376029039764:user/dhorton
+
+Select deployment size:
+  1) mini   - Single EC2 instance with all components
+  2) medium - Multi-tier deployment (SBC, Feature Server, Web/Monitoring, Recording)
+  3) large  - Fully separated architecture (SBC SIP, SBC RTP, FS, Web, Monitoring, Recording)
+
+Enter choice [1-3]: 2
+Selected: medium
+
+Select AWS region:
+Available regions:
+     1	us-east-1
+     2	us-east-2
+     3	us-west-1
+     4	us-west-2
+     5	ca-central-1
+     6	ca-west-1
+     7	sa-east-1
+     8	mx-central-1
+     9	eu-central-1
+    10	eu-central-2
+    11	eu-west-1
+    12	eu-west-2
+    13	eu-west-3
+    14	eu-north-1
+    15	eu-south-1
+    16	eu-south-2
+    17	ap-south-1
+    18	ap-south-2
+    19	ap-east-1
+    20	ap-east-2
+    21	ap-southeast-1
+    22	ap-southeast-2
+    23	ap-southeast-3
+    24	ap-southeast-4
+    25	ap-southeast-5
+    26	ap-southeast-6
+    27	ap-southeast-7
+    28	ap-northeast-1
+    29	ap-northeast-2
+    30	ap-northeast-3
+    31	me-central-1
+    32	me-south-1
+    33	il-central-1
+    34	af-south-1
+
+Enter region name (e.g., us-east-1): eu-west-3
+Selected region: eu-west-3
+
+================================================
+Reading public AMI IDs from mappings...
+================================================
+
+
+Querying version tags from public AMIs...
+This will take a moment - querying 4 AMI(s)...
+
+  Querying version tag for SbcAmi (ami-0eb29538f92008874)...
+    ✓ SbcAmi: ami-0eb29538f92008874 (version: v10.0.2)
+  Querying version tag for FsAmi (ami-0e2ee4081c6393519)...
+    ✓ FsAmi: ami-0e2ee4081c6393519 (version: v10.0.2)
+  Querying version tag for WebMonitoringAmi (ami-0d11651e060e40b7c)...
+    ✓ WebMonitoringAmi: ami-0d11651e060e40b7c (version: v10.0.2)
+  Querying version tag for RecordingServerAmi (ami-0b0e1c42c96499cf2)...
+    ✓ RecordingServerAmi: ami-0b0e1c42c96499cf2 (version: v10.0.2)
+
+✓ All AMIs verified with proper JambonzVersion tags
+Detected jambonz version: v10.0.2
+
+================================================
+Validating source AMI availability...
+================================================
+
+Checking that all source AMIs are ready to be copied...
+
+  Checking SbcAmi (ami-0eb29538f92008874)...
+    ✓ AMI is available
+  Checking FsAmi (ami-0e2ee4081c6393519)...
+    ✓ AMI is available
+  Checking WebMonitoringAmi (ami-0d11651e060e40b7c)...
+    ✓ AMI is available
+  Checking RecordingServerAmi (ami-0b0e1c42c96499cf2)...
+    ✓ AMI is available
+
+✓ All source AMIs are available and ready to copy
+
+================================================
+Copying AMIs to your account...
+================================================
+
+This will take 5-15 minutes for same-region copying. Please be patient.
+
+Note: Keep this script running to automatically generate the CloudFormation template.
+Status updates every 30 seconds.
+
+Initiating 4 AMI copy operation(s) in parallel...
+
+  Starting copy: SbcAmi (ami-0eb29538f92008874) version v10.0.2...
+    ✓ Copy initiated: ami-0751fc0bf773500d4
+    Tagging AMI...
+    ✓ AMI tagged successfully
+  Starting copy: FsAmi (ami-0e2ee4081c6393519) version v10.0.2...
+    ✓ Copy initiated: ami-0e09b398f9595b24b
+    Tagging AMI...
+    ✓ AMI tagged successfully
+  Starting copy: WebMonitoringAmi (ami-0d11651e060e40b7c) version v10.0.2...
+    ✓ Copy initiated: ami-01d01d4eb80b18f29
+    Tagging AMI...
+    ✓ AMI tagged successfully
+  Starting copy: RecordingServerAmi (ami-0b0e1c42c96499cf2) version v10.0.2...
+    ✓ Copy initiated: ami-0b81b0618f98c334b
+    Tagging AMI...
+    ✓ AMI tagged successfully
+
+✓ All 4 AMI copy operation(s) started in parallel
+
+================================================
+Waiting for AMI copies to complete...
+================================================
+
+Status updates every 30 seconds. This typically takes 5-15 minutes.
+Do not close this terminal or interrupt the script while AMI copies are in progress!
+Tip: You can also check progress in another terminal:
+  aws ec2 describe-images --region eu-west-3 --image-ids ami-0751fc0bf773500d4 ami-0e09b398f9595b24b ami-01d01d4eb80b18f29 ami-0b81b0618f98c334b  --query 'Images[*].[ImageId,Name,State]' --output table
+
+[Check #1] Elapsed: 0m 13s
+  SbcAmi (ami-0751fc0bf773500d4): pending
+  FsAmi (ami-0e09b398f9595b24b): pending
+  WebMonitoringAmi (ami-01d01d4eb80b18f29): pending
+  RecordingServerAmi (ami-0b81b0618f98c334b): pending
+  Progress: 0/4 AMIs ready
+
+[Check #2] Elapsed: 0m 47s
+  SbcAmi (ami-0751fc0bf773500d4): pending
+  FsAmi (ami-0e09b398f9595b24b): pending
+  WebMonitoringAmi (ami-01d01d4eb80b18f29): pending
+  RecordingServerAmi (ami-0b81b0618f98c334b): pending
+  Progress: 0/4 AMIs ready
+
+[Check #3] Elapsed: 1m 20s
+  ✓ SbcAmi (ami-0751fc0bf773500d4): available
+  ✓ FsAmi (ami-0e09b398f9595b24b): available
+  ✓ WebMonitoringAmi (ami-01d01d4eb80b18f29): available
+  ✓ RecordingServerAmi (ami-0b81b0618f98c334b): available
+  Progress: 4/4 AMIs ready
+
+================================================
+✓ All 4 AMI(s) are now available!
+================================================
+Total time: 83s (1m 23s)
+
+================================================
+Generating CloudFormation template...
+================================================
+
+✓ CloudFormation template generated: /Users/dhorton/beachdog-enterprises/beachdog-networks/git/jambones.org/jambonz-selfhosting/cloudformation/jambonz-medium-eu-west-3.yaml
+
+Validating generated template...
+✓ Template is valid YAML
+
+================================================
+SUCCESS!
+================================================
+
+Copied AMI IDs (for your records):
+  SbcAmi: ami-0751fc0bf773500d4
+  FsAmi: ami-0e09b398f9595b24b
+  WebMonitoringAmi: ami-01d01d4eb80b18f29
+  RecordingServerAmi: ami-0b81b0618f98c334b
+
+Generated CloudFormation template:
+  /Users/dhorton/beachdog-enterprises/beachdog-networks/git/jambones.org/jambonz-selfhosting/cloudformation/jambonz-medium-eu-west-3.yaml
+
+Next steps:
+
+Note: This template is 77680 bytes (CloudFormation has a 51,200 byte limit for direct usage).
+
+1. Upload template to S3 bucket:
+   aws s3 cp /Users/dhorton/beachdog-enterprises/beachdog-networks/git/jambones.org/jambonz-selfhosting/cloudformation/jambonz-medium-eu-west-3.yaml s3://<your-bucket>/jambonz-medium-eu-west-3.yaml
+
+2. Deploy using S3 URL:
+   aws cloudformation create-stack \
+     --region eu-west-3 \
+     --stack-name jambonz-medium \
+     --template-url https://<your-bucket>.s3.amazonaws.com/jambonz-medium-eu-west-3.yaml \
+     --capabilities CAPABILITY_IAM \
+     --parameters \
+       ParameterKey=KeyName,ParameterValue=<your-key-name> \
+       ParameterKey=URLPortal,ParameterValue=<your-domain>
+
+3. Or deploy via AWS Console (recommended for large templates):
+   - Navigate to CloudFormation service in eu-west-3
+   - Click 'Create stack'
+   - Choose 'Upload a template file' and select: /Users/dhorton/beachdog-enterprises/beachdog-networks/git/jambones.org/jambonz-selfhosting/cloudformation/jambonz-medium-eu-west-3.yaml
+   - Follow the wizard to configure parameters
+```
+
+## Resources
+
+- [public repo for CloudFormation templates](https://github.com/jambonz-selfhosting/cloudformation)

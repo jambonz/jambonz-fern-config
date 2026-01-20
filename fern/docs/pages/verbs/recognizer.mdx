@@ -219,6 +219,18 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Default: `10ms`.
     </ParamField>
 
+    <ParamField path="eagerEotThreshold" type="number" required={false}>
+      **Available with Deepgram Flux only**.  The [confidence threshold for triggering EagerEndOfTurn events](https://developers.deepgram.com/docs/flux/configuration#eager_eot_threshold), enableing early LLM response generation.
+    </ParamField>
+
+    <ParamField path="eotThreshold" type="number" required={false}>
+      **Available with Deepgram Flux only**.  The [confidence threshold for end-of-turn detection](https://developers.deepgram.com/docs/flux/configuration#eot_threshold)  
+    </ParamField>
+
+    <ParamField path="eotTimeoutMs" type="number" required={false}>
+      **Available with Deepgram Flux only**.  [Maximum silence duration before forcing an EndOfTurn](https://developers.deepgram.com/docs/flux/configuration#eot_timeout_ms), regardless of confidence. Valid values are between 500 and 10000 milliseconds.  
+    </ParamField>
+
     <ParamField path="keyterms" type="array" required={false}>
       [An array of keyterm prompts](https://developers.deepgram.com/docs/keyterm)  
     </ParamField>
@@ -227,6 +239,10 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       [An array of keywords](https://developers.deepgram.com/documentation/features/keywords/)  
       to which the model should pay particular attention to boosting or suppressing to help it understand context.
     </ParamField>
+
+    <ParamField path="mipOptOut" type="boolean" required={false}>
+      Indicates whether to opt out of Deepgram's model improvement program.
+    </ParamField>  
 
     <ParamField path="model" type="string" required={false}>
       Deepgram model used to process submitted audio.  
@@ -305,6 +321,106 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Default: `'latest'`.
     </ParamField>
 
+  </Accordion>
+
+  <Accordion title="houndifyOptions">
+    <ParamField path="houndifyOptions" type="number" required={false}>
+      Latitude of caller.
+    </ParamField>
+    <ParamField path="longitude" type="number" required={false}>
+      Longitude of caller.
+    </ParamField>
+    <ParamField path="city" type="string" required={false}>
+      City of caller.
+    </ParamField>
+    <ParamField path="state" type="string" required={false}>
+      State of caller.
+    </ParamField>
+    <ParamField path="country" type="string" required={false}>
+      Country of caller.
+    </ParamField>
+    <ParamField path="timezone" type="string" required={false}>
+      Timezone of caller.
+    </ParamField>
+
+    <ParamField path="domain" type="string" required={false}>
+    </ParamField>
+ 
+    <ParamField path="audioEndpoint" type="string" required={false}>
+    </ParamField>
+ 
+    <ParamField path="maxSilenceSeconds" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="maxSilenceAfterFullQuerySeconds" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="maxSilenceAfterPartialQuerySeconds" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="vadSensitivity" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="vadTimeout" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="vadMode" type="string" required={false}>
+    </ParamField>
+ 
+    <ParamField path="vadVoiceMs" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="vadSilenceMs" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="vadDebug" type="debug" required={false}>
+    </ParamField>
+ 
+    <ParamField path="audioFormat" type="string" required={false}>
+    </ParamField>
+ 
+    <ParamField path="enableNoiseReduction" type="boolean" required={false}>
+    </ParamField>
+ 
+    <ParamField path="enableProfanityFilter" type="boolean" required={false}>
+    </ParamField>
+ 
+    <ParamField path="enablePunctuation" type="boolean" required={false}>
+    </ParamField>
+
+    <ParamField path="enableCapitalization" type="boolean" required={false}>
+    </ParamField>
+ 
+    <ParamField path="confidenceThreshold" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="enableDisfluencyFilter" type="boolean" required={false}>
+    </ParamField>
+ 
+    <ParamField path="maxResults" type="number" required={false}>
+    </ParamField>
+
+    <ParamField path="enableWordTimestamps" type="boolean" required={false}>
+    </ParamField>
+
+    <ParamField path="maxAlternatives" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="partialTranscriptInterval" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="sessionTimeout" type="number" required={false}>
+    </ParamField>
+
+    <ParamField path="connectionTimeout" type="number" required={false}>
+    </ParamField>
+ 
+    <ParamField path="customVocabulary" type="string" required={false}>
+    </ParamField>
+
+    <ParamField path="languageModel" type="string" required={false}>
+    </ParamField>
+ 
   </Accordion>
 
   <Accordion title="ibmOptions">
