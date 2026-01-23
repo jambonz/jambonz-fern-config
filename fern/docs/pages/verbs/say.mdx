@@ -45,9 +45,13 @@ subtitle: Generate text-to-speech audio.
 </ParamField>
 
 <ParamField path="synthesizer.voice" type="string" required={false}>
-  Voice to use.  
-  Note that the voice list differs depending on whether you are using AWS or Google.  
+  Voice to use.
+  Note that the voice list differs depending on whether you are using AWS or Google.
   Defaults to application setting, if provided.
+</ParamField>
+
+<ParamField path="instructions" type="string" required={false}>
+  A prompt sent to the TTS vendor to guide how the audio should be generated. Use this to specify the desired tone, emotion, speaking style, or context for the synthesized speech. This parameter is only supported by vendors that offer prompt-based TTS generation (e.g., Google Gemini TTS).
 </ParamField>
 
 <ParamField path="text" type="string" required={false}>

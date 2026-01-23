@@ -37,6 +37,23 @@ subtitle: A **property** that can be used in a `say` verb to override the applic
 
 <AccordionGroup>
 
+  <Accordion title="google">
+    <ParamField path="model" type="string" required={false}>
+      The model to use for text-to-speech synthesis. When specified, this enables Gemini TTS. Example: `gemini-2.5-flash-preview-tts`.
+    </ParamField>
+    <ParamField path="apiMode" type="string" required={false}>
+      Controls which Google TTS API mode to use. Possible values:
+      - `tts`: Standard Google Cloud TTS voices (default).
+      - `live`: HD voices using streaming mode for higher quality output.
+      - `gemini`: Gemini TTS for AI-powered speech synthesis.
+
+      The mode is automatically selected based on configuration: if `options.model` is specified or a `model_id` is configured in the speech credentials, Gemini TTS is used. If an HD voice is selected, `live` mode is used. Otherwise, standard `tts` mode is used.
+    </ParamField>
+    <ParamField path="prompt" type="string" required={false}>
+      A prompt sent to the TTS model to guide how the audio should be generated. Use this to specify the desired tone, emotion, speaking style, or context for the synthesized speech. This parameter is only applicable when using Gemini TTS (`apiMode: "gemini"` or when `model` is specified).
+    </ParamField>
+  </Accordion>
+
   <Accordion title="cartesia">
     <ParamField path="voice_mode" type="string" required={false}>
       `embedding` or `id` (see [Cartesia docs](https://docs.cartesia.ai/api-reference/tts/bytes#request.body.voice))

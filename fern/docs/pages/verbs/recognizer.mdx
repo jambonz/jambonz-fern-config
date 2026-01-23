@@ -1108,6 +1108,14 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     <ParamField path="transcription_config.punctuation_overrides.sensitivity" type="number" required={false}>
     </ParamField>
 
+    <ParamField path="transcription_config.conversation_config" type="object" required={false}>
+      Configuration for conversation-based transcription features.
+    </ParamField>
+
+    <ParamField path="transcription_config.conversation_config.end_of_utterance_silence_trigger" type="number" required={false}>
+      Duration of silence (in seconds) that triggers an end-of-utterance event. This controls how long the system waits after the speaker stops talking before determining that the utterance is complete. See [Speechmatics turn detection docs](https://docs.speechmatics.com/speech-to-text/realtime/turn-detection#end-of-utterance) for details.
+    </ParamField>
+
     <ParamField path="sm_audioFilteringConfig" type="object" required={false}>
       Audio filtering configuration.
     </ParamField>

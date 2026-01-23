@@ -28,8 +28,9 @@ To begin with, here are the possible options that you use with OpenAI STT:
       prompt: 'string',
       turn_detection: {
         type: 'server_vad', // or 'semantic_vad' or 'none'
-        prefix_padding_ms: 300,
-        silence_duration_ms: 800
+        eagerness: 'medium', // only for semantic_vad: 'low', 'medium', 'high', or 'auto'
+        prefix_padding_ms: 300, // only for server_vad
+        silence_duration_ms: 800 // only for server_vad
       },
       promptTemplates: {
         hintsTemplate: 'string',
@@ -38,6 +39,19 @@ To begin with, here are the possible options that you use with OpenAI STT:
     }
   }
 ```
+
+### Turn detection options
+
+The `turn_detection` object controls how OpenAI detects when a speaker has finished talking.
+
+**For `semantic_vad` type:**
+- `eagerness`: Controls how eager the model is to determine the end of an utterance. Possible values:
+  - `auto` (default): Equivalent to `medium`
+  - `low`: Allows the user more time to speak, resulting in larger transcript chunks
+  - `medium`: Balanced approach
+  - `high`: Returns transcription events faster with smaller chunks
+
+The `eagerness` setting affects how audio is chunked even in transcription mode. Use `high` if you want faster transcription events, or `low` if you prefer larger, more complete transcript chunks.
 
 In this article we want to explore the various ways to construct a prompt for OpenAI STT.  
 
