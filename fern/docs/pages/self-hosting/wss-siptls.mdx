@@ -1,0 +1,75 @@
+---
+title: Setting up TLS for WebRTC and SIP
+subtitle: Obtain a certificate and configure Drachtio
+---
+
+# Overview
+WebRTC clients will be sending SIP over secure WebSockets (wss). Client-side libraries like jsSip (my favorite) and SIP.js are most often used to build the client webrtc application that runs in your browser. To support these types of clients, jambonz needs to support sip over wss for the SIP signaling, and SRTP for the encrypted media.
+Note that insecure websockets (SIP over plain ws) is not allowed by the browser, so we are going to need to install a TLS certificate on the jambonz server. In the example below we'll configure our jambonz server to listen on port 8443/tcp for sip over wss traffic, 
+and we'll create a TLS wildcard certificate for *.sip.jambonz.me since that is a domain that we own. (If you are working along, you should similarly choose a domain of your own that you control the DNS for).
+
+Additionally some SIP Trunks and Clients may require SIP over TLS and SRTP for the Media stream to encrypt connections.
+
+We'll be making these changes on the SIP SBC if you're running a Cluster, if you have the single server Mini its the same process.
+
+## Generating a TLS certificate for SIP traffic
+We're going to use letsencrypt to generate our certificate because it's free (and easy!), If you prefer to obtain certificates from another issuer you can do this and skip to the Configuring Dractio step.
+Certbot is installed as part of the standard Jambonz installation.
+```
+sudo certbot certonly --manual --preferred-challenges=dns --email user@example.com --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d *.sip.jambonz.me -d sip.jambonz.me
+```
+This gets us a TLS cert with the CN of *.sip.jambonz.me and Subject Alternative Names of both sip.jambonz.me and *.sip.jambonz.me. 
+This gives  the option of assigning different jambonz accounts different SIP realm values to register against (e.g. one jambonz user joe can register phones under the realm joe.sip.jambonz.me while jane with a different jambonz account registers her devices under jane.sip.jambonz.me).
+
+We're using the DNS challenge method to verify control of  those domains, so letsencrypt will prompt me to add some TXT records in my DNS provider. Once done the TLS cert is generated to the server:
+
+```
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/sip.jambonz.me/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/sip.jambonz.me/privkey.pem
+```
+
+## Configuring drachtio
+Now that we have our TLS certificate, we need to configure drachtio to use it. This is a simple matter of adding the tls info to the sip section of  /etc/drachtio.conf.xml config file. When done, it will look like this:
+```
+<sip>
+  <contacts></contacts>
+  <tls>
+    <key-file>/etc/letsencrypt/live/sip.jambonz.me/privkey.pem</key-file>
+    <cert-file>/etc/letsencrypt/live/sip.jambonz.me/fullchain.pem</cert-file>
+    <chain-file>/etc/letsencrypt/live/sip.jambonz.me/fullchain.pem</chain-file>
+  </tls>
+  <udp-mtu>8192</udp-mtu>
+  <reject-register-with-no-realm>true</reject-register-with-no-realm>
+</sip>
+```
+
+Now, we need to configure drachtio to listen on port 8443 for sip traffic over wss and 5061 for SIP over TLS. To do that we edit `/etc/systemd/system/drachtio.service` to add this new sip contact. When finished, that section of the file looks like this:
+
+```
+ExecStart=/usr/local/bin/drachtio --daemon \
+--contact sip:${LOCAL_IP};transport=udp --external-ip ${PUBLIC_IP} \
+--contact sip:${LOCAL_IP};transport=tcp --external-ip ${PUBLIC_IP} \
+--contact sips:${LOCAL_IP}:5061;transport=tls --external-ip ${PUBLIC_IP} \
+--contact sips:${LOCAL_IP}:8443;transport=wss --external-ip ${PUBLIC_IP} \
+--address 0.0.0.0 --port 9022 --homer 127.0.0.1:9060 --homer-id 10
+```
+
+We then restart drachtio..
+```
+systemctl daemon-reload
+systemctl restart drachtio
+```
+we can verify that drachtio is now listening on ports 8443 and 5061 by looking at the /var/log/drachtio/drachtio.log file after we restart it:
+
+```
+sudo cat /var/log//drachtio.log  | grep logTransports
+```
+
+```
+2026-01-26 09:26:19.751505 SipTransport::logTransports - there are : 4 transports
+2026-01-26 09:26:19.751512 SipTransport::logTransports - wss/172.31.10.100:8443 (sips:172.31.10.100:8443;transport=wss, external-ip: 3.249.74.254, local-net: )
+2026-01-26 09:26:19.751517 SipTransport::logTransports - tls/172.31.10.100:5061 (sips:172.31.10.100:5061;transport=tls, external-ip: 3.249.74.254, local-net: )
+2026-01-26 09:26:19.751521 SipTransport::logTransports - tcp/172.31.10.100:5060 (sip:172.31.10.100;transport=tcp, external-ip: 3.249.74.254, local-net: )
+2026-01-26 09:26:19.751526 SipTransport::logTransports - udp/172.31.10.100:5060 (sip:172.31.10.100;transport=udp, external-ip: 3.249.74.254, local-net: ), mtu size: 8192
+```
