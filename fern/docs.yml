@@ -261,7 +261,8 @@ navigation:
             path: ./docs/pages/self-hosting/wss-siptls.mdx
       - page: AWS
         path: ./docs/pages/self-hosting/aws.mdx
-      
+      - page: Google Cloud
+        path: ./docs/pages/self-hosting/google-cloud.mdx
   - tab: sdks
     layout:
       - page: SDKs
