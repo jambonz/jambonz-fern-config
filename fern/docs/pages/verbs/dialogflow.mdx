@@ -1,8 +1,9 @@
 ---
 title: Dialogflow
-subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialogflow) bot.
+subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialogflow) bot. Supports both Dialogflow ES (Essentials) and CX.
 ---
 
+**Dialogflow ES Example:**
 ```json
 {
   "verb": "dialogflow",
@@ -12,6 +13,21 @@ subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialo
   "welcomeEvent": "welcome",
   "eventHook": "/dialogflow-event",
   "actionHook": "/dialogflow-action"
+}
+```
+
+**Dialogflow CX Example:**
+```json
+{
+  "verb": "dialogflow",
+  "project": "my-dialogflow-project",
+  "lang": "en-US",
+  "credentials": "{\"type\": \"service_account\",\"project_id\": \"my-dialogflow-project\"..",
+  "eventHook": "/dialogflow-event",
+  "actionHook": "/dialogflow-action",
+  "model": "cx",
+  "agent": "5e1fcb9e-9b33-4c86-aab7-18a0ef75eb7a",
+  "region": "us"
 }
 ```
 
@@ -85,6 +101,18 @@ subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialo
 
 <ParamField path="welcomeEventParams" type="object" required={false}>
   An object containing parameters to send with the welcome event.
+</ParamField>
+
+<ParamField path="model" type="string" required={false}>
+  Specifies which Dialogflow model to use. Valid values are `es` (Dialogflow ES/Essentials) or `cx` (Dialogflow CX). Defaults to `es` if not specified.
+</ParamField>
+
+<ParamField path="agent" type="string" required={false}>
+  The Dialogflow CX agent ID. Required when `model` is set to `cx`.
+</ParamField>
+
+<ParamField path="region" type="string" required={false}>
+  The Google Cloud region where the Dialogflow CX agent is located (e.g., `us`, `eu`, `asia-northeast1`). Required when `model` is set to `cx`.
 </ParamField>
 
 #### actionHook properties

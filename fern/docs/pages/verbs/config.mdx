@@ -172,3 +172,43 @@ The `config` verb is non-blocking.
 <ParamField path="disableTtsCache" type="boolean" required={false}>
   disable TTS caching for an entire call session
 </ParamField>
+
+<ParamField path="noiseIsolation" type="object" required={false}>
+  configure noise isolation to reduce background noise from the caller's audio.
+</ParamField>
+
+<ParamField path="noiseIsolation.enable" type="boolean" required={true}>
+  whether to enable or disable noise isolation.
+</ParamField>
+
+<ParamField path="noiseIsolation.vendor" type="string" required={false}>
+  the vendor to use for noise isolation. Supported vendors: `krisp`, `rnnoise`.
+</ParamField>
+
+<ParamField path="noiseIsolation.level" type="number" required={false}>
+  the intensity level of noise isolation.
+</ParamField>
+
+<ParamField path="noiseIsolation.model" type="string" required={false}>
+  the model to use for noise isolation.
+</ParamField>
+
+<ParamField path="turnTaking" type="object" required={false}>
+  configure turn-taking detection to identify when the caller has finished speaking.
+</ParamField>
+
+<ParamField path="turnTaking.enable" type="boolean" required={true}>
+  whether to enable or disable turn-taking detection.
+</ParamField>
+
+<ParamField path="turnTaking.vendor" type="string" required={false}>
+  the vendor to use for turn-taking detection. Supported vendor: `krisp`.
+</ParamField>
+
+<ParamField path="turnTaking.threshold" type="number" required={false}>
+  the threshold value for turn-taking detection.
+</ParamField>
+
+<ParamField path="turnTaking.model" type="string" required={false}>
+  the model to use for turn-taking detection.
+</ParamField>
