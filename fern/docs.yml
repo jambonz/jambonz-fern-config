@@ -261,6 +261,8 @@ navigation:
             path: ./docs/pages/self-hosting/wss-siptls.mdx
       - page: AWS
         path: ./docs/pages/self-hosting/aws.mdx
+      - page: Azure
+        path: ./docs/pages/self-hosting/azure.mdx
       - page: GCP
         path: ./docs/pages/self-hosting/gcp.mdx
   - tab: sdks
