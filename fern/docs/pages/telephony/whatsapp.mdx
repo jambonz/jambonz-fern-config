@@ -55,7 +55,7 @@ Navigate to "Phone Numbers" on the left-hand side and click the "Add phone numbe
 Enter your WhatsApp number, using international format and only numerical characters (e.g. "12125551212").
 Next, select "the WhatsApp carrier you crated as the "Carrier", and select the jambonz application you want to 
 handle incoming WhatsApp calls.
-<Note>To validate your setup, we suggest you test with the simple "Hello World" application.</Note> 
+<Note>To initially validate your configuration we suggest that you test using the simple "Hello World" application.</Note> 
 
 <Frame caption="">
   <img src="../../assets/images/whatsapp/number.png" alt=""/>
@@ -68,5 +68,5 @@ To finish, click "Save". Now calls to your WhatsApp number should be routed to y
 When making an Outbound call from jambonz to WhatsApp you need to specify an additional header in the 
 [Dial](https://docs.jambonz.org/verbs/verbs/dial) verb or the 
 [Create Call](https://docs.jambonz.org/reference/rest-call-control/calls/create-call#request.body.headers) method.
-This header is `X-Preferred-From-Host` and the value should be your jambonz sip realm (e.g. `accountname.sip.jambonz.cloud`). 
-This is required otherwise WhatsApp rejects the call.
+This header is named `X-Preferred-From-Host` and the value should be your jambonz sip realm; 
+this is required otherwise WhatsApp rejects the call.
