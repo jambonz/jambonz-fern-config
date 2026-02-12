@@ -70,3 +70,10 @@ When making an Outbound call from jambonz to WhatsApp you need to specify an add
 [Create Call](https://docs.jambonz.org/reference/rest-call-control/calls/create-call#request.body.headers) method.
 This header is named `X-Preferred-From-Host` and the value should be your jambonz sip realm; 
 this is required otherwise WhatsApp rejects the call.
+
+## Self Hosted Customers  
+Customers self-hosting with version 10.0.4 or greater can use this feature. 
+
+You will need to add an additional environment variable to the `ecosystem.config.js` file for `sbc-inbound`. 
+
+The line is `JAMBONES_ACCEPT_AND_TRANSCODE: 'opus/16000'`
