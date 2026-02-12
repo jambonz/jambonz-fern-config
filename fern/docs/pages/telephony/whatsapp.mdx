@@ -67,3 +67,10 @@ To finish, click "Save". Call the number from WhatsApp and you should hear the H
 When making an Outbound call from jambonz to WhatsApp you need to specify an additional header in the [Dial](https://docs.jambonz.org/verbs/verbs/dial) verb or the [Create Call](https://docs.jambonz.org/reference/rest-call-control/calls/create-call#request.body.headers) method.
 
 This header is `X-Preferred-From-Host` and the value should be your jambonz sip domain eg `accountname.sip.jambonz.cloud` This is required otherwise WhatsApp rejects the call.
+
+## Self Hosted Customers  
+Customers self-hosting with version 10.0.4 or greater can use this feature. 
+
+You will need to add an additional environment variable to the `ecosystem.config.js` file for `sbc-inbound`. 
+
+The line is `JAMBONES_ACCEPT_AND_TRANSCODE: 'opus/16000'`
