@@ -303,6 +303,8 @@ navigation:
             path: ./docs/pages/telephony/3cx.mdx
           - page: Vonage
             path: ./docs/pages/telephony/vonage.mdx
+          - page: WhatsApp
+            path: ./docs/pages/telephony/whatsapp.mdx
   - tab: changelog
 
   
