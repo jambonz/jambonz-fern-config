@@ -10,61 +10,57 @@ It can be used for both inbound and outbound calls, with outbounds calls you wou
 Before setting up the hosted application you will need:
 - A Jambonz Account,
 - A Retell account,
-- A SIP carrier configured in your jambonz account for connecting to the PSTN.
-- A Phone number configured in your jambonz account for the above carrier.
+- A SIP carrier configured in your Jambonz account for connecting to the PSTN.
+- A Phone number configured in your Jambonz account for the above carrier.
 
 # Get started
 
-## SIP client
+## Carrier
 
-You will need to create a new Client in your jambonz account in order for retell to make outbound calls, on the Clients tab of the jambonz UI click the + icon and then create a new username and password, 
-make a note of the username and password you created and then click **save**
+Login to your Jambonz account, go to Carriers and click Add Carrier. Select Retell from the dropdown "Select a predefined carrier". This will automatically update the carrier name and set the Trunk Type to Auth Trunk.
+In the Default Application field, select an application that will be used when an INVITE is received for a phone number that is not defined in the Jambonz portal.
+
 <Frame>
-  <img src="../../assets/images/sip-client-retell.png" alt="Create a client"/>
+  <img src="../../assets/images/carrier-retell-general.png" alt="New Retell Carrier created"/>
 </Frame>
 
-When you are returned to the client list screen you should also see a SIP Realm at the top of the page, make a note of this too
+Select the Inbound tab and enter a username and password that Retell will use for SIP authentication.
+
 <Frame>
-  <img src="../../assets/images/sip-client-list.png" alt="Create a client"/>
+  <img src="../../assets/images/carrier-retell-inbound.png" alt="Set SIP credentials"/>
 </Frame>
 
+The Outbound gateway will have already been populated for Retell, so no changes are required on the Outbound & Registration tab.
+
+<Note>
+The existing retell-hosted carrier is a deprecated version. If you are already running the Retell application with the retell-hosted carrier, it will continue to work as normal. New users should follow the steps provided here to create the carrier using the Predefined Carrier option.
+</Note>
 
 
 ## Application
 
-Login to your jambonz account, goto applications and click the + icon to create a new application.
+Go to Applications and click the Add Application button to create a new application.
 
 Enter the name of your application, this can be anything, we suggest starting out with `retell`
 Enter the Calling Webhook below, the same value should be automatically copied to the Call Status Webhook.
 ```txt Calling Webhook
 wss://retell.jambonz.app
 ```
+When you enter the webhook some new fields will then appear beneath that as shown below, these are the Application Environment variables
+for this hosted application. We'll go through how you should configure these next.
 
 <Frame>
   <img src="../../assets/images/application-webhook-retell.png" alt="Setting the calling webhook"/>
 </Frame>
 
-When you enter the webhook some new fields will then appear beneath that as shown below, these are the Application Environment variables
-for this hosted application. We'll go through how you should configure these next.
-
-
-## Client Application
-
-Now that you have created your application you need to configure you account so that calls made using the SIP client are routed to this application.
-
-On the account page scroll dow to `Application for SIP device calls` and select the name of the application you just created.
-
-<Frame>
-  <img src="../../assets/images/retell-account-client-app.png" alt="Setting the client application"/>
-</Frame>
 
 ## Configuration
 
 ### RETELL_TRUNK_NAME
-You can leave this as the default of `retell-hosted` on jambonz.cloud as there is a shared carrier already created with the correct settings.
+Set this to the name of the carrier you created earlier for Retell.
 
 ### RETELL_SIP_CLIENT_USERNAME
-Set this to the name of the SIP client you created earler on for retell to connect to.
+This field is only needed for the deprecated retell-hosted carrier. If you created the carrier as instructed above, leave this empty.
 
 ### PSTN_TRUNK_NAME
 The name of your SIP carrier in Jambonz that you want retell to use for outbound calls.
@@ -90,19 +86,19 @@ Now link your phone number to this application on the phone numbers page.
 
 ## Retell Configuration
 
-Now you can login to your Retell account and add a new phone number, select `Connect to your number via SIP Trunking` and then enter;
+Now you can login to your Retell account and add a new phone number, select `Connect to your number via SIP Trunking` and then enter:
 
-Your PSTN number from your carrier (note this needs to be in e.164 format eg +12125551212)
-The sip realm you noted earlier as the Termination URI
-In the SIP Trunk User Name enter the user of the client you created
-In the SIP Trunk Password enter the password of the client you created.
+Your PSTN number from your carrier (note this needs to be in e.164 format eg +12125551212). 
+The sip realm you noted earlier as the Termination URI. 
+In the SIP Trunk User Name enter the username you defined when creating the Carrier.  
+In the SIP Trunk Password enter the password you defined when creating the Carrier.
 
 <Frame>
   <img src="../../assets/images/retell-create-number.png" alt="Configure phone number in retell"/>
 </Frame>
 
 
-Now you can associate that number with your retell agent and process calls.
+Now you can associate that number with your Retell agent and process calls.
 
 ## Retell Call Transfer
 
@@ -113,10 +109,10 @@ You can choose a Cold or Warm Transfer, and within a Cold Transfer you can choos
 A Cold Transfer with the Retell Agent`s Number or a Warm Transfer will initiate a new outbound call leg from retell through Jambonz, this will be seen to Jambonz as a brand new call and will use a 2nd instance of your availble channels.
 Retell and Jambonz remain in the call path for the duration of the call, if you have selected a Warm Transfer there are some additional options where retell will play messages to either of the parties on the call.
 
-If you select a Cold Transfer with the Transferee's Number then retell will send a SIP REFER message back to Jambonz, at this stage you have 2 options depending on the configuration of the PASS REFER flag in your application configuration at jambonz.
-If set to True then jambonz will send the SIP REFER on to your originating carrier, if they support SIP REFER then they will transfer the call from jambonz to the new destination, once this is completed both Retell and Jambonz are completely out of the call path.
+If you select a Cold Transfer with the Transferee's Number then retell will send a SIP REFER message back to Jambonz, at this stage you have 2 options depending on the configuration of the PASS REFER flag in your application configuration at Jambonz.
+If set to True then Jambonz will send the SIP REFER on to your originating carrier, if they support SIP REFER then they will transfer the call from Jambonz to the new destination, once this is completed both Retell and Jambonz are completely out of the call path.
 
-If PASS REFER is set to false then jambonz will turn the SIP refer into a new outbound call leg from Jambonz via your carrier, this will then remove retell from the call path but keep the call in Jambonz, it will only use one of your availble channels.
+If PASS REFER is set to false then Jambonz will turn the SIP refer into a new outbound call leg from Jambonz via your carrier, this will then remove retell from the call path but keep the call in Jambonz, it will only use one of your availble channels.
 
 ### Override Carrier & Number
 Sometimes you may want to transfer the call to an internal number like on your PBX, Retell only allows you to enter full valid phone numbers here and not to use a private mnumber like 1000,
