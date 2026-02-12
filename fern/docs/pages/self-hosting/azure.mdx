@@ -1,0 +1,25 @@
+---
+title: Azure Deployment
+subtitle: Deploy jambonz on Azure using VM instances
+---
+
+<div class="video-wrap">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/v=1r-rCjbhT_A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+## Prerequisites
+jambonz is deployed on Azure using Terraform. 
+You will need:
+- An Azure account with appropriate permissions
+- Azure CLI installed and configured with your AZURE_APPLICATION_CREDENTIALS environment variable
+## Generate and run the Terraform templates
+The Terraform templates for deploying jambonz on Azure [are available here](https://github.com/jambonz-selfhosting/terraform/tree/main/azure).
+- Clone the repository to your local machine.
+- Choose whether to deploy a mini, medium, or large jambonz configuration.
+- Follow the instructions in the README of the corresponding directory of the terraform repo (e.g [mini](https://github.com/jambonz-selfhosting/terraform/tree/main/azure/provision-vm-mini), [medium](https://github.com/jambonz-selfhosting/terraform/tree/main/azure/provision-vm-medium), [large](https://github.com/jambonz-selfhosting/terraform/tree/main/azure/provision-vm-large))
+- Once jambonz is deployed, follow the post-install steps outlined in the [Post-Install Steps](/self-hosting/overview/post-install-steps) article to complete the setup.
+- Generate a software license key as described in the [Software Licensing](/self-hosting/overview/licensing) article.
+
+## Resources
+
+- [public repo for Terraform templates](https://github.com/jambonz-selfhosting/terraform)
