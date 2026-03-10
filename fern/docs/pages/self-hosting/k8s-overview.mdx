@@ -1,0 +1,41 @@
+---
+title: Kubernetes Deployment
+subtitle: Deploy jambonz on Kubernetes
+---
+
+## Overview
+jambonz can be deployed on Kubernetes using a two-step process:
+1. **Provision a Kubernetes cluster** using the provided Terraform templates for your cloud provider.
+2. **Deploy jambonz** into the cluster using the [jambonz Helm chart](https://github.com/jambonz-selfhosting/helm-chart).
+
+## Cluster Architecture
+All supported cloud providers use the same general cluster architecture with three node pools:
+
+| Node Pool | Purpose | Public IPs | Taint | Label |
+|-----------|---------|------------|-------|-------|
+| **System** | Web portal, monitoring, databases, Redis | No | None | `pool=system` |
+| **SIP** | SBC for SIP signaling | Yes | `sip=true:NoSchedule` | `voip-environment=sip` |
+| **RTP** | Media processing (RTP streams) | Yes | `rtp=true:NoSchedule` | `voip-environment=rtp` |
+
+The SIP and RTP node pools require public IP addresses so they can be reached directly by SIP trunking carriers and endpoints. The taints ensure that only jambonz VoIP workloads are scheduled onto those nodes.
+
+## Deployment Workflow
+The general deployment workflow is the same for all providers:
+1. Clone the [Terraform repository](https://github.com/jambonz-selfhosting/terraform).
+2. Navigate to the appropriate provider directory and configure `terraform.tfvars`.
+3. Run `terraform init && terraform plan && terraform apply` to provision the cluster.
+4. Configure `kubectl` to connect to your new cluster.
+5. Deploy jambonz using the [Helm chart](https://github.com/jambonz-selfhosting/helm-chart).
+6. Complete the [Post-Install Steps](/self-hosting/overview/post-install-steps).
+7. Generate a software license key as described in [Software Licensing](/self-hosting/overview/licensing).
+
+## Supported Providers
+- [AWS (EKS)](/self-hosting/kubernetes/aws-eks)
+- [Azure (AKS)](/self-hosting/kubernetes/azure-aks)
+- [GCP (GKE)](/self-hosting/kubernetes/gcp-gke)
+- [Exoscale (SKS)](/self-hosting/kubernetes/exoscale-sks)
+
+## Resources
+
+- [Terraform templates repository](https://github.com/jambonz-selfhosting/terraform)
+- [jambonz Helm chart](https://github.com/jambonz-selfhosting/helm-chart)

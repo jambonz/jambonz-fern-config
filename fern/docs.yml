@@ -267,6 +267,17 @@ navigation:
         path: ./docs/pages/self-hosting/gcp.mdx
       - page: OCI
         path: ./docs/pages/self-hosting/oci.mdx
+      - section: Kubernetes
+        path: ./docs/pages/self-hosting/k8s-overview.mdx
+        contents:
+          - page: AWS (EKS)
+            path: ./docs/pages/self-hosting/k8s-eks.mdx
+          - page: Azure (AKS)
+            path: ./docs/pages/self-hosting/k8s-aks.mdx
+          - page: GCP (GKE)
+            path: ./docs/pages/self-hosting/k8s-gke.mdx
+          - page: Exoscale (SKS)
+            path: ./docs/pages/self-hosting/k8s-sks.mdx
   - tab: sdks
     layout:
       - page: SDKs
