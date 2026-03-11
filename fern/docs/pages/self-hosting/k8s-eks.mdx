@@ -1,0 +1,43 @@
+---
+title: AWS (EKS)
+subtitle: Deploy jambonz on Amazon Elastic Kubernetes Service
+---
+
+## Prerequisites
+You will need:
+- An AWS account with appropriate permissions
+- AWS CLI installed and configured with your credentials
+- Terraform >= 1.5
+- kubectl installed
+
+## Provision the EKS Cluster
+The Terraform templates for provisioning an EKS cluster [are available here](https://github.com/jambonz-selfhosting/terraform/tree/main/aws/provision-eks-cluster).
+
+- Clone the [Terraform repository](https://github.com/jambonz-selfhosting/terraform) to your local machine.
+- Navigate to `aws/provision-eks-cluster`.
+- Copy `terraform.tfvars.example` to `terraform.tfvars` and edit it with your desired settings.
+- Run `terraform init && terraform plan && terraform apply` to provision the cluster.
+- Update your kubeconfig: `aws eks update-kubeconfig --region <region> --name <cluster-name>`
+- Verify: `kubectl get nodes --show-labels`
+
+<Note>
+EKS uses Elastic IPs for SIP and RTP nodes, assigned automatically via an `ec2-eip-allocator` init container. The Terraform templates configure the necessary IAM permissions for this.
+</Note>
+
+## Deploy jambonz
+Once the cluster is provisioned, deploy jambonz using the [Helm chart](https://github.com/jambonz-selfhosting/helm-chart). Follow the instructions in the Helm chart README to configure and install.
+
+After deployment, complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
+
+## Cleanup
+When tearing down, follow this order:
+1. `helm uninstall jambonz -n jambonz`
+2. `kubectl delete namespace jambonz`
+3. `kubectl delete svc --all-namespaces --field-selector spec.type=LoadBalancer`
+4. Wait 60 seconds for AWS to clean up load balancers.
+5. `terraform destroy`
+
+## Resources
+
+- [EKS Terraform templates](https://github.com/jambonz-selfhosting/terraform/tree/main/aws/provision-eks-cluster)
+- [jambonz Helm chart](https://github.com/jambonz-selfhosting/helm-chart)
