@@ -50,3 +50,11 @@
   font-weight: 500;
   text-decoration: none;
 }
+
+.fern-button.outlined,
+.fern-button.outlined:hover {
+  border: 1px solid var(--accent) !important;
+  outline-color: var(--accent) !important;
+  color: var(--accent) !important;
+  font-weight: 500 !important;
+}

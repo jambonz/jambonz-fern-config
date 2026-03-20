@@ -323,7 +323,10 @@ navigation:
   - tab: changelog
 
   
-navbar-links: 
+navbar-links:
+  - type: outlined
+    text: Community
+    url: https://community.jambonz.org 
   - type: filled
     text: Sign Up
     url: https://jambonz.cloud/register
