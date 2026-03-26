@@ -282,6 +282,8 @@ navigation:
     layout:
       - page: SDKs
         path: ./docs/pages/sdks/index.mdx
+      - page: WebRTC SDK
+        path: ./docs/pages/sdks/webrtc.mdx
       - page: nodeclient
         path: ./docs/pages/sdks/nodeclient.mdx
       - page: nodered
