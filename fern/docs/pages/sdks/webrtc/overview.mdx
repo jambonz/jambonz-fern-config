@@ -1,0 +1,91 @@
+---
+title: WebRTC SDK
+subtitle: Voice calling SDK for Web and React Native
+layout: page
+---
+
+The jambonz WebRTC SDK enables browser and mobile applications to make and receive voice calls through a jambonz SBC using SIP over WebSocket.
+
+It supports **Web (React)** and **React Native (iOS + Android)** with a unified API. [JsSIP](https://jssip.net/) is used internally for SIP signaling but is completely hidden from SDK consumers.
+
+**Source code:** [github.com/jambonz/webrtc-sdk](https://github.com/jambonz/webrtc-sdk)
+
+<CardGroup cols={2}>
+  <Card
+    title="Web (React) Guide"
+    icon="fa-regular fa-browser"
+    href="/sdks/webrtc/web"
+  >
+    Step-by-step guide for building a browser softphone with React
+  </Card>
+  <Card
+    title="React Native Guide"
+    icon="fa-regular fa-mobile"
+    href="/sdks/webrtc/react-native"
+  >
+    Step-by-step guide for building an iOS + Android softphone
+  </Card>
+  <Card
+    title="API Reference"
+    icon="fa-regular fa-code"
+    href="/sdks/webrtc/api-reference"
+  >
+    Full API documentation — JambonzClient, JambonzCall, events, types
+  </Card>
+</CardGroup>
+
+## Packages
+
+| Package | Platform | Install |
+|---------|----------|---------|
+| `@jambonz/client-sdk-web` | Browser / React | `npm install @jambonz/client-sdk-web` |
+| `@jambonz/client-sdk-react-native` | iOS + Android | `npm install @jambonz/client-sdk-react-native react-native-webrtc` |
+
+Both packages share the same API. The only difference is the import path.
+
+## What It Does
+
+- **SIP registration** with a jambonz SBC over WebSocket
+- **Outbound calls** to phone numbers, SIP users, queues, conferences, and applications
+- **Incoming calls** with answer/decline
+- **In-call controls** — mute, hold, DTMF, transfer (blind + attended)
+- **Call quality monitoring** — jitter, packet loss, round-trip time
+- **Audio device management** — enumerate and switch microphones/speakers
+- **SIP messaging** — send and receive SIP MESSAGE
+- **React hooks** — `useJambonzClient()` and `useCall()` for declarative React integration
+
+## Call Types
+
+The SDK supports five types of outbound calls, matching jambonz SBC routing:
+
+| Method | Description | SIP Target |
+|--------|-------------|------------|
+| `client.call(number)` | Call a phone number or SIP URI | `sip:number@domain` |
+| `client.callUser(username)` | Call a registered SIP user | `sip:username@domain` |
+| `client.callQueue(name)` | Take a call from a queue | `sip:queue-name@domain` |
+| `client.callConference(name)` | Join a conference room | `sip:conference-name@domain` |
+| `client.callApplication(sid)` | Call a jambonz application | `sip:app-sid@domain` |
+
+## Quick Example
+
+```js
+import { createJambonzClient } from '@jambonz/client-sdk-web';
+
+const client = createJambonzClient({
+  server: 'wss://sbc.example.com:8443',
+  username: 'user1',
+  password: 'pass123',
+});
+
+await client.connect();
+
+// Make a call
+const call = client.call('+15551234567');
+call.on('accepted', () => console.log('Connected!'));
+call.on('ended', () => console.log('Call ended'));
+
+// Receive incoming calls
+client.on('incoming', (incomingCall) => {
+  incomingCall.answer();
+});
+```
