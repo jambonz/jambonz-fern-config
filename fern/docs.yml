@@ -282,8 +282,15 @@ navigation:
     layout:
       - page: SDKs
         path: ./docs/pages/sdks/index.mdx
-      - page: WebRTC SDK
-        path: ./docs/pages/sdks/webrtc.mdx
+      - section: WebRTC SDK
+        path: ./docs/pages/sdks/webrtc/overview.mdx
+        contents:
+          - page: Web (React) Guide
+            path: ./docs/pages/sdks/webrtc/web.mdx
+          - page: React Native Guide
+            path: ./docs/pages/sdks/webrtc/react-native.mdx
+          - page: API Reference
+            path: ./docs/pages/sdks/webrtc/api-reference.mdx
       - page: nodeclient
         path: ./docs/pages/sdks/nodeclient.mdx
       - page: nodered
