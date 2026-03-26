@@ -192,17 +192,43 @@ function Phone() {
 }
 ```
 
-## Full Working Example
+## Run the Full Example App
 
-See the complete softphone example with Tailwind CSS UI in the GitHub repo:
-
-[github.com/jambonz/webrtc-sdk/tree/main/examples/web](https://github.com/jambonz/webrtc-sdk/tree/main/examples/web)
+The repo includes a complete softphone example built with React + Vite + Tailwind CSS — with a polished dark theme UI, DTMF pad, incoming call handling, and console logs.
 
 ```bash
+# 1. Clone the repo
 git clone https://github.com/jambonz/webrtc-sdk.git
 cd webrtc-sdk
-npm install && npm run build
+
+# 2. Install and build the SDK
+npm install
+npm run build
+
+# 3. Install and run the web example
 cd examples/web
 npm install
 npm run dev
 ```
+
+Open http://localhost:5173 in your browser.
+
+#### What the example includes
+
+The example app has clean separation between SDK logic and UI:
+
+- **`src/useJambonz.ts`** — all SDK interactions (connect, call, mute, hold, transfer, incoming calls). **Read this file to learn the SDK.**
+- **`src/App.tsx`** — wires SDK state to UI components
+- **`src/components/`** — reusable UI: ConnectionForm, DialerView, ActiveCallView, IncomingCallView, DtmfPad, LogPanel
+
+#### How to use it
+
+1. Enter your jambonz SBC WebSocket URL (e.g. `wss://sbc.example.com:8443`)
+2. Enter your SIP username and password
+3. Click **Connect** — status dot turns green when registered
+4. Enter a number or SIP URI and click **Call**
+5. Use the in-call controls: mute, hold, DTMF pad, hang up
+6. Incoming calls show an answer/decline screen
+7. Expand **Console Logs** at the bottom to see SDK events
+
+Source: [github.com/jambonz/webrtc-sdk/tree/main/examples/web](https://github.com/jambonz/webrtc-sdk/tree/main/examples/web)

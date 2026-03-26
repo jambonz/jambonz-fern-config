@@ -7,7 +7,7 @@ layout: page
 This guide walks you through building a voice calling app for iOS and Android using React Native.
 
 <Note>
-WebRTC does not work in the iOS Simulator or Android Emulator. You need a **physical device** for testing calls.
+The SDK works on both simulators/emulators and physical devices. A physical device is recommended for real call testing with audio.
 </Note>
 
 ## Step 1: Create a React Native Project
@@ -248,31 +248,80 @@ function Phone() {
 ## Android Notes
 
 - **JDK 17+** required — install via `brew install --cask zulu@17`
-- **USB debugging** must be enabled on the device
-- WebRTC crashes on Android emulators — always use a physical device
+- **USB debugging** must be enabled for physical devices
+- Works on both emulator and physical device
 
 ## iOS Notes
 
 - **Xcode 15+** required
 - You must configure **code signing** in Xcode (Signing & Capabilities tab)
 - Add **microphone permission** in Info.plist
-- **Physical iPhone required** — WebRTC does not work in the iOS Simulator
+- Works on both simulator and physical device (physical device recommended for real calls)
 
-## Full Working Example
+## Run the Full Example App
 
-See the complete softphone example with dark theme UI in the GitHub repo:
-
-[github.com/jambonz/webrtc-sdk/tree/main/examples/react-native](https://github.com/jambonz/webrtc-sdk/tree/main/examples/react-native)
+The repo includes a complete softphone example with a dark theme UI, DTMF dial pad, incoming call handling, mute/hold/hangup controls.
 
 ```bash
+# 1. Clone the repo
 git clone https://github.com/jambonz/webrtc-sdk.git
 cd webrtc-sdk
-npm install && npm run build
+
+# 2. Install and build the SDK
+npm install
+npm run build
+
+# 3. Install the React Native example
 cd examples/react-native
 npm install
-# Android:
+```
+
+#### Run on Android
+
+```bash
+# Start Metro bundler
+npx react-native start
+
+# In another terminal — run on device or emulator
 npx react-native run-android
-# iOS:
+```
+
+#### Run on iOS
+
+```bash
+# Install CocoaPods
 cd ios && pod install && cd ..
+
+# Open Xcode to configure signing
+open ios/JambonzExample.xcworkspace
+# → Select your Team in Signing & Capabilities
+# → Change Bundle Identifier to something unique
+
+# Start Metro bundler
+npx react-native start
+
+# In another terminal — run on device or simulator
+npx react-native run-ios
+# Or for a specific device:
 npx react-native run-ios --device
 ```
+
+#### What the example includes
+
+The example app has clean separation between SDK logic and UI:
+
+- **`src/useJambonz.ts`** — all SDK interactions (connect, call, mute, hold, transfer, incoming calls). **Read this file to learn the SDK.**
+- **`src/App.tsx`** — wires SDK state to UI components
+- **`src/components/`** — reusable UI: ConnectionForm, DialerView, ActiveCallView, IncomingCallView, DtmfPad
+- **`src/theme.ts`** — shared color palette
+
+#### How to use it
+
+1. Enter your jambonz SBC WebSocket URL (e.g. `wss://sbc.example.com:8443`)
+2. Enter your SIP username and password
+3. Tap **Connect** — status dot turns green when registered
+4. Enter a number or SIP target and tap **Call**
+5. Use the in-call controls: mute, hold, DTMF pad, hang up
+6. Incoming calls show an answer/decline prompt
+
+Source: [github.com/jambonz/webrtc-sdk/tree/main/examples/react-native](https://github.com/jambonz/webrtc-sdk/tree/main/examples/react-native)
