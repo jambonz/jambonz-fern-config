@@ -283,8 +283,9 @@ navigation:
       - page: SDKs
         path: ./docs/pages/sdks/index.mdx
       - section: WebRTC SDK
-        path: ./docs/pages/sdks/webrtc/overview.mdx
         contents:
+          - page: Overview
+            path: ./docs/pages/sdks/webrtc/overview.mdx
           - page: Web (React) Guide
             path: ./docs/pages/sdks/webrtc/web.mdx
           - page: React Native Guide
