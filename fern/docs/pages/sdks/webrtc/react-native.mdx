@@ -274,6 +274,29 @@ npm run build
 # 3. Install the React Native example
 cd examples/react-native
 npm install
+
+# 4. Generate the native projects
+npx @react-native-community/cli init JambonzExample --directory /tmp/JambonzExample --skip-install
+cp -r /tmp/JambonzExample/android ./android
+cp -r /tmp/JambonzExample/ios ./ios
+rm -rf /tmp/JambonzExample
+```
+
+After generating, add the required permissions:
+
+**Android** — add to `android/app/src/main/AndroidManifest.xml` inside `<manifest>`:
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+```
+
+**iOS** — add to `ios/JambonzExample/Info.plist` before `</dict>`:
+```xml
+<key>NSMicrophoneUsageDescription</key>
+<string>Required for voice calls</string>
 ```
 
 #### Run on Android
