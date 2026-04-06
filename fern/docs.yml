@@ -303,16 +303,10 @@ navigation:
         slug: node-sdk
       - page: Node-RED
         path: ./docs/pages/sdks/nodered.mdx
-        slug: nodered
-      - page: NPX Quickstarts
-        path: ./docs/pages/sdks/npx.mdx
-        slug: npx
-      - page: Node.js Webhook SDK (Legacy)
+      - page: nodeclient
         path: ./docs/pages/sdks/nodeclient.mdx
-        slug: nodeclient
-      - page: Node.js WebSocket SDK (Legacy)
+      - page: nodeclientws
         path: ./docs/pages/sdks/nodeclientws.mdx
-        slug: nodeclientws
   - tab: tutorials
     layout:
       - section: Hosted applications
