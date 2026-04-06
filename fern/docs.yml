@@ -286,30 +286,30 @@ navigation:
     layout:
       - page: SDKs
         path: ./docs/pages/sdks/index.mdx
-      - section: WebRTC SDK
-        contents:
-          - page: Overview
-            path: ./docs/pages/sdks/webrtc/overview.mdx
-          - page: Web (React) Guide
-            path: ./docs/pages/sdks/webrtc/web.mdx
-          - page: React Native Guide
-            path: ./docs/pages/sdks/webrtc/react-native.mdx
-          - page: API Reference
-            path: ./docs/pages/sdks/webrtc/api-reference.mdx
+      - page: WebRTC SDK
+        path: ./docs/pages/sdks/webrtc/overview.mdx
+        slug: webrtc
+      - page: WebRTC Web Guide
+        path: ./docs/pages/sdks/webrtc/web.mdx
+        slug: webrtc-web
+      - page: WebRTC React Native Guide
+        path: ./docs/pages/sdks/webrtc/react-native.mdx
+        slug: webrtc-react-native
+      - page: WebRTC API Reference
+        path: ./docs/pages/sdks/webrtc/api-reference.mdx
+        slug: webrtc-api
       - page: Node.js SDK
         path: ./docs/pages/sdks/node-sdk.mdx
-      - section: Utilities
-        contents:
-          - page: Node-RED
-            path: ./docs/pages/sdks/nodered.mdx
-          - page: NPX Quickstarts
-            path: ./docs/pages/sdks/npx.mdx
-      - section: Deprecated
-        contents:
-          - page: Node.js Webhook SDK (Legacy)
-            path: ./docs/pages/sdks/nodeclient.mdx
-          - page: Node.js WebSocket SDK (Legacy)
-            path: ./docs/pages/sdks/nodeclientws.mdx
+        slug: node-sdk
+      - page: Node-RED
+        path: ./docs/pages/sdks/nodered.mdx
+      - page: NPX Quickstarts
+        path: ./docs/pages/sdks/npx.mdx
+        slug: npx
+      - page: Node.js Webhook SDK (Legacy)
+        path: ./docs/pages/sdks/nodeclient.mdx
+      - page: Node.js WebSocket SDK (Legacy)
+        path: ./docs/pages/sdks/nodeclientws.mdx
   - tab: tutorials
     layout:
       - section: Hosted applications
