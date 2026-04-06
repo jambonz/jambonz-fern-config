@@ -13,6 +13,10 @@ The `@jambonz/sdk` package is the recommended way to build jambonz voice applica
 This SDK replaces the older `@jambonz/node-client` (webhook) and `@jambonz/node-client-ws` (WebSocket) packages, which are now [deprecated](/sdks/nodeclient). The new SDK provides a unified package with a consistent API across both transports.
 </Note>
 
+<Info>
+**Which transport should I use?** The **WebSocket transport** is recommended for most applications. It provides a persistent bidirectional connection that enables TTS streaming, mid-call updates, inject commands, real-time event handling, and voice AI features like the [pipeline](/verbs/verbs/pipeline) and [llm](/verbs/verbs/llm) verbs. The **webhook transport** is simpler but limited — use it for straightforward call routing scenarios (e.g., [dial](/verbs/verbs/dial), basic IVR menus) where you don't need real-time interaction.
+</Info>
+
 ## Installation
 
 ```bash
@@ -200,6 +204,178 @@ Both `WebhookResponse` and WebSocket `Session` support the same chainable verb m
 `.say()` `.play()` `.gather()` `.dial()` `.llm()` `.pipeline()` `.conference()` `.enqueue()` `.dequeue()` `.hangup()` `.pause()` `.redirect()` `.config()` `.tag()` `.dtmf()` `.listen()` `.transcribe()` `.message()` `.dub()` `.alert()` `.answer()` `.leave()` `.sipDecline()` `.sipRefer()` `.sipRequest()`
 
 All methods accept the same options as the corresponding [verb JSON schemas](/verbs/verbs/overview) and are chainable.
+
+## TTS Token Streaming
+
+The WebSocket Session provides methods for incremental TTS token streaming, enabling the lowest-latency voice AI experiences. This is used when you're streaming tokens from an LLM and want them spoken as they arrive.
+
+```typescript
+session.on('/llm-tokens', async (evt) => {
+  const { tokens, done } = evt;
+
+  if (tokens) {
+    // Send tokens as they arrive from the LLM — backpressure is handled automatically
+    await session.sendTtsTokens(tokens);
+  }
+
+  if (done) {
+    // Signal end of token stream
+    session.flushTtsTokens();
+  }
+});
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `sendTtsTokens(text)` | `Promise<void>` | Send a chunk of text for TTS. Resolves when jambonz acknowledges receipt. Automatically applies backpressure if the buffer is full. |
+| `flushTtsTokens()` | `void` | Signal the end of a TTS token stream. Triggers final audio generation. |
+| `clearTtsTokens()` | `void` | Cancel all pending TTS tokens, clear the queue, and reset backpressure state. |
+
+The `isTtsPaused` property indicates whether TTS streaming is paused due to backpressure.
+
+### TTS Streaming Events
+
+| Event | Description |
+|-------|-------------|
+| `tts:stream_open` | TTS vendor connection established |
+| `tts:stream_paused` | Backpressure — buffer full, tokens will queue |
+| `tts:stream_resumed` | Backpressure released, streaming resumes |
+| `tts:stream_closed` | TTS stream ended |
+| `tts:user_interruption` | User barged in during TTS playback |
+
+## LLM and Pipeline Updates
+
+The Session provides methods for interacting with active LLM and pipeline conversations.
+
+### Tool Output
+
+When the LLM requests a tool/function call (via the `toolHook`), respond with the result:
+
+```typescript
+session.on('/tool-call', async (evt) => {
+  const { tool_call_id, name, arguments: args } = evt;
+  const result = await handleTool(name, args);
+  session.sendToolOutput(tool_call_id, result);
+});
+```
+
+### Pipeline Updates
+
+Send mid-conversation updates to an active [pipeline](/verbs/verbs/pipeline):
+
+```typescript
+// Change the system prompt
+session.updatePipeline({
+  type: 'update_instructions',
+  instructions: 'You are now a billing agent.',
+});
+
+// Inject context
+session.updatePipeline({
+  type: 'inject_context',
+  messages: [{ role: 'user', content: 'Customer: Sarah, Gold tier.' }],
+});
+
+// Replace tools
+session.updatePipeline({ type: 'update_tools', tools: [...] });
+
+// Trigger a new response (with optional interrupt)
+session.updatePipeline({
+  type: 'generate_reply',
+  interrupt: true,
+  user_input: 'Tell the customer about the flash sale.',
+});
+```
+
+### LLM Updates
+
+Send updates to an active [llm](/verbs/verbs/llm) verb:
+
+```typescript
+session.updateLlm({ instructions: 'Switch to Spanish.' });
+```
+
+| Method | Description |
+|--------|-------------|
+| `sendToolOutput(toolCallId, data)` | Send tool/function result back to the LLM or pipeline |
+| `updatePipeline(data)` | Send a `pipeline:update` command (update_instructions, inject_context, update_tools, generate_reply) |
+| `updateLlm(data)` | Send an `llm:update` command |
+
+## Inject Commands
+
+Inject commands execute immediately on an active call without affecting the verb stack. They are useful for mid-call control actions like muting, recording, or whispering to one party on a bridged call.
+
+```typescript
+// Mute/unmute
+session.injectMute('mute');
+session.injectMute('unmute');
+
+// Whisper to one party (e.g., coaching a call center agent)
+session.injectWhisper({ verb: 'say', text: 'The customer is a VIP.' }, agentCallSid);
+
+// Control noise isolation mid-call
+session.injectNoiseIsolation('enable', { vendor: 'krisp', level: 80 });
+session.injectNoiseIsolation('disable');
+
+// Control recording
+session.injectRecord('startCallRecording', { siprecServerURL: 'sip:siprec@recorder.example.com' });
+session.injectRecord('pauseCallRecording');
+
+// Pause/resume audio streaming
+session.injectListenStatus('pause');
+session.injectListenStatus('resume');
+
+// Send DTMF
+session.injectDtmf('1234');
+
+// Redirect call flow
+session.injectRedirect('/new-webhook');
+
+// Tag the call with metadata
+session.injectTag({ priority: 'high', department: 'billing' });
+```
+
+| Method | Description |
+|--------|-------------|
+| `injectMute(status)` | Mute or unmute the call (`'mute'` or `'unmute'`) |
+| `injectWhisper(verb, callSid?)` | Play a whisper verb (say/play) to one party on a bridged call |
+| `injectNoiseIsolation(status, opts?, callSid?)` | Enable or disable noise isolation. Options: `vendor`, `level`, `model` |
+| `injectRecord(action, opts?, callSid?)` | Control call recording: `startCallRecording`, `stopCallRecording`, `pauseCallRecording`, `resumeCallRecording` |
+| `injectListenStatus(status, callSid?)` | Pause or resume audio streaming (`'pause'` or `'resume'`) |
+| `injectDtmf(digit, duration?, callSid?)` | Send DTMF digits into the call |
+| `injectRedirect(hook, callSid?)` | Redirect call execution to a new webhook |
+| `injectTag(data, callSid?)` | Attach metadata to the call |
+| `injectCommand(command, data?, callSid?)` | Send a generic inject command |
+
+<Note>
+The optional `callSid` parameter on inject methods targets a specific call leg on a bridged call. Omit it to target the current call.
+</Note>
+
+## Session Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `callSid` | `string` | Unique call identifier |
+| `from` | `string` | Caller phone number or SIP URI |
+| `to` | `string` | Called phone number or SIP URI |
+| `direction` | `'inbound' \| 'outbound'` | Call direction |
+| `accountSid` | `string` | Account identifier |
+| `applicationSid` | `string` | Application identifier |
+| `callId` | `string` | SIP Call-ID |
+| `data` | `CallSession` | Full call session data (includes `env_vars`, SIP headers, etc.) |
+| `locals` | `Record<string, unknown>` | Application-specific storage that persists for the session |
+| `isTtsPaused` | `boolean` | Whether TTS streaming is paused due to backpressure |
+
+## Session Events
+
+| Event | Description |
+|-------|-------------|
+| `'/hookName'` | ActionHook callback — requires `.reply()` |
+| `verb:status` | Verb status change (when `notifyEvents` is enabled) |
+| `call:status` | Call state change |
+| `jambonz:error` | Error from jambonz |
+| `close` | WebSocket connection closed |
+| `error` | WebSocket connection error |
 
 ## AI-Assisted Development
 
