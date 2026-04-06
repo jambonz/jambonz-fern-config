@@ -1,0 +1,287 @@
+---
+title: API Reference
+subtitle: Complete API documentation for the jambonz WebRTC SDK
+layout: page
+---
+
+## JambonzClient
+
+The main client class. Manages the SIP connection and call lifecycle.
+
+### Creating a Client
+
+```js
+import { createJambonzClient } from '@jambonz/client-sdk-web';
+// or: import { createJambonzClient } from '@jambonz/client-sdk-react-native';
+
+const client = createJambonzClient(options);
+```
+
+### Client Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `server` | `string` | **required** | WebSocket URL of the jambonz SBC (e.g. `wss://sbc.example.com:8443`) |
+| `username` | `string` | **required** | SIP username |
+| `password` | `string` | **required** | SIP password |
+| `displayName` | `string` | — | Display name shown to the callee |
+| `realm` | `string` | server hostname | SIP realm/domain |
+| `autoRegister` | `boolean` | `true` | Auto-register on connect |
+| `registerExpires` | `number` | `300` | Registration expiry in seconds |
+| `userAgent` | `string` | `jambonz-webrtc-{version}` | Custom SIP User-Agent header |
+
+### Client Methods
+
+#### Connection
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `connect()` | `Promise<void>` | Connect to the SBC and register. Resolves when registration succeeds. |
+| `disconnect()` | `void` | Disconnect and hang up all active calls. |
+| `register()` | `void` | Register manually (if `autoRegister` was `false`). |
+| `unregister()` | `void` | Unregister from the SBC. |
+
+#### Making Calls
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `call(target, options?)` | `JambonzCall` | Call a phone number or SIP URI |
+| `callUser(username, options?)` | `JambonzCall` | Call a registered SIP user |
+| `callQueue(queueName, options?)` | `JambonzCall` | Take a call from a named queue |
+| `callConference(name, options?)` | `JambonzCall` | Join a conference room |
+| `callApplication(sid, options?)` | `JambonzCall` | Call a jambonz application by SID |
+
+#### Messaging
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `sendMessage(target, body, contentType?)` | `void` | Send a SIP MESSAGE. Default content type: `text/plain` |
+
+### Client Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `state` | `ClientState` | Current connection state |
+| `isRegistered` | `boolean` | Whether registered with the SBC |
+| `calls` | `ReadonlyMap<string, JambonzCall>` | All active calls |
+| `callCount` | `number` | Number of active calls |
+
+### Client Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `registered` | — | SIP registration succeeded |
+| `unregistered` | — | SIP registration removed |
+| `registrationFailed` | `Error` | Registration failed |
+| `incoming` | `JambonzCall` | Incoming call received |
+| `stateChanged` | `ClientState` | Client state changed |
+| `connected` | — | WebSocket connected |
+| `disconnected` | — | WebSocket disconnected |
+| `message` | `{ from, body, contentType }` | SIP MESSAGE received |
+| `error` | `Error` | Error occurred |
+
+### ClientState Enum
+
+| Value | Description |
+|-------|-------------|
+| `disconnected` | Not connected |
+| `connecting` | Initial connection in progress |
+| `connected` | WebSocket connected, not yet registered |
+| `registered` | SIP registration successful — ready to make calls |
+| `reconnecting` | Transient disconnect, auto-reconnecting |
+| `unregistered` | Explicitly unregistered |
+| `error` | Connection or registration error |
+
+---
+
+## JambonzCall
+
+Represents a single voice call (inbound or outbound).
+
+### Call Methods
+
+#### Answering & Ending
+
+| Method | Description |
+|--------|-------------|
+| `answer()` | Answer an incoming call |
+| `hangup()` | Hang up the call |
+
+#### Call Control
+
+| Method | Description |
+|--------|-------------|
+| `hold()` | Place the call on hold |
+| `unhold()` | Resume a held call |
+| `mute()` | Mute the microphone |
+| `unmute()` | Unmute the microphone |
+| `toggleMute()` | Toggle mute state |
+| `sendDTMF(tone)` | Send a DTMF tone (`0-9`, `A-D`, `#`, `*`) |
+
+#### Transfer
+
+| Method | Description |
+|--------|-------------|
+| `transfer(target, options?)` | Blind transfer to another target via SIP REFER |
+| `attendedTransfer(otherCall, options?)` | Attended transfer — connect two active calls |
+
+#### Quality Monitoring
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getStats()` | `Promise<CallQualityStats \| null>` | One-time quality snapshot |
+| `startQualityMonitoring(intervalMs?)` | `void` | Start periodic monitoring (default: 2000ms) |
+| `stopQualityMonitoring()` | `void` | Stop monitoring |
+
+### Call Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `string` | Unique call identifier |
+| `state` | `CallState` | Current call state |
+| `direction` | `CallDirection` | `'inbound'` or `'outbound'` |
+| `isMuted` | `boolean` | Whether the microphone is muted |
+| `isHeld` | `boolean` | Whether the call is on hold |
+| `duration` | `number` | Call duration in seconds (0 if not connected) |
+| `remoteIdentity` | `string` | Remote party SIP URI or display name |
+
+### Call Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `accepted` | — | Call was answered |
+| `progress` | — | Call is ringing (180/183 response) |
+| `ended` | `{ code, reason }` | Call ended normally |
+| `failed` | `{ code, reason }` | Call failed to connect |
+| `stateChanged` | `CallState` | Call state changed |
+| `hold` | `boolean` | Hold state changed |
+| `mute` | `boolean` | Mute state changed |
+| `dtmf` | `string` | DTMF tone received |
+| `transferred` | — | Call transfer succeeded |
+| `transferFailed` | `Error` | Call transfer failed |
+| `qualityStats` | `CallQualityStats` | Quality metrics update |
+
+### CallState Enum
+
+| Value | Description |
+|-------|-------------|
+| `idle` | Call created, not yet started |
+| `ringing` | Ringing (outbound) or incoming |
+| `connecting` | Call being set up |
+| `connected` | Call is active |
+| `held` | Call is on hold |
+| `ended` | Call has ended |
+
+---
+
+## Call Options
+
+Passed as the second argument to any call method:
+
+```js
+client.call(target, options);
+client.callUser(username, options);
+client.callQueue(queueName, options);
+// etc.
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `headers` | `Record<string, string>` | — | Custom SIP headers on INVITE |
+| `mediaConstraints` | `{ audio?, video? }` | `{ audio: true }` | getUserMedia constraints |
+| `pcConfig` | `{ iceServers? }` | Google STUN | ICE/STUN/TURN configuration |
+| `noAnswerTimeout` | `number` | — | Auto-hangup after N seconds if not answered |
+| `preferredCodecs` | `string[]` | — | Preferred audio codecs (e.g. `['opus', 'PCMU']`) |
+| `record` | `boolean` | `false` | Enable server-side recording (sends `X-Record-Call` header) |
+
+---
+
+## CallQualityStats
+
+Returned by `call.getStats()` and emitted via the `qualityStats` event:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `roundTripTime` | `number` | Round-trip time in milliseconds |
+| `jitter` | `number` | Jitter in milliseconds |
+| `packetLoss` | `number` | Fraction of packets lost (0.0 – 1.0) |
+| `packetsSent` | `number` | Total packets sent |
+| `packetsReceived` | `number` | Total packets received |
+| `packetsLost` | `number` | Total packets lost |
+| `codec` | `string` | Audio codec in use (e.g. `opus`) |
+| `timestamp` | `number` | Timestamp of measurement |
+
+---
+
+## React Hooks
+
+### useJambonzClient
+
+```ts
+import { useJambonzClient } from '@jambonz/client-sdk-web';
+
+const {
+  client,        // JambonzClient | null
+  state,         // ClientState
+  isRegistered,  // boolean
+  isConnecting,  // boolean
+  error,         // string | null
+  connect,       // () => Promise<void>
+  disconnect,    // () => void
+} = useJambonzClient(options);
+```
+
+### useCall
+
+```ts
+import { useCall } from '@jambonz/client-sdk-web';
+
+const {
+  call,             // JambonzCall | null
+  state,            // CallState | null
+  isMuted,          // boolean
+  isHeld,           // boolean
+  isActive,         // boolean
+  incomingCaller,   // string | null
+  makeCall,         // (target, options?) => void
+  answerIncoming,   // () => void
+  declineIncoming,  // () => void
+  hangup,           // () => void
+  toggleMute,       // () => void
+  toggleHold,       // () => void
+  sendDtmf,         // (tone) => void
+  transfer,         // (target) => void
+} = useCall(client);
+```
+
+---
+
+## Error Classes
+
+| Class | Properties | Description |
+|-------|------------|-------------|
+| `JambonzError` | `message` | Base error class |
+| `RegistrationError` | `message`, `code?` | SIP registration failed |
+| `CallError` | `message`, `code?`, `reason?` | Call-related error |
+| `ConnectionError` | `message` | WebSocket connection error |
+
+---
+
+## JambonzAudioManager
+
+Manages audio device enumeration and output switching.
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `enumerateDevices()` | `Promise<AudioDevice[]>` | List all audio devices |
+| `getMicrophones()` | `Promise<AudioDevice[]>` | List input devices only |
+| `getSpeakers()` | `Promise<AudioDevice[]>` | List output devices only |
+| `setOutputDevice(deviceId)` | `Promise<boolean>` | Switch output device. Returns `false` if unsupported. |
+
+### AudioDevice
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `deviceId` | `string` | Unique device identifier |
+| `label` | `string` | Human-readable device name |
+| `kind` | `'audioinput' \| 'audiooutput'` | Device type |

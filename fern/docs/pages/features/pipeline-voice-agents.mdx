@@ -1,0 +1,577 @@
+---
+title: Pipeline Voice Agents
+subtitle: Build conversational AI agents using the pipeline verb
+---
+
+The [pipeline](/verbs/verbs/pipeline) verb orchestrates a complete voice AI agent by wiring together three separate components — STT, LLM, and TTS — with integrated turn detection. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs where a single vendor handles everything), the pipeline verb lets you mix and match: for example, Deepgram for STT, Anthropic for the LLM, and Cartesia for TTS.
+
+Pipeline manages the full conversational turn cycle:
+1. User speaks → STT produces a transcript
+2. Turn detection decides the user is done speaking
+3. Transcript is sent to the LLM
+4. LLM response tokens stream to TTS
+5. TTS audio plays back to the caller
+6. If the user barges in, TTS stops and a new turn begins
+
+## Basic Setup
+
+The `llm` property is the only required field. STT and TTS will use your application's default speech credentials if not specified, but in practice you'll want to configure all three.
+
+Here is a minimal pipeline agent using the [Node.js SDK](/sdks/node-sdk):
+
+```typescript
+import http from 'http';
+import { createEndpoint } from '@jambonz/sdk/websocket';
+
+const server = http.createServer();
+const makeService = createEndpoint({ server, port: 3000 });
+const svc = makeService({ path: '/' });
+
+svc.on('session:new', (session) => {
+  session.on('/pipeline-complete', () => {
+    session.hangup().reply();
+  });
+
+  session
+    .pipeline({
+      stt: {
+        vendor: 'deepgram',
+        language: 'en-US',
+        deepgramOptions: { model: 'nova-3-general' },
+      },
+      tts: {
+        vendor: 'cartesia',
+        voice: '9626c31c-bec5-4cca-baa8-f8ba9e84c8bc',
+      },
+      llm: {
+        vendor: 'openai',
+        model: 'gpt-4.1-mini',
+        llmOptions: {
+          messages: [
+            { role: 'system', content: 'You are a helpful voice assistant.' },
+          ],
+        },
+      },
+      actionHook: '/pipeline-complete',
+    })
+    .send();
+});
+```
+
+Or as JSON (for webhook applications):
+
+```json
+[
+  {
+    "verb": "pipeline",
+    "stt": {
+      "vendor": "deepgram",
+      "language": "en-US"
+    },
+    "tts": {
+      "vendor": "cartesia",
+      "voice": "sonic-english"
+    },
+    "llm": {
+      "vendor": "openai",
+      "model": "gpt-4.1-mini",
+      "llmOptions": {
+        "messages": [
+          { "role": "system", "content": "You are a helpful voice assistant." }
+        ]
+      }
+    },
+    "actionHook": "/pipeline-complete"
+  }
+]
+```
+
+### Supported LLM Vendors
+
+| Vendor | `llm.vendor` | Example models |
+|--------|-------------|----------------|
+| OpenAI | `openai` | `gpt-4.1-mini`, `gpt-4.1`, `gpt-4o` |
+| Anthropic | `anthropic` | `claude-sonnet-4-6`, `claude-opus-4-6` |
+| Google | `google` | `gemini-2.5-flash-lite`, `gemini-2.5-pro` |
+| AWS Bedrock | `aws` | `us.meta.llama4-scout-17b-instruct-v1:0` |
+
+The pipeline normalizes message formats and tool schemas across vendors automatically. You write tools in OpenAI format and the pipeline adapts them for each vendor.
+
+### Authentication
+
+By default, the pipeline uses speech credentials configured in the jambonz portal. You can also pass credentials directly:
+
+```js
+llm: {
+  vendor: 'openai',
+  model: 'gpt-4.1-mini',
+  auth: { apiKey: process.env.OPENAI_API_KEY },
+  // ...
+}
+```
+
+For AWS Bedrock, pass `accessKeyId`, `secretAccessKey`, and `region` in the `auth` object.
+
+## Turn Detection
+
+The `turnDetection` property controls how the pipeline decides the user has finished speaking.
+
+### STT-based detection (default)
+
+```json
+{ "turnDetection": "stt" }
+```
+
+Uses the STT vendor's native end-of-utterance signal. For most vendors this is silence-based. Some vendors have smarter built-in turn detection:
+
+- **deepgramflux** — Acoustic + semantic turn detection (Deepgram's "Flux" model)
+- **assemblyai** — Native turn-taking with the `u3-rt-pro` model
+- **speechmatics** — Built-in turn detection
+
+These vendors always use their native detection regardless of the `turnDetection` setting.
+
+### Krisp turn detection
+
+```json
+{
+  "turnDetection": {
+    "mode": "krisp",
+    "threshold": 0.3
+  }
+}
+```
+
+Uses the Krisp acoustic end-of-turn model, which analyzes speech patterns rather than just silence. Good for natural conversation where users pause mid-thought.
+
+- `threshold` — Confidence threshold from 0.0 to 1.0. Lower values trigger earlier turn transitions (more aggressive). Default: 0.5.
+- `model` — Optional Krisp model name override.
+
+The shorthand `"turnDetection": "krisp"` uses default settings.
+
+<Info>
+You must have a Krisp API key configured in order to use Krisp turn detection on a self-hosted jambonz system. Contact support@jambonz.org for details.
+</Info>
+
+## Early Generation (Speculative Preflight)
+
+Early generation speculatively sends the transcript to the LLM *before* end-of-turn is confirmed. If the transcript matches when the turn does end, buffered tokens are released immediately — shaving off the LLM prompt time. If the user keeps talking and the transcript changes, the speculative response is discarded.
+
+There are two ways early generation is triggered:
+
+- **Krisp turn detection** — Set `earlyGeneration: true` to opt in. Krisp emits an early signal that triggers the speculative LLM prompt before final end-of-turn confirmation.
+- **Deepgram Flux** — Early generation happens automatically. Flux emits a native `EagerEndOfTurn` event that triggers preflight regardless of the `earlyGeneration` setting.
+
+For other STT vendors with native turn-taking (assemblyai, speechmatics), early generation is not available.
+
+```js
+session.pipeline({
+  turnDetection: 'krisp',
+  earlyGeneration: true,
+  // ...
+}).send();
+```
+
+The [turn_end event](#event-handling) includes `preflight` metrics so you can track hit rates:
+- `hit` — speculative transcript matched final, tokens released immediately
+- `miss` — transcript changed, speculative response discarded
+- `pending` — preflight was still in progress when the turn ended
+
+## Barge-in Configuration
+
+By default, users can interrupt the assistant while it's speaking. The `bargeIn` object controls this behavior:
+
+```json
+{
+  "bargeIn": {
+    "enable": true,
+    "minSpeechDuration": 0.5,
+    "sticky": false
+  }
+}
+```
+
+- `enable` — Allow interruptions. Default: `true`.
+- `minSpeechDuration` — Seconds of speech required to confirm an interruption. Prevents brief noises (coughs, background sounds) from cutting off the assistant. Default: 0.5.
+- `sticky` — If `true`, once the user interrupts, the assistant does not resume speaking the interrupted response. Default: `false`.
+
+**Tuning tips:**
+- Lower `minSpeechDuration` (e.g., 0.2) for more responsive barge-in
+- Higher `minSpeechDuration` (e.g., 1.0) for noisy environments where false triggers are common
+- Set `enable: false` for scenarios where the assistant must complete its message (e.g., legal disclaimers)
+
+## No Response Timeout
+
+The `noResponseTimeout` property handles the case where the user goes silent after the assistant finishes speaking.
+
+```json
+{ "noResponseTimeout": 12 }
+```
+
+When the timeout fires, the LLM is prompted with a system cue: *"The user has not responded. Briefly check if they are still there or ask if they need help."* This generates a natural follow-up rather than leaving dead air.
+
+Set to `0` to disable (default). The timer is cancelled if the user starts speaking.
+
+This also covers the "missed speech" case: when VAD detects speech but STT returns no transcript, the no-response timer handles the re-prompt.
+
+## Greeting
+
+By default (`greeting: true`), the pipeline prompts the LLM to generate an initial greeting before the user speaks. Set `greeting: false` if you want the agent to wait silently for the user to speak first.
+
+## Tool/Function Calling
+
+The pipeline supports LLM tool/function calling, allowing your agent to perform actions like looking up data, calling APIs, or transferring calls.
+
+### Defining Tools
+
+Define tools in `llm.llmOptions.tools` using the standard function-calling format:
+
+```typescript
+const weatherTool = {
+  name: 'get_weather',
+  description: 'Get the current temperature and wind speed for a location.',
+  parameters: {
+    type: 'object',
+    properties: {
+      location: { type: 'string', description: 'City name, e.g. "Portland"' },
+      scale: { type: 'string', enum: ['celsius', 'fahrenheit'] },
+    },
+    required: ['location'],
+  },
+};
+
+session.pipeline({
+  llm: {
+    vendor: 'openai',
+    model: 'gpt-4.1-mini',
+    llmOptions: {
+      messages: [{ role: 'system', content: 'You are a weather assistant.' }],
+      tools: [weatherTool],
+    },
+  },
+  toolHook: '/tool-call',
+  // ...
+}).send();
+```
+
+The pipeline normalizes tool schemas across LLM vendors. You always define tools in the same format regardless of whether you're using OpenAI, Anthropic, Google, or Bedrock.
+
+### Handling Tool Calls (WebSocket)
+
+Tool calls arrive as events on the `toolHook` path with `tool_call_id`, `name`, and `arguments` (already parsed as an object). Respond with `session.sendToolOutput()`:
+
+```typescript
+session.on('/tool-call', async (evt) => {
+  const { tool_call_id, name, arguments: args } = evt;
+
+  if (name === 'get_weather') {
+    try {
+      const geoRes = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(args.location)}&count=1`
+      );
+      const geoData = await geoRes.json();
+      const { latitude, longitude } = geoData.results[0];
+
+      const wxRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m`
+      );
+      const weather = await wxRes.json();
+      session.sendToolOutput(tool_call_id,
+        `Temperature: ${weather.current.temperature_2m}°C, Wind: ${weather.current.wind_speed_10m} km/h`
+      );
+    } catch (err) {
+      session.sendToolOutput(tool_call_id, `Error: ${err.message}`);
+    }
+    return;
+  }
+
+  session.sendToolOutput(tool_call_id, `Unknown tool: ${name}`);
+});
+```
+
+### Handling Tool Calls (Webhook)
+
+In webhook mode, the tool call arrives as an HTTP POST to the `toolHook` URL. Return the tool result as JSON in the response body.
+
+## MCP Server Integration
+
+Instead of (or in addition to) defining tools inline, you can connect to external [MCP](https://modelcontextprotocol.io/) servers. The pipeline connects to each server at startup via SSE or Streamable HTTP transport, discovers available tools, and makes them callable by the LLM.
+
+```typescript
+session
+  .pipeline({
+    llm: {
+      vendor: 'openai',
+      model: 'gpt-4.1',
+      llmOptions: {
+        messages: [{
+          role: 'system',
+          content: 'You are a sports assistant. Use available tools to answer questions about live scores.',
+        }],
+      },
+    },
+    stt: { vendor: 'deepgram', language: 'en-US' },
+    tts: { vendor: 'cartesia', voice: 'sonic-english' },
+    mcpServers: [
+      { url: 'https://livescoremcp.com/sse' },
+    ],
+    actionHook: '/pipeline-complete',
+  })
+  .send();
+```
+
+A caller can simply ask "what football matches are on right now?" and the LLM will use the tools discovered from the MCP server to fetch real-time data — no need to define tool schemas in `llmOptions.tools`.
+
+If an MCP server requires authentication:
+
+```json
+{
+  "mcpServers": [
+    {
+      "url": "https://mcp.tavily.com/mcp/?tavilyApiKey=your-key",
+      "auth": { "apiKey": "your-key" }
+    }
+  ]
+}
+```
+
+**Tool dispatch priority**: When the LLM requests a tool call, MCP servers are checked first. If the tool name matches one discovered from an MCP server, the call is dispatched there. Otherwise, it falls through to the `toolHook` webhook. You can use both together.
+
+## Mid-conversation Updates
+
+The pipeline supports asynchronous updates while a conversation is in progress, allowing you to change the agent's behavior, inject context, modify tools, or trigger responses — without interrupting the verb stack.
+
+Updates are sent via WebSocket (`session.updatePipeline(data)`) or REST API.
+
+### update_instructions
+
+Replace the LLM system prompt mid-conversation. Useful for persona switching or topic transitions.
+
+```typescript
+// After identifying the caller's intent, switch to a specialist persona
+session.updatePipeline({
+  type: 'update_instructions',
+  instructions: 'You are now a billing support agent. Help the caller with invoice questions.',
+});
+```
+
+### inject_context
+
+Append messages to the LLM conversation history. System messages are routed to the system prompt for vendors that don't support inline system messages (Bedrock, Anthropic, Google).
+
+```typescript
+// Inject CRM data after identifying the caller
+session.updatePipeline({
+  type: 'inject_context',
+  messages: [
+    {
+      role: 'user',
+      content: 'CRM context: Customer name: Sarah Mitchell. Account tier: Gold. ' +
+        'Open support ticket: delayed delivery on the smart home hub.',
+    },
+  ],
+});
+```
+
+### update_tools
+
+Replace the tool set available to the LLM. The new tools take effect on the next turn.
+
+```typescript
+// Add web search capability after the user requests it
+session.updatePipeline({
+  type: 'update_tools',
+  tools: [
+    {
+      name: 'web_search',
+      description: 'Search the web for current information',
+      parameters: {
+        type: 'object',
+        properties: { query: { type: 'string' } },
+        required: ['query'],
+      },
+    },
+  ],
+});
+```
+
+### generate_reply
+
+Prompt the LLM to generate a new response. If the pipeline is idle, the prompt executes immediately. If busy, the request is queued.
+
+Use `interrupt: true` to cancel the current response and generate immediately — useful for supervisor overrides or urgent notifications.
+
+```typescript
+// Supervisor whisper — interrupt with urgent info
+session.updatePipeline({
+  type: 'generate_reply',
+  interrupt: true,
+  user_input: 'URGENT: Tell the customer about the flash sale — 50% off all items for the next hour.',
+});
+
+// Gentle prompt with one-shot instructions
+session.updatePipeline({
+  type: 'generate_reply',
+  user_input: 'Customer is asking about refunds',
+  instructions: 'Be empathetic and offer a 20% discount before processing a refund.',
+});
+```
+
+## Event Handling
+
+The `eventHook` receives real-time events during the conversation. In WebSocket mode, listen with `session.on()`:
+
+```typescript
+session.on('/pipeline-event', (evt) => {
+  switch (evt.type) {
+    case 'user_transcript':
+      console.log('User said:', evt.transcript);
+      break;
+    case 'agent_response':
+      console.log('Agent replied:', evt.response);
+      break;
+    case 'user_interruption':
+      console.log('User interrupted');
+      break;
+    case 'turn_end':
+      console.log('Turn complete:', {
+        transcript: evt.transcript,
+        response: evt.response,
+        latency: evt.latency,
+      });
+      break;
+  }
+});
+```
+
+### Event Types
+
+| Event | Description | Key fields |
+|-------|-------------|------------|
+| `user_transcript` | User speech recognized | `transcript` |
+| `agent_response` | Assistant reply text | `response` |
+| `user_interruption` | User barged in | — |
+| `turn_end` | End-of-turn summary | `transcript`, `confidence`, `response`, `interrupted`, `latency`, `tool_calls` |
+| `history_summarized` | Conversation summarized | `turn`, `messages_dropped`, `messages_kept`, `summary` |
+
+### turn_end Payload
+
+The `turn_end` event is the most useful for observability. Example payload:
+
+```json
+{
+  "type": "turn_end",
+  "transcript": "What's the weather in Portland?",
+  "confidence": 0.998,
+  "response": "The temperature in Portland is 52°F with wind at 12 km/h.",
+  "interrupted": false,
+  "latency": {
+    "stt_ms": 320,
+    "eot_ms": 180,
+    "llm_ms": 890,
+    "tool_ms": 420,
+    "tts_ms": 210,
+    "preflight": {
+      "result": "hit",
+      "tokens": 12
+    }
+  },
+  "tool_calls": [
+    { "name": "get_weather", "rtt_ms": 420 }
+  ]
+}
+```
+
+## Latency Optimization
+
+The `turn_end` latency breakdown helps you identify bottlenecks and optimize response time.
+
+| Field | What it measures | How to optimize |
+|-------|-----------------|-----------------|
+| `stt_ms` | STT processing time | Choose low-latency STT vendors (Deepgram). Use `hints` to improve accuracy. |
+| `eot_ms` | End-of-turn detection wait | Tune Krisp `threshold` (lower = faster). Use vendors with native turn-taking. |
+| `llm_ms` | Pure LLM thinking time (tool RTT subtracted) | Use faster models (e.g., `gpt-4.1-mini`). Keep system prompts concise. Enable `earlyGeneration`. |
+| `tool_ms` | Total time in tool calls | Optimize tool endpoint latency. Use caching where appropriate. |
+| `tts_ms` | TTS engine latency (text → first audio) | Choose streaming-capable TTS (Cartesia, ElevenLabs, Deepgram). |
+| `preflight` | Speculative preflight result | Enable `earlyGeneration` with Krisp. Monitor hit rate — high miss rates may indicate the threshold is too aggressive. |
+
+## Conversation History Summarization
+
+For long conversations that might exceed the LLM's context window, the pipeline can automatically summarize older turns.
+
+Set the `JAMBONES_PIPELINE_SUMMARIZE_TURNS` environment variable to control how often summarization runs. Values 1–7 are clamped to 8. Set to `0` to disable (default).
+
+When summarization triggers:
+1. The LLM generates a concise summary of the older conversation turns
+2. The summary is appended to the system prompt as a "Conversation context" section
+3. The summarized turns are dropped from conversation history
+4. Half the configured number of turns are kept in full fidelity
+
+A `history_summarized` event is sent to the `eventHook`:
+
+```json
+{
+  "type": "history_summarized",
+  "turn": 8,
+  "messages_dropped": 5,
+  "messages_kept": 6,
+  "summary": "The user is a software developer looking for a MacBook Pro..."
+}
+```
+
+## Noise Isolation
+
+The `noiseIsolation` property enables server-side noise cancellation on call audio, improving STT accuracy in noisy environments.
+
+Two vendors are available:
+- **`"krisp"`** — Krisp's proprietary noise cancellation. Requires a Krisp API key on self-hosted systems.
+- **`"rnnoise"`** — Open-source RNNoise-based noise cancellation. No API key required.
+
+Shorthand:
+
+```json
+{ "noiseIsolation": "krisp" }
+```
+
+Detailed configuration:
+
+```json
+{
+  "noiseIsolation": {
+    "mode": "krisp",
+    "level": 80,
+    "direction": "read"
+  }
+}
+```
+
+- `level` — Suppression level 0–100. Higher values are more aggressive. Default: 100.
+- `direction` — `"read"` filters caller audio (default), `"write"` filters outbound audio.
+
+## Error Recovery
+
+The pipeline handles errors gracefully to keep the conversation going:
+
+- **LLM errors with tools** — If the LLM fails and tools were included, the pipeline retries the same prompt without tools. This handles models that don't support tool use in certain configurations.
+- **Speculative preflight errors** — When a speculative prompt fails, the preflight is discarded and a fresh prompt is issued normally.
+- **Recovery to idle** — On unrecoverable LLM errors, the pipeline ends the turn and transitions to idle so the user can continue speaking. The no-response timer is not started after an error to avoid retry loops.
+- **STT reconnection** — The pipeline automatically reconnects the STT stream if the connection drops.
+
+When the pipeline encounters an unrecoverable error, it invokes the `actionHook` with a `completion_reason` indicating the failure.
+
+## Example Applications
+
+The [pipeline examples](https://github.com/jambonz/v10-examples/tree/main/examples/pipeline) repository contains runnable demos for each feature:
+
+| Example | What it demonstrates |
+|---------|---------------------|
+| `deepgram-cartesia` | Basic pipeline with Deepgram STT + Cartesia TTS |
+| `deepgramflux-elevenlabs` | Deepgram Flux (native turn detection) + ElevenLabs TTS |
+| `speechmatics-rime` | Speechmatics STT + Rime TTS |
+| `using-tools` | Tool calling with weather lookup |
+| `web-search` | Web search via Tavily tool |
+| `using-mcp-server` | MCP server for live sports scores |
+| `tavily-mcp` | Web search via Tavily MCP server |
+| `crm-injection` | Live CRM context injection via `inject_context` |
+| `persona-switch` | Mid-conversation persona change via `update_instructions` |
+| `supervisor-interrupt` | Urgent message injection via `generate_reply` with interrupt |
+| `dynamic-tools` | Mid-conversation tool injection via `update_tools` |

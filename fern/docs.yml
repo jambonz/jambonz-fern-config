@@ -82,6 +82,8 @@ navigation:
                 path: ./docs/pages/get-started/outbound-call-routing.mdx
       - section: Features
         contents:
+          - page: Pipeline Voice Agents
+            path: ./docs/pages/features/pipeline-voice-agents.mdx
           - page: Using OpenAI STT
             path: ./docs/pages/features/using-openai-stt.mdx
           - page: Custom STT providers
@@ -158,6 +160,8 @@ navigation:
             hidden: true
           - page: Pause
             path: ./docs/pages/verbs/pause.mdx
+          - page: Pipeline
+            path: ./docs/pages/verbs/pipeline.mdx
           - page: Play
             path: ./docs/pages/verbs/play.mdx
           - page: Rasa
@@ -282,14 +286,30 @@ navigation:
     layout:
       - page: SDKs
         path: ./docs/pages/sdks/index.mdx
-      - page: nodeclient
-        path: ./docs/pages/sdks/nodeclient.mdx
-      - page: nodered
-        path: ./docs/pages/sdks/nodered.mdx
-      - page: nodeclientws
-        path: ./docs/pages/sdks/nodeclientws.mdx
-      - page: npx
-        path: ./docs/pages/sdks/npx.mdx
+      - section: WebRTC SDK
+        contents:
+          - page: Overview
+            path: ./docs/pages/sdks/webrtc/overview.mdx
+          - page: Web (React) Guide
+            path: ./docs/pages/sdks/webrtc/web.mdx
+          - page: React Native Guide
+            path: ./docs/pages/sdks/webrtc/react-native.mdx
+          - page: API Reference
+            path: ./docs/pages/sdks/webrtc/api-reference.mdx
+      - page: Node.js SDK
+        path: ./docs/pages/sdks/node-sdk.mdx
+      - section: Utilities
+        contents:
+          - page: Node-RED
+            path: ./docs/pages/sdks/nodered.mdx
+          - page: NPX Quickstarts
+            path: ./docs/pages/sdks/npx.mdx
+      - section: Deprecated
+        contents:
+          - page: Node.js Webhook SDK (Legacy)
+            path: ./docs/pages/sdks/nodeclient.mdx
+          - page: Node.js WebSocket SDK (Legacy)
+            path: ./docs/pages/sdks/nodeclientws.mdx
   - tab: tutorials
     layout:
       - section: Hosted applications
