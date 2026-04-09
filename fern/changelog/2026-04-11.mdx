@@ -1,0 +1,57 @@
+<Card title="10.1.0" icon="regular crown" iconPosition="left">
+jambonz Commercial 10.1.0
+</Card>
+
+#### New Features & Improvements
+
+1. **Voice Pipeline support** — Major new feature enabling low-latency voice AI pipelines with support for Amazon Bedrock and Google Gemini as LLM backends, Deepgram and Krisp for STT/turn-taking, and ElevenLabs TTS with spoken-word tracking. Includes mid-conversation async updates via `pipeline:update`, noise cancellation powered by Krisp, and comprehensive pipeline metrics and measurement.
+1. **Speechmatics Preview STT** — Add support for Speechmatics Preview as a speech-to-text vendor, including turn-taking event forwarding and analytics.
+1. **Houndify WebSocket STT** — Add support for Houndify speech recognition over WebSocket, including `audioQueryAbsoluteTimeout` for controlling recognition timeouts.
+1. **Google Dialogflow CX/CES** — Add support for Dialogflow Customer Engagement Suite (CES) via API access, enabling integration with Google's conversational AI platform.
+1. **Krisp noise isolation** — Add support for Krisp-powered noise isolation and cancellation with usage tracking and event generation.
+1. **Google Gemini LLM** — Add support for Google Gemini as an LLM provider with credential management in the API server and webapp.
+1. **Google S2S transcription events** — Google Speech-to-Speech now emits `llm_event` with transcription data to the application layer.
+1. **MCP client hardening** — Improved MCP client reliability with configurable timeouts, authentication support, URL hints, automatic reconnection, and graceful connection close.
+1. **ElevenLabs TTS tracking** — Track spoken words and TTS timing for ElevenLabs, enabling detailed usage analytics and billing insights.
+1. **TTS time-to-first-byte metrics** — Added latency metrics across all streaming TTS vendors to measure and monitor time to first audio byte.
+1. **Listen verb in conference** — Support for nesting a `listen` verb inside a `conference`, enabling real-time audio streaming from conference sessions.
+1. **Deepgram Flux language hint** — Pass `language_hint` to Deepgram Flux STT for improved recognition accuracy.
+1. **AssemblyAI Universal-2 Pro** — Support for AssemblyAI's universal-2 pro streaming model, defaulting to `u3-rt-pro` when a prompt is provided.
+1. **Inworld AI models** — Add support for Inworld AI models.
+1. **LLM services** — New LLM services management in the API server and webapp.
+1. **License expiry alert** — The webapp now displays an alert when the system license key is expired or approaching expiration.
+1. **Schema migration** — Migrated to the consolidated `@jambonz/schema` package, deprecating the standalone verb-specs module.
+1. **Updated API swagger** — API server swagger documentation updated to reflect new endpoints and properties.
+1. **Removed IBM speech utils** — Removed unused IBM speech integration from the webapp.
+
+#### Bug Fixes
+
+- Fixed a race condition for outbound calls in the feature-server that could cause call setup failures.
+- Fixed `gladiaOptions` being hardcoded instead of using user-provided configuration.
+- Fixed Google Speech-to-Speech not sending transcription events to the application layer.
+- Fixed DTMF digits being sent as multiple underscore characters instead of correct tones.
+- Fixed TTS engine flush signaling and guarded against Cartesia empty events without proper completion state.
+- Fixed ElevenLabs models endpoint failure causing the entire language/model dropdown to break; now gracefully falls back to static data.
+- Fixed Deepgram STT language dropdown appearing empty due to model name parsing issue.
+- Fixed missing language names for Cartesia Sonic 3 languages in the language map.
+- Fixed ElevenLabs STT not properly loading available languages and models.
+- Fixed potential crash in webapp TTS voice sorting when voice name is undefined.
+- Fixed exception when user provides an invalid value for a play file URL.
+- Added exception handling in the `mod_dub` FreeSWITCH module to prevent crashes from unhandled errors.
+- Fixed pipeline integration with Deepgram STT and Krisp/LLM-based turn taking.
+- Fixed internal task validation that was incorrectly rejecting valid internal tasks.
+
+#### SQL Changes
+```
+-- Krisp usage tracking
+CREATE TABLE krisp_usage_rollup (...)
+```
+
+<Callout intent="info">
+Contact your account manager or email support@jambonz.org for the complete SQL migration script for this release.
+</Callout>
+
+#### Availability
+- Available now with devops scripts for subscription customers
+
+**Questions?** Contact us at <a href="mailto:support@jambonz.org">support@jambonz.org</a>
