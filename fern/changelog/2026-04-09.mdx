@@ -1,0 +1,87 @@
+<Card title="0.9.6" icon="regular box-open" iconPosition="left">
+Major release
+</Card>
+
+#### New Features & Improvements
+1. Add ability to override certain TTS streaming options via the [config verb](https://github.com/jambonz/jambonz-feature-server/pull/1429), allowing runtime control of streaming behavior.
+1. Add ability to enable/disable [Azure audio logging](https://github.com/jambonz/jambonz-feature-server/pull/1432) via `azureOptions` in speech credentials.
+1. Compare SDP to determine if [transcoding is being used](https://github.com/jambonz/jambonz-feature-server/pull/1444), with refactored codec checking.
+1. SoundHound now supports [audio endpoint configuration](https://github.com/jambonz/jambonz-feature-server/pull/1446) from speech credentials with `requestInfo` and `sampleRate` options.
+1. Add [configurable say chunk size](https://github.com/jambonz/jambonz-feature-server/pull/1461) for TTS streaming.
+1. Enhanced [TTS sentence boundary detection](https://github.com/jambonz/jambonz-feature-server/pull/1464) for Arabic and Japanese with improved regex handling.
+1. Add support for [sending DTMF to Ultravox](https://github.com/jambonz/jambonz-feature-server/pull/1471).
+1. Add [label to STT/TTS alerts](https://github.com/jambonz/jambonz-feature-server/pull/1468) with time-series updates.
+1. Use [timeout on HTTP requests](https://github.com/jambonz/jambonz-feature-server/pull/1453) to prevent hanging connections.
+1. Allow UAS leg to send [re-invite with outbound gateway credentials](https://github.com/jambonz/sbc-inbound/pull/221).
+1. Add [hasRecording flag](https://github.com/jambonz/sbc-inbound/pull/229) for setting recording URLs in call detail records.
+1. Add [configurable backup for outbound registration failure](https://github.com/jambonz/sbc-sip-sidecar/pull/128).
+1. Use [persistent call-id for regbot](https://github.com/jambonz/sbc-sip-sidecar/pull/130) using gateway SID.
+1. Only disable registration after [multiple consecutive failures](https://github.com/jambonz/sbc-sip-sidecar/pull/131) rather than a single failure.
+1. Add support for [Google Gemini TTS](https://github.com/jambonz/jambonz-api-server/pull/534).
+1. Add support for [OpenAI transcribe auto language detection](https://github.com/jambonz/jambonz-api-server/pull/537).
+1. Allow [boostAudioSignal from updateCall](https://github.com/jambonz/jambonz-api-server/pull/523) API.
+1. Allow [media_path updates from REST API](https://github.com/jambonz/jambonz-api-server/pull/533) with validation for media_path values.
+1. Allow [startRecording without SIPREC URL](https://github.com/jambonz/jambonz-api-server/pull/530) for cloud deployments.
+1. Add new fields for [ICE and DTLS configuration](https://github.com/jambonz/jambonz-api-server/pull/538).
+1. Add [admin carrier and number management control](https://github.com/jambonz/jambonz-api-server/pull/532) via `JAMBONES_ADMIN_CARRIER`.
+1. Add [database migrations for predefined carriers](https://github.com/jambonz/jambonz-api-server/pull/540) tables.
+1. Add [alert notification badge](https://github.com/jambonz/jambonz-webapp/pull/593) to the webapp with configurable polling.
+1. Add [SoundHound audio endpoint](https://github.com/jambonz/jambonz-webapp/pull/582) configuration in the webapp.
+
+#### Bug fixes
+- Fixed say verb does not [close streaming when finishing say](https://github.com/jambonz/jambonz-feature-server/pull/1412).
+- Fixed [playbackIds not in correct order](https://github.com/jambonz/jambonz-feature-server/pull/1439) compared with `say.text` array.
+- Allow say verb to fail as NonFatalTaskError for [File Not Found](https://github.com/jambonz/jambonz-feature-server/pull/1443) instead of crashing the call.
+- Fixed [race condition in gather](https://github.com/jambonz/jambonz-feature-server/pull/1449) where timeout timer gets set after resolve when speech transcript arrives.
+- Fixed [transcribe 2 legs cannot fallback](https://github.com/jambonz/jambonz-feature-server/pull/1451).
+- Fixed [SDP checking for Opus](https://github.com/jambonz/jambonz-feature-server/pull/1455) on A leg during B leg dialing.
+- Fixed [undefined issue](https://github.com/jambonz/jambonz-feature-server/pull/1456) when setting TTS streaming channel vars.
+- Fixed [dial verb cannot bridge](https://github.com/jambonz/jambonz-feature-server/pull/1457) 2 leg endpoints due to transcoding.
+- Do not send [TTS streaming events](https://github.com/jambonz/jambonz-feature-server/pull/1467) when not doing TTS streaming.
+- Fixed [gather should ignore transcription](https://github.com/jambonz/jambonz-feature-server/pull/1465) if task is killed or resolved.
+- Fixed [callsession cannot close TTS streaming](https://github.com/jambonz/jambonz-feature-server/pull/1472).
+- Optimized [slow SQL queries](https://github.com/jambonz/sbc-inbound/pull/232) and added support for readonly database endpoints.
+- Optimized [CIDR gateway queries](https://github.com/jambonz/sbc-inbound/pull/233) using STRAIGHT_JOIN to prevent inefficient table scans.
+- [Parallelized independent gateway queries](https://github.com/jambonz/sbc-inbound/pull/234) for exact IP and CIDR range lookups to reduce inbound call routing latency.
+- When far end answers with only PCMA, [passthrough instead of transcoding](https://github.com/jambonz/sbc-outbound/pull/208) to PCMU.
+- Include [codec-accept on answer to rtpengine](https://github.com/jambonz/sbc-outbound/pull/209) during reinvites.
+- Remove [ICE and DTLS settings](https://github.com/jambonz/sbc-outbound/pull/214) if set in database configuration.
+- Fixed [reg trunk proxy port handling](https://github.com/jambonz/sbc-sip-sidecar/pull/118) to only use port if proxy is IPv4 address; use SIP gateway host for DNS lookup of ephemeral gateways.
+- Fixed [Array.prototype.push.apply stack overflow](https://github.com/jambonz/sbc-sip-sidecar/pull/119) causing maximum call stack size exceeded errors.
+- If no SRV record found when no port specified, [fall back to A record lookup](https://github.com/jambonz/sbc-sip-sidecar/pull/125).
+- Fixed support for [writer/reader database nodes](https://github.com/jambonz/sbc-sip-sidecar/pull/126).
+- Removed [send_options_bots array](https://github.com/jambonz/sbc-sip-sidecar/pull/129) to fix ticket #1983.
+- Fixed [timing issue with ephemeral gateway](https://github.com/jambonz/sbc-sip-sidecar/pull/132) update/deletion and potential regbot zombie processes.
+- Set `JAMBONES_NETWORK_CIDR` as private IP address space when running under K8S.
+- Removed [activation code from API response](https://github.com/jambonz/jambonz-api-server/pull/513).
+- Force [account sip_realm to lowercase](https://github.com/jambonz/jambonz-api-server/pull/519).
+- Fixed [obscured key detection](https://github.com/jambonz/jambonz-api-server/pull/524).
+- Fixed unable to [fetch voice_call_session](https://github.com/jambonz/jambonz-api-server/pull/525).
+- Fixed [webhook URL validation on update](https://github.com/jambonz/jambonz-api-server/pull/528) to not remove URLs if unchanged.
+- Fixed [Soniox STT speech credential validation](https://github.com/jambonz/jambonz-api-server/pull/535).
+- Subscription [update-quantities validation](https://github.com/jambonz/jambonz-api-server/pull/521) for minimum voice call sessions.
+- Added [database indexes and SQL optimizations](https://github.com/jambonz/jambonz-api-server/pull/536) including index on sip_gateways and trunk_type for predefined carriers.
+- Fixed [duplicate inbound and outbound SIP gateways](https://github.com/jambonz/jambonz-webapp/pull/576) could be created.
+- Require IP auth trunk to have [either inbound or outbound carrier](https://github.com/jambonz/jambonz-webapp/pull/579); consistent wording to "IP Trunk".
+- Fixed [outbound call routing race condition](https://github.com/jambonz/jambonz-webapp/pull/577) showing default LCR route set that user cannot delete.
+- Removed [filter for active carriers](https://github.com/jambonz/jambonz-webapp/pull/589) from phone number configuration.
+
+#### SQL changes
+```
+ALTER TABLE sip_gateways ADD COLUMN remove_ice BOOLEAN NOT NULL DEFAULT 0
+ALTER TABLE sip_gateways ADD COLUMN dtls_off BOOLEAN NOT NULL DEFAULT 0
+CREATE INDEX idx_sip_gateways_inbound_lookup ON sip_gateways (inbound,netmask,ipv4)
+CREATE INDEX idx_sip_gateways_inbound_netmask ON sip_gateways (inbound,netmask)
+ALTER TABLE predefined_carriers ADD COLUMN trunk_type ENUM('static_ip','auth','reg') NOT NULL DEFAULT 'static_ip'
+ALTER TABLE predefined_sip_gateways ADD COLUMN send_options_ping BOOLEAN NOT NULL DEFAULT 0
+ALTER TABLE predefined_sip_gateways ADD COLUMN use_sips_scheme BOOLEAN NOT NULL DEFAULT 0
+ALTER TABLE predefined_sip_gateways ADD COLUMN pad_crypto BOOLEAN NOT NULL DEFAULT 0
+ALTER TABLE predefined_sip_gateways ADD COLUMN remove_ice BOOLEAN NOT NULL DEFAULT 0
+ALTER TABLE predefined_sip_gateways ADD COLUMN dtls_off BOOLEAN NOT NULL DEFAULT 0
+ALTER TABLE predefined_sip_gateways ADD COLUMN protocol ENUM('udp','tcp','tls', 'tls/srtp') NOT NULL DEFAULT 'udp'
+```
+
+#### Availability
+- Available now with devops scripts for subscription customers
+
+**Questions?** Contact us at <a href="mailto:support@jambonz.org">support@jambonz.org</a>
