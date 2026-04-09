@@ -3,6 +3,10 @@ title: Pipeline Voice Agents
 subtitle: Build conversational AI agents using the pipeline verb
 ---
 
+<Warning>
+The pipeline verb is an **experimental feature** and requires jambonz version **10.1.0 or above**.
+</Warning>
+
 The [pipeline](/verbs/verbs/pipeline) verb orchestrates a complete voice AI agent by wiring together three separate components — STT, LLM, and TTS — with integrated turn detection. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs where a single vendor handles everything), the pipeline verb lets you mix and match: for example, Deepgram for STT, Anthropic for the LLM, and Cartesia for TTS.
 
 Pipeline manages the full conversational turn cycle:
