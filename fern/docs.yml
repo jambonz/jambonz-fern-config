@@ -301,6 +301,9 @@ navigation:
       - page: Node.js SDK
         path: ./docs/pages/sdks/node-sdk.mdx
         slug: node-sdk
+      - page: Python SDK
+        path: ./docs/pages/sdks/python-sdk.mdx
+        slug: python-sdk
       - page: Node-RED
         path: ./docs/pages/sdks/nodered.mdx
       - page: nodeclient

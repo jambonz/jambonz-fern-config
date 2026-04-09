@@ -4,25 +4,26 @@ jambonz Commercial 10.1.0
 
 #### New Features & Improvements
 
-1. **Voice Pipeline support** — Major new feature enabling low-latency voice AI pipelines with support for Amazon Bedrock and Google Gemini as LLM backends, Deepgram and Krisp for STT/turn-taking, and ElevenLabs TTS with spoken-word tracking. Includes mid-conversation async updates via `pipeline:update`, noise cancellation powered by Krisp, and comprehensive pipeline metrics and measurement.
-1. **Speechmatics Preview STT** — Add support for Speechmatics Preview as a speech-to-text vendor, including turn-taking event forwarding and analytics.
-1. **Houndify WebSocket STT** — Add support for Houndify speech recognition over WebSocket, including `audioQueryAbsoluteTimeout` for controlling recognition timeouts.
-1. **Google Dialogflow CX/CES** — Add support for Dialogflow Customer Engagement Suite (CES) via API access, enabling integration with Google's conversational AI platform.
+1. **Voice Pipeline support** — Major new feature enabling low-latency voice AI pipelines with support for Amazon Bedrock and Google Gemini as LLM backends, Deepgram and Krisp for STT/turn-taking, and ElevenLabs TTS with spoken-word tracking. Includes mid-conversation async updates via `pipeline:update`, noise cancellation powered by Krisp, and comprehensive pipeline metrics and measurement. See the [pipeline verb reference](/verbs/verbs/pipeline) and [pipeline voice agents guide](/guides/pipeline-voice-agents) for details.
+1. **Node.js SDK** — New unified SDK for building jambonz voice applications in TypeScript/JavaScript, supporting webhook and WebSocket transports, REST API client, TTS streaming, and chainable verb methods. Replaces the older `@jambonz/node-client` and `@jambonz/node-client-ws` packages. See the [Node.js SDK documentation](/sdks/node-sdk).
+1. **Python SDK** (experimental) — New Python SDK with the same capabilities as the Node.js SDK: webhook and WebSocket transports, REST client, TTS streaming, inject commands, and spec-driven verb generation with full type hints. See the [Python SDK documentation](/sdks/python-sdk).
+1. **Speech vendor updates** — Expanded speech vendor support across the platform:
+   - **Speechmatics Preview STT** — New speech-to-text vendor with turn-taking event forwarding and analytics.
+   - **Houndify WebSocket STT** — Speech recognition over WebSocket with `audioQueryAbsoluteTimeout` for controlling recognition timeouts.
+   - **AssemblyAI Universal-2 Pro** — Support for the universal-2 pro streaming model, defaulting to `u3-rt-pro` when a prompt is provided.
+   - **Deepgram Flux language hint** — Pass `language_hint` to Deepgram Flux STT for improved recognition accuracy.
+   - **Google S2S transcription events** — Google Speech-to-Speech now emits `llm_event` with transcription data to the application layer.
+   - **ElevenLabs TTS tracking** — Track spoken words and TTS timing for ElevenLabs, enabling detailed usage analytics and billing insights.
+   - **TTS time-to-first-byte metrics** — Latency metrics across all streaming TTS vendors to measure time to first audio byte.
+   - **Inworld AI models** — Support for Inworld AI models.
 1. **Krisp noise isolation** — Add support for Krisp-powered noise isolation and cancellation with usage tracking and event generation.
 1. **Google Gemini LLM** — Add support for Google Gemini as an LLM provider with credential management in the API server and webapp.
-1. **Google S2S transcription events** — Google Speech-to-Speech now emits `llm_event` with transcription data to the application layer.
 1. **MCP client hardening** — Improved MCP client reliability with configurable timeouts, authentication support, URL hints, automatic reconnection, and graceful connection close.
-1. **ElevenLabs TTS tracking** — Track spoken words and TTS timing for ElevenLabs, enabling detailed usage analytics and billing insights.
-1. **TTS time-to-first-byte metrics** — Added latency metrics across all streaming TTS vendors to measure and monitor time to first audio byte.
 1. **Listen verb in conference** — Support for nesting a `listen` verb inside a `conference`, enabling real-time audio streaming from conference sessions.
-1. **Deepgram Flux language hint** — Pass `language_hint` to Deepgram Flux STT for improved recognition accuracy.
-1. **AssemblyAI Universal-2 Pro** — Support for AssemblyAI's universal-2 pro streaming model, defaulting to `u3-rt-pro` when a prompt is provided.
-1. **Inworld AI models** — Add support for Inworld AI models.
 1. **LLM services** — New LLM services management in the API server and webapp.
 1. **License expiry alert** — The webapp now displays an alert when the system license key is expired or approaching expiration.
 1. **Schema migration** — Migrated to the consolidated `@jambonz/schema` package, deprecating the standalone verb-specs module.
 1. **Updated API swagger** — API server swagger documentation updated to reflect new endpoints and properties.
-1. **Removed IBM speech utils** — Removed unused IBM speech integration from the webapp.
 
 #### Bug Fixes
 
@@ -40,6 +41,7 @@ jambonz Commercial 10.1.0
 - Added exception handling in the `mod_dub` FreeSWITCH module to prevent crashes from unhandled errors.
 - Fixed pipeline integration with Deepgram STT and Krisp/LLM-based turn taking.
 - Fixed internal task validation that was incorrectly rejecting valid internal tasks.
+- Removed unused IBM speech integration from the webapp.
 
 #### SQL Changes
 ```
