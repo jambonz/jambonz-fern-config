@@ -264,6 +264,9 @@ paths:
                   $ref: '#/components/schemas/Webhook'
                 child_call_hook:
                   $ref: '#/components/schemas/Webhook'
+                tool_call_id:
+                  type: string
+                  description: "Required when sending `llm_tool_output`. Identifies which tool call this output is for."
                 call_status:
                   type: string
                   enum:
@@ -366,12 +369,42 @@ paths:
                         - unhold
                     tag:
                       type: string
+                stream_status:
+                  type: string
+                  enum:
+                    - pause
+                    - silence
+                    - resume
+                  description: "Control an active stream (alias for listen_status)"
+                tag:
+                  type: object
+                  additionalProperties: true
+                  description: "Set customer data on the call. Must be a plain object (not an array or null). The data is stored as customerData on the call and included in subsequent webhooks."
+                dub:
+                  type: object
+                  description: "Start or modify a dub (audio mixing) track on the call. See [Dub](/verbs/verbs/dub) for details of the properties."
+                boostAudioSignal:
+                  type: number
+                  description: "Adjust the audio signal gain in decibels (dB) for the call."
+                media_path:
+                  type: string
+                  enum:
+                    - no-media
+                    - partial-media
+                    - full-media
+                  description: "Change the media path for the call during an active dial. Controls whether media flows through the feature server."
+                llm_tool_output:
+                  type: object
+                  description: "Send tool output back to an active LLM verb. Must include a `tool_call_id` property at the top level of the update request to identify which tool call this output is for."
+                llm_update:
+                  type: object
+                  description: "Send an update to an active LLM verb to modify its configuration mid-conversation."
                 dtmf:
                   type: object
                   properties:
                     digit:
                       type: string
-                      enum: 
+                      enum:
                         - "1"
                         - "2"
                         - "3"
@@ -389,7 +422,7 @@ paths:
                       type: integer
                       default: 250
                       description: "Duration of the tone in ms"
-                  required: 
+                  required:
                     -  digit
       responses:
         '200':
