@@ -389,8 +389,125 @@ paths:
                       type: integer
                       default: 250
                       description: "Duration of the tone in ms"
-                  required: 
+                  required:
                     -  digit
+                stream_status:
+                  type: string
+                  description: Pause or resume an active stream verb.
+                  enum:
+                    - pause
+                    - silence
+                    - resume
+                tag:
+                  type: object
+                  description: Set customer data tags on the call. Freeform key-value object.
+                  additionalProperties: true
+                dub:
+                  type: object
+                  description: Add or remove additional audio tracks on the call.
+                  required:
+                    - action
+                    - track
+                  properties:
+                    action:
+                      type: string
+                      enum:
+                        - startDub
+                        - stopDub
+                    track:
+                      type: string
+                      description: Track name identifier.
+                    play:
+                      type: string
+                      description: Audio URL to play.
+                    say:
+                      type: object
+                      description: TTS configuration.
+                    loop:
+                      type: boolean
+                      description: Whether to loop playback.
+                    gain:
+                      type: number
+                      description: Gain in decibels.
+                boostAudioSignal:
+                  description: Boost audio signal by specified decibels (e.g. 6 or "6dB").
+                  oneOf:
+                    - type: number
+                    - type: string
+                media_path:
+                  type: string
+                  description: Update the media path during an active Dial verb.
+                  enum:
+                    - no-media
+                    - partial-media
+                    - full-media
+                noise_isolation_status:
+                  type: string
+                  description: Enable or disable noise isolation on the call.
+                  enum:
+                    - enable
+                    - disable
+                noise_isolation_vendor:
+                  type: string
+                  description: Noise isolation vendor. Default is krisp.
+                noise_isolation_level:
+                  type: number
+                  description: Noise isolation level 0-100. Default is 100.
+                noise_isolation_model:
+                  type: string
+                  description: Noise isolation model identifier.
+                pipeline_update:
+                  type: object
+                  description: Update an active pipeline verb mid-conversation.
+                  required:
+                    - type
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - update_instructions
+                        - inject_context
+                        - update_tools
+                        - generate_reply
+                      description: The type of pipeline update to perform.
+                    instructions:
+                      type: string
+                      description: New system prompt (for update_instructions).
+                    messages:
+                      type: array
+                      description: Messages to append to conversation history (for inject_context).
+                      items:
+                        type: object
+                        required:
+                          - role
+                          - content
+                        properties:
+                          role:
+                            type: string
+                            enum:
+                              - user
+                              - assistant
+                          content:
+                            type: string
+                    tools:
+                      type: array
+                      description: Replacement tool definitions (for update_tools).
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          description:
+                            type: string
+                          parameters:
+                            type: object
+                    user_input:
+                      type: string
+                      description: Text to prompt the LLM with (for generate_reply).
+                    interrupt:
+                      type: boolean
+                      description: Whether to interrupt current assistant speech (for generate_reply).
+                      default: false
       responses:
         '200':
           description: Accepted
