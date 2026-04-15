@@ -4,7 +4,7 @@ jambonz Commercial 10.1.0
 
 #### New Features & Improvements
 
-1. **Voice Pipeline support** — Major new feature enabling low-latency voice AI pipelines with support for Amazon Bedrock and Google Gemini as LLM backends, Deepgram and Krisp for STT/turn-taking, and ElevenLabs TTS with spoken-word tracking. Includes mid-conversation async updates via `pipeline:update`, noise cancellation powered by Krisp, and comprehensive pipeline metrics and measurement. See the [pipeline verb reference](/verbs/verbs/pipeline) and [pipeline voice agents guide](/guides/pipeline-voice-agents) for details.
+1. **Agent verb** — Major new feature enabling low-latency voice AI agents with support for Amazon Bedrock and Google Gemini as LLM backends, Deepgram and Krisp for STT/turn-taking, and ElevenLabs TTS with spoken-word tracking. Includes mid-conversation async updates via `agent:update`, noise cancellation powered by Krisp, and comprehensive metrics and measurement. See the [agent verb reference](/verbs/verbs/agent) and [voice agents guide](/guides/features/voice-agents) for details.
 1. **Node.js SDK** — New unified SDK for building jambonz voice applications in TypeScript/JavaScript, supporting webhook and WebSocket transports, REST API client, TTS streaming, and chainable verb methods. Replaces the older `@jambonz/node-client` and `@jambonz/node-client-ws` packages. See the [Node.js SDK documentation](/sdks/node-sdk).
 1. **Python SDK** (experimental) — New Python SDK with the same capabilities as the Node.js SDK: webhook and WebSocket transports, REST client, TTS streaming, inject commands, and spec-driven verb generation with full type hints. See the [Python SDK documentation](/sdks/python-sdk).
 1. **Speech vendor updates** — Expanded speech vendor support across the platform:
@@ -39,7 +39,7 @@ jambonz Commercial 10.1.0
 - Fixed potential crash in webapp TTS voice sorting when voice name is undefined.
 - Fixed exception when user provides an invalid value for a play file URL.
 - Added exception handling in the `mod_dub` FreeSWITCH module to prevent crashes from unhandled errors.
-- Fixed pipeline integration with Deepgram STT and Krisp/LLM-based turn taking.
+- Fixed agent verb integration with Deepgram STT and Krisp/LLM-based turn taking.
 - Fixed internal task validation that was incorrectly rejecting valid internal tasks.
 - Removed unused IBM speech integration from the webapp.
 

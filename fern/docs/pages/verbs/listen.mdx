@@ -124,9 +124,7 @@ The payload that is sent will look like this:
 ### Bidirectional audio
 
 Audio can also be sent back over the websocket to jambonz. 
-This audio, if supplied, will be played out to the caller. 
-(Note: Bidirectional audio is not supported when the `listen` is nested 
-in the context of a `dial` verb).
+This audio, if supplied, will be played out to the caller.
 
 There are two separate modes for bidirectional audio:
 - non-streaming, where you provide a full base64-encoded audio file as JSON text frames

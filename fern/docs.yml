@@ -82,8 +82,8 @@ navigation:
                 path: ./docs/pages/get-started/outbound-call-routing.mdx
       - section: Features
         contents:
-          - page: Pipeline Voice Agents
-            path: ./docs/pages/features/pipeline-voice-agents.mdx
+          - page: Voice Agents
+            path: ./docs/pages/features/voice-agents.mdx
           - page: Using OpenAI STT
             path: ./docs/pages/features/using-openai-stt.mdx
           - page: Custom STT providers
@@ -160,8 +160,8 @@ navigation:
             hidden: true
           - page: Pause
             path: ./docs/pages/verbs/pause.mdx
-          - page: Pipeline
-            path: ./docs/pages/verbs/pipeline.mdx
+          - page: Agent
+            path: ./docs/pages/verbs/agent.mdx
           - page: Play
             path: ./docs/pages/verbs/play.mdx
           - page: Rasa

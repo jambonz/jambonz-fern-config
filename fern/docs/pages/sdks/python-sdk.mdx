@@ -1,6 +1,6 @@
 ---
 title: Python SDK
-subtitle: Build jambonz voice applications with jambonz-python-sdk
+subtitle: "Experimental: Build jambonz voice applications with jambonz-python-sdk"
 layout: page
 ---
 
@@ -9,7 +9,7 @@ The `jambonz-python-sdk` package lets you build jambonz voice applications in Py
 **Source code:** [github.com/jambonz/python-sdk](https://github.com/jambonz/python-sdk)
 
 <Warning>
-The Python SDK is currently **experimental**. APIs may change between releases. Please report issues on [GitHub](https://github.com/jambonz/python-sdk/issues).
+**Experimental** — This SDK is under active development. APIs may change between releases. Please report issues on [GitHub](https://github.com/jambonz/python-sdk/issues).
 </Warning>
 
 ## Installation
@@ -192,7 +192,7 @@ async with JambonzClient(
 
 Both `WebhookResponse` and WebSocket `Session` support the same chainable verb methods:
 
-`.say()` `.play()` `.gather()` `.dial()` `.llm()` `.pipeline()` `.conference()` `.enqueue()` `.dequeue()` `.hangup()` `.pause()` `.redirect()` `.config()` `.tag()` `.dtmf()` `.listen()` `.transcribe()` `.message()` `.dub()` `.alert()` `.answer()` `.leave()` `.sip_decline()` `.sip_refer()` `.sip_request()`
+`.say()` `.play()` `.gather()` `.dial()` `.llm()` `.agent()` `.conference()` `.enqueue()` `.dequeue()` `.hangup()` `.pause()` `.redirect()` `.config()` `.tag()` `.dtmf()` `.listen()` `.transcribe()` `.message()` `.dub()` `.alert()` `.answer()` `.leave()` `.sip_decline()` `.sip_refer()` `.sip_request()`
 
 All methods accept the same options as the corresponding [verb JSON schemas](/verbs/verbs/overview) and are chainable.
 
@@ -224,7 +224,7 @@ session.on("/llm-tokens", on_llm_tokens)
 | `flush_tts_tokens()` | Signal the end of a TTS token stream. |
 | `clear_tts_tokens()` | Cancel all pending TTS tokens and reset state. |
 
-## LLM and Pipeline Updates
+## LLM and Agent Updates
 
 ### Tool Output
 
@@ -241,28 +241,28 @@ async def on_tool_call(evt):
 session.on("/tool-call", on_tool_call)
 ```
 
-### Pipeline Updates
+### Agent Updates
 
-Send mid-conversation updates to an active [pipeline](/verbs/verbs/pipeline):
+Send mid-conversation updates to an active [agent](/verbs/verbs/agent):
 
 ```python
 # Change the system prompt
-session.update_pipeline({
+session.update_agent({
     "type": "update_instructions",
     "instructions": "You are now a billing agent.",
 })
 
 # Inject context
-session.update_pipeline({
+session.update_agent({
     "type": "inject_context",
     "messages": [{"role": "user", "content": "Customer: Sarah, Gold tier."}],
 })
 
 # Replace tools
-session.update_pipeline({"type": "update_tools", "tools": [...]})
+session.update_agent({"type": "update_tools", "tools": [...]})
 
 # Trigger a new response
-session.update_pipeline({
+session.update_agent({
     "type": "generate_reply",
     "interrupt": True,
     "user_input": "Tell the customer about the flash sale.",
@@ -277,8 +277,8 @@ session.update_llm({"instructions": "Switch to Spanish."})
 
 | Method | Description |
 |--------|-------------|
-| `send_tool_output(tool_call_id, data)` | Send tool/function result back to the LLM or pipeline |
-| `update_pipeline(data)` | Send a `pipeline:update` command |
+| `send_tool_output(tool_call_id, data)` | Send tool/function result back to the LLM or agent verb |
+| `update_agent(data)` | Send an `agent:update` command |
 | `update_llm(data)` | Send an `llm:update` command |
 
 ## Inject Commands

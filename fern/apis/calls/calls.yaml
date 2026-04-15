@@ -456,9 +456,9 @@ paths:
                 noise_isolation_model:
                   type: string
                   description: Noise isolation model identifier.
-                pipeline_update:
+                agent_update:
                   type: object
-                  description: Update an active pipeline verb mid-conversation.
+                  description: Update an active agent verb mid-conversation.
                   required:
                     - type
                   properties:
@@ -469,7 +469,7 @@ paths:
                         - inject_context
                         - update_tools
                         - generate_reply
-                      description: The type of pipeline update to perform.
+                      description: The type of agent update to perform.
                     instructions:
                       type: string
                       description: New system prompt (for update_instructions).

@@ -14,7 +14,7 @@ This SDK replaces the older `@jambonz/node-client` (webhook) and `@jambonz/node-
 </Note>
 
 <Info>
-**Which transport should I use?** The **WebSocket transport** is recommended for most applications. It provides a persistent bidirectional connection that enables TTS streaming, mid-call updates, inject commands, real-time event handling, and voice AI features like the [pipeline](/verbs/verbs/pipeline) and [llm](/verbs/verbs/llm) verbs. The **webhook transport** is simpler but limited — use it for straightforward call routing scenarios (e.g., [dial](/verbs/verbs/dial), basic IVR menus) where you don't need real-time interaction.
+**Which transport should I use?** The **WebSocket transport** is recommended for most applications. It provides a persistent bidirectional connection that enables TTS streaming, mid-call updates, inject commands, real-time event handling, and voice AI features like the [agent](/verbs/verbs/agent) and [llm](/verbs/verbs/llm) verbs. The **webhook transport** is simpler but limited — use it for straightforward call routing scenarios (e.g., [dial](/verbs/verbs/dial), basic IVR menus) where you don't need real-time interaction.
 </Info>
 
 ## Installation
@@ -201,7 +201,7 @@ await client.calls.redirect(callSid, 'https://example.com/new-flow');
 
 Both `WebhookResponse` and WebSocket `Session` support the same chainable verb methods:
 
-`.say()` `.play()` `.gather()` `.dial()` `.llm()` `.pipeline()` `.conference()` `.enqueue()` `.dequeue()` `.hangup()` `.pause()` `.redirect()` `.config()` `.tag()` `.dtmf()` `.listen()` `.transcribe()` `.message()` `.dub()` `.alert()` `.answer()` `.leave()` `.sipDecline()` `.sipRefer()` `.sipRequest()`
+`.say()` `.play()` `.gather()` `.dial()` `.llm()` `.agent()` `.conference()` `.enqueue()` `.dequeue()` `.hangup()` `.pause()` `.redirect()` `.config()` `.tag()` `.dtmf()` `.listen()` `.transcribe()` `.message()` `.dub()` `.alert()` `.answer()` `.leave()` `.sipDecline()` `.sipRefer()` `.sipRequest()`
 
 All methods accept the same options as the corresponding [verb JSON schemas](/verbs/verbs/overview) and are chainable.
 
@@ -243,9 +243,9 @@ The `isTtsPaused` property indicates whether TTS streaming is paused due to back
 | `tts:stream_closed` | TTS stream ended |
 | `tts:user_interruption` | User barged in during TTS playback |
 
-## LLM and Pipeline Updates
+## LLM and Agent Updates
 
-The Session provides methods for interacting with active LLM and pipeline conversations.
+The Session provides methods for interacting with active LLM and agent conversations.
 
 ### Tool Output
 
@@ -259,28 +259,28 @@ session.on('/tool-call', async (evt) => {
 });
 ```
 
-### Pipeline Updates
+### Agent Updates
 
-Send mid-conversation updates to an active [pipeline](/verbs/verbs/pipeline):
+Send mid-conversation updates to an active [agent](/verbs/verbs/agent):
 
 ```typescript
 // Change the system prompt
-session.updatePipeline({
+session.updateAgent({
   type: 'update_instructions',
   instructions: 'You are now a billing agent.',
 });
 
 // Inject context
-session.updatePipeline({
+session.updateAgent({
   type: 'inject_context',
   messages: [{ role: 'user', content: 'Customer: Sarah, Gold tier.' }],
 });
 
 // Replace tools
-session.updatePipeline({ type: 'update_tools', tools: [...] });
+session.updateAgent({ type: 'update_tools', tools: [...] });
 
 // Trigger a new response (with optional interrupt)
-session.updatePipeline({
+session.updateAgent({
   type: 'generate_reply',
   interrupt: true,
   user_input: 'Tell the customer about the flash sale.',
@@ -297,8 +297,8 @@ session.updateLlm({ instructions: 'Switch to Spanish.' });
 
 | Method | Description |
 |--------|-------------|
-| `sendToolOutput(toolCallId, data)` | Send tool/function result back to the LLM or pipeline |
-| `updatePipeline(data)` | Send a `pipeline:update` command (update_instructions, inject_context, update_tools, generate_reply) |
+| `sendToolOutput(toolCallId, data)` | Send tool/function result back to the LLM or agent verb |
+| `updateAgent(data)` | Send an `agent:update` command (update_instructions, inject_context, update_tools, generate_reply) |
 | `updateLlm(data)` | Send an `llm:update` command |
 
 ## Inject Commands
@@ -414,4 +414,4 @@ See the [examples directory](https://github.com/jambonz/node-sdk/tree/main/examp
 | openai-realtime | WebSocket | OpenAI Realtime API voice agent |
 | llm-streaming | WebSocket | LLM with TTS streaming and barge-in |
 
-For pipeline verb examples, see the [pipeline examples](https://github.com/jambonz/v10-examples/tree/main/examples/pipeline).
+For agent verb examples, see the [agent examples](https://github.com/jambonz/v10-examples/tree/main/examples/agent).

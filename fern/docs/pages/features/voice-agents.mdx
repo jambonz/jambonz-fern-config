@@ -1,15 +1,15 @@
 ---
-title: Pipeline Voice Agents
-subtitle: Build conversational AI agents using the pipeline verb
+title: Voice Agents
+subtitle: Build conversational AI agents using the agent verb
 ---
 
 <Warning>
-The pipeline verb is an **experimental feature** and requires jambonz version **10.1.0 or above**.
+The agent verb is an **experimental feature** and requires jambonz version **10.1.0 or above**.
 </Warning>
 
-The [pipeline](/verbs/verbs/pipeline) verb orchestrates a complete voice AI agent by wiring together three separate components — STT, LLM, and TTS — with integrated turn detection. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs where a single vendor handles everything), the pipeline verb lets you mix and match: for example, Deepgram for STT, Anthropic for the LLM, and Cartesia for TTS.
+The [agent](/verbs/verbs/agent) verb orchestrates a complete voice AI agent by wiring together three separate components — STT, LLM, and TTS — with integrated turn detection. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs where a single vendor handles everything), the agent verb lets you mix and match: for example, Deepgram for STT, Anthropic for the LLM, and Cartesia for TTS.
 
-Pipeline manages the full conversational turn cycle:
+The agent verb manages the full conversational turn cycle:
 1. User speaks → STT produces a transcript
 2. Turn detection decides the user is done speaking
 3. Transcript is sent to the LLM
@@ -21,7 +21,7 @@ Pipeline manages the full conversational turn cycle:
 
 The `llm` property is the only required field. STT and TTS will use your application's default speech credentials if not specified, but in practice you'll want to configure all three.
 
-Here is a minimal pipeline agent using the [Node.js SDK](/sdks/node-sdk):
+Here is a minimal voice agent using the [Node.js SDK](/sdks/node-sdk):
 
 ```typescript
 import http from 'http';
@@ -32,12 +32,12 @@ const makeService = createEndpoint({ server, port: 3000 });
 const svc = makeService({ path: '/' });
 
 svc.on('session:new', (session) => {
-  session.on('/pipeline-complete', () => {
+  session.on('/agent-complete', () => {
     session.hangup().reply();
   });
 
   session
-    .pipeline({
+    .agent({
       stt: {
         vendor: 'deepgram',
         language: 'en-US',
@@ -56,7 +56,7 @@ svc.on('session:new', (session) => {
           ],
         },
       },
-      actionHook: '/pipeline-complete',
+      actionHook: '/agent-complete',
     })
     .send();
 });
@@ -67,7 +67,7 @@ Or as JSON (for webhook applications):
 ```json
 [
   {
-    "verb": "pipeline",
+    "verb": "agent",
     "stt": {
       "vendor": "deepgram",
       "language": "en-US"
@@ -85,7 +85,7 @@ Or as JSON (for webhook applications):
         ]
       }
     },
-    "actionHook": "/pipeline-complete"
+    "actionHook": "/agent-complete"
   }
 ]
 ```
@@ -99,11 +99,11 @@ Or as JSON (for webhook applications):
 | Google | `google` | `gemini-2.5-flash-lite`, `gemini-2.5-pro` |
 | AWS Bedrock | `aws` | `us.meta.llama4-scout-17b-instruct-v1:0` |
 
-The pipeline normalizes message formats and tool schemas across vendors automatically. You write tools in OpenAI format and the pipeline adapts them for each vendor.
+The agent verb normalizes message formats and tool schemas across vendors automatically. You write tools in OpenAI format and the agent verb adapts them for each vendor.
 
 ### Authentication
 
-By default, the pipeline uses speech credentials configured in the jambonz portal. You can also pass credentials directly:
+By default, the agent verb uses speech credentials configured in the jambonz portal. You can also pass credentials directly:
 
 ```js
 llm: {
@@ -118,7 +118,7 @@ For AWS Bedrock, pass `accessKeyId`, `secretAccessKey`, and `region` in the `aut
 
 ## Turn Detection
 
-The `turnDetection` property controls how the pipeline decides the user has finished speaking.
+The `turnDetection` property controls how the agent verb decides the user has finished speaking.
 
 ### STT-based detection (default)
 
@@ -168,7 +168,7 @@ There are two ways early generation is triggered:
 For other STT vendors with native turn-taking (assemblyai, speechmatics), early generation is not available.
 
 ```js
-session.pipeline({
+session.agent({
   turnDetection: 'krisp',
   earlyGeneration: true,
   // ...
@@ -219,11 +219,11 @@ This also covers the "missed speech" case: when VAD detects speech but STT retur
 
 ## Greeting
 
-By default (`greeting: true`), the pipeline prompts the LLM to generate an initial greeting before the user speaks. Set `greeting: false` if you want the agent to wait silently for the user to speak first.
+By default (`greeting: true`), the agent verb prompts the LLM to generate an initial greeting before the user speaks. Set `greeting: false` if you want the agent to wait silently for the user to speak first.
 
 ## Tool/Function Calling
 
-The pipeline supports LLM tool/function calling, allowing your agent to perform actions like looking up data, calling APIs, or transferring calls.
+The agent verb supports LLM tool/function calling, allowing your agent to perform actions like looking up data, calling APIs, or transferring calls.
 
 ### Defining Tools
 
@@ -243,7 +243,7 @@ const weatherTool = {
   },
 };
 
-session.pipeline({
+session.agent({
   llm: {
     vendor: 'openai',
     model: 'gpt-4.1-mini',
@@ -257,7 +257,7 @@ session.pipeline({
 }).send();
 ```
 
-The pipeline normalizes tool schemas across LLM vendors. You always define tools in the same format regardless of whether you're using OpenAI, Anthropic, Google, or Bedrock.
+The agent verb normalizes tool schemas across LLM vendors. You always define tools in the same format regardless of whether you're using OpenAI, Anthropic, Google, or Bedrock.
 
 ### Handling Tool Calls (WebSocket)
 
@@ -298,11 +298,11 @@ In webhook mode, the tool call arrives as an HTTP POST to the `toolHook` URL. Re
 
 ## MCP Server Integration
 
-Instead of (or in addition to) defining tools inline, you can connect to external [MCP](https://modelcontextprotocol.io/) servers. The pipeline connects to each server at startup via SSE or Streamable HTTP transport, discovers available tools, and makes them callable by the LLM.
+Instead of (or in addition to) defining tools inline, you can connect to external [MCP](https://modelcontextprotocol.io/) servers. The agent verb connects to each server at startup via SSE or Streamable HTTP transport, discovers available tools, and makes them callable by the LLM.
 
 ```typescript
 session
-  .pipeline({
+  .agent({
     llm: {
       vendor: 'openai',
       model: 'gpt-4.1',
@@ -318,7 +318,7 @@ session
     mcpServers: [
       { url: 'https://livescoremcp.com/sse' },
     ],
-    actionHook: '/pipeline-complete',
+    actionHook: '/agent-complete',
   })
   .send();
 ```
@@ -342,9 +342,9 @@ If an MCP server requires authentication:
 
 ## Mid-conversation Updates
 
-The pipeline supports asynchronous updates while a conversation is in progress, allowing you to change the agent's behavior, inject context, modify tools, or trigger responses — without interrupting the verb stack.
+The agent verb supports asynchronous updates while a conversation is in progress, allowing you to change the agent's behavior, inject context, modify tools, or trigger responses — without interrupting the verb stack.
 
-Updates are sent via WebSocket (`session.updatePipeline(data)`) or REST API.
+Updates are sent via WebSocket (`session.updateAgent(data)`) or REST API.
 
 ### update_instructions
 
@@ -352,7 +352,7 @@ Replace the LLM system prompt mid-conversation. Useful for persona switching or 
 
 ```typescript
 // After identifying the caller's intent, switch to a specialist persona
-session.updatePipeline({
+session.updateAgent({
   type: 'update_instructions',
   instructions: 'You are now a billing support agent. Help the caller with invoice questions.',
 });
@@ -364,7 +364,7 @@ Append messages to the LLM conversation history. System messages are routed to t
 
 ```typescript
 // Inject CRM data after identifying the caller
-session.updatePipeline({
+session.updateAgent({
   type: 'inject_context',
   messages: [
     {
@@ -382,7 +382,7 @@ Replace the tool set available to the LLM. The new tools take effect on the next
 
 ```typescript
 // Add web search capability after the user requests it
-session.updatePipeline({
+session.updateAgent({
   type: 'update_tools',
   tools: [
     {
@@ -400,20 +400,20 @@ session.updatePipeline({
 
 ### generate_reply
 
-Prompt the LLM to generate a new response. If the pipeline is idle, the prompt executes immediately. If busy, the request is queued.
+Prompt the LLM to generate a new response. If the agent verb is idle, the prompt executes immediately. If busy, the request is queued.
 
 Use `interrupt: true` to cancel the current response and generate immediately — useful for supervisor overrides or urgent notifications.
 
 ```typescript
 // Supervisor whisper — interrupt with urgent info
-session.updatePipeline({
+session.updateAgent({
   type: 'generate_reply',
   interrupt: true,
   user_input: 'URGENT: Tell the customer about the flash sale — 50% off all items for the next hour.',
 });
 
 // Gentle prompt with one-shot instructions
-session.updatePipeline({
+session.updateAgent({
   type: 'generate_reply',
   user_input: 'Customer is asking about refunds',
   instructions: 'Be empathetic and offer a 20% discount before processing a refund.',
@@ -425,7 +425,7 @@ session.updatePipeline({
 The `eventHook` receives real-time events during the conversation. In WebSocket mode, listen with `session.on()`:
 
 ```typescript
-session.on('/pipeline-event', (evt) => {
+session.on('/agent-event', (evt) => {
   switch (evt.type) {
     case 'user_transcript':
       console.log('User said:', evt.transcript);
@@ -500,7 +500,7 @@ The `turn_end` latency breakdown helps you identify bottlenecks and optimize res
 
 ## Conversation History Summarization
 
-For long conversations that might exceed the LLM's context window, the pipeline can automatically summarize older turns.
+For long conversations that might exceed the LLM's context window, the agent verb can automatically summarize older turns.
 
 Set the `JAMBONES_PIPELINE_SUMMARIZE_TURNS` environment variable to control how often summarization runs. Values 1–7 are clamped to 8. Set to `0` to disable (default).
 
@@ -553,22 +553,22 @@ Detailed configuration:
 
 ## Error Recovery
 
-The pipeline handles errors gracefully to keep the conversation going:
+The agent verb handles errors gracefully to keep the conversation going:
 
-- **LLM errors with tools** — If the LLM fails and tools were included, the pipeline retries the same prompt without tools. This handles models that don't support tool use in certain configurations.
+- **LLM errors with tools** — If the LLM fails and tools were included, the agent verb retries the same prompt without tools. This handles models that don't support tool use in certain configurations.
 - **Speculative preflight errors** — When a speculative prompt fails, the preflight is discarded and a fresh prompt is issued normally.
-- **Recovery to idle** — On unrecoverable LLM errors, the pipeline ends the turn and transitions to idle so the user can continue speaking. The no-response timer is not started after an error to avoid retry loops.
-- **STT reconnection** — The pipeline automatically reconnects the STT stream if the connection drops.
+- **Recovery to idle** — On unrecoverable LLM errors, the agent verb ends the turn and transitions to idle so the user can continue speaking. The no-response timer is not started after an error to avoid retry loops.
+- **STT reconnection** — The agent verb automatically reconnects the STT stream if the connection drops.
 
-When the pipeline encounters an unrecoverable error, it invokes the `actionHook` with a `completion_reason` indicating the failure.
+When the agent verb encounters an unrecoverable error, it invokes the `actionHook` with a `completion_reason` indicating the failure.
 
 ## Example Applications
 
-The [pipeline examples](https://github.com/jambonz/v10-examples/tree/main/examples/pipeline) repository contains runnable demos for each feature:
+The [agent examples](https://github.com/jambonz/v10-examples/tree/main/examples/agent) repository contains runnable demos for each feature:
 
 | Example | What it demonstrates |
 |---------|---------------------|
-| `deepgram-cartesia` | Basic pipeline with Deepgram STT + Cartesia TTS |
+| `deepgram-cartesia` | Basic agent with Deepgram STT + Cartesia TTS |
 | `deepgramflux-elevenlabs` | Deepgram Flux (native turn detection) + ElevenLabs TTS |
 | `speechmatics-rime` | Speechmatics STT + Rime TTS |
 | `using-tools` | Tool calling with weather lookup |

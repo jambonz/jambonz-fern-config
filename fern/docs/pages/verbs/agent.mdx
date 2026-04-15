@@ -1,15 +1,15 @@
 ---
-title: Pipeline
-subtitle: Orchestrate a complete STT, LLM, and TTS voice AI pipeline with integrated turn detection.
+title: Agent
+subtitle: Orchestrate a complete STT, LLM, and TTS voice AI agent with integrated turn detection.
 ---
 
 <Warning>
-The pipeline verb is an **experimental feature** and requires jambonz version **10.1.0 or above**.
+The agent verb is an **experimental feature** and requires jambonz version **10.1.0 or above**.
 </Warning>
 
 ```js maxLines=100
 session
-  .pipeline({
+  .agent({
     stt: {
       vendor: 'deepgram',
       language: 'multi',
@@ -46,15 +46,15 @@ session
     bargeIn: { enable: true, minSpeechDuration: 0.5 },
     noResponseTimeout: 12,
     toolHook: '/tool-call',
-    eventHook: '/pipeline-event',
-    actionHook: '/pipeline-complete',
+    eventHook: '/agent-event',
+    actionHook: '/agent-complete',
   })
   .send();
 ```
 
-The pipeline verb wires together three components — STT, LLM, and TTS — with integrated turn detection to create a complete voice AI agent. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs like OpenAI Realtime), pipeline lets you mix and match separate vendors for each component.
+The agent verb wires together three components — STT, LLM, and TTS — with integrated turn detection to create a complete voice AI agent. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs like OpenAI Realtime), the agent verb lets you mix and match separate vendors for each component.
 
-Pipeline manages the full conversational turn cycle:
+The agent verb manages the full conversational turn cycle:
 1. User speaks → STT produces a transcript
 2. Turn detection decides the user is done speaking
 3. Transcript is sent to the LLM
@@ -63,13 +63,13 @@ Pipeline manages the full conversational turn cycle:
 6. If the user barges in, TTS stops and a new turn begins
 
 <Note>
-For a comprehensive guide on building voice AI agents with the pipeline verb, see [Pipeline Voice Agents](/guides/features/pipeline-voice-agents).
+For a comprehensive guide on building voice AI agents with the agent verb, see [Voice Agents](/guides/features/voice-agents).
 </Note>
 
 ## Parameters
 
 <ParamField path="actionHook" type="string" required={false}>
-  A webhook invoked when the pipeline ends. The payload includes a `completion_reason` field indicating why the pipeline terminated.
+  A webhook invoked when the agent verb ends. The payload includes a `completion_reason` field indicating why it terminated.
 </ParamField>
 
 <ParamField path="bargeIn" type="object" required={false}>
@@ -93,7 +93,7 @@ For a comprehensive guide on building voice AI agents with the pipeline verb, se
 </ParamField>
 
 <ParamField path="eventHook" type="string" required={false}>
-  A webhook invoked for pipeline events. Receives event types: `user_transcript`, `agent_response`, `user_interruption`, `turn_end`, and `history_summarized`. See [eventHook Events](#eventhook-events) below.
+  A webhook invoked for agent events. Receives event types: `user_transcript`, `agent_response`, `user_interruption`, `turn_end`, and `history_summarized`. See [eventHook Events](#eventhook-events) below.
 </ParamField>
 
 <ParamField path="greeting" type="boolean" required={false} default="true">
@@ -141,7 +141,7 @@ For a comprehensive guide on building voice AI agents with the pipeline verb, se
 </ParamField>
 
 <ParamField path="mcpServers" type="array" required={false}>
-  External MCP servers that provide tools to the LLM. The pipeline connects to each server at startup, discovers available tools, and makes them callable by the LLM. Each entry requires a `url` property and optionally `auth` and `roots`.
+  External MCP servers that provide tools to the LLM. The agent verb connects to each server at startup, discovers available tools, and makes them callable by the LLM. Each entry requires a `url` property and optionally `auth` and `roots`.
 </ParamField>
 
 <ParamField path="noiseIsolation" type="string or object" required={false}>
@@ -165,7 +165,7 @@ For a comprehensive guide on building voice AI agents with the pipeline verb, se
 </ParamField>
 
 <ParamField path="turnDetection" type="string or object" required={false} default="stt">
-  Turn detection strategy. Controls when the pipeline decides the user has finished speaking.
+  Turn detection strategy. Controls when the agent verb decides the user has finished speaking.
 
   As a string:
   - `"stt"` — Uses the STT vendor's native end-of-utterance signal. For most vendors this is silence-based. Vendors with smarter built-in turn detection (deepgramflux, assemblyai, speechmatics) always use their native detection regardless of this setting.
@@ -201,11 +201,11 @@ Alternatively, connect external [MCP servers](#mcp-servers) to provide tools aut
 
 ## MCP Servers
 
-Instead of (or in addition to) defining tools inline, you can connect to external MCP servers. The pipeline connects to each server at startup via SSE or Streamable HTTP transport, discovers available tools, and makes them callable by the LLM.
+Instead of (or in addition to) defining tools inline, you can connect to external MCP servers. The agent verb connects to each server at startup via SSE or Streamable HTTP transport, discovers available tools, and makes them callable by the LLM.
 
 ```js
 session
-  .pipeline({
+  .agent({
     llm: { vendor: 'openai', model: 'gpt-4.1', llmOptions: {
       messages: [{ role: 'system', content: 'You are a sports assistant.' }],
     }},
@@ -214,12 +214,12 @@ session
     mcpServers: [
       { url: 'https://livescoremcp.com/sse' },
     ],
-    actionHook: '/pipeline-complete',
+    actionHook: '/agent-complete',
   })
   .send();
 ```
 
-When the LLM requests a tool call, the pipeline checks MCP servers first. If the tool name matches one discovered from an MCP server, the call is dispatched there directly. If no MCP server provides the tool, it falls through to the `toolHook`.
+When the LLM requests a tool call, the agent verb checks MCP servers first. If the tool name matches one discovered from an MCP server, the call is dispatched there directly. If no MCP server provides the tool, it falls through to the `toolHook`.
 
 ## eventHook Events
 
@@ -311,14 +311,14 @@ The `eventHook` receives real-time events during the conversation. In WebSocket 
 
 ## Mid-conversation Updates
 
-The pipeline supports asynchronous updates while a conversation is in progress. Updates can be sent via WebSocket (`session.updatePipeline(data)`) or REST API.
+The agent verb supports asynchronous updates while a conversation is in progress. Updates can be sent via WebSocket (`session.updateAgent(data)`) or REST API.
 
 ### update_instructions
 
 Replace the LLM system prompt mid-conversation.
 
 ```js
-session.updatePipeline({
+session.updateAgent({
   type: 'update_instructions',
   instructions: 'You are now a billing support agent.',
 });
@@ -329,7 +329,7 @@ session.updatePipeline({
 Append messages to the LLM conversation history. System messages are routed to the system prompt for vendors that don't support inline system messages.
 
 ```js
-session.updatePipeline({
+session.updateAgent({
   type: 'inject_context',
   messages: [
     { role: 'user', content: 'CRM context: Customer name: Sarah Mitchell. Account tier: Gold.' },
@@ -342,7 +342,7 @@ session.updatePipeline({
 Replace the tool set available to the LLM.
 
 ```js
-session.updatePipeline({
+session.updateAgent({
   type: 'update_tools',
   tools: [
     {
@@ -359,7 +359,7 @@ session.updatePipeline({
 Prompt the LLM to generate a new response. Use `interrupt: true` to cancel the current response and generate immediately.
 
 ```js
-session.updatePipeline({
+session.updateAgent({
   type: 'generate_reply',
   interrupt: true,
   user_input: 'URGENT: Tell the customer about the flash sale.',
@@ -377,4 +377,4 @@ session.updatePipeline({
 
 ## Example Applications
 
-See the [pipeline examples](https://github.com/jambonz/v10-examples/tree/main/examples/pipeline) for runnable demos covering basic usage, tool calling, MCP servers, CRM injection, persona switching, and more.
+See the [agent examples](https://github.com/jambonz/v10-examples/tree/main/examples/agent) for runnable demos covering basic usage, tool calling, MCP servers, CRM injection, persona switching, and more.
