@@ -24,6 +24,10 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
   Timeout value for [continuous ASR feature](/guides/features/continous-asr).
 </ParamField>
 
+<ParamField path="autogeneratePrompt" type="boolean" required={false}>
+  (AssemblyAI) When `true`, automatically sets `assemblyAiOptions.prompt` to the text of the nested [`say`](/verbs/verbs/say) verb of the parent [`gather`](/verbs/verbs/gather). Only applies when there is a nested `say` and no explicit `assemblyAiOptions.prompt` has been supplied. SSML tags are stripped before use.
+</ParamField>
+
 <ParamField path="azureServiceEndpoint" type="string" required={false}>
   Custom service endpoint to connect to instead of hosted Microsoft regional endpoints.
 </ParamField>
@@ -163,21 +167,45 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 <AccordionGroup>
 
   <Accordion title="assemblyAiOptions">
-    <ParamField path="serviceVersion" type="string" required={false}>
-      the version of the streaming API to use, example `v3`
+    <ParamField path="apiKey" type="string" required={false}>
+      AssemblyAI API key to authenticate with (overrides credentials configured in the jambonz portal).
     </ParamField>
-   <ParamField path="formatTurns" type="boolean" required={false}>
-      Format each speaker turn
-   </ParamField>
-   <ParamField path="endOfTurnConfidenceThreshold" type="number" required={false}>
-      determines how confident the model must be before it triggers an end-of-turn, example `0.5`
-   </ParamField>
-   <ParamField path="minEndOfTurnSilenceWhenConfident" type="number" required={false}>
-      the minimum amount of silence (in milliseconds) required after the last spoken word before the system will trigger an end-of-turn (EOT) event, when the model is confident an EOT should occur, example `500`
-   </ParamField>
-   <ParamField path="maxTurnSilence" type="number" required={false}>
-      the maximum amount of silence (in milliseconds) allowed in a turn before an end-of-turn (EOT) is automatically triggered, example `2000`
-   </ParamField>
+    <ParamField path="serviceVersion" type="string" required={false}>
+      The version of the streaming API to use, `v2` or `v3`.
+    </ParamField>
+    <ParamField path="speechModel" type="string" required={false}>
+      AssemblyAI speech model to use for recognition (e.g., `u3-rt-pro`).
+    </ParamField>
+    <ParamField path="formatTurns" type="boolean" required={false}>
+      Format each speaker turn. Default: `true`.
+    </ParamField>
+    <ParamField path="endOfTurnConfidenceThreshold" type="number" required={false}>
+      Confidence threshold (0.0–1.0) the model must meet before triggering an end-of-turn. Example: `0.5`.
+    </ParamField>
+    <ParamField path="minEndOfTurnSilenceWhenConfident" type="number" required={false}>
+      Minimum silence duration (milliseconds) required after the last spoken word before the system triggers an end-of-turn event, when the model is confident an EOT should occur. Default: `400`. Example: `500`.
+    </ParamField>
+    <ParamField path="maxTurnSilence" type="number" required={false}>
+      Maximum silence duration (milliseconds) allowed in a turn before an end-of-turn is automatically triggered. Default: `1280`. Example: `2000`.
+    </ParamField>
+    <ParamField path="minTurnSilence" type="number" required={false}>
+      Minimum silence duration (milliseconds) before allowing end-of-turn.
+    </ParamField>
+    <ParamField path="keyterms" type="array" required={false}>
+      List of key terms to boost in recognition. Example: `["jambonz", "drachtio"]`.
+    </ParamField>
+    <ParamField path="prompt" type="string" required={false}>
+      Prompt text to guide the recognition model — typically a description of the expected user response. Improves accuracy when the response is predictable (e.g., the text of the question you just asked). See also [`autogeneratePrompt`](#param-autogenerateprompt) on the recognizer, which auto-populates this from a nested `say` in a `gather` verb.
+    </ParamField>
+    <ParamField path="languageDetection" type="boolean" required={false}>
+      Enable automatic language detection.
+    </ParamField>
+    <ParamField path="vadThreshold" type="number" required={false}>
+      Voice activity detection threshold.
+    </ParamField>
+    <ParamField path="inactivityTimeout" type="number" required={false}>
+      Timeout (seconds) for inactivity before closing the stream.
+    </ParamField>
   </Accordion>
 
   <Accordion title="azureOptions">
