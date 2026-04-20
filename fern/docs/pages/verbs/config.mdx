@@ -172,3 +172,43 @@ The `config` verb is non-blocking.
 <ParamField path="disableTtsCache" type="boolean" required={false}>
   disable TTS caching for an entire call session
 </ParamField>
+
+<ParamField path="noiseIsolation" type="object" required={false}>
+  Enable or disable server-side noise isolation to reduce background noise on call audio. Useful for improving STT accuracy in noisy environments.
+</ParamField>
+
+<ParamField path="noiseIsolation.enable" type="boolean" required={false}>
+  Whether to enable or disable noise isolation.
+</ParamField>
+
+<ParamField path="noiseIsolation.vendor" type="string" required={false}>
+  Noise isolation vendor: `"krisp"` or `"rnnoise"`. Krisp requires an API key on self-hosted systems. RNNoise is open-source and requires no API key.
+</ParamField>
+
+<ParamField path="noiseIsolation.level" type="number" required={false}>
+  Suppression level 0–100. Higher values are more aggressive. Default: 100.
+</ParamField>
+
+<ParamField path="noiseIsolation.model" type="string" required={false}>
+  Optional model name override.
+</ParamField>
+
+<ParamField path="turnTaking" type="object" required={false}>
+  Enable or disable turn-taking detection for conversational AI applications. Turn-taking uses an acoustic model to determine when the user has finished speaking, rather than relying on silence detection alone.
+</ParamField>
+
+<ParamField path="turnTaking.enable" type="boolean" required={false}>
+  Whether to enable or disable turn-taking detection.
+</ParamField>
+
+<ParamField path="turnTaking.vendor" type="string" required={false}>
+  Turn-taking vendor: `"krisp"`. Requires a Krisp API key on self-hosted systems.
+</ParamField>
+
+<ParamField path="turnTaking.threshold" type="number" required={false}>
+  Confidence threshold 0.0–1.0. Lower values trigger earlier turn transitions (more aggressive). Default: 0.5.
+</ParamField>
+
+<ParamField path="turnTaking.model" type="string" required={false}>
+  Optional model name override.
+</ParamField>

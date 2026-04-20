@@ -1,0 +1,56 @@
+<Card title="10.1.0" icon="regular crown" iconPosition="left">
+jambonz Commercial 10.1.0
+</Card>
+
+#### New Features & Improvements
+
+1. **Agent verb** — Major new feature enabling low-latency voice AI agents with support for Amazon Bedrock and Google Gemini as LLM backends, Deepgram and Krisp for STT/turn-taking, and ElevenLabs TTS with spoken-word tracking. Includes mid-conversation async updates via `agent:update`, noise cancellation powered by Krisp, and comprehensive metrics and measurement. See the [agent verb reference](/verbs/verbs/agent) and [voice agents guide](/guides/features/voice-agents) for details.
+1. **Node.js SDK** — New unified SDK for building jambonz voice applications in TypeScript/JavaScript, supporting webhook and WebSocket transports, REST API client, TTS streaming, and chainable verb methods. Replaces the older `@jambonz/node-client` and `@jambonz/node-client-ws` packages. See the [Node.js SDK documentation](/sdks/node-sdk).
+1. **Python SDK** (experimental) — New Python SDK with the same capabilities as the Node.js SDK: webhook and WebSocket transports, REST client, TTS streaming, inject commands, and spec-driven verb generation with full type hints. See the [Python SDK documentation](/sdks/python-sdk).
+1. **Speech vendor updates** — Expanded speech vendor support across the platform:
+   - **Speechmatics Preview STT** — New speech-to-text vendor with turn-taking event forwarding and analytics.
+   - **Houndify WebSocket STT** — Speech recognition over WebSocket with `audioQueryAbsoluteTimeout` for controlling recognition timeouts.
+   - **AssemblyAI Universal-2 Pro** — Support for the universal-2 pro streaming model, defaulting to `u3-rt-pro` when a prompt is provided.
+   - **Deepgram Flux language hint** — Pass `language_hint` to Deepgram Flux STT for improved recognition accuracy.
+   - **Google S2S transcription events** — Google Speech-to-Speech now emits `llm_event` with transcription data to the application layer.
+   - **ElevenLabs TTS tracking** — Track spoken words and TTS timing for ElevenLabs, enabling detailed usage analytics and billing insights.
+   - **TTS time-to-first-byte metrics** — Latency metrics across all streaming TTS vendors to measure time to first audio byte.
+   - **Inworld AI models** — Support for Inworld AI models.
+1. **Krisp noise isolation** — Add support for Krisp-powered noise isolation and cancellation with usage tracking and event generation.
+1. **Google Gemini LLM** — Add support for Google Gemini as an LLM provider with credential management in the API server and webapp.
+1. **MCP client hardening** — Improved MCP client reliability with configurable timeouts, authentication support, URL hints, automatic reconnection, and graceful connection close.
+1. **Listen verb in conference** — Support for nesting a `listen` verb inside a `conference`, enabling real-time audio streaming from conference sessions.
+1. **LLM services** — New LLM services management in the API server and webapp.
+1. **License expiry alert** — The webapp now displays an alert when the system license key is expired or approaching expiration.
+1. **Schema migration** — Migrated to the consolidated `@jambonz/schema` package, deprecating the standalone verb-specs module.
+1. **Updated API swagger** — API server swagger documentation updated to reflect new endpoints and properties.
+
+#### Bug Fixes
+
+- Fixed a race condition for outbound calls in the feature-server that could cause call setup failures.
+- Fixed `gladiaOptions` being hardcoded instead of using user-provided configuration.
+- Fixed Google Speech-to-Speech not sending transcription events to the application layer.
+- Fixed DTMF digits being sent as multiple underscore characters instead of correct tones.
+- Fixed TTS engine flush signaling and guarded against Cartesia empty events without proper completion state.
+- Fixed ElevenLabs models endpoint failure causing the entire language/model dropdown to break; now gracefully falls back to static data.
+- Fixed Deepgram STT language dropdown appearing empty due to model name parsing issue.
+- Fixed missing language names for Cartesia Sonic 3 languages in the language map.
+- Fixed ElevenLabs STT not properly loading available languages and models.
+- Fixed potential crash in webapp TTS voice sorting when voice name is undefined.
+- Fixed exception when user provides an invalid value for a play file URL.
+- Added exception handling in the `mod_dub` FreeSWITCH module to prevent crashes from unhandled errors.
+- Fixed agent verb integration with Deepgram STT and Krisp/LLM-based turn taking.
+- Fixed internal task validation that was incorrectly rejecting valid internal tasks.
+- Removed unused IBM speech integration from the webapp.
+
+#### SQL Changes
+```
+-- Krisp usage tracking
+CREATE TABLE krisp_usage_rollup (...)
+```
+
+<Callout intent="info">
+Contact your account manager or email support@jambonz.org for the complete SQL migration script for this release.
+</Callout>
+
+**Questions?** Contact us at <a href="mailto:support@jambonz.org">support@jambonz.org</a>

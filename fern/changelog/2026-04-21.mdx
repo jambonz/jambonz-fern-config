@@ -1,0 +1,33 @@
+<Card title="10.1.1" icon="regular crown" iconPosition="left">
+jambonz Commercial 10.1.1
+</Card>
+
+#### New Features & Improvements
+
+1. **Session observability** — Major new feature providing detailed per-session data for debugging and analysis. At call end, the feature-server assembles a `session.json` containing turn-by-turn detail (transcripts, latencies, agent responses) and sends it to the recorder alongside the audio. The API server exposes a new session retrieval endpoint and bundle viewer (HTML page with embedded waveform player) so you can replay audio and inspect turn data together. A new `observability_level` column on the application controls how much detail is captured. The webapp adds an observability level selector and a transcript tab in the Recent Calls view for browsing session data.
+1. **Krisp turn detection with native-turn-taking STT vendors** — You can now use Krisp for acoustic turn detection even when your STT vendor (AssemblyAI, Deepgram Flux, Speechmatics) provides its own native turn-taking. Previously these vendors always used their built-in detection; now you can opt into Krisp for more consistent behavior across vendors.
+1. **Agent verb inherits STT/TTS from application** — The [agent](/verbs/verbs/agent) verb now falls back to the STT and TTS settings configured on the application when `stt` or `tts` are not specified in the verb. Previously these were effectively required on the verb itself.
+1. **drachtio-srf 5.0.21** — Updated the SIP stack to pick up upstream fixes.
+
+#### Bug Fixes
+
+- Fixed webapp clearing the "alerts last viewed" timestamp on logout, which caused the alert notification badge to re-trigger for already-seen alerts after logging back in.
+- Fixed an issue in the Recent Calls view where session date was being parsed from `attempted_at` instead of the recording URL, producing incorrect timestamps in some cases.
+
+#### SQL Changes
+```sql
+ALTER TABLE accounts ADD COLUMN observability_level
+  ENUM('disabled','recording','full') NOT NULL DEFAULT 'disabled' AFTER record_all_calls;
+
+ALTER TABLE applications ADD COLUMN observability_level
+  ENUM('disabled','recording','full') DEFAULT NULL AFTER record_all_calls;
+
+UPDATE accounts SET observability_level = 'recording' WHERE record_all_calls = true;
+
+UPDATE applications SET observability_level = 'recording' WHERE record_all_calls = true;
+```
+
+#### Availability
+- Available now on jambonz.cloud; coming soon with devops scripts for subscription customers
+
+**Questions?** Contact us at <a href="mailto:support@jambonz.org">support@jambonz.org</a>

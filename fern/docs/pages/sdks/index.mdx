@@ -3,34 +3,44 @@ title: Client SDKs
 layout: page
 ---
 
-Jambonz has a number of SDKs
+jambonz provides SDKs for building voice applications across multiple platforms.
+
+#### Server SDKs
 <CardGroup cols={2}>
   <Card
-    title="Node.js Client SDK "
+    title="Node.js SDK"
     icon="fa-regular fa-code"
-    href="/sdks/nodeclient"
+    href="/sdks/node-sdk"
   >
-    Our Node.js SDK for using with Webhooks and the REST API. 
+    TypeScript/JavaScript SDK for building webhook and WebSocket voice applications with @jambonz/sdk.
   </Card>
   <Card
-    title="Node.js Websocket Client SDK "
-    icon="fa-regular fa-code"
-    href="/sdks/nodeclientws"
+    title="Python SDK"
+    icon="fa-regular fa-flask"
+    href="/sdks/python-sdk"
   >
-    Our Node.js SDK for using with the Websocket API 
+    Python SDK for building webhook and WebSocket voice applications. Spec-driven verb generation with full type hints. Experimental.
   </Card>
+</CardGroup>
+
+#### Client SDKs
+<CardGroup cols={2}>
+  <Card
+    title="WebRTC SDK"
+    icon="fa-regular fa-phone"
+    href="/sdks/webrtc"
+  >
+    Browser and React Native SDK for real-time voice calling with WebRTC. Supports Web (React) and React Native (iOS + Android).
+  </Card>
+</CardGroup>
+
+#### Utilities
+<CardGroup cols={2}>
   <Card
     title="Node-RED"
     icon="fa-regular fa-code"
     href="/sdks/nodered"
   >
     A package for the Node-RED Low Code platform
-  </Card>
-  <Card
-    title="NPX Quickstarts" 
-    icon="fa-regular fa-code"
-    href="/sdks/npx"
-  >
-    Create a scaffold of an application from the command line 
   </Card>
 </CardGroup>

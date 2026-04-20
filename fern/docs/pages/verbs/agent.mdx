@@ -1,0 +1,380 @@
+---
+title: Agent
+subtitle: Orchestrate a complete voice agent by creating a cascaded voice pipeline consisting of your choice of STT, LLM, TTS, VAD and turn-taking components.
+---
+
+<Warning>
+The agent verb is an **experimental feature** in jambonz v10.1.1
+</Warning>
+
+```js maxLines=100
+session
+  .agent({
+    stt: {
+      vendor: 'deepgram',
+      language: 'multi',
+      deepgramOptions: { model: 'nova-3-general' },
+    },
+    tts: {
+      vendor: 'cartesia',
+      voice: '9626c31c-bec5-4cca-baa8-f8ba9e84c8bc',
+    },
+    llm: {
+      vendor: 'openai',
+      model: 'gpt-4.1-mini',
+      llmOptions: {
+        messages: [
+          { role: 'system', content: 'You are a helpful voice assistant.' },
+        ],
+        tools: [
+          {
+            name: 'get_weather',
+            description: 'Get current weather for a city',
+            parameters: {
+              type: 'object',
+              properties: {
+                city: { type: 'string' },
+              },
+              required: ['city'],
+            },
+          },
+        ],
+      },
+    },
+    turnDetection: 'krisp',
+    earlyGeneration: true,
+    bargeIn: { enable: true, minSpeechDuration: 0.5 },
+    noResponseTimeout: 12,
+    toolHook: '/tool-call',
+    eventHook: '/agent-event',
+    actionHook: '/agent-complete',
+  })
+  .send();
+```
+
+The agent verb wires together three components — STT, LLM, and TTS — with integrated turn detection to create a complete voice AI agent. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs like OpenAI Realtime), the agent verb lets you mix and match separate vendors for each component.
+
+The agent verb manages the full conversational turn cycle:
+1. User speaks → STT produces a transcript
+2. Turn detection decides the user is done speaking
+3. Transcript is sent to the LLM
+4. LLM response tokens stream to TTS
+5. TTS audio plays back to the caller
+6. If the user barges in, TTS stops and a new turn begins
+
+<Note>
+For a comprehensive guide on building voice AI agents with the agent verb, see [Voice Agents](/guides/features/voice-agents).
+</Note>
+
+## Parameters
+
+<ParamField path="actionHook" type="string" required={false}>
+  A webhook invoked when the agent verb ends. The payload includes a `completion_reason` field indicating why it terminated.
+</ParamField>
+
+<ParamField path="bargeIn" type="object" required={false}>
+  Controls whether and how the user can interrupt the assistant while it is speaking.
+</ParamField>
+
+<ParamField path="bargeIn.enable" type="boolean" required={false} default="true">
+  Allow the user to interrupt the assistant while it is speaking.
+</ParamField>
+
+<ParamField path="bargeIn.minSpeechDuration" type="number" required={false} default="0.5">
+  Seconds of detected speech required before confirming an interruption. Prevents brief noises from cutting off the assistant.
+</ParamField>
+
+<ParamField path="bargeIn.sticky" type="boolean" required={false} default="false">
+  If true, once the user interrupts, the assistant does not resume speaking the interrupted response.
+</ParamField>
+
+<ParamField path="earlyGeneration" type="boolean" required={false} default="false">
+  Enable speculative LLM prompting before end-of-turn is confirmed. When using Krisp turn detection, set this to `true` to speculatively prompt the LLM before Krisp confirms the turn has ended. If the transcript matches when the turn ends, buffered tokens are released immediately — reducing response latency. Deepgram Flux performs early generation automatically regardless of this setting.
+</ParamField>
+
+<ParamField path="eventHook" type="string" required={false}>
+  A webhook invoked for agent events. Receives event types: `user_transcript`, `agent_response`, `user_interruption`, `turn_end`, and `history_summarized`. See [eventHook Events](#eventhook-events) below.
+</ParamField>
+
+<ParamField path="greeting" type="boolean" required={false} default="true">
+  Whether the LLM should generate an initial greeting before the user speaks. Set to `false` if you want the agent to wait silently for the user to speak first.
+</ParamField>
+
+<ParamField path="id" type="string" required={false}>
+  An optional unique identifier for this verb instance.
+</ParamField>
+
+<ParamField path="llm" type="object" required={true}>
+  LLM configuration. This is the only required property. Supported vendors: `openai`, `anthropic`, `google`, `aws` (Bedrock).
+</ParamField>
+
+<ParamField path="llm.vendor" type="string" required={true}>
+  LLM vendor name: `openai`, `anthropic`, `google`, or `aws`.
+</ParamField>
+
+<ParamField path="llm.model" type="string" required={true}>
+  Model name (e.g., `gpt-4.1-mini`, `claude-sonnet-4-6`, `gemini-2.5-flash-lite`, `us.meta.llama4-scout-17b-instruct-v1:0`).
+</ParamField>
+
+<ParamField path="llm.auth" type="object" required={false}>
+  Authentication credentials. Format depends on the vendor. For OpenAI/Anthropic/Google: `{ apiKey: '...' }`. For AWS Bedrock: `{ accessKeyId, secretAccessKey, region }`. If not provided, credentials are resolved from speech credentials configured in the jambonz portal.
+</ParamField>
+
+<ParamField path="llm.llmOptions" type="object" required={false}>
+  LLM options including system prompt, tools, and generation parameters.
+</ParamField>
+
+<ParamField path="llm.llmOptions.messages" type="array" required={false}>
+  Initial conversation messages. Typically includes a system message with instructions: `[{ role: 'system', content: '...' }]`.
+</ParamField>
+
+<ParamField path="llm.llmOptions.systemPrompt" type="string" required={false}>
+  System prompt for the LLM. Alternative to providing a system message in `messages`.
+</ParamField>
+
+<ParamField path="llm.llmOptions.tools" type="array" required={false}>
+  Tool/function definitions available to the LLM. Uses OpenAI function-calling format. See [Tool Calling](#tool-calling) below.
+</ParamField>
+
+<ParamField path="llm.llmOptions.maxTokens" type="number" required={false}>
+  Maximum number of tokens in the LLM response.
+</ParamField>
+
+<ParamField path="mcpServers" type="array" required={false}>
+  External MCP servers that provide tools to the LLM. The agent verb connects to each server at startup, discovers available tools, and makes them callable by the LLM. Each entry requires a `url` property and optionally `auth` and `roots`.
+</ParamField>
+
+<ParamField path="noiseIsolation" type="string or object" required={false}>
+  Enable server-side noise isolation to reduce background noise. As a string, pass `"krisp"` or `"rnnoise"` for default settings. As an object: `{ mode: "krisp", level: 80, direction: "read" }`. `direction` can be `"read"` (filter caller audio, default) or `"write"` (filter outbound audio). Krisp requires an API key on self-hosted systems.
+</ParamField>
+
+<ParamField path="noResponseTimeout" type="number" required={false} default="12">
+  Seconds to wait after the assistant finishes speaking before prompting the user to respond. When triggered, the LLM is prompted with a system cue to check if the user is still there. Set to `0` to disable.
+</ParamField>
+
+<ParamField path="stt" type="object" required={false}>
+  Speech-to-text configuration. See [recognizer](/verbs/verbs/recognizer) for available properties. Key properties: `vendor`, `language`, `hints`, and vendor-specific options like `deepgramOptions`.
+</ParamField>
+
+<ParamField path="toolHook" type="string" required={false}>
+  A webhook invoked when the LLM requests a tool/function call. The payload includes `tool_call_id`, `name`, and `arguments` (already parsed as an object). See [Tool Calling](#tool-calling) below.
+</ParamField>
+
+<ParamField path="tts" type="object" required={false}>
+  Text-to-speech configuration. See [synthesizer](/verbs/verbs/synthesizer) for available properties. Key properties: `vendor`, `voice`, `language`, and vendor-specific `options`.
+</ParamField>
+
+<ParamField path="turnDetection" type="string or object" required={false} default="stt">
+  Turn detection strategy. Controls when the agent verb decides the user has finished speaking.
+
+  As a string:
+  - `"stt"` — Uses the STT vendor's native end-of-utterance signal. For most vendors this is silence-based. Vendors with smarter built-in turn detection (deepgramflux, assemblyai, speechmatics) always use their native detection regardless of this setting.
+  - `"krisp"` — Uses the Krisp acoustic end-of-turn model, which analyzes speech patterns rather than just silence.
+
+  As an object (Krisp only):
+  - `mode` — `"krisp"` (required)
+  - `threshold` — Confidence threshold 0.0–1.0. Lower values trigger earlier turn transitions. Default: 0.5.
+  - `model` — Optional Krisp model name override.
+</ParamField>
+
+## Tool Calling
+
+Define tools in `llm.llmOptions.tools` and handle calls via `toolHook`. The tool call payload includes `tool_call_id`, `name`, and `arguments` (already parsed — an object, not a JSON string).
+
+In **WebSocket mode**, respond with `session.sendToolOutput(tool_call_id, result)`:
+
+```js
+session.on('/tool-call', async (evt) => {
+  const { tool_call_id, name, arguments: args } = evt;
+  if (name === 'get_weather') {
+    const weather = await fetchWeather(args.city);
+    session.sendToolOutput(tool_call_id, weather);
+    return;
+  }
+  session.sendToolOutput(tool_call_id, `Unknown tool: ${name}`);
+});
+```
+
+In **webhook mode**, return the tool result as JSON in the HTTP response body.
+
+Alternatively, connect external [MCP servers](#mcp-servers) to provide tools automatically without defining them inline.
+
+## MCP Servers
+
+Instead of (or in addition to) defining tools inline, you can connect to external MCP servers. The agent verb connects to each server at startup via SSE or Streamable HTTP transport, discovers available tools, and makes them callable by the LLM.
+
+```js
+session
+  .agent({
+    llm: { vendor: 'openai', model: 'gpt-4.1', llmOptions: {
+      messages: [{ role: 'system', content: 'You are a sports assistant.' }],
+    }},
+    stt: { vendor: 'deepgram', language: 'en-US' },
+    tts: { vendor: 'cartesia', voice: 'sonic-english' },
+    mcpServers: [
+      { url: 'https://livescoremcp.com/sse' },
+    ],
+    actionHook: '/agent-complete',
+  })
+  .send();
+```
+
+When the LLM requests a tool call, the agent verb checks MCP servers first. If the tool name matches one discovered from an MCP server, the call is dispatched there directly. If no MCP server provides the tool, it falls through to the `toolHook`.
+
+## eventHook Events
+
+The `eventHook` receives real-time events during the conversation. In WebSocket mode, listen with `session.on('/your-event-hook', handler)`.
+
+<AccordionGroup>
+  <Accordion title="turn_end">
+    Sent at the end of each conversational turn. The most useful event for observability.
+
+    ```json
+    {
+      "type": "turn_end",
+      "transcript": "What's the weather in Portland?",
+      "confidence": 0.998,
+      "response": "The current temperature in Portland is 52°F with wind speed 12 km/h.",
+      "interrupted": false,
+      "latency": {
+        "stt_ms": 320,
+        "eot_ms": 180,
+        "llm_ms": 890,
+        "tool_ms": 420,
+        "tts_ms": 210,
+        "preflight": {
+          "result": "hit",
+          "tokens": 12
+        }
+      },
+      "tool_calls": [
+        { "name": "get_weather", "rtt_ms": 420 }
+      ]
+    }
+    ```
+
+    **Latency fields** (all in milliseconds):
+    - `stt_ms` — STT processing time (user stops talking → final transcript received)
+    - `eot_ms` — Additional wait for end-of-turn detection after transcript
+    - `llm_ms` — Pure LLM thinking time (tool RTT subtracted)
+    - `tool_ms` — Total time spent in tool calls
+    - `tts_ms` — TTS engine latency (text sent → first audio received)
+    - `preflight` — Early generation metrics: `result` (`hit`, `miss`, or `pending`) and `tokens` buffered on a hit
+  </Accordion>
+
+  <Accordion title="user_transcript">
+    Sent when the user's final transcript is available.
+
+    ```json
+    {
+      "type": "user_transcript",
+      "transcript": "What's the weather in Portland?"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="agent_response">
+    Sent when the LLM finishes generating its response.
+
+    ```json
+    {
+      "type": "agent_response",
+      "response": "The current temperature in Portland is 52°F."
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="user_interruption">
+    Sent when the user barges in while the assistant is speaking.
+
+    ```json
+    {
+      "type": "user_interruption"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="history_summarized">
+    Sent when conversation history summarization completes (requires `JAMBONES_PIPELINE_SUMMARIZE_TURNS` environment variable).
+
+    ```json
+    {
+      "type": "history_summarized",
+      "turn": 8,
+      "messages_dropped": 5,
+      "messages_kept": 6,
+      "summary": "The user is a software developer looking for a MacBook Pro..."
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Mid-conversation Updates
+
+The agent verb supports asynchronous updates while a conversation is in progress. Updates can be sent via WebSocket (`session.updateAgent(data)`) or REST API.
+
+### update_instructions
+
+Replace the LLM system prompt mid-conversation.
+
+```js
+session.updateAgent({
+  type: 'update_instructions',
+  instructions: 'You are now a billing support agent.',
+});
+```
+
+### inject_context
+
+Append messages to the LLM conversation history. System messages are routed to the system prompt for vendors that don't support inline system messages.
+
+```js
+session.updateAgent({
+  type: 'inject_context',
+  messages: [
+    { role: 'user', content: 'CRM context: Customer name: Sarah Mitchell. Account tier: Gold.' },
+  ],
+});
+```
+
+### update_tools
+
+Replace the tool set available to the LLM.
+
+```js
+session.updateAgent({
+  type: 'update_tools',
+  tools: [
+    {
+      name: 'transfer_call',
+      description: 'Transfer the caller to a specialist',
+      parameters: { type: 'object', properties: { department: { type: 'string' } } },
+    },
+  ],
+});
+```
+
+### generate_reply
+
+Prompt the LLM to generate a new response. Use `interrupt: true` to cancel the current response and generate immediately.
+
+```js
+session.updateAgent({
+  type: 'generate_reply',
+  interrupt: true,
+  user_input: 'URGENT: Tell the customer about the flash sale.',
+});
+```
+
+## Supported LLM Vendors
+
+| Vendor | `llm.vendor` | Example models |
+|--------|-------------|----------------|
+| OpenAI | `openai` | `gpt-4.1-mini`, `gpt-4.1`, `gpt-4o` |
+| Anthropic | `anthropic` | `claude-sonnet-4-6`, `claude-opus-4-6` |
+| Google | `google` | `gemini-2.5-flash-lite`, `gemini-2.5-pro` |
+| AWS Bedrock | `aws` | `us.meta.llama4-scout-17b-instruct-v1:0` |
+
+## Example Applications
+
+See the [agent examples](https://github.com/jambonz/v10-examples/tree/main/examples/agent) for runnable demos covering basic usage, tool calling, MCP servers, CRM injection, persona switching, and more.
