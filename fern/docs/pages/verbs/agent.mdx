@@ -1,10 +1,10 @@
 ---
 title: Agent
-subtitle: Orchestrate a complete STT, LLM, and TTS voice AI agent with integrated turn detection.
+subtitle: Orchestrate a complete voice agent by creating a cascaded voice pipeline consisting of your choice of STT, LLM, TTS, VAD and turn-taking components.
 ---
 
 <Warning>
-The agent verb is an **experimental feature** and requires jambonz version **10.1.0 or above**.
+The agent verb is an **experimental feature** in jambonz v10.1.1
 </Warning>
 
 ```js maxLines=100
@@ -148,7 +148,7 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   Enable server-side noise isolation to reduce background noise. As a string, pass `"krisp"` or `"rnnoise"` for default settings. As an object: `{ mode: "krisp", level: 80, direction: "read" }`. `direction` can be `"read"` (filter caller audio, default) or `"write"` (filter outbound audio). Krisp requires an API key on self-hosted systems.
 </ParamField>
 
-<ParamField path="noResponseTimeout" type="number" required={false} default="0">
+<ParamField path="noResponseTimeout" type="number" required={false} default="12">
   Seconds to wait after the assistant finishes speaking before prompting the user to respond. When triggered, the LLM is prompted with a system cue to check if the user is still there. Set to `0` to disable.
 </ParamField>
 
