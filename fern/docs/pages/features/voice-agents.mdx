@@ -1,6 +1,6 @@
 ---
 title: Voice Agents
-subtitle: Build conversational AI agents using the agent verb
+subtitle: Build conversational AI agents using the [agent](/verbs/verbs/agent) verb.
 ---
 
 <Warning>
@@ -16,6 +16,10 @@ The agent verb manages the full conversational turn cycle:
 4. LLM response tokens stream to TTS
 5. TTS audio plays back to the caller
 6. If the user barges in, TTS stops and a new turn begins
+
+<Tip>
+**Looking for runnable examples?** The [jambonz/v10-examples](https://github.com/jambonz/v10-examples/tree/main/examples/agent) repository has working demos for every feature described in this guide — basic usage, tool calling, MCP servers, CRM injection, persona switching, supervisor overrides, and more. Clone it and run any example end-to-end in minutes.
+</Tip>
 
 ## Basic Setup
 
@@ -196,9 +200,18 @@ By default (`greeting: true`), the agent verb prompts the LLM to generate an ini
 
 ## Tool/Function Calling
 
-The agent verb supports LLM tool/function calling, allowing your agent to perform actions like looking up data, calling APIs, or transferring calls.
+The agent verb supports LLM tool/function calling, allowing your agent to perform actions like looking up data, calling APIs, or transferring calls. There are two ways to provide tools:
 
-### Defining Tools
+1. **Roll your own** — define a JSON schema, list it in `llmOptions.tools`, and handle the tool call yourself in a `toolHook` handler. Use this for tools specific to your application (CRM lookups, business logic, proprietary APIs).
+2. **Use pre-built tools from [`@jambonz/tools`](https://github.com/jambonz/tools)** — drop in ready-made tools (web search, weather, Wikipedia, calculator, datetime) without writing schemas or handlers. Use this for common utility tools.
+
+You can mix both approaches in the same agent — they share the same `toolHook` path.
+
+### Rolling your own tools
+
+Use this approach for tools that are specific to your application. You supply the schema and handle the execution yourself.
+
+#### Defining the tool schema
 
 Define tools in `llm.llmOptions.tools` using the standard function-calling format:
 
@@ -232,7 +245,7 @@ session.agent({
 
 The agent verb normalizes tool schemas across LLM vendors. You always define tools in the same format regardless of whether you're using OpenAI, Anthropic, Google, or Bedrock.
 
-### Handling Tool Calls (WebSocket)
+#### Handling tool calls (WebSocket)
 
 Tool calls arrive as events on the `toolHook` path with `tool_call_id`, `name`, and `arguments` (already parsed as an object). Respond with `session.sendToolOutput()`:
 
@@ -265,13 +278,13 @@ session.on('/tool-call', async (evt) => {
 });
 ```
 
-### Handling Tool Calls (Webhook)
+#### Handling tool calls (Webhook)
 
 In webhook mode, the tool call arrives as an HTTP POST to the `toolHook` URL. Return the tool result as JSON in the response body.
 
-### Pre-built Tools (`@jambonz/tools`)
+### Using pre-built tools from `@jambonz/tools`
 
-The [`@jambonz/tools`](https://github.com/jambonz/tools) package provides ready-made tools you can drop into an agent without writing schemas or API handlers yourself. Each tool bundles a JSON Schema (for the LLM) and an `execute()` function (for your application).
+For common utility tools — web search, weather, Wikipedia, calculator, datetime — the [`@jambonz/tools`](https://github.com/jambonz/tools) package lets you skip the schema definition and handler code entirely. Each tool bundles a JSON Schema (for the LLM) and an `execute()` function (for your application) that are wired into your session with a single call.
 
 <Note>
 `@jambonz/tools` is open source (MIT-licensed) and we actively welcome community contributions. If you've built a useful tool — a CRM lookup, a scheduling integration, a knowledge-base query — please consider [opening a PR](https://github.com/jambonz/tools) so other jambonz developers can use it. See the contributing guidelines in the repo README.
@@ -327,9 +340,9 @@ svc.on('session:new', (session) => {
 
 `registerTools()` also accepts a `logger` option and returns errors to the LLM if a tool throws or is called with an unknown name.
 
-#### Mixing pre-built, custom, and MCP tools
+### Combining both approaches
 
-You can combine pre-built tools from `@jambonz/tools` with your own custom tool handlers and MCP servers in the same agent. Use `registerTools()` for the pre-built tools, attach your own handler for custom tools, and list MCP servers in `mcpServers` — MCP tools are dispatched by the feature-server and do not arrive on the `toolHook`.
+You can mix pre-built tools from `@jambonz/tools` with your own custom tools in the same agent. Include the schemas from both in `llmOptions.tools`, use `registerTools()` for the pre-built ones, and attach your own `toolHook` handler for the custom ones. The two dispatch paths run side by side — `registerTools()` only handles tool calls whose `name` matches one it was given, so custom calls fall through to your handler.
 
 ```typescript
 const myTool = {
@@ -342,8 +355,10 @@ const myTool = {
   },
 };
 
+// pre-built tools
 registerTools(session, '/tool-call', [search, weather]);
 
+// custom tool handler — runs alongside registerTools
 session.on('/tool-call', async (evt) => {
   if (evt.name === 'lookup_order') {
     const order = await db.orders.find(evt.arguments.order_id);
@@ -359,9 +374,6 @@ session.agent({
       tools: [search.schema, weather.schema, myTool],
     },
   },
-  mcpServers: [
-    { url: 'https://mcp.example.com/sse' },
-  ],
   toolHook: '/tool-call',
   // ...
 }).send();
