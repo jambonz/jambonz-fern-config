@@ -122,6 +122,8 @@ navigation:
         contents:
           - page: Overview
             path: ./docs/pages/verbs/overview.mdx
+          - page: Agent
+            path: ./docs/pages/verbs/agent.mdx
           - page: Alert
             path: ./docs/pages/verbs/alert.mdx
           - page: Answer
@@ -160,8 +162,6 @@ navigation:
             hidden: true
           - page: Pause
             path: ./docs/pages/verbs/pause.mdx
-          - page: Agent
-            path: ./docs/pages/verbs/agent.mdx
           - page: Play
             path: ./docs/pages/verbs/play.mdx
           - page: Rasa
