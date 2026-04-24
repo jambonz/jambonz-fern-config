@@ -327,6 +327,8 @@ navigation:
             path: ./docs/pages/tutorials/deepgram.mdx
           - page: Elevenlabs Conversational AI
             path: ./docs/pages/tutorials/elevenlabs.mdx
+          - page: Google Gemini Live
+            path: ./docs/pages/tutorials/gemini.mdx
           - page: OpenAI Realtime API
             path: ./docs/pages/tutorials/openai.mdx
           - page: Ultravox
