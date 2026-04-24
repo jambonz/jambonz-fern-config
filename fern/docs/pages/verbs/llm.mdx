@@ -108,6 +108,56 @@ The following LLMs are currently supported:
 - Deepgram Voice Agent
 - Ultravox
 - ElevenLabs
+- Google Gemini Live API
+
+## Google Gemini Live
+
+Set `vendor: 'google'` and supply a Gemini Live model (for example `models/gemini-2.0-flash-live-001` or `models/gemini-3.1-flash-live-preview`). `llmOptions.setup` is forwarded verbatim to Google's [BidiGenerateContentSetup](https://ai.google.dev/api/live#bidigeneratecontentsetup) message after the websocket connects.
+
+```js
+session.llm({
+  vendor: 'google',
+  model: 'models/gemini-2.0-flash-live-001',
+  auth: { apiKey: process.env.GEMINI_API_KEY },
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  connectOptions: {
+    host: 'generativelanguage.googleapis.com',
+    version: 'v1beta'
+  },
+  llmOptions: {
+    setup: {
+      generationConfig: {
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
+        }
+      },
+      systemInstruction: {
+        parts: [{ text: 'You are a helpful assistant named Barbara.' }]
+      }
+    },
+    greeting: 'Greet the caller warmly and ask how you can help.',
+    sessionResumption: {}
+  }
+});
+```
+
+### Google-specific llmOptions fields
+
+<ParamField path="setup" type="object" required={true}>
+  The [BidiGenerateContentSetup](https://ai.google.dev/api/live#bidigeneratecontentsetup) object sent to Gemini right after the websocket connects. The `model` field is populated automatically from the verb's `model` parameter. `generationConfig.responseModalities` is forced to `audio`.
+</ParamField>
+
+<ParamField path="greeting" type="string | object" required={false}>
+  Optional proactive greeting. When set, jambonz sends a text message to Gemini immediately after setup so the agent speaks first without waiting for the caller to speak. Accepts either a string or an object with a `text` field. The value is an **instruction to the model**, not the literal words — for example `"Greet the caller warmly"` rather than `"Hello, how can I help?"`.
+
+  Implemented using `realtimeInput.text` so it works on both the 2.0 Live models and `gemini-3.1-flash-live-preview`. (On 3.1, `clientContent` is reserved for seeding history and does not trigger a model response, which is why `realtimeInput.text` is used.)
+</ParamField>
+
+<ParamField path="sessionResumption" type="object" required={false}>
+  Enable [session resumption](https://ai.google.dev/api/live#session-resumption). Pass `{}` to opt in, or `{ handle: "..." }` to resume a previous session. Resumption handles are delivered back to the application via `llm_event` `sessionResumptionUpdate` messages.
+</ParamField>
 
 ## Example Applications
 Please checkout the following example applications:
@@ -115,4 +165,5 @@ Please checkout the following example applications:
 - for [Deepgram](https://github.com/jambonz/deepgram-voice-agent-example)
 - for [Ultravox](https://github.com/jambonz/ultravox-s2s-example)
 - for [ElevenLabs](https://github.com/jambonz/elevenlabs-s2s-example)
+- for [Google Gemini](https://github.com/jambonz/gemini-s2s-example)
 
