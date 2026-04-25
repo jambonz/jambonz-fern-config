@@ -1,15 +1,17 @@
 ---
-title: HuggingFace Inference Providers
+title: HuggingFace
 subtitle: One HuggingFace token, many backends — Groq, Together, Fireworks, Cerebras, Nebius all behind a single broker endpoint.
 ---
+
+<Note>
+This vendor specifically integrates with **HuggingFace Inference Providers** — HF's multi-provider broker at `https://router.huggingface.co/v1`. It is **not** for HuggingFace's older shared Inference API (different wire shape) or dedicated Inference Endpoints (those are per-customer URLs that work with `vendor: openai` and a `baseURL` override).
+</Note>
 
 HuggingFace Inference Providers is a multi-provider broker. One HF token at `https://router.huggingface.co/v1` routes requests to whichever inference shop hosts the requested model — Groq, Together, Fireworks, Cerebras, Nebius, Hyperbolic, SambaNova, etc. The wire is OpenAI-compatible.
 
 **Why pick this over a direct vendor?** A customer who wants Llama on Groq, Mistral on Together, and Qwen on Fireworks needs three separate accounts and three jambonz credentials when going direct. With HF Providers, *one* HF token covers all of them, and you switch backends just by changing the model id.
 
 The tradeoff: you don't get the absolute cheapest per-token pricing — HF takes a small markup on top of provider rates. For production scale, going direct to your chosen provider may save money. For prototyping and multi-vendor testing, HF wins on convenience.
-
-This adapter is **not** for HuggingFace's older shared Inference API (different wire shape) or dedicated Inference Endpoints (those are per-customer URLs that work with `vendor: openai` and a `baseURL` override).
 
 ## Get credentials
 
@@ -68,6 +70,8 @@ The `model` value is a canonical HF model id (`<org>/<model>`), optionally with 
 | `meta-llama/Llama-3.3-70B-Instruct:groq` | Pin Groq. |
 
 The provider chosen is reported in the `x-inference-provider` response header. Useful for diagnosing latency anomalies — if you expected Cerebras and got Groq, you know the routing kicked in differently.
+
+## Available Models
 
 Browse [HuggingFace's full Inference Providers model list](https://huggingface.co/inference/models) (filterable by provider) or read the [Inference Providers documentation](https://huggingface.co/docs/inference-providers/en/index) for the routing model. Common picks for voice agents:
 

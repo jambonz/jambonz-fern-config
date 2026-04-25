@@ -26,7 +26,7 @@ In the portal: **Account → LLM Services → + Add LLM Service → Vertex AI �
 </ParamField>
 
 <ParamField path="Region" type="select" required={true}>
-  Pick a region where the partner model you intend to use is hosted. **Llama models are most broadly available in `us-east5`.** Other partner models may have different region availability — check the [Vertex partner-model docs](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-openai) before picking.
+  Pick a region where the partner model you intend to use is hosted. **Llama models are most broadly available in `us-east5`.** Other partner models may have different region availability — check the [Vertex partner-model docs](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models) before picking.
 </ParamField>
 
 ## Use in an agent verb
@@ -49,7 +49,9 @@ session.agent({
 }).send();
 ```
 
-See Google's [Vertex AI partner models catalog](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models) for the full list and per-region availability. Common picks:
+## Available Models
+
+See Google's [Vertex AI partner models catalog](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models) for the full list and per-region availability. Common picks:
 
 | Model | Notes |
 |---|---|
@@ -65,7 +67,7 @@ See Google's [Vertex AI partner models catalog](https://cloud.google.com/vertex-
 </Warning>
 
 <Warning>
-**Intermittent `400 INVALID_ARGUMENT`** — we've seen ~40% first-attempt 400-rate on `meta/llama-3.3-70b-instruct-maas` in some regions, with no body details. Identical retry succeeds. This is a Vertex-side flake, not a jambonz issue. The agent verb terminates with an `LLM_FAILURE` alert and runs the `actionHook` so your application can retry the turn. Reproducible with raw `fetch` outside jambonz, so the diagnosis isn't ours; track [Vertex AI release notes](https://cloud.google.com/vertex-ai/docs/release-notes) for fixes.
+**Intermittent `400 INVALID_ARGUMENT`** — we've seen ~40% first-attempt 400-rate on `meta/llama-3.3-70b-instruct-maas` in some regions, with no body details. Identical retry succeeds. This is a Vertex-side flake, not a jambonz issue. The agent verb terminates with an `LLM_FAILURE` alert and runs the `actionHook` so your application can retry the turn. Reproducible with raw `fetch` outside jambonz, so the diagnosis isn't ours; track [Vertex AI release notes](https://docs.cloud.google.com/vertex-ai/docs/release-notes) for fixes.
 </Warning>
 
 <Note>

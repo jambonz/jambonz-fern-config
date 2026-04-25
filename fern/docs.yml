@@ -106,7 +106,7 @@ navigation:
                 path: ./docs/pages/features/llm-vendors/azure-openai.mdx
               - page: Groq
                 path: ./docs/pages/features/llm-vendors/groq.mdx
-              - page: HuggingFace Inference Providers
+              - page: HuggingFace
                 path: ./docs/pages/features/llm-vendors/huggingface.mdx
           - page: Using OpenAI STT
             path: ./docs/pages/features/using-openai-stt.mdx

@@ -56,7 +56,9 @@ session.agent({
 }).send();
 ```
 
-See Google's [Vertex AI generative model list](https://cloud.google.com/vertex-ai/generative-ai/docs/models) for the full Gemini lineup and per-region availability. The model ids match AI Studio (e.g. `gemini-2.5-flash`, `gemini-2.5-pro`) — Vertex deploys the same models with enterprise infrastructure underneath.
+## Available Models
+
+See Google's [Vertex AI generative model list](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models) for the full Gemini lineup and per-region availability. The model ids match AI Studio (e.g. `gemini-2.5-flash`, `gemini-2.5-pro`) — Vertex deploys the same models with enterprise infrastructure underneath.
 
 ## Quirks & errors
 
@@ -69,7 +71,7 @@ See Google's [Vertex AI generative model list](https://cloud.google.com/vertex-a
 </Warning>
 
 <Warning>
-**`NOT_FOUND` on a model** — the model isn't available in the chosen region. Gemini availability differs by region; check the [Vertex model availability matrix](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations) and either switch regions or pick a model present in yours.
+**`NOT_FOUND` on a model** — the model isn't available in the chosen region. Gemini availability differs by region; check the [Vertex model availability matrix](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations) and either switch regions or pick a model present in yours.
 </Warning>
 
 <Note>
