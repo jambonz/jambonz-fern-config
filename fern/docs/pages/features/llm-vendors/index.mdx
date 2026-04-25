@@ -3,7 +3,7 @@ title: Bring Your Own LLM
 subtitle: Configure jambonz to use your own credentials with any of 10 supported LLM providers.
 ---
 
-The [agent verb](/verbs/verbs/agent) wires together STT, LLM, and TTS into a complete voice agent. The `llm` block selects which LLM vendor jambonz talks to. Credentials live in the **LLM Services** section of the jambonz portal — once added there, you reference them from any agent verb by `vendor` (and optionally `label` if you have multiple credentials for the same vendor).
+The [agent verb](/verbs/verbs/agent) wires together STT, LLM, and TTS into a complete voice agent. The `llm` block selects which LLM vendor jambonz talks to. Credentials live in the **LLM Services** section of the jambonz portal — once added there, you reference them from any agent verb by `vendor`.
 
 This section walks through configuring each supported vendor, including known issues and gotchas we've hit in production.
 
@@ -34,20 +34,36 @@ In the jambonz portal, navigate to **Account → LLM Services → + Add LLM Serv
 
 ### Picking a credential at call time
 
-The agent verb resolves credentials by `(vendor, label)`:
+In the typical case — one LLM credential per vendor on your account — jambonz resolves the credential automatically from the `vendor` field. No `label` is needed:
 
 ```js
 session.agent({
   llm: {
     vendor: 'openai',
-    label: 'production',  // optional — omit if you only have one openai credential
     model: 'gpt-4o-mini',
   },
   // ...
 }).send();
 ```
 
-If you don't pass `label`, jambonz uses the unlabeled credential for that vendor on the account. If multiple credentials share the same vendor, give each a distinct label and reference it explicitly.
+This is the recommended setup for nearly all customers. **Don't set a label when creating the credential, and don't pass one in the agent verb.**
+
+### Multiple credentials for the same vendor (rare)
+
+The only reason to use a label is if you've added two or more credentials for the **same** vendor on the same account — e.g., separate dev and production OpenAI keys you want both available. In that case, give each credential a distinct label in the portal at create time, then reference it from the agent verb:
+
+```js
+session.agent({
+  llm: {
+    vendor: 'openai',
+    label: 'production',
+    model: 'gpt-4o-mini',
+  },
+  // ...
+}).send();
+```
+
+If you only ever have one credential per vendor (the common case), skip the label entirely.
 
 ### Inline `auth` (rare)
 

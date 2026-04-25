@@ -117,11 +117,11 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 </ParamField>
 
 <ParamField path="llm.label" type="string" required={false}>
-  Optional credential label. Use to disambiguate when the account has multiple LLM credentials for the same vendor.
+  Only needed when the account has more than one LLM credential for the same vendor — give each a distinct label in the portal at create time and reference it explicitly here. Most accounts have a single credential per vendor and should leave this unset.
 </ParamField>
 
 <ParamField path="llm.auth" type="object" required={false}>
-  Inline authentication credentials. Format depends on the vendor — see the per-vendor pages under [Bring Your Own LLM](/guides/features/bring-your-own-llm). If not provided, jambonz looks up credentials by `(vendor, label)` from the LLM Services configured in the portal.
+  Inline authentication credentials. Format depends on the vendor — see the per-vendor pages under [Bring Your Own LLM](/guides/features/bring-your-own-llm). If not provided, jambonz looks up credentials by `vendor` (and `label`, if the rare multi-credential case applies) from the LLM Services configured in the portal.
 </ParamField>
 
 <ParamField path="llm.llmOptions" type="object" required={false}>
