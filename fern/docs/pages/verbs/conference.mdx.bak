@@ -1,0 +1,164 @@
+---
+title: Conference
+subtitle: Places a call into a conference.
+---
+
+```json
+{
+  "verb": "conference",
+  "name": "test",
+  "beep": true,
+  "startConferenceOnEnter": false,
+  "waitHook": "/confWait",
+  "enterHook": "/confEnter"
+}
+```
+## Parameters
+
+<ParamField path="name" type="string" required={true}>
+  name of the conference
+</ParamField>
+
+<ParamField path="actionHook" type="string" required={false}>
+  A webhook to call when the conference ends
+</ParamField>
+
+<ParamField path="beep" type="boolean" required={false}>
+  if true, play a beep tone to the conference when caller enters (default: false)
+</ParamField>
+
+<ParamField path="distributeDtmf" type="boolean" required={false}>
+  if true, DTMF events from this participant will be sent to other partipants on the call. (default: false)
+</ParamField>
+
+<ParamField path="endConferenceOnExit" type="boolean" required={false}>
+  if true, end the conference when this caller hangs up (default: false)
+</ParamField>
+
+<ParamField path="enterHook" type="string" required={false}>
+  A webhook to retrieve something to play or say to the caller just before they are put into a conference after waiting for it to start
+</ParamField>
+
+<ParamField path="listen" type="object" required={false}>
+  Audio streaming configuration. When provided, conference audio is streamed in real-time over a WebSocket connection to a remote server. See [Audio Streaming](#audio-streaming) below.
+</ParamField>
+
+<ParamField path="listen.url" type="string" required={true}>
+  WebSocket URL to stream conference audio to (e.g., `wss://example.com/conference-audio`).
+</ParamField>
+
+<ParamField path="listen.sampleRate" type="number" required={false} default="8000">
+  Audio sample rate in Hz.
+</ParamField>
+
+<ParamField path="listen.wsAuth" type="object" required={false}>
+  Authentication credentials to include when connecting to the WebSocket server.
+</ParamField>
+
+<ParamField path="listen.metadata" type="object" required={false}>
+  Custom metadata to include in the initial WebSocket connection message.
+</ParamField>
+
+<ParamField path="joinMuted" type="boolean" required={false}>
+  if true, this caller will join the conference with their audio muted
+</ParamField>
+
+<ParamField path="maxParticipants" type="number" required={false}>
+  maximum number of participants that will be allowed in the conference
+</ParamField>
+
+<ParamField path="memberTag" type="string" required={false}>
+  a way to classify participants for the "coach" feature; see related speakOnlyTo attribute below (0.9.1 and above)
+</ParamField>
+
+<ParamField path="speakOnlyTo" type="string" required={false}>
+  a tag value that will cause this member's audio to be heard only by members that were assigned that tag; see [this article](/guides/features/conferencing-coach-mode) for details
+</ParamField>
+
+<ParamField path="startConferenceOnEnter" type="boolean" required={false}>
+  if true, start the conference only when this caller enters. This also designates this caller as a moderator of the conference (default: true)
+</ParamField>
+
+<ParamField path="statusHook" type="string" required={false}>
+  A webhook to call with conference status events
+</ParamField>
+
+<ParamField path="statusEvents" type="array" required={false}>
+  An array of events for which the statusHook should be called. See below for details.
+</ParamField>
+
+<ParamField path="waitHook" type="string" required={false}>
+  A webhook to retrieve commands to play or say while the caller is waiting for the conference to start
+</ParamField>
+
+### Conference Status Events
+
+- **'start'**: the conference has started  
+- **'end'**: the conference has ended  
+- **'join'**: a participant has joined the conference  
+- **'leave'**: a participant has left the conference  
+- **'start-talking'**: a participant started speaking  
+- **'end-talking'**: a participant stopped talking  
+
+### Conference Status Webhook Parameters
+
+Conference status webhooks will contain the following additional parameters:
+
+- **conferenceSid**: a unique identifier for the conference  
+- **friendlyName**: the name of the conference as specified in the application  
+- **event**: the conference event being reported (e.g. "join")  
+- **time**: the time of the event in ISO format (e.g. "2020-04-27T13:44:17.336Z")  
+- **members**: the current number of members in the conference  
+- **duration**: the current length of the conference in seconds
+
+## Audio Streaming
+
+The `listen` property enables real-time audio streaming of the full conference mix to an external WebSocket server. Unlike the standalone [listen](/verbs/verbs/listen) verb (which streams a single participant's audio), this streams the mixed audio from all conference participants.
+
+```json
+{
+  "verb": "conference",
+  "name": "team-standup",
+  "beep": true,
+  "listen": {
+    "url": "wss://example.com/conference-audio",
+    "sampleRate": 8000,
+    "metadata": {
+      "conferenceId": "team-standup",
+      "recordingType": "full-mix"
+    }
+  }
+}
+```
+
+When the conference starts, a virtual participant (with no channel of its own) joins the conference and streams the mixed audio to the specified WebSocket URL. The WebSocket connection receives:
+
+- **Binary frames**: Raw L16 PCM audio of the conference mix at the configured sample rate
+- **`participant-join`**: JSON text frame sent when a participant joins the conference
+- **`participant-leave`**: JSON text frame sent when a participant leaves the conference
+
+The audio stream starts automatically when the conference begins and stops when the conference ends.
+
+### Bidirectional audio
+
+The connection is bidirectional. Audio sent back from your WebSocket server as binary L16 PCM frames at the agreed sample rate is injected into the conference mix and heard by all participants. This lets you play TTS, music, announcements, or AI-generated speech directly into the conference from a remote service without needing a separate participant.
+
+### Dynamic Control
+
+You can also start and stop conference audio streaming dynamically via the REST API using the `conf:listen-status` command on the [update call](/api-reference/rest/calls/update-call) endpoint:
+
+```json
+{
+  "listen_status": "start",
+  "url": "wss://example.com/conference-audio",
+  "sampleRate": 8000
+}
+```
+
+To stop streaming:
+
+```json
+{
+  "listen_status": "stop"
+}
+```

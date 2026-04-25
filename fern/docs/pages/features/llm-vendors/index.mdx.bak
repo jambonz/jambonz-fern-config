@@ -1,0 +1,89 @@
+---
+title: Bring Your Own LLM
+subtitle: Configure jambonz to use your own credentials with any of 10 supported LLM providers.
+---
+
+The [agent verb](/verbs/verbs/agent) wires together STT, LLM, and TTS into a complete voice agent. The `llm` block selects which LLM vendor jambonz talks to. Credentials live in the **LLM Services** section of the jambonz portal — once added there, you reference them from any agent verb by `vendor`.
+
+This section walks through configuring each supported vendor, including known issues and gotchas we've hit in production.
+
+## Supported vendors
+
+| Vendor | `llm.vendor` | Auth | Tool calling | Strengths |
+|---|---|---|---|---|
+| [OpenAI](/guides/features/llm-vendors/openai) | `openai` | API key | ✓ | Industry standard, broadest model catalog |
+| [Anthropic](/guides/features/llm-vendors/anthropic) | `anthropic` | API key | ✓ | Best-in-class instruction following (Claude) |
+| [Google AI Studio](/guides/features/llm-vendors/google) | `google` | API key | ✓ | Gemini family, generous free tier |
+| [Vertex AI — Gemini](/guides/features/llm-vendors/vertex-gemini) | `vertex-gemini` | Service account | ✓ | Gemini on GCP infrastructure with enterprise data controls |
+| [Vertex AI — Partner Models](/guides/features/llm-vendors/vertex-openai) | `vertex-openai` | Service account | ✓ | Llama, Mistral, AI21 hosted on Vertex |
+| [AWS Bedrock](/guides/features/llm-vendors/bedrock) | `bedrock` | API key or IAM | ✓ | Claude, Llama, Mistral, Nova on AWS infra |
+| [DeepSeek](/guides/features/llm-vendors/deepseek) | `deepseek` | API key | ✓ | Strong reasoning at low cost |
+| [Azure OpenAI](/guides/features/llm-vendors/azure-openai) | `azure-openai` | API key | ✓ | OpenAI models inside Azure (data residency, BAA) |
+| [Groq](/guides/features/llm-vendors/groq) | `groq` | API key | ✓ | Sub-100ms TTFT — Llama on LPU silicon |
+| [HuggingFace Inference Providers](/guides/features/llm-vendors/huggingface) | `huggingface` | HF token | ✓ | Multi-provider broker — one token, many backends |
+
+<Note>
+This page covers the **agent verb's** `llm` block (cascaded STT → LLM → TTS pipelines). For speech-to-speech vendors that handle audio in and audio out directly (OpenAI Realtime, Ultravox, Google Gemini Live, ElevenLabs), see the [llm verb](/verbs/verbs/llm).
+</Note>
+
+## Common patterns
+
+### Adding a credential
+
+In the jambonz portal, navigate to **Account → LLM Services → + Add LLM Service**. Pick a vendor from the dropdown, fill in the fields the form requests, and click **Test** to verify before saving. The Test button issues a cheap authenticated probe against the vendor — green means the credential works.
+
+### Picking a credential at call time
+
+In the typical case — one LLM credential per vendor on your account — jambonz resolves the credential automatically from the `vendor` field. No `label` is needed:
+
+```js
+session.agent({
+  llm: {
+    vendor: 'openai',
+    model: 'gpt-4o-mini',
+  },
+  // ...
+}).send();
+```
+
+This is the recommended setup for nearly all customers. **Don't set a label when creating the credential, and don't pass one in the agent verb.**
+
+### Multiple credentials for the same vendor (rare)
+
+The only reason to use a label is if you've added two or more credentials for the **same** vendor on the same account — e.g., separate dev and production OpenAI keys you want both available. In that case, give each credential a distinct label in the portal at create time, then reference it from the agent verb:
+
+```js
+session.agent({
+  llm: {
+    vendor: 'openai',
+    label: 'production',
+    model: 'gpt-4o-mini',
+  },
+  // ...
+}).send();
+```
+
+If you only ever have one credential per vendor (the common case), skip the label entirely.
+
+### Inline `auth` (rare)
+
+For one-off testing or when you don't want to store credentials in the portal, you can pass `auth` inline in the verb payload:
+
+```js
+session.agent({
+  llm: {
+    vendor: 'openai',
+    model: 'gpt-4o-mini',
+    auth: { apiKey: process.env.OPENAI_API_KEY },
+  },
+  // ...
+}).send();
+```
+
+The shape of `auth` matches the vendor's credential form. Per-vendor pages document the exact field names.
+
+## Where to next
+
+- New to voice agents? Start with [Voice Agents](/guides/features/voice-agents) for the end-to-end concept.
+- Already comfortable? Pick your vendor from the table above for setup specifics.
+- Looking for the verb reference? See [the agent verb](/verbs/verbs/agent).

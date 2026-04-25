@@ -1,0 +1,45 @@
+---
+title: Start building with jambonz
+layout: overview
+hide-feedback: true
+---
+
+jambonz is the open-source telephony platform for deploying Voice AI applications at scale.
+
+<CardGroup cols={2}>
+  <Card
+    title="Overview and Concepts"
+    icon="fa-regular fa-head-side-brain"
+    href="/guides/get-started/jambonz-overview"
+  >
+    Learn about jambonz in 5 minutes. 
+  </Card>
+  <Card
+    title="Developer Quickstart"
+    icon="fa-regular fa-play"
+    href="/guides/get-started/developer-quickstart"
+  >
+    Start using jambonz in 5 minutes. 
+  </Card>
+  <Card
+    title="Community"
+    icon="fa-regular fa-people-group"
+    href="https://community.jambonz.org/"
+  >
+    Join our jambonz community. 
+  </Card>
+  <Card
+    title="Deployment Options"
+    icon="fa-regular fa-file-lines"
+    href="/guides/get-started/deployment-options"
+  >
+    Explore ways of accessing jambonz. 
+  </Card>
+  <Card
+    title="Support plans"
+    icon="fa-regular fa-server"
+    href="/guides/get-started/support-plans"
+  >
+    Get support from the jambonz team. 
+  </Card>
+</CardGroup>

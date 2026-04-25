@@ -1,0 +1,30 @@
+---
+title: Redirect
+subtitle: transfer control to another JSON document that is retrieved from the specified url
+---
+
+<Warning>
+All actions after `redirect` are unreachable and ignored.
+</Warning>
+
+```json
+{
+  "verb": "redirect",
+  "actionHook": "/connectToSales",
+  "statusHook": "https://example.com/newStatus"
+}
+```
+
+## Parameters
+
+<ParamField path="actionHook" type="string" required={true}>
+  URL of webhook to retrieve a new application from.
+</ParamField>
+
+<ParamField path="statusHook" type="string" required={false}>
+  URL of webhook to send status messages to 
+</ParamField>
+
+Where the actionHook url is a full url eg `https://example.com/connectToSales` Jambonz will update the base URL used for the call so any futher actionHooks that contain relative urls will use the new base.
+
+If the statusHook is updated then the previous endpoint will not recieve any further events, like the actionHook this can be a relative path or a full URL

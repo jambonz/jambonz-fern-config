@@ -1,0 +1,32 @@
+---
+title: SIP Decline
+subtitle: Reject an incoming call with a specific status
+---
+
+The session ends immediately after the action is executed.
+
+```json
+{
+  "verb": "sip:decline",
+  "status": 480,
+  "reason": "Gone Fishing",
+  "headers" : {
+    "Retry-After": 1800
+  }
+}
+```
+
+## Parameters
+
+<ParamField path="status" type="number" required={true}>
+  A valid SIP status code in the range `4XX - 6XX`.
+</ParamField>
+
+<ParamField path="headers" type="object" required={false}>
+  SIP headers to include in the response.
+</ParamField>
+
+<ParamField path="reason" type="string" required={false}>
+  A brief description.  
+  Default: The well-known SIP reasons associated with the specified status code.
+</ParamField>

@@ -1,0 +1,22 @@
+---
+title: About the REST API
+---
+The jambonz REST API allows applications to query, create, and manage calls and other resources within the platform.
+
+## API Endpoint
+
+User of jambonz.cloud should use `https://jambonz.cloud/api` as the base URL for all REST API requests, if you are self hosting your own instance of jambonz then you will need to use the value for your API server.
+
+## Authentication
+
+The API uses Bearer authentication; i.e., a bearer token that must be provided in the Authorization header, e.g.
+
+`Authorization: Bearer 'your-api-token'`
+
+You can generate an api token for your account in the hosted portal.
+
+## HTTP response codes
+
+  POST requests will return a 201 status on success and a JSON payload that includes a sid property referencing the unique identifier of the resource that has been created.
+  UPDATE and DELETE requests will return a 204 status on success with no body
+  GET requests will return a 200 response with a JSON payload

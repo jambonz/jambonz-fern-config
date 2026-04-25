@@ -11,16 +11,16 @@ This section walks through configuring each supported vendor, including known is
 
 | Vendor | `llm.vendor` | Auth | Tool calling | Strengths |
 |---|---|---|---|---|
-| [OpenAI](/guides/features/llm-vendors/openai) | `openai` | API key | ✓ | Industry standard, broadest model catalog |
-| [Anthropic](/guides/features/llm-vendors/anthropic) | `anthropic` | API key | ✓ | Best-in-class instruction following (Claude) |
-| [Google AI Studio](/guides/features/llm-vendors/google) | `google` | API key | ✓ | Gemini family, generous free tier |
-| [Vertex AI — Gemini](/guides/features/llm-vendors/vertex-gemini) | `vertex-gemini` | Service account | ✓ | Gemini on GCP infrastructure with enterprise data controls |
-| [Vertex AI — Partner Models](/guides/features/llm-vendors/vertex-openai) | `vertex-openai` | Service account | ✓ | Llama, Mistral, AI21 hosted on Vertex |
-| [AWS Bedrock](/guides/features/llm-vendors/bedrock) | `bedrock` | API key or IAM | ✓ | Claude, Llama, Mistral, Nova on AWS infra |
-| [DeepSeek](/guides/features/llm-vendors/deepseek) | `deepseek` | API key | ✓ | Strong reasoning at low cost |
-| [Azure OpenAI](/guides/features/llm-vendors/azure-openai) | `azure-openai` | API key | ✓ | OpenAI models inside Azure (data residency, BAA) |
-| [Groq](/guides/features/llm-vendors/groq) | `groq` | API key | ✓ | Sub-100ms TTFT — Llama on LPU silicon |
-| [HuggingFace Inference Providers](/guides/features/llm-vendors/huggingface) | `huggingface` | HF token | ✓ | Multi-provider broker — one token, many backends |
+| [OpenAI](/guides/features/bring-your-own-llm/openai) | `openai` | API key | ✓ | Industry standard, broadest model catalog |
+| [Anthropic](/guides/features/bring-your-own-llm/anthropic) | `anthropic` | API key | ✓ | Best-in-class instruction following (Claude) |
+| [Google AI Studio](/guides/features/bring-your-own-llm/google) | `google` | API key | ✓ | Gemini family, generous free tier |
+| [Vertex AI — Gemini](/guides/features/bring-your-own-llm/vertex-gemini) | `vertex-gemini` | Service account | ✓ | Gemini on GCP infrastructure with enterprise data controls |
+| [Vertex AI — Partner Models](/guides/features/bring-your-own-llm/vertex-openai) | `vertex-openai` | Service account | ✓ | Llama, Mistral, AI21 hosted on Vertex |
+| [AWS Bedrock](/guides/features/bring-your-own-llm/bedrock) | `bedrock` | API key or IAM | ✓ | Claude, Llama, Mistral, Nova on AWS infra |
+| [DeepSeek](/guides/features/bring-your-own-llm/deepseek) | `deepseek` | API key | ✓ | Strong reasoning at low cost |
+| [Azure OpenAI](/guides/features/bring-your-own-llm/azure-openai) | `azure-openai` | API key | ✓ | OpenAI models inside Azure (data residency, BAA) |
+| [Groq](/guides/features/bring-your-own-llm/groq) | `groq` | API key | ✓ | Sub-100ms TTFT — Llama on LPU silicon |
+| [HuggingFace Inference Providers](/guides/features/bring-your-own-llm/huggingface) | `huggingface` | HF token | ✓ | Multi-provider broker — one token, many backends |
 
 <Note>
 This page covers the **agent verb's** `llm` block (cascaded STT → LLM → TTS pipelines). For speech-to-speech vendors that handle audio in and audio out directly (OpenAI Realtime, Ultravox, Google Gemini Live, ElevenLabs), see the [llm verb](/verbs/verbs/llm).

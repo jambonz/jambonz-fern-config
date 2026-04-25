@@ -1,0 +1,215 @@
+1\. Navigate to your Node-RED editor eg [http://127.0.0.1:1880/](https://www.google.com/)
+
+![](../../assets/images/nodered/88aa3c0d-bfd4-4ede-adae-ac8247dda5e5.jpeg)
+
+
+2\. Open the Hamburger Menu
+
+![](../../assets/images/nodered/dddb0531-14e4-43ac-a733-e941ff6e4bc3.jpeg)
+
+
+3\. Click "Manage palette"
+
+![](../../assets/images/nodered/ccfafce7-7787-4b53-a69e-b67478f4b27e.jpeg)
+
+
+4\. Click the "Install" tab
+
+![](../../assets/images/nodered/040e8259-8936-4acd-8348-fa1526f1abea.jpeg)
+
+
+5\. Type "jambonz" in the search bar, then click the "install" button
+
+![](../../assets/images/nodered/52d9fcf9-0511-4de6-950c-e3461ef40847.jpeg)
+
+
+6\. Click "Install"
+
+![](../../assets/images/nodered/50068066-f542-4753-ade2-f4e019678905.jpeg)
+
+
+7\. Next install the "ngrok" package in the same way Click "install"
+
+![](../../assets/images/nodered/7198ba9b-03cf-4968-b904-4f7f3412f3fe.jpeg)
+
+
+8\. Click "Close"
+
+![](../../assets/images/nodered/f5fc4dd0-414b-4949-9d8d-e2af5f2b50c9.jpeg)
+
+
+9\. On the left hand side is the pallette, scroll down to find the ngrok node
+
+![](../../assets/images/nodered/730513e2-6d35-4bfd-b0ae-37d0fdf5b1d6.jpeg)
+
+
+10\. And drag it onto the canvas, then double click to open the node
+
+![](../../assets/images/nodered/aa87d4f9-ef76-47e6-9896-fdeb18fab50c.jpeg)
+
+
+11\. Click the + button to add a new ngrok auth config
+
+![](../../assets/images/nodered/18fda631-bcdb-4685-8ece-f567f2aee934.jpeg)
+
+
+12\. enter your ngrok authtoken and give it a name like "authtoken"
+
+![](../../assets/images/nodered/f161c5b7-252c-461f-8348-099c49516e20.jpeg)
+
+
+13\. Click "Add"
+
+![](../../assets/images/nodered/a382b046-4637-4206-9e1e-05a6d22af48b.jpeg)
+
+
+14\. Click "Done"
+
+![](../../assets/images/nodered/01a01cc9-f0f8-4c0c-b305-fca27b629647.jpeg)
+
+
+15\. Now scroll the pallette to the bottom and you will see the jambonz nodes, drag a "webhook in" node to the canvas, then double click it to open the config.
+
+![](../../assets/images/nodered/721f6397-93da-4aa2-a5a5-18ca6407f198.jpeg)
+
+
+16\. Click the "Path" field. and enter "/call", then click "Done"
+
+![](../../assets/images/nodered/a16f5225-2e0e-4efa-9acd-e7fa6a99dbec.jpeg)
+
+
+17\. Next drag a say node from the palette onto the canvas, and double click it to edit.
+
+![](../../assets/images/nodered/cae4b72e-28b7-4059-9ac4-fe5a91903677.jpeg)
+
+
+18\. Click the "Text {{ }}" field.
+
+![](../../assets/images/nodered/d43d244c-1167-449e-a819-da8384ef4d47.jpeg)
+
+
+19\. Type "Hello world, this is jambonz managed by Node-RED"
+
+
+20\. Click "Done"
+
+![](../../assets/images/nodered/7eb7f847-b0cc-478d-8dd9-6cebc61d9e33.jpeg)
+
+
+21\. Click here.
+
+![](../../assets/images/nodered/2c6b1c8c-32bb-4b92-aaa1-1ddf3a61b79d.jpeg)
+
+
+22\. Now wire together the nodes so that the webhook In is connected to say and then say to webhook out.
+
+![](../../assets/images/nodered/0706cec4-e81b-42e4-87b6-368ffd8737bf.jpeg)
+
+
+23\. Click here.
+
+![](../../assets/images/nodered/26d03921-3fcd-43aa-8723-06acbe77435c.jpeg)
+
+
+24\. Drag a debig node from the palette to the canvas and wire it to the ngrok node
+
+![](../../assets/images/nodered/af5fdc49-8ab5-4a46-9a7f-e483bae64c7a.jpeg)
+
+
+25\. Now click "Deploy" to save your flow.
+
+![](../../assets/images/nodered/dd827242-1a56-437d-9ad5-0c4a54d089b4.jpeg)
+
+
+26\. Click the button on the ngrok node to activate your ngrok tunnel
+
+![](../../assets/images/nodered/d9c88430-60bd-4dae-8ef0-f2c90b60f668.jpeg)
+
+
+27\. Now click on the debug icon in the right hand panel
+
+![](../../assets/images/nodered/b34e194b-3c3d-44bb-95b1-639e62736d73.jpeg)
+
+
+28\. You should see the ngrok hostname for your session in the degug bar, click the icon to copy that value to your clipboard
+
+![](../../assets/images/nodered/f9ff4933-2550-4472-baac-b3b2d3bf86f9.jpeg)
+
+
+29\. In a new tab, navigate to [https://jambonz.cloud/](https://jambonz.cloud/)
+
+
+30\. Login
+
+![](../../assets/images/nodered/58ef37af-8490-4689-b6d4-05cbae590652.jpeg)
+
+
+31\. Click "Applications"
+
+![](../../assets/images/nodered/a69d1c75-3d08-4569-afe4-60fbcc79f3bf.jpeg)
+
+
+32\. Click "Add application"
+
+![](../../assets/images/nodered/49413b88-d328-4a90-90ce-7b446f563eeb.jpeg)
+
+
+33\. Click the "Application name*" field.
+
+![](../../assets/images/nodered/590ee8a8-a38a-4121-9f7a-f2c11b19e6cd.jpeg)
+
+
+34\. Type "node-red ngrok"
+
+
+35\. Click the "Calling webhook *" field.
+
+![](../../assets/images/nodered/17340b93-71ce-4ef6-85d1-867f68bef8c4.jpeg)
+
+
+36\. Paste your ngrok url from node red here and add "/call" to the end
+
+
+37\. Click the "Call status webhook *" field.
+
+![](../../assets/images/nodered/3eb6db42-e490-4e6d-bc03-bc8cef7242b8.jpeg)
+
+
+38\. Paste your ngrok url from node red here and add "/status" to the end
+
+![](../../assets/images/nodered/1eba48b4-dc5b-4b50-8926-179b2ea0e045.jpeg)
+
+
+39\. Scroll down and click  "Save"
+
+![](../../assets/images/nodered/3b45567e-ab3c-4827-8203-ca8514eea711.jpeg)
+
+
+40\. Now goto your  "Phone Numbers"
+
+![](../../assets/images/nodered/e9e766c5-0fa5-48b1-898f-c04a4ce37ce3.jpeg)
+
+
+41\. Click on your configured phone number to edit it.
+
+![](../../assets/images/nodered/702e1f0c-07d7-412a-a912-4f8fb8c30336.jpeg)
+
+
+42\. Click the "Application" field.
+
+![](../../assets/images/nodered/7296f114-7fcb-40d8-a1c5-082d749bb0ac.jpeg)
+
+
+43\. select your new application "node-red ngrok"
+
+![](../../assets/images/nodered/b9481259-117f-4606-9039-5021ab6c3439.jpeg)
+
+
+44\. Click "Save"
+
+![](../../assets/images/nodered/1443849d-898e-4192-8497-a14ca53f84b3.jpeg)
+
+
+45\. If you now call your number you will hear the text configured in the say node.
+
+

@@ -1,0 +1,51 @@
+---
+title: Tag
+subtitle: Add properties to the standard call attributes that jambonz will then include on every webhook / websocket message
+---
+
+<Note>
+Every time the tag verb is used, the collection of customer data is completely replaced with the new data provided.
+</Note>
+
+```json
+{
+  "verb": "tag",
+  "data": {
+		"foo": "bar",
+		"counter": 100,
+		"list": [1, 2, "three"]
+	}
+}
+```
+
+After the above 'tag' verb has executed, web callbacks using POST would have a payload similar to this:
+```json
+{
+	"call_sid": "df09e8d4-7ffd-492b-94d9-51a60318552c",
+	"direction": "inbound",
+	"from": "+15083084809",
+	"to": "+15083728299",
+	"call_id": "f0414693-bdb6-1238-6185-06d91d68c9b0",
+	"sip_status": 200,
+	"call_status": "in-progress",
+	"caller_id": "f0414693-bdb6-1238-6185-06d91d68c9b0",
+	"account_sid": "fef61e75-cec3-496c-a7bc-8368e4d02a04",
+	"application_sid": "0e0681b0-d49f-4fb8-b973-b5a3c6758de1",
+	"originating_sip_ip": "54.172.60.1:5060",
+	"originating_sip_trunk_name": "twilio",
+	"customerData": {
+		"foo": "bar",
+		"counter": 100,
+		"list": [1, 2, "three"]
+	}
+}
+```
+
+You can use the following options in the `tag` command:
+
+## Parameters
+
+<ParamField path="data" type="object" required={true}>
+  A JSON object containing values to be saved and included in future action or  
+  call status notifications (HTTP POST only) for this call.
+</ParamField>

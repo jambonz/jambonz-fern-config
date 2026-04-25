@@ -1,0 +1,44 @@
+---
+title: SIP Request
+subtitle: Sends a SIP INFO, NOTIFY, or MESSAGE request during a call.
+---
+
+```json
+{
+  "verb": "sip:request",
+  "method": "INFO",
+  "headers": {
+    "X-Metadata": "my sip metadata"
+  }
+  "actionHook": "/info"
+}
+```
+
+## Parameters
+
+<ParamField path="method" type="string" required={true}>
+  SIP method, should be one of `INFO`, `MESSAGE`, or `NOTIFY`.
+</ParamField>
+
+<ParamField path="actionHook" type="string" required={false}>
+  A webhook to call when the SIP request has completed.
+</ParamField>
+
+<ParamField path="body" type="string" required={false}>
+  The body of the SIP request, if any.
+</ParamField>
+
+<ParamField path="headers" type="object" required={false}>
+  An object containing headers (key-value pairs) to include with the SIP request.
+</ParamField>
+
+The sip:request verb completes when a response is received from the far end. 
+
+### actionHook properties
+
+The actionHook provides the status code of the sip response:
+
+- `result`: 'success' or 'failed'
+- `sipStatus`: sip status code of response
+- `err`: error message, in the case of failure
+

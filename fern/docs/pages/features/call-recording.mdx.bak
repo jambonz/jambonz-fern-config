@@ -1,0 +1,22 @@
+---
+title: Call Recording
+hidden: false
+---
+
+Jambonz supports 2 methods of call recording, either acting as a SIPREC client to stream to a compatible server or recording the call internally and uploading to a cloud provider storage such as S3, Azure, or Google Cloud.
+
+The cloud provider can be configured via the account secttion in the Web UI, You can choose at this level to record all calls for the whole account or you can set this on a specific application, alternativly you can dynamincally control the 
+recording using the [Config Verb ](/verbs/verbs/config) or the [REST Update Call](/eference/rest-call-control/calls/update-call#request.body.record) method.
+
+You must have a provider configured on the account to use cloud recording via the config verb or REST api.
+
+Using either method you can send the following actions
+
+  - startCallRecording
+  - stopCallRecording
+  - pauseCallRecording
+  - resumeCallRecording
+
+In order to pause or stop a recording it must have first been started either via the startCallRecording action or with cloud recording via default account or application configuration.
+
+When pausing a recording you can  set `silence` to `true` and this will pad the recording with silence, by default this is `false` so a pause in the recording will truncate the file.

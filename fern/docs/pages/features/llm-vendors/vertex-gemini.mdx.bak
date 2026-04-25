@@ -1,0 +1,77 @@
+---
+title: Vertex AI — Gemini
+subtitle: Configure jambonz to use Gemini models via Google Cloud's Vertex AI.
+---
+
+Vertex AI is Google Cloud's enterprise inference platform. Use this vendor (rather than [`google`](/guides/features/llm-vendors/google)) when your organization needs GCP IAM, regional data residency, pre-paid commitments, or Vertex-specific features. The Gemini model catalog largely overlaps with AI Studio, but the auth path and quotas differ.
+
+## Get credentials
+
+You need a **service account key** from a GCP project that has the Vertex AI API enabled.
+
+1. Sign in to the [Google Cloud Console](https://console.cloud.google.com) and select (or create) the project that will run inference.
+2. Enable the **Vertex AI API** at [console.cloud.google.com/apis/library/aiplatform.googleapis.com](https://console.cloud.google.com/apis/library/aiplatform.googleapis.com).
+3. Create a service account: **IAM & Admin → Service Accounts → + Create service account**. Give it a name like `jambonz-vertex`.
+4. Grant the role **Vertex AI User** (`roles/aiplatform.user`). This is the minimum required role; broader roles (Editor, Owner) work too but are over-privileged.
+5. Open the new service account, go to the **Keys** tab → **Add key → Create new key → JSON**. Download the JSON file.
+
+<Tip>
+Treat the downloaded JSON like a password. Anyone with the file can mint tokens against your Vertex quota until the key is rotated.
+</Tip>
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Vertex AI — Gemini**.
+
+<ParamField path="Service Account Key (JSON)" type="file" required={true}>
+  Upload the JSON key file you downloaded.
+</ParamField>
+
+<ParamField path="Project ID" type="string" required={true}>
+  Your GCP project id (visible in the Cloud Console — e.g. `my-company-12345`). Often also embedded in the service account JSON, but the form requires it explicitly.
+</ParamField>
+
+<ParamField path="Region" type="select" required={true}>
+  GCP region where you want inference to happen. `us-central1` is the most common default. Pick closer regions for lower latency or regulated regions for compliance.
+</ParamField>
+
+Click **Test**. The probe mints a Google access token from the service account — green means the key is valid and the service account has the right roles.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'vertex-gemini',
+    model: 'gemini-2.5-flash',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+See Google's [Vertex AI generative model list](https://cloud.google.com/vertex-ai/generative-ai/docs/models) for the full Gemini lineup and per-region availability. The model ids match AI Studio (e.g. `gemini-2.5-flash`, `gemini-2.5-pro`) — Vertex deploys the same models with enterprise infrastructure underneath.
+
+## Quirks & errors
+
+<Note>
+**Form field naming**: the jambonz form uses **Region**, but Google's docs and the encrypted credential blob use `location`. Same field — different name.
+</Note>
+
+<Warning>
+**`PERMISSION_DENIED`** during Test — the service account is missing the `roles/aiplatform.user` IAM role. Add it under IAM & Admin → IAM → find the service account → edit roles.
+</Warning>
+
+<Warning>
+**`NOT_FOUND` on a model** — the model isn't available in the chosen region. Gemini availability differs by region; check the [Vertex model availability matrix](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations) and either switch regions or pick a model present in yours.
+</Warning>
+
+<Note>
+Test passes but inference fails? The Test probe only verifies the credential mints a token. Specific model access is a separate check — if you've never called a particular model from this project, your first inference call may fail with `NOT_FOUND` or quota errors. Hit the [Vertex AI model garden](https://console.cloud.google.com/vertex-ai/model-garden) and "Open in playground" once for each model you plan to use.
+</Note>

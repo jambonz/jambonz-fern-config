@@ -5,11 +5,11 @@ subtitle: Configure jambonz to use Llama, Mistral, and other partner models host
 
 Vertex AI also hosts third-party "partner" models — Meta's Llama, Mistral, AI21 Jamba, and others — through an OpenAI-compatible chat completions endpoint. Use this vendor when you want non-Google models on GCP infrastructure with the same IAM and data-residency story as Vertex Gemini.
 
-For Google's own Gemini models, use [Vertex AI — Gemini](/guides/features/llm-vendors/vertex-gemini) instead.
+For Google's own Gemini models, use [Vertex AI — Gemini](/guides/features/bring-your-own-llm/vertex-gemini) instead.
 
 ## Get credentials
 
-Identical to Vertex Gemini — you need a service account JSON. See the [Vertex AI — Gemini](/guides/features/llm-vendors/vertex-gemini#get-credentials) page for full steps.
+Identical to Vertex Gemini — you need a service account JSON. See the [Vertex AI — Gemini](/guides/features/bring-your-own-llm/vertex-gemini#get-credentials) page for full steps.
 
 The service account needs the **Vertex AI User** role (`roles/aiplatform.user`).
 
@@ -49,7 +49,7 @@ session.agent({
 }).send();
 ```
 
-Common model picks:
+See Google's [Vertex AI partner models catalog](https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models) for the full list and per-region availability. Common picks:
 
 | Model | Notes |
 |---|---|

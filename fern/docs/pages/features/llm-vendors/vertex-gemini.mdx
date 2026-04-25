@@ -3,7 +3,7 @@ title: Vertex AI — Gemini
 subtitle: Configure jambonz to use Gemini models via Google Cloud's Vertex AI.
 ---
 
-Vertex AI is Google Cloud's enterprise inference platform. Use this vendor (rather than [`google`](/guides/features/llm-vendors/google)) when your organization needs GCP IAM, regional data residency, pre-paid commitments, or Vertex-specific features. The Gemini model catalog largely overlaps with AI Studio, but the auth path and quotas differ.
+Vertex AI is Google Cloud's enterprise inference platform. Use this vendor (rather than [`google`](/guides/features/bring-your-own-llm/google)) when your organization needs GCP IAM, regional data residency, pre-paid commitments, or Vertex-specific features. The Gemini model catalog largely overlaps with AI Studio, but the auth path and quotas differ.
 
 ## Get credentials
 
@@ -55,6 +55,8 @@ session.agent({
   actionHook: '/agent-complete',
 }).send();
 ```
+
+See Google's [Vertex AI generative model list](https://cloud.google.com/vertex-ai/generative-ai/docs/models) for the full Gemini lineup and per-region availability. The model ids match AI Studio (e.g. `gemini-2.5-flash`, `gemini-2.5-pro`) — Vertex deploys the same models with enterprise infrastructure underneath.
 
 ## Quirks & errors
 

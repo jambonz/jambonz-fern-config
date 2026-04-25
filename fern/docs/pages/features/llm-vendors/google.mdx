@@ -5,7 +5,7 @@ subtitle: Configure jambonz to use Google's Gemini models via AI Studio.
 
 Google AI Studio is the simplest way to use Gemini — sign in with a Google account, get an API key, done. The free tier has generous monthly limits, making this the easiest entry point for prototyping.
 
-If you need enterprise data controls, GCP IAM, or Vertex regional residency, use [Vertex AI — Gemini](/guides/features/llm-vendors/vertex-gemini) instead. Same models, different infrastructure path.
+If you need enterprise data controls, GCP IAM, or Vertex regional residency, use [Vertex AI — Gemini](/guides/features/bring-your-own-llm/vertex-gemini) instead. Same models, different infrastructure path.
 
 ## Get credentials
 
@@ -46,7 +46,7 @@ session.agent({
 }).send();
 ```
 
-Common model picks:
+See Google's [Gemini model catalog](https://ai.google.dev/gemini-api/docs/models) for the full list and current pricing. Common picks for voice agents:
 
 | Model | When to use |
 |---|---|
@@ -57,7 +57,7 @@ Common model picks:
 ## Quirks & errors
 
 <Note>
-**`google` is the AI Studio path, not Vertex.** If your organization requires GCP IAM, regional data residency, or pre-paid commitments, you want [`vertex-gemini`](/guides/features/llm-vendors/vertex-gemini) instead. The model catalog overlaps but the auth and infra differ.
+**`google` is the AI Studio path, not Vertex.** If your organization requires GCP IAM, regional data residency, or pre-paid commitments, you want [`vertex-gemini`](/guides/features/bring-your-own-llm/vertex-gemini) instead. The model catalog overlaps but the auth and infra differ.
 </Note>
 
 <Note>

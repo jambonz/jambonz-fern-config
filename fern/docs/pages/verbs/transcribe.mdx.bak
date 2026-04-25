@@ -1,0 +1,30 @@
+---
+title: Transcribe
+subtitle: Send real time transcriptions of speech continuously.
+---
+
+<Note>
+The transcribe verb may appear on its own or as a nested verb within a dial, config, or listen verb.
+</Note>
+
+```json
+{
+  "verb": "transcribe",
+  "transcriptionHook": "http://example.com/transcribe",
+  "recognizer": {
+    "vendor": "google",
+    "language" : "en-US",
+    "interim": true
+  }
+}
+```
+
+## Parameters
+
+<ParamField path="transcriptionHook" type="string" required={true}>
+  Webhook to receive an HTTP POST when an interim or final transcription is received.
+</ParamField>
+
+<ParamField path="recognizer" type="object" required={false}>
+  [Speech recognition options](/verbs/verbs/recognizer).
+</ParamField>
