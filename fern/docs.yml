@@ -84,6 +84,30 @@ navigation:
         contents:
           - page: Voice Agents
             path: ./docs/pages/features/voice-agents.mdx
+          - section: Bring Your Own LLM
+            contents:
+              - page: Overview
+                path: ./docs/pages/features/llm-vendors/index.mdx
+              - page: OpenAI
+                path: ./docs/pages/features/llm-vendors/openai.mdx
+              - page: Anthropic
+                path: ./docs/pages/features/llm-vendors/anthropic.mdx
+              - page: Google (AI Studio)
+                path: ./docs/pages/features/llm-vendors/google.mdx
+              - page: Vertex AI — Gemini
+                path: ./docs/pages/features/llm-vendors/vertex-gemini.mdx
+              - page: Vertex AI — Partner Models
+                path: ./docs/pages/features/llm-vendors/vertex-openai.mdx
+              - page: AWS Bedrock
+                path: ./docs/pages/features/llm-vendors/bedrock.mdx
+              - page: DeepSeek
+                path: ./docs/pages/features/llm-vendors/deepseek.mdx
+              - page: Azure OpenAI
+                path: ./docs/pages/features/llm-vendors/azure-openai.mdx
+              - page: Groq
+                path: ./docs/pages/features/llm-vendors/groq.mdx
+              - page: HuggingFace Inference Providers
+                path: ./docs/pages/features/llm-vendors/huggingface.mdx
           - page: Using OpenAI STT
             path: ./docs/pages/features/using-openai-stt.mdx
           - page: Custom STT providers

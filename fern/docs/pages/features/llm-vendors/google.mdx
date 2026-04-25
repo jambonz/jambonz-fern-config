@@ -1,0 +1,73 @@
+---
+title: Google (AI Studio)
+subtitle: Configure jambonz to use Google's Gemini models via AI Studio.
+---
+
+Google AI Studio is the simplest way to use Gemini — sign in with a Google account, get an API key, done. The free tier has generous monthly limits, making this the easiest entry point for prototyping.
+
+If you need enterprise data controls, GCP IAM, or Vertex regional residency, use [Vertex AI — Gemini](/guides/features/llm-vendors/vertex-gemini) instead. Same models, different infrastructure path.
+
+## Get credentials
+
+1. Sign in at [https://aistudio.google.com](https://aistudio.google.com) with your Google account.
+2. Click **Get API key** in the sidebar (direct link: [https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
+3. Click **Create API key**, optionally tie it to a Google Cloud project, copy the key.
+
+<Tip>
+AI Studio API keys do not expire by default but can be revoked from the same page. Each key is tied to a Google Cloud project for billing purposes.
+</Tip>
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Google Gemini**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The key from AI Studio.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'google',
+    model: 'gemini-2.5-flash',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+Common model picks:
+
+| Model | When to use |
+|---|---|
+| `gemini-2.5-flash` | Default for voice — fast, cheap, tool-capable, 1M-token context |
+| `gemini-2.5-pro` | Higher reasoning quality |
+| `gemini-2.0-flash-lite` | Cheapest option; no vision support |
+
+## Quirks & errors
+
+<Note>
+**`google` is the AI Studio path, not Vertex.** If your organization requires GCP IAM, regional data residency, or pre-paid commitments, you want [`vertex-gemini`](/guides/features/llm-vendors/vertex-gemini) instead. The model catalog overlaps but the auth and infra differ.
+</Note>
+
+<Note>
+**Free-tier rate limits.** AI Studio's free tier caps requests-per-minute pretty aggressively. For production traffic, upgrade to a paid tier in your Google Cloud billing account or switch to Vertex AI for higher quotas.
+</Note>
+
+<Warning>
+**`400 API_KEY_INVALID`** — the key has typos or was revoked. Regenerate at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
+</Warning>
+
+<Warning>
+**`429 RESOURCE_EXHAUSTED`** — you've hit a per-minute or per-day quota. Switch to a paid tier or distribute traffic across multiple keys.
+</Warning>

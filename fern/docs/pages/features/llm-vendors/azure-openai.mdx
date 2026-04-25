@@ -1,0 +1,125 @@
+---
+title: Azure OpenAI
+subtitle: Configure jambonz to use OpenAI models hosted in your Azure subscription.
+---
+
+Azure OpenAI is Microsoft's managed hosting of OpenAI models inside Azure. Use this vendor when your organization is committed to Azure for data residency, BAA / HIPAA compliance, or procurement reasons. The model catalog largely mirrors OpenAI direct (gpt-4o, gpt-4-turbo, o-series, gpt-5 family) but auth, URL structure, and api-versioning differ.
+
+This is the most fiddly setup of any vendor we support. Read carefully — small input mistakes cause confusing errors.
+
+## Get credentials
+
+You need **four** pieces of information: API Key, Endpoint, Deployment Name, and API Version. All four are visible in **Azure AI Foundry** once you've provisioned an Azure OpenAI resource and deployed at least one model.
+
+### Step 1 — Provision an Azure OpenAI resource
+
+If you don't have one yet:
+
+1. Sign in at [https://portal.azure.com](https://portal.azure.com).
+2. Search for **Azure OpenAI**, click into the service, click **+ Create**.
+3. Pick a resource group, name (e.g. `jambonz-test`), region, and pricing tier. The `S0` standard tier is fine for most use cases.
+4. Wait for provisioning (~1 minute).
+
+### Step 2 — Deploy a model
+
+1. From your Azure OpenAI resource page, click **Go to Azure AI Foundry portal** at the top — or go directly to [https://ai.azure.com](https://ai.azure.com).
+2. In Foundry, pick your resource from the project picker.
+3. Sidebar: **Deployments** (or **Model deployments**) → **+ Deploy model** → **Deploy base model**.
+4. Pick a model — `gpt-4o-mini` is a great starting point. For gpt-5 family or o-series, see the api-version warning below.
+5. **Deployment name**: type something simple. Many people name the deployment after the model id (`gpt-4o-mini`) but it can be any string you want — `prod-chat`, `voice-agent-1`, whatever.
+6. Submit. Wait until status is **Succeeded**.
+
+### Step 3 — Collect the four fields from Foundry
+
+In the deployment detail page, you'll see:
+
+- **Endpoint → Key** — click the eye icon to reveal, copy the long string. This is your **API Key**.
+- **Endpoint → Target URI** — looks like `https://my-resource.openai.azure.com/openai/responses?api-version=2025-04-01-preview`.
+  - **Strip everything from `/openai/...` onward.** The hostname-only portion is your **Endpoint**: `https://my-resource.openai.azure.com`.
+  - The `?api-version=...` query string at the end is your **API Version**: `2025-04-01-preview` in the example.
+- **Deployment info → Name** — the string you chose at deploy time. This is your **Deployment Name**.
+
+<Warning>
+**Don't paste the full Target URI as the Endpoint.** This is the most common mistake. Foundry shows the full URL because that's what their Python SDK example consumes; jambonz wants only the resource hostname. If you paste the full URL into the Endpoint field, calls fail with confusing 404s or routing errors.
+</Warning>
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Azure OpenAI**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The key from the Endpoint panel of your Azure AI Foundry deployment.
+</ParamField>
+
+<ParamField path="Endpoint" type="string" required={true}>
+  **Resource hostname only.** Example: `https://my-resource.openai.azure.com`. No path, no query string.
+</ParamField>
+
+<ParamField path="Deployment Name" type="string" required={true}>
+  The name you chose at deploy time — the string at the top of the Foundry deployment page. NOT the underlying model id (unless you named your deployment after the model).
+</ParamField>
+
+<ParamField path="API Version" type="string" required={true}>
+  The `?api-version=...` value from the Target URI, or the `api_version=...` line in Foundry's Python sample. Defaults to `2025-03-01-preview`. See the warning below for gpt-5 / o-series.
+</ParamField>
+
+Click **Test**. The probe issues a minimal chat completion against the deployment.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'azure-openai',
+    model: 'gpt-4o-mini',  // your deployment name
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+The `model` value here is your deployment name — Azure ignores the wire `model` field because the deployment in the URL determines which model runs.
+
+## Quirks & errors
+
+<Warning>
+**Deployment name is NOT the model id.** Azure deployments can be named anything. If your deployment is `prod-chat` running gpt-4o-mini, your `model` value in the agent verb is `prod-chat`, not `gpt-4o-mini`. Customers regularly trip on this — it's the most common cause of `404 DeploymentNotFound`.
+</Warning>
+
+<Warning>
+**`api-version` minimum: `2025-03-01-preview` for gpt-5 / o-series.** Azure routes gpt-5 family and o-series reasoning models through their internal Responses API even when you call `/chat/completions`. If your `API Version` is older than `2025-03-01-preview`, you'll get:
+
+```
+400 Azure OpenAI Responses API is enabled only for api-version
+2025-03-01-preview and later
+```
+
+The default in the jambonz form is `2025-03-01-preview` — safe for all current Azure deployments. Only override if you have a specific reason to pin an older version.
+</Warning>
+
+<Note>
+**`max_completion_tokens` vs `max_tokens`** — gpt-5 family and o-series reject the legacy `max_tokens` parameter. jambonz handles this automatically: the Azure adapter always sends `max_completion_tokens` regardless of model, which is a superset accepted by gpt-4o-family too. No action needed on your end.
+</Note>
+
+<Warning>
+**`404 DeploymentNotFound`** — verify in Azure AI Foundry that:
+1. A deployment with that exact name exists (case-sensitive).
+2. It's on the same resource your endpoint URL points to.
+3. Status is **Succeeded** (not still provisioning).
+
+If all three are true and you still get 404, check the Endpoint field — it's the most likely culprit.
+</Warning>
+
+<Warning>
+**`400 Could not finish the message because max_tokens or model output limit was reached`** with reasoning models — gpt-5 / o-series consume reasoning tokens before producing visible output. The Test button's probe sends `max_completion_tokens: 256` to leave headroom for reasoning. If you hit this in your own agent verb, increase `llm.llmOptions.maxTokens` to at least 256, ideally more, when running on reasoning models.
+</Warning>
+
+<Note>
+**Microsoft Entra (AAD) auth is not yet supported** by this vendor — only API key. If your organization requires AAD-only auth on Azure OpenAI, file a feature request.
+</Note>

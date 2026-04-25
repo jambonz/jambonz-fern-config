@@ -1,0 +1,71 @@
+---
+title: Anthropic
+subtitle: Configure jambonz to use Anthropic's Claude models.
+---
+
+Anthropic's Claude models are widely regarded as the strongest option for instruction following and tool use. Pair Claude with a fast STT and TTS for voice agents that need to follow complex multi-turn flows reliably.
+
+## Get credentials
+
+1. Sign in at [https://console.anthropic.com](https://console.anthropic.com).
+2. Open **API Keys** in the sidebar (direct link: [https://console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)).
+3. Click **Create Key**, name it, copy the `sk-ant-...` string.
+
+<Tip>
+Anthropic shows the key once. Store it before navigating away — you can't retrieve it later, only revoke.
+</Tip>
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Anthropic**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The `sk-ant-...` secret from the Anthropic console.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://api.anthropic.com`. Override only for proxies or enterprise deployments.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'anthropic',
+    model: 'claude-haiku-4-5-20251001',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+Common model picks:
+
+| Model | When to use |
+|---|---|
+| `claude-haiku-4-5-20251001` | Default for voice — fast, cheap, tool-capable, vision |
+| `claude-sonnet-4-6` | Mid-tier; better reasoning than Haiku, lower latency than Opus |
+| `claude-opus-4-7` | Highest-quality model; slower and more expensive |
+
+## Quirks & errors
+
+<Note>
+**Vision support varies by model.** Claude Sonnet and Opus accept image inputs; Claude Haiku 3.5 does not. Haiku 4.5 supports vision. If you need to pass images, double-check the model in the [Anthropic model comparison](https://docs.anthropic.com/en/docs/about-claude/models).
+</Note>
+
+<Warning>
+**`401 invalid_api_key`** — the key was revoked or has typos. Regenerate at [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys).
+</Warning>
+
+<Warning>
+**`429 rate_limit_error`** — you've hit Anthropic's per-minute or per-day rate limits. Reduce traffic or request a higher tier from Anthropic support. Note: Anthropic's rate limits are stricter than OpenAI's at equivalent tiers.
+</Warning>

@@ -1,0 +1,66 @@
+---
+title: DeepSeek
+subtitle: Configure jambonz to use DeepSeek's V4 family models.
+---
+
+DeepSeek's V4 models offer strong reasoning at substantially lower cost than equivalent OpenAI or Anthropic tiers. The wire is OpenAI-compatible (chat completions, streaming, tools), so the integration is straightforward.
+
+## Get credentials
+
+1. Sign in at [https://platform.deepseek.com](https://platform.deepseek.com).
+2. Open **API keys** in the dashboard (direct link: [https://platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys)).
+3. Click **Create new API key**, copy the value.
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → DeepSeek**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The key from DeepSeek's dashboard.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://api.deepseek.com/v1`. Override for self-hosted DeepSeek deployments or proxy endpoints.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'deepseek',
+    model: 'deepseek-v4-flash',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+Common model picks:
+
+| Model | Notes |
+|---|---|
+| `deepseek-v4-flash` | Default — fast, cheap, tool-capable |
+| `deepseek-v4-pro` | Higher quality at higher cost |
+
+## Quirks & errors
+
+<Note>
+**`deepseek-chat` and `deepseek-reasoner` are deprecated** — older V3-era ids that the manifest flags as `deprecated: true`. They still work in some accounts but are scheduled for removal. Switch to `deepseek-v4-flash` or `deepseek-v4-pro`.
+</Note>
+
+<Warning>
+**Tool-calling reliability is weaker than OpenAI/Anthropic** on shorter prompts. If your agent depends on consistent tool invocation, test thoroughly with realistic prompts. For complex tool flows, consider Claude or GPT-4o.
+</Warning>
+
+<Warning>
+**`401`** — key revoked or copied with whitespace. Regenerate at [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys).
+</Warning>

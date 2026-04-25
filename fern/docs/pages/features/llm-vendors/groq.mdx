@@ -1,0 +1,77 @@
+---
+title: Groq
+subtitle: Configure jambonz to use Llama and Gemma models on Groq's LPU hardware for sub-100ms TTFT.
+---
+
+Groq runs open-weight Llama 3.x/3.3 and Gemma models on custom LPU silicon and gets ~5-10× the tokens/sec of GPU-backed providers. For real-time voice agents, this is the most jambonz-shaped value prop in the LLM market — your agent feels noticeably more responsive than the same prompt on `gpt-4o`.
+
+The tradeoff: Groq's catalog is open-weight Llama / Gemma. Capable, but not GPT-5 / Claude-tier on hard reasoning. Pick Groq for "look up the order, read it back" voice agents; pick Anthropic / OpenAI / Bedrock for complex reasoning.
+
+## Get credentials
+
+1. Sign in at [https://console.groq.com](https://console.groq.com).
+2. Click **API Keys** in the sidebar (direct link: [https://console.groq.com/keys](https://console.groq.com/keys)).
+3. Click **Create API Key**, name it, copy the `gsk_...` string.
+
+<Tip>
+Groq shows the key once at creation. Copy before navigating away.
+</Tip>
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Groq**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The `gsk_...` key from Groq's console.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://api.groq.com/openai/v1`. Override only for proxies — Groq's production endpoint is the default.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'groq',
+    model: 'llama-3.3-70b-versatile',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+Common model picks:
+
+| Model | Notes |
+|---|---|
+| `llama-3.3-70b-versatile` | Best general-purpose — reliable tool calls, fast |
+| `llama-3.1-8b-instant` | Fastest and cheapest; tool-capable but less reliable on complex flows |
+| `gemma2-9b-it` | Alternative open model |
+
+## Quirks & errors
+
+<Note>
+**Tool-calling reliability scales with model size.** `llama-3.3-70b-versatile` handles multi-step tool calls cleanly. `llama-3.1-8b-instant` is faster and cheaper but occasionally fails to invoke tools when it should, or invokes them with malformed arguments. Test your specific tool definitions on both to find the right tradeoff.
+</Note>
+
+<Note>
+**Groq's catalog churns frequently.** Preview models come and go on a monthly cadence. The jambonz manifest ships a small curated set of stable models; for the full live catalog, see [Groq's models page](https://console.groq.com/docs/models) or call `listAvailableModels()` programmatically.
+</Note>
+
+<Warning>
+**Rate limits are strict on the free tier.** Groq enforces tight per-minute and per-day limits if you haven't added a payment method. For production traffic, upgrade at [console.groq.com/settings/billing](https://console.groq.com/settings/billing).
+</Warning>
+
+<Warning>
+**`401 invalid_api_key`** — typo or revoked key. Regenerate at [console.groq.com/keys](https://console.groq.com/keys).
+</Warning>
