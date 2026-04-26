@@ -105,19 +105,23 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 </ParamField>
 
 <ParamField path="llm" type="object" required={true}>
-  LLM configuration. This is the only required property. Supported vendors: `openai`, `anthropic`, `google`, `aws` (Bedrock).
+  LLM configuration. This is the only required property. See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for the full list of supported vendors and per-vendor setup.
 </ParamField>
 
 <ParamField path="llm.vendor" type="string" required={true}>
-  LLM vendor name: `openai`, `anthropic`, `google`, or `aws`.
+  LLM vendor id. One of: `openai`, `anthropic`, `google`, `vertex-gemini`, `vertex-openai`, `bedrock`, `deepseek`, `azure-openai`, `groq`, `huggingface`. See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for setup of each.
 </ParamField>
 
 <ParamField path="llm.model" type="string" required={true}>
-  Model name (e.g., `gpt-4.1-mini`, `claude-sonnet-4-6`, `gemini-2.5-flash-lite`, `us.meta.llama4-scout-17b-instruct-v1:0`).
+  Model name. Format is vendor-specific (e.g., `gpt-4o-mini`, `claude-haiku-4-5-20251001`, `gemini-2.5-flash`, `llama-3.3-70b-versatile`, `meta-llama/Llama-3.3-70B-Instruct`). For Azure OpenAI, this is your **deployment name**, not the model id.
+</ParamField>
+
+<ParamField path="llm.label" type="string" required={false}>
+  Only needed when the account has more than one LLM credential for the same vendor — give each a distinct label in the portal at create time and reference it explicitly here. Most accounts have a single credential per vendor and should leave this unset.
 </ParamField>
 
 <ParamField path="llm.auth" type="object" required={false}>
-  Authentication credentials. Format depends on the vendor. For OpenAI/Anthropic/Google: `{ apiKey: '...' }`. For AWS Bedrock: `{ accessKeyId, secretAccessKey, region }`. If not provided, credentials are resolved from speech credentials configured in the jambonz portal.
+  Inline authentication credentials. Format depends on the vendor — see the per-vendor pages under [Bring Your Own LLM](/guides/features/bring-your-own-llm). If not provided, jambonz looks up credentials by `vendor` (and `label`, if the rare multi-credential case applies) from the LLM Services configured in the portal.
 </ParamField>
 
 <ParamField path="llm.llmOptions" type="object" required={false}>
@@ -370,10 +374,20 @@ session.updateAgent({
 
 | Vendor | `llm.vendor` | Example models |
 |--------|-------------|----------------|
-| OpenAI | `openai` | `gpt-4.1-mini`, `gpt-4.1`, `gpt-4o` |
-| Anthropic | `anthropic` | `claude-sonnet-4-6`, `claude-opus-4-6` |
-| Google | `google` | `gemini-2.5-flash-lite`, `gemini-2.5-pro` |
-| AWS Bedrock | `aws` | `us.meta.llama4-scout-17b-instruct-v1:0` |
+| OpenAI | `openai` | `gpt-5.4-mini`, `gpt-5.4`, `gpt-5.5`, `gpt-4o-mini` |
+| Anthropic | `anthropic` | `claude-haiku-4-5-20251001`, `claude-sonnet-4-6` |
+| Google AI Studio | `google` | `gemini-2.5-flash`, `gemini-2.5-pro` |
+| Vertex AI — Gemini | `vertex-gemini` | `gemini-2.5-flash`, `gemini-2.5-pro` |
+| Vertex AI — Partner Models | `vertex-openai` | `meta/llama-3.3-70b-instruct-maas`, `mistral-large` |
+| AWS Bedrock | `bedrock` | `amazon.nova-micro-v1:0`, `us.anthropic.claude-haiku-4-5-20251001-v1:0` |
+| DeepSeek | `deepseek` | `deepseek-v4-flash`, `deepseek-v4-pro` |
+| Azure OpenAI | `azure-openai` | _your deployment name_ |
+| Groq | `groq` | `llama-3.3-70b-versatile`, `llama-3.1-8b-instant` |
+| HuggingFace | `huggingface` | `meta-llama/Llama-3.3-70B-Instruct`, `…:fastest` |
+
+<Tip>
+See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for per-vendor credential setup, model recommendations, and known issues.
+</Tip>
 
 ## Example Applications
 

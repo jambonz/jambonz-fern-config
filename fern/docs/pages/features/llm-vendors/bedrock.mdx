@@ -1,0 +1,115 @@
+---
+title: AWS Bedrock
+subtitle: Configure jambonz to use Anthropic Claude, Meta Llama, Mistral, and Amazon Nova models on AWS Bedrock.
+---
+
+AWS Bedrock is Amazon's managed inference platform. It hosts Anthropic's Claude family, Meta's Llama, Mistral, and Amazon's own Nova models — all behind a unified Bedrock Runtime API. Use this vendor when your organization is AWS-heavy or needs the BAA / data-residency story Bedrock provides.
+
+## Get credentials
+
+Bedrock supports two auth modes. Pick based on what your organization already uses.
+
+### Option A — API Key (newer, simpler)
+
+1. Sign in to the [AWS Console](https://console.aws.amazon.com), go to **Amazon Bedrock**.
+2. Open **API keys** in the sidebar.
+3. Click **Generate API key**, copy the bearer token.
+
+This is the easiest path — one secret, no IAM dance.
+
+### Option B — IAM credentials (legacy, more flexible)
+
+If your organization issues IAM credentials per-team or per-environment:
+
+1. Create an IAM user (or use an existing one) with the policy `AmazonBedrockFullAccess` (or a tighter custom policy that grants `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream`).
+2. From IAM → Security credentials → **Create access key**, save the **Access Key ID** and **Secret Access Key**.
+3. If you're using STS / temporary credentials, you'll also have a **Session Token**.
+
+<Tip>
+For most jambonz deployments, **Option A (API key)** is enough and simpler to rotate. Use IAM credentials when you have organizational policy reasons (centralized IAM management, federated logins, STS rotation).
+</Tip>
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → AWS Bedrock**.
+
+The form lets you pick **API Key** or **IAM Credentials** auth.
+
+### API Key fields
+
+<ParamField path="API Key" type="string" required={true}>
+  The bearer token from Bedrock → API keys.
+</ParamField>
+
+<ParamField path="Region" type="select" required={true}>
+  AWS region where Bedrock is enabled (`us-east-1`, `us-west-2`, etc.). Region affects which models are available.
+</ParamField>
+
+### IAM fields
+
+<ParamField path="Access Key ID" type="string" required={true}>
+  The `AKIA...` string.
+</ParamField>
+
+<ParamField path="Secret Access Key" type="string" required={true}>
+  The 40-character secret.
+</ParamField>
+
+<ParamField path="Session Token" type="string" required={false}>
+  Only needed for STS / temporary credentials.
+</ParamField>
+
+<ParamField path="Region" type="select" required={true}>
+  Same as above.
+</ParamField>
+
+Click **Test** to verify. The probe issues `ListFoundationModels` against the control plane.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'bedrock',
+    model: 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+## Available Models
+
+See AWS's [Bedrock model cards](https://docs.aws.amazon.com/bedrock/latest/userguide/model-cards.html) for the authoritative current list — each card has model id, supported regions, modalities, and pricing. Common picks:
+
+| Model id | Notes |
+|---|---|
+| `amazon.nova-micro-v1:0` | Cheapest, fastest, broadly available |
+| `amazon.nova-lite-v1:0` / `pro-v1:0` | Larger Nova variants with vision |
+| `us.anthropic.claude-haiku-4-5-20251001-v1:0` | Claude Haiku with cross-region inference profile |
+| `us.anthropic.claude-sonnet-4-5-20250929-v1:0` | Claude Sonnet with cross-region inference profile |
+| `meta.llama3-3-70b-instruct-v1:0` | Llama 3.3 70B |
+
+## Quirks & errors
+
+<Warning>
+**Cross-region inference profile prefix** (`us.`, `eu.`, `apac.`) is required for Claude 4.x family on Bedrock. The plain `anthropic.claude-*-4-*` ids no longer accept on-demand invocations in most regions. Use the `us.` (or appropriate regional) prefix. Operators outside the US should change to `eu.` or `apac.` accordingly.
+</Warning>
+
+<Warning>
+**`ResourceNotFoundException: This Model is marked by provider as Legacy`** — AWS may revoke "legacy" model access on accounts that haven't called the model in the last 30 days. Models like `anthropic.claude-3-5-sonnet-20240620-v1:0` are flagged in the jambonz manifest as `deprecated: true` and may stop working without warning on dormant accounts. Switch to a current model.
+</Warning>
+
+<Note>
+**Model availability differs by region.** Some models are exclusive to specific AWS regions, and not all regions have Bedrock at all. Check [the Bedrock model availability matrix](https://docs.aws.amazon.com/bedrock/latest/userguide/models-regions.html) before picking a region.
+</Note>
+
+<Note>
+**You must explicitly request model access** in the AWS console (Bedrock → Model access → Request access) before invoking Anthropic, Meta, or Mistral models. Amazon-published models (Nova) are usually accessible by default. The Test button passes regardless of model access since it only verifies auth — first inference call against an un-requested model returns `AccessDeniedException`.
+</Note>

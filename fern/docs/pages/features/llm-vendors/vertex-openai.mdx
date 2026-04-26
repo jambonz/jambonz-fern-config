@@ -1,0 +1,79 @@
+---
+title: Vertex AI — Partner Models
+subtitle: Configure jambonz to use Llama, Mistral, and other partner models hosted on Vertex AI's OpenAI-compatible endpoint.
+---
+
+Vertex AI also hosts third-party "partner" models — Meta's Llama, Mistral, AI21 Jamba, and others — through an OpenAI-compatible chat completions endpoint. Use this vendor when you want non-Google models on GCP infrastructure with the same IAM and data-residency story as Vertex Gemini.
+
+For Google's own Gemini models, use [Vertex AI — Gemini](/guides/features/bring-your-own-llm/vertex-gemini) instead.
+
+## Get credentials
+
+Identical to Vertex Gemini — you need a service account JSON. See the [Vertex AI — Gemini](/guides/features/bring-your-own-llm/vertex-gemini#get-credentials) page for full steps.
+
+The service account needs the **Vertex AI User** role (`roles/aiplatform.user`).
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Vertex AI — OpenAI-compatible**.
+
+<ParamField path="Service Account Key (JSON)" type="file" required={true}>
+  Upload the same JSON you'd use for Vertex Gemini.
+</ParamField>
+
+<ParamField path="Project ID" type="string" required={true}>
+  Your GCP project id.
+</ParamField>
+
+<ParamField path="Region" type="select" required={true}>
+  Pick a region where the partner model you intend to use is hosted. **Llama models are most broadly available in `us-east5`.** Other partner models may have different region availability — check the [Vertex partner-model docs](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models) before picking.
+</ParamField>
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'vertex-openai',
+    model: 'meta/llama-3.3-70b-instruct-maas',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+      maxTokens: 4096,
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+## Available Models
+
+See Google's [Vertex AI partner models catalog](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-partner-models) for the full list and per-region availability. Common picks:
+
+| Model | Notes |
+|---|---|
+| `meta/llama-3.3-70b-instruct-maas` | Recommended general-purpose Llama model |
+| `meta/llama-3.1-405b-instruct-maas` | Largest open-weight model on Vertex |
+| `mistral-large` | Mistral's flagship |
+| `mistral-small` | Smaller, cheaper |
+
+## Quirks & errors
+
+<Warning>
+**Llama MaaS returns empty responses if `max_tokens` isn't set.** A bare call without `maxTokens` can hit a Vertex quirk where the model returns `finish_reason: stop` with zero output tokens — your assistant says nothing. jambonz applies a `defaultMaxTokens: 4096` workaround, so calls work even without an explicit setting. If you see empty responses, confirm you're on a recent jambonz version.
+</Warning>
+
+<Warning>
+**Intermittent `400 INVALID_ARGUMENT`** — we've seen ~40% first-attempt 400-rate on `meta/llama-3.3-70b-instruct-maas` in some regions, with no body details. Identical retry succeeds. This is a Vertex-side flake, not a jambonz issue. The agent verb terminates with an `LLM_FAILURE` alert and runs the `actionHook` so your application can retry the turn. Reproducible with raw `fetch` outside jambonz, so the diagnosis isn't ours; track [Vertex AI release notes](https://docs.cloud.google.com/vertex-ai/docs/release-notes) for fixes.
+</Warning>
+
+<Note>
+**Region availability for Llama** is limited compared to Gemini. If you get a 404 on a Llama model, switch to `us-east5`. Other regions sometimes catch up but `us-east5` is the most reliable starting point.
+</Note>
+
+<Note>
+**Model listing isn't supported** on this endpoint — the LLM Services form will show only the curated list of `knownModels` jambonz ships. You can still type any partner model id manually in the agent verb's `model` field; it'll work as long as the model is hosted in your chosen region.
+</Note>

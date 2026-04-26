@@ -1,0 +1,102 @@
+---
+title: HuggingFace
+subtitle: One HuggingFace token, many backends — Groq, Together, Fireworks, Cerebras, Nebius all behind a single broker endpoint.
+---
+
+<Note>
+This vendor specifically integrates with **HuggingFace Inference Providers** — HF's multi-provider broker at `https://router.huggingface.co/v1`. It is **not** for HuggingFace's older shared Inference API (different wire shape) or dedicated Inference Endpoints (those are per-customer URLs that work with `vendor: openai` and a `baseURL` override).
+</Note>
+
+HuggingFace Inference Providers is a multi-provider broker. One HF token at `https://router.huggingface.co/v1` routes requests to whichever inference shop hosts the requested model — Groq, Together, Fireworks, Cerebras, Nebius, Hyperbolic, SambaNova, etc. The wire is OpenAI-compatible.
+
+**Why pick this over a direct vendor?** A customer who wants Llama on Groq, Mistral on Together, and Qwen on Fireworks needs three separate accounts and three jambonz credentials when going direct. With HF Providers, *one* HF token covers all of them, and you switch backends just by changing the model id.
+
+The tradeoff: you don't get the absolute cheapest per-token pricing — HF takes a small markup on top of provider rates. For production scale, going direct to your chosen provider may save money. For prototyping and multi-vendor testing, HF wins on convenience.
+
+## Get credentials
+
+1. Sign in at [https://huggingface.co](https://huggingface.co).
+2. Open **Settings → Access Tokens** (direct link: [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)).
+3. Click **+ Create new token**. Name it (e.g. `jambonz`). Pick token type **Read** — that's enough for Inference Providers.
+4. Copy the `hf_...` string.
+
+<Warning>
+Inference Providers requires an **inference credit balance**. HF gives a small free monthly allowance; for production use, attach a payment method at [https://huggingface.co/billing](https://huggingface.co/billing). Without credits, requests return `402 Payment Required`.
+</Warning>
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → HuggingFace Inference Providers**.
+
+<ParamField path="HuggingFace Token" type="string" required={true}>
+  The `hf_...` token from your HF account settings.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://router.huggingface.co/v1`. Override only for proxies.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'huggingface',
+    model: 'meta-llama/Llama-3.3-70B-Instruct',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+## Model field syntax
+
+The `model` value is a canonical HF model id (`<org>/<model>`), optionally with a routing-hint suffix:
+
+| Form | Behavior |
+|---|---|
+| `meta-llama/Llama-3.3-70B-Instruct` | HF picks a backend (often Groq for fast Llama models). |
+| `meta-llama/Llama-3.3-70B-Instruct:fastest` | HF picks the lowest-latency backend at request time. |
+| `meta-llama/Llama-3.3-70B-Instruct:fireworks-ai` | Pin Fireworks. |
+| `meta-llama/Llama-3.3-70B-Instruct:cerebras` | Pin Cerebras. |
+| `meta-llama/Llama-3.3-70B-Instruct:groq` | Pin Groq. |
+
+The provider chosen is reported in the `x-inference-provider` response header. Useful for diagnosing latency anomalies — if you expected Cerebras and got Groq, you know the routing kicked in differently.
+
+## Available Models
+
+Browse [HuggingFace's full Inference Providers model list](https://huggingface.co/inference/models) (filterable by provider) or read the [Inference Providers documentation](https://huggingface.co/docs/inference-providers/en/index) for the routing model. Common picks for voice agents:
+
+| Model | Notes |
+|---|---|
+| `meta-llama/Llama-3.3-70B-Instruct` | General-purpose, often Groq-routed |
+| `meta-llama/Llama-3.1-8B-Instruct` | Smaller, cheaper |
+| `Qwen/Qwen2.5-72B-Instruct` | Strong reasoning |
+| `mistralai/Mistral-7B-Instruct-v0.3` | Mistral via partner |
+| `deepseek-ai/DeepSeek-V3` | DeepSeek through HF |
+
+## Quirks & errors
+
+<Warning>
+**`402 Payment Required`** — your HF account has no inference credits. Either claim the free monthly allowance or attach a payment method at [huggingface.co/billing](https://huggingface.co/billing).
+</Warning>
+
+<Warning>
+**`410 Gone — model is deprecated and no longer supported by provider 'X'`** — provider pinning works only for currently-hosted pairs. If a specific provider drops support for a model, requests pinned to that provider fail. Drop the suffix (let HF auto-route) or pick a different provider.
+</Warning>
+
+<Note>
+**Provider routing is dynamic.** A request without a suffix today might route to Groq; tomorrow it could route to Cerebras if HF's broker decides differently. If you need deterministic routing for benchmarking or compliance, pin a specific provider with the `:provider-name` suffix.
+</Note>
+
+<Note>
+**Read scope on the token is enough.** Higher scopes (Write, Admin) work too but are over-privileged for inference-only use.
+</Note>
