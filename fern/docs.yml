@@ -347,6 +347,8 @@ navigation:
             path: ./docs/pages/hostedapps/forward.mdx
       - section: Voice AI Examples
         contents:
+          - page: AssemblyAI Voice Agent
+            path: ./docs/pages/tutorials/assemblyai.mdx
           - page: Deepgram Voice Agent
             path: ./docs/pages/tutorials/deepgram.mdx
           - page: Elevenlabs Conversational AI

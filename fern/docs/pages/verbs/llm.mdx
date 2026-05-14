@@ -109,6 +109,7 @@ The following LLMs are currently supported:
 - Ultravox
 - ElevenLabs
 - Google Gemini Live API
+- AssemblyAI Voice Agent
 
 ## Google Gemini Live
 
@@ -159,6 +160,86 @@ session.llm({
   Enable [session resumption](https://ai.google.dev/api/live#session-resumption). Pass `{}` to opt in, or `{ handle: "..." }` to resume a previous session. Resumption handles are delivered back to the application via `llm_event` `sessionResumptionUpdate` messages.
 </ParamField>
 
+## AssemblyAI Voice Agent
+
+Set `vendor: 'assemblyai'` and supply your AssemblyAI API key via `auth.api_key`. `llmOptions` is the [AssemblyAI Voice Agent `session` payload](https://www.assemblyai.com/docs/voice-agents/voice-agent-api/events-reference#sessionupdate) passed through verbatim — there is no jambonz-specific wrapper. jambonz wraps it as `{type: 'session.update', session: <llmOptions>}` and sends it as the first client message after the websocket connects to `wss://agents.assemblyai.com/v1/ws`. See the [AssemblyAI Voice Agent product page](https://www.assemblyai.com/products/voice-agent-api) and [Voice Agent API docs](https://www.assemblyai.com/docs/voice-agents/voice-agent-api) for an overview.
+
+The audio format is **not** configurable. AssemblyAI Voice Agent only accepts `audio/pcm` at 24 kHz, which jambonz uses unconditionally — `session.input.format` / `session.output.format` set by the application are overridden. jambonz resamples to/from the channel's native rate automatically.
+
+```js
+session.llm({
+  vendor: 'assemblyai',
+  auth: { api_key: process.env.ASSEMBLYAI_API_KEY },
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  events: ['all'],
+  llmOptions: {
+    system_prompt: 'You are a helpful voice agent.',
+    greeting: 'Hello, how can I help you today?',
+    output: { voice: 'ivy' },
+    input: {
+      keyterms: ['weather', 'temperature'],
+      turn_detection: {
+        vad_threshold: 0.5,
+        min_silence: 1000,
+        max_silence: 3000,
+        interrupt_response: true
+      }
+    },
+    tools: [
+      {
+        type: 'function',
+        name: 'getWeather',
+        description: 'Get current weather for a given city',
+        parameters: {
+          type: 'object',
+          properties: {
+            location: { type: 'string', description: 'City name' },
+            scale: { type: 'string', enum: ['celsius', 'fahrenheit'] }
+          },
+          required: ['location']
+        }
+      }
+    ]
+  }
+});
+```
+
+### AssemblyAI-specific auth fields
+
+<ParamField path="api_key" type="string" required={true}>
+  Your AssemblyAI API key. Sent as `Authorization: Bearer <api_key>` on the WebSocket handshake.
+</ParamField>
+
+### AssemblyAI-specific llmOptions fields
+
+AssemblyAI's protocol requires a `session.update` message, but every field inside is optional — pass `llmOptions: {}` to start with all server defaults.
+
+<ParamField path="system_prompt" type="string" required={false}>
+  System prompt for the agent.
+</ParamField>
+
+<ParamField path="greeting" type="string" required={false}>
+  Initial greeting the agent will speak when the session opens.
+</ParamField>
+
+<ParamField path="output" type="object" required={false}>
+  Output audio configuration. Supports `voice` — see the [AssemblyAI voices reference](https://www.assemblyai.com/docs/voice-agents/voice-agent-api/audio-format) for available IDs. The `format` sub-field is overridden by jambonz.
+</ParamField>
+
+<ParamField path="input" type="object" required={false}>
+  Input audio configuration. Supports `keyterms` (array of biasing terms) and `turn_detection` (`vad_threshold`, `min_silence`, `max_silence`, `interrupt_response`). The `format` sub-field is overridden by jambonz.
+</ParamField>
+
+<ParamField path="tools" type="array" required={false}>
+  Array of tool definitions. Each entry must include `type: "function"`, `name`, `description`, and `parameters` (JSON Schema). jambonz auto-fills `type: "function"` if omitted.
+</ParamField>
+
+### Tool calls
+
+The agent invokes a tool by emitting a `tool.call` server event. jambonz routes it to the application's `toolHook` with `{name, args, tool_call_id}`. The application replies via `session.sendToolOutput(tool_call_id, {type: 'tool.result', tool_call_id, result})`. The `result` should be a string (JSON-stringify objects before sending) — jambonz JSON-stringifies non-string `result` values automatically.
+
 ## Example Applications
 Please checkout the following example applications:
 - for [OpenAI](https://github.com/jambonz/openai-s2s-example)
@@ -166,4 +247,5 @@ Please checkout the following example applications:
 - for [Ultravox](https://github.com/jambonz/ultravox-s2s-example)
 - for [ElevenLabs](https://github.com/jambonz/elevenlabs-s2s-example)
 - for [Google Gemini](https://github.com/jambonz/gemini-s2s-example)
+- for [AssemblyAI](https://github.com/jambonz/assemblyai-s2s-example)
 
