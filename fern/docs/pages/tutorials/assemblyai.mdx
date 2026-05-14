@@ -1,0 +1,91 @@
+---
+title: AssemblyAI Voice Agent
+subtitle: Using jambonz to connect custom telephony to AssemblyAI's Voice Agent API
+---
+
+<Note>
+The jambonz application referenced in this article can be
+found [here](https://github.com/jambonz/assemblyai-voice-agent-example).
+</Note>
+
+This is an example jambonz application that connects to the [AssemblyAI Voice Agent API](https://www.assemblyai.com/docs/voice-agents/voice-agent-api) and illustrates how to build a voice-AI application using jambonz and AssemblyAI. The application uses an open-meteo REST API to enable the agent to answer callers' questions about the weather for specified locations.
+
+## Authentication
+
+You'll need an AssemblyAI API key with Voice Agent access. Configure it as a jambonz application environment variable in the portal (not via `process.env`):
+
+| Variable | Required | Description |
+|---|---|---|
+| `ASSEMBLYAI_API_KEY` | yes | AssemblyAI API key (sent as `Authorization: Bearer …` on the voice-agent websocket). Mark as obscured. |
+
+The example application declares this variable via the SDK's `envVars` option on `createEndpoint`, and reads it at call time from `session.data.env_vars.ASSEMBLYAI_API_KEY`. See [Application Environment Variables](/sdks/node-sdk#application-environment-variables) in the Node.js SDK guide for the declaration pattern.
+
+## Configuring the Assistant
+
+AssemblyAI's protocol requires a `session.update` message to be sent before the agent will accept audio. The jambonz `llm` verb sends this automatically using whatever you pass in `llmOptions` — system prompt, greeting, output voice, input biasing, turn-detection thresholds, and tools.
+
+`llmOptions` is the AssemblyAI [`session.update.session` payload](https://www.assemblyai.com/docs/voice-agents/voice-agent-api/events-reference#sessionupdate) passed through verbatim:
+
+```js
+llmOptions: {
+  system_prompt: 'You are a helpful voice agent. Help callers get the weather for a city they ask about.',
+  greeting: 'Hello, how can I help you today?',
+  output: { voice: 'ivy' },
+  input: {
+    keyterms: ['weather', 'temperature', 'celsius', 'fahrenheit'],
+    turn_detection: {
+      vad_threshold: 0.5,
+      min_silence: 1000,
+      max_silence: 3000,
+      interrupt_response: true
+    }
+  },
+  tools: [ /* ... */ ]
+}
+```
+
+<Note>
+Audio format is **not** configurable. AssemblyAI Voice Agent only supports `audio/pcm` at 24 kHz, which jambonz uses unconditionally. The `input.format` and `output.format` keys are overridden by jambonz before the message is sent to AssemblyAI. jambonz resamples to/from the channel's native rate automatically.
+</Note>
+
+For the full list of `session` fields (voices, keyterm biasing, turn-detection knobs, etc.), refer to the [AssemblyAI events reference](https://www.assemblyai.com/docs/voice-agents/voice-agent-api/events-reference).
+
+## Tool calls
+
+The example application registers a `getWeather` tool that the agent can invoke to answer weather questions. Each tool entry must use AssemblyAI's flat format:
+
+```js
+{
+  type: 'function',
+  name: 'getWeather',
+  description: 'Get current weather for a given city',
+  parameters: {
+    type: 'object',
+    properties: {
+      location: { type: 'string', description: 'City name' },
+      scale: { type: 'string', enum: ['celsius', 'fahrenheit'] }
+    },
+    required: ['location']
+  }
+}
+```
+
+When the agent decides to invoke a tool, jambonz fires a `tool.call` event and routes it to the configured `toolHook`. The handler replies via `session.sendToolOutput(tool_call_id, {type: 'tool.result', tool_call_id, result})`. The `result` field should be a string the model can read — jambonz JSON-stringifies non-string values automatically.
+
+See [AssemblyAI tool calling](https://www.assemblyai.com/docs/voice-agents/voice-agent-api/tool-calling) for the underlying protocol.
+
+## actionHook properties
+
+Like many jambonz verbs, the `llm` verb sends an `actionHook` with a final status when the verb completes. The payload includes a `completion_reason` property indicating why the session ended. Possible values are:
+
+- `normal conversation end`
+- `connection failure`
+- `disconnect from remote end`
+- `server error`
+- `client error calling function`
+- `client error calling mcp function`
+
+## Resources
+
+- [AssemblyAI Voice Agent API — product page](https://www.assemblyai.com/products/voice-agent-api)
+- [AssemblyAI Voice Agent API — documentation](https://www.assemblyai.com/docs/voice-agents/voice-agent-api)
