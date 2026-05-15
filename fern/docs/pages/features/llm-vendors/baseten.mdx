@@ -1,0 +1,82 @@
+---
+title: Baseten
+subtitle: Configure jambonz to use Baseten's hosted open-weight model catalog or a dedicated Baseten deployment.
+---
+
+[Baseten](https://www.baseten.co) hosts open-weight models (DeepSeek, GLM, Kimi, MiniMax, Nemotron, GPT-OSS, …) behind an OpenAI-compatible API. Two surfaces are supported:
+
+- **Model APIs** (default) — `https://inference.baseten.co/v1`. A shared, curated catalog of hosted models. `GET /v1/models` returns the live list.
+- **Bridge / Direct** — `https://bridge.baseten.co/v1/direct`. Routes to a dedicated deployment you've spun up in your Baseten account.
+
+The wire is OpenAI-compatible (chat completions, streaming, tools), so the integration is straightforward.
+
+## Get credentials
+
+1. Sign in at [https://app.baseten.co](https://app.baseten.co).
+2. Open **Settings → API Keys** ([direct link](https://app.baseten.co/settings/api_keys)).
+3. Create a key and copy the value.
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Baseten**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The key from Baseten's dashboard.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://inference.baseten.co/v1` (Model APIs — the shared catalog). Set to `https://bridge.baseten.co/v1/direct` to route to a dedicated deployment, or to your own proxy endpoint.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'baseten',
+    model: 'deepseek-ai/DeepSeek-V3.1',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+## Available models
+
+The current Model APIs catalog includes (curated subset — check `/v1/models` for the live list):
+
+| Model id | Notes |
+|---|---|
+| `deepseek-ai/DeepSeek-V3.1` | DeepSeek V3.1, 163k context, tool-capable |
+| `deepseek-ai/DeepSeek-V4-Pro` | Newer DeepSeek flagship |
+| `zai-org/GLM-4.7` | Zhipu GLM 4.7 |
+| `zai-org/GLM-5` | Zhipu GLM 5 |
+| `moonshotai/Kimi-K2.5` | Moonshot Kimi K2.5 |
+| `moonshotai/Kimi-K2.6` | Moonshot Kimi K2.6 |
+| `MiniMaxAI/MiniMax-M2.5` | MiniMax M2.5 |
+| `nvidia/Nemotron-120B-A12B` | NVIDIA Nemotron Super |
+| `openai/gpt-oss-120b` | OpenAI's open-weight 120B model |
+
+For dedicated deployments via the Bridge endpoint, the `model` value is whatever model id your deployment serves.
+
+## Quirks & errors
+
+<Note>
+**Two endpoints, one vendor**: keep the `vendor: 'baseten'` constant — only the `Base URL` (in the portal credential) differs between the shared Model APIs catalog and a dedicated Bridge deployment. The same auth shape works for both.
+</Note>
+
+<Warning>
+**Tool-calling capability varies by model.** The wire format is OpenAI-compatible, but whether a given Baseten-hosted model actually executes tools depends on the underlying model's training. DeepSeek V4 and GLM 5 generally do tools well; smaller models may be inconsistent. Test thoroughly.
+</Warning>
+
+<Warning>
+**`401`** — key revoked or copied with whitespace. Regenerate at [app.baseten.co/settings/api_keys](https://app.baseten.co/settings/api_keys).
+</Warning>

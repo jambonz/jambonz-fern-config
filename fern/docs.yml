@@ -88,26 +88,28 @@ navigation:
             contents:
               - page: Overview
                 path: ./docs/pages/features/llm-vendors/index.mdx
-              - page: OpenAI
-                path: ./docs/pages/features/llm-vendors/openai.mdx
               - page: Anthropic
                 path: ./docs/pages/features/llm-vendors/anthropic.mdx
-              - page: Google (AI Studio)
-                path: ./docs/pages/features/llm-vendors/google.mdx
-              - page: Vertex AI — Gemini
-                path: ./docs/pages/features/llm-vendors/vertex-gemini.mdx
-              - page: Vertex AI — Partner Models
-                path: ./docs/pages/features/llm-vendors/vertex-openai.mdx
               - page: AWS Bedrock
                 path: ./docs/pages/features/llm-vendors/bedrock.mdx
-              - page: DeepSeek
-                path: ./docs/pages/features/llm-vendors/deepseek.mdx
               - page: Azure OpenAI
                 path: ./docs/pages/features/llm-vendors/azure-openai.mdx
+              - page: Baseten
+                path: ./docs/pages/features/llm-vendors/baseten.mdx
+              - page: DeepSeek
+                path: ./docs/pages/features/llm-vendors/deepseek.mdx
+              - page: Google (AI Studio)
+                path: ./docs/pages/features/llm-vendors/google.mdx
               - page: Groq
                 path: ./docs/pages/features/llm-vendors/groq.mdx
               - page: HuggingFace
                 path: ./docs/pages/features/llm-vendors/huggingface.mdx
+              - page: OpenAI
+                path: ./docs/pages/features/llm-vendors/openai.mdx
+              - page: Vertex AI — Gemini
+                path: ./docs/pages/features/llm-vendors/vertex-gemini.mdx
+              - page: Vertex AI — Partner Models
+                path: ./docs/pages/features/llm-vendors/vertex-openai.mdx
           - page: Using OpenAI STT
             path: ./docs/pages/features/using-openai-stt.mdx
           - page: Custom STT providers
