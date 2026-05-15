@@ -3,32 +3,38 @@ title: Llm
 subtitle: Connect a call to AI language model.  
 ---
 
-```js maxLines=100
-session.llm(
-{
+```js maxLines=120
+session.llm({
   vendor: 'openai',
-  model: "gpt-4o-realtime-preview-2024-10-01",
-  auth: {
-    apiKey
-  },
+  model: 'gpt-realtime',
+  auth: { apiKey },
   actionHook: '/final',
   eventHook: '/event',
   toolHook: '/toolCall',
   events: [
     'conversation.item.*',
-    'response.audio_transcript.done',
+    'response.output_audio_transcript.done',
     'input_audio_buffer.committed'
   ],
   llmOptions: {
     response_create: {
-      modalities: ['text', 'audio'],
-      instructions: 'Please assist the user with their request.',
-      voice: 'alloy',
-      output_audio_format: 'pcm16',
-      temperature: 0.8,
-      max_output_tokens: 4096,
+      output_modalities: ['audio'],
+      instructions: 'Greet the caller warmly in English and ask how you can help today.',
+      audio: {
+        output: {
+          voice: 'alloy',
+          format: { type: 'audio/pcm', rate: 24000 }
+        }
+      },
+      max_output_tokens: 4096
     },
     session_update: {
+      type: 'realtime',
+      instructions:
+        'You are a friendly, helpful voice assistant on a phone call. ' +
+        'Always respond in English unless the caller explicitly speaks another language. ' +
+        'Keep responses concise and natural for spoken conversation. ' +
+        'If asked about weather, call the get_weather function.',
       tools: [
         {
           name: 'get_weather',
@@ -51,18 +57,25 @@ session.llm(
         },
       ],
       tool_choice: 'auto',
-      input_audio_transcription: {
-        model: 'whisper-1',
-      },
-      turn_detection: {
-        type: 'server_vad',
-        threshold: 0.8,
-        prefix_padding_ms: 300,
-        silence_duration_ms: 500,
+      audio: {
+        input: {
+          format: { type: 'audio/pcm', rate: 24000 },
+          transcription: { model: 'whisper-1' },
+          turn_detection: {
+            type: 'server_vad',
+            threshold: 0.8,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 500
+          }
+        },
+        output: {
+          format: { type: 'audio/pcm', rate: 24000 },
+          voice: 'alloy'
+        }
       }
     }
   }
-})
+});
 ```
 
 ## Parameters
@@ -110,6 +123,90 @@ The following LLMs are currently supported:
 - ElevenLabs
 - Google Gemini Live API
 - AssemblyAI Voice Agent
+
+## OpenAI Realtime
+
+Set `vendor: 'openai'` and supply an OpenAI API key via `auth.apiKey`. `llmOptions` carries two payloads — `response_create` and `session_update` — that are forwarded to OpenAI as the corresponding [`response.create`](https://platform.openai.com/docs/api-reference/realtime-client-events/response/create) and [`session.update`](https://platform.openai.com/docs/api-reference/realtime-client-events/session/update) client events. The example at the top of this page shows the GA-format shape.
+
+### Model selection
+
+<ParamField path="model" type="string" required={true}>
+  GA realtime model name. Common choices:
+
+  - **`gpt-realtime`** — the standard GA realtime conversation model. Recommended starting point.
+  - **`gpt-realtime-2`** — reasoning-capable variant. Emits a `phase: "commentary"` message before `phase: "final_answer"` in its output items; both phases produce audio, so the caller hears the model "think out loud" before the actual answer. Useful for some assistants, surprising for typical greeting-first flows.
+  - **`gpt-realtime-whisper`** — streaming transcription model. Emits `response.output_audio_transcript.delta` events but does not endpoint turns server-side (no `.completed` in current GA); not suitable for normal speech-to-speech or gather flows.
+
+  OpenAI deprecated the Realtime preview models (`gpt-4o-realtime-preview-*`) on 2026-05-12; use a GA model.
+</ParamField>
+
+### Instructions
+
+`session_update.instructions` sets the persona that persists for the whole session; `response_create.instructions` overrides it for a single response only. GA realtime models do **not** assume English by default — if jambonz speaks first (which it does when `response.create` fires before any caller audio), anchor the language in `instructions` (e.g. *"Always respond in English unless the caller speaks another language"*) or you may get a greeting in an arbitrary language.
+
+### Audio format
+
+The audio format on the wire to OpenAI is fixed at `{type: 'audio/pcm', rate: 24000}`. jambonz resamples to and from the channel's native rate (typically G.711) automatically. Any `audio.input.format` or `audio.output.format` set in the application is overridden — they are present in the example only for completeness.
+
+### Legacy preview-shape compatibility
+
+Apps written against the preview API still work without changes. jambonz detects the legacy flat shape — top-level `modalities`, `voice`, `input_audio_format`, `output_audio_format`, `input_audio_transcription`, `turn_detection`, `temperature` — inside `session_update` or `response_create`, converts it to the GA shape on the wire, and aliases GA event names back to their preview names before forwarding to your `eventHook`. For example, an app that subscribed to `response.audio_transcript.done` continues to receive events with that exact `type` even though the server now emits `response.output_audio_transcript.done`. A one-time deprecation warning is logged when the legacy shape is detected.
+
+GA-invalid fields are stripped silently with a WARN log:
+- `temperature` in `response_create` — no longer accepted in GA.
+- `output_audio_format` as a flat string — replaced by `audio.output.format: {type, rate}` (which jambonz overrides to `pcm` 24 kHz anyway).
+
+The compatibility layer is intended as a transitional shim — plan to update applications to the GA shape before it is removed.
+
+### OpenAI-specific llmOptions fields
+
+<ParamField path="response_create" type="object" required={true}>
+  The initial [`response.create.response`](https://platform.openai.com/docs/api-reference/realtime-client-events/response/create) payload sent to OpenAI when the session opens. Drives the first response from the assistant.
+</ParamField>
+
+<ParamField path="response_create.output_modalities" type="array" required={false}>
+  Array of output modalities. Typically `['audio']` for voice. (GA renamed this from preview's `modalities`.)
+</ParamField>
+
+<ParamField path="response_create.instructions" type="string" required={false}>
+  Per-response instruction override. Replaces session-level instructions for this one response only — useful for the opening greeting. Anchor the language explicitly when the model speaks first.
+</ParamField>
+
+<ParamField path="response_create.audio" type="object" required={false}>
+  Audio configuration object. Use `audio.output.voice` to choose a voice (e.g. `alloy`, `marin`) and `audio.output.format` (overridden to `pcm` 24 kHz by jambonz).
+</ParamField>
+
+<ParamField path="response_create.max_output_tokens" type="number" required={false}>
+  Maximum tokens for this response.
+</ParamField>
+
+<ParamField path="session_update" type="object" required={false}>
+  The initial [`session.update.session`](https://platform.openai.com/docs/api-reference/realtime-client-events/session/update) payload. Sets persona, tools, audio config, and VAD for the whole session.
+</ParamField>
+
+<ParamField path="session_update.type" type="string" required={true}>
+  Must be `'realtime'` in GA. Required when present.
+</ParamField>
+
+<ParamField path="session_update.instructions" type="string" required={false}>
+  Session-wide persona prompt. Persists for every response in the session unless overridden by `response_create.instructions`.
+</ParamField>
+
+<ParamField path="session_update.audio.input.transcription.model" type="string" required={false}>
+  Auxiliary transcription model for converting caller audio into text in the conversation log. Common values: `whisper-1`, `gpt-4o-transcribe`, `gpt-realtime-whisper`. This is separate from the conversation model.
+</ParamField>
+
+<ParamField path="session_update.audio.input.turn_detection" type="object" required={false}>
+  Server-side VAD configuration: `{type: 'server_vad', threshold, prefix_padding_ms, silence_duration_ms}`. Defaults are server-supplied if omitted. `type: 'semantic_vad'` with an `eagerness` field is also supported on models that accept it.
+</ParamField>
+
+<ParamField path="session_update.tools" type="array" required={false}>
+  Array of function-tool definitions exposed to the model. Each entry needs `name`, `type: 'function'`, `description`, and JSON Schema `parameters`. The model calls a tool by emitting `response.output_item.done` with `item.type: 'function_call'`; jambonz routes that to your `toolHook`.
+</ParamField>
+
+<ParamField path="session_update.tool_choice" type="string" required={false}>
+  `'auto'` (default), `'none'`, or a specific tool name to force.
+</ParamField>
 
 ## Google Gemini Live
 

@@ -8,6 +8,14 @@ The jambonz application referenced in this article can be
 found [here](https://github.com/jambonz/openai-s2s-example). 
 </Note>
 
+<Note title="Migrating from preview">
+OpenAI deprecated the Realtime preview API on 2026-05-12. The example below uses the GA-format payloads (`response.create.audio.output`, `session.update.audio.input`, `output_modalities`, `session.type: "realtime"`).
+
+Apps written for the preview API still work without changes — jambonz auto-converts the legacy flat shape (`voice`, `input_audio_format`, `input_audio_transcription`, `turn_detection` directly under `session_update`) to the GA shape on the wire, logs a one-time deprecation warning, and aliases GA event names back to the preview names so your existing `events` filters keep matching. Plan to update to the GA shape before that compatibility layer is removed.
+
+See the [`llm` verb article](/verbs/llm) for the canonical GA-shape example and field reference.
+</Note>
+
 This is an example jambonz application that connect to the OpenAI Realtime API and illustrates how to
 build a Voice-AI application using jambonz and OpenAI.  
 
@@ -26,7 +34,7 @@ with this example.
 
 You can see that application first answers the call, pauses one second, and the connects to the OpenAI Realtime API 
 using the jambonz `llm` verb.  We specify the vendor and model, and provide options specific to that 
-LLM (in this case gpt-4o-realtime-preview-2024-10-01) in the `llmOptions` property.
+LLM (in this case `gpt-realtime`) in the `llmOptions` property.
 
 In the case of the OpenAI Realtime API, 
 configuration is provided in the form of the 
@@ -51,8 +59,8 @@ event to interrupt the assistant.  Any queued audio that has been received from 
 ## Events
 There are [28 server events](https://platform.openai.com/docs/api-reference/realtime-server-events) 
 that OpenAI sends, and your application can specify which it wants to receive. 
-(The only exception is the [response.audio.delta](https://platform.openai.com/docs/api-reference/realtime-server-events/response/audio/delta) 
-server event, because this contains actual audio content that jambonz itself processes). 
+(The only exception is the [response.output_audio.delta](https://platform.openai.com/docs/api-reference/realtime-server-events/response/audio/delta) 
+server event — formerly `response.audio.delta` in the preview API — which contains actual audio content that jambonz itself processes. mod_openai_s2s handles both names so legacy and GA models both work.) 
 You specify which events you want to receive in the `events` property of the `llm` verb, 
 and as you can see in the example you can use wildcards to include a whole class of server events 
 (e.g. "conversation.item.*").
