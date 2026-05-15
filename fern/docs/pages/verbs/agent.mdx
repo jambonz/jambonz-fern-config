@@ -109,7 +109,7 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 </ParamField>
 
 <ParamField path="llm.vendor" type="string" required={true}>
-  LLM vendor id. One of: `openai`, `anthropic`, `google`, `vertex-gemini`, `vertex-openai`, `bedrock`, `deepseek`, `azure-openai`, `groq`, `huggingface`. See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for setup of each.
+  LLM vendor id. One of: `openai`, `anthropic`, `google`, `vertex-gemini`, `vertex-openai`, `bedrock`, `deepseek`, `baseten`, `azure-openai`, `groq`, `huggingface`. See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for setup of each.
 </ParamField>
 
 <ParamField path="llm.model" type="string" required={true}>
@@ -381,6 +381,7 @@ session.updateAgent({
 | Vertex AI — Partner Models | `vertex-openai` | `meta/llama-3.3-70b-instruct-maas`, `mistral-large` |
 | AWS Bedrock | `bedrock` | `amazon.nova-micro-v1:0`, `us.anthropic.claude-haiku-4-5-20251001-v1:0` |
 | DeepSeek | `deepseek` | `deepseek-v4-flash`, `deepseek-v4-pro` |
+| Baseten | `baseten` | `deepseek-ai/DeepSeek-V4-Pro`, `zai-org/GLM-5`, `moonshotai/Kimi-K2.6`, `openai/gpt-oss-120b` |
 | Azure OpenAI | `azure-openai` | _your deployment name_ |
 | Groq | `groq` | `llama-3.3-70b-versatile`, `llama-3.1-8b-instant` |
 | HuggingFace | `huggingface` | `meta-llama/Llama-3.3-70B-Instruct`, `…:fastest` |

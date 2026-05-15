@@ -102,6 +102,8 @@ navigation:
                 path: ./docs/pages/features/llm-vendors/bedrock.mdx
               - page: DeepSeek
                 path: ./docs/pages/features/llm-vendors/deepseek.mdx
+              - page: Baseten
+                path: ./docs/pages/features/llm-vendors/baseten.mdx
               - page: Azure OpenAI
                 path: ./docs/pages/features/llm-vendors/azure-openai.mdx
               - page: Groq

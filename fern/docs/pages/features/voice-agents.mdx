@@ -123,14 +123,9 @@ console.log(`voice agent listening on port ${port}`);
 
 ### Supported LLM Vendors
 
-The jambonz portal now allows you to "bring your own LLM" in a similar fashion to speech credentials. You can configure credentials for any supported LLM vendor and then select that vendor in the `agent` verb.
+The jambonz portal lets you "bring your own LLM" in a similar fashion to speech credentials. Configure credentials in **Account → LLM Services**, then reference the vendor in the agent verb.
 
-| Vendor | `llm.vendor` | Example models |
-|--------|-------------|----------------|
-| OpenAI | `openai` | `gpt-4.1-mini`, `gpt-4.1`, `gpt-4o` |
-| Anthropic | `anthropic` | `claude-sonnet-4-6`, `claude-opus-4-6` |
-| Google | `google` | `gemini-2.5-flash-lite`, `gemini-2.5-pro` |
-| AWS Bedrock | `aws` | `us.meta.llama4-scout-17b-instruct-v1:0` |
+11 LLM vendors are supported: OpenAI, Anthropic, Google AI Studio, Vertex AI (Gemini and Partner Models), AWS Bedrock, DeepSeek, Baseten, Azure OpenAI, Groq, and HuggingFace. See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for per-vendor setup, model recommendations, and known issues, or the [agent verb reference](/verbs/verbs/agent#supported-llm-vendors) for the full vendor id + example-models table.
 
 The agent verb normalizes message formats and tool schemas across vendors automatically. You write tools in OpenAI format and the agent verb adapts them for each vendor.
 
