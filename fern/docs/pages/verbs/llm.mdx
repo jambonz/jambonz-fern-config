@@ -121,7 +121,7 @@ The following LLMs are currently supported:
 - Deepgram Voice Agent
 - Ultravox
 - ElevenLabs
-- Google Gemini Live API
+- Google Gemini Live API (via Gemini Developer API or Vertex AI)
 - AssemblyAI Voice Agent
 
 ## OpenAI Realtime
@@ -210,7 +210,18 @@ The compatibility layer is intended as a transitional shim — plan to update ap
 
 ## Google Gemini Live
 
-Set `vendor: 'google'` and supply a Gemini Live model (for example `models/gemini-2.0-flash-live-001` or `models/gemini-3.1-flash-live-preview`). `llmOptions.setup` is forwarded verbatim to Google's [BidiGenerateContentSetup](https://ai.google.dev/api/live#bidigeneratecontentsetup) message after the websocket connects.
+Set `vendor: 'google'` to use Gemini's [Live API](https://ai.google.dev/api/live). The same `vendor: 'google'` integration reaches the Live API through **two access paths**:
+
+| Access path | Host | Auth | When to use |
+|---|---|---|---|
+| **Gemini Developer API** | `generativelanguage.googleapis.com` | API key (`AIza…`) from [Google AI Studio](https://aistudio.google.com/apikey) | Dev / prototype / hobby. No SLA, shared quotas. |
+| **Vertex AI Live API** | `{LOCATION}-aiplatform.googleapis.com` | OAuth 2 Bearer token (`ya29.…`) minted from a GCP service-account JSON | Production. SLA, IAM, audit logs, project-level quotas. |
+
+Both speak the same JSON wire protocol — `setup`, `realtimeInput`, `serverContent`, `modelTurn`, `toolCall`, `sessionResumptionUpdate` are identical. Only the URL, auth, and model resource format differ. `llmOptions.setup` is forwarded verbatim to Google's [BidiGenerateContentSetup](https://ai.google.dev/api/live#bidigeneratecontentsetup) message after the WebSocket connects.
+
+### Gemini Developer API (API key)
+
+Default access path. Provide an API key via `auth.apiKey`; the key starts with `AIza`. Model name uses the short form `models/<id>`. `connectOptions` is optional — defaults to the Gemini Developer endpoint.
 
 ```js
 session.llm({
@@ -220,10 +231,6 @@ session.llm({
   actionHook: '/final',
   eventHook: '/event',
   toolHook: '/toolCall',
-  connectOptions: {
-    host: 'generativelanguage.googleapis.com',
-    version: 'v1beta'
-  },
   llmOptions: {
     setup: {
       generationConfig: {
@@ -240,6 +247,75 @@ session.llm({
   }
 });
 ```
+
+### Vertex AI Live API (OAuth Bearer)
+
+Production access path. The application mints an OAuth access token from a Google Cloud service-account JSON key and passes the **token string** (starting with `ya29.`) as `auth.apiKey`. jambonz detects the `ya29.` prefix and sends it as an `Authorization: Bearer …` header on the WebSocket upgrade. Model name must be the full Vertex resource path.
+
+```js
+const { JWT } = require('google-auth-library');
+const fs = require('fs');
+
+const saKey = JSON.parse(fs.readFileSync(process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH, 'utf8'));
+const jwtClient = new JWT({
+  email: saKey.client_email,
+  key: saKey.private_key,
+  scopes: ['https://www.googleapis.com/auth/cloud-platform']
+});
+
+const { token } = await jwtClient.getAccessToken();   // "ya29...."
+const projectId = saKey.project_id;
+const location = 'us-central1';
+
+session.llm({
+  vendor: 'google',
+  model: `projects/${projectId}/locations/${location}/publishers/google/models/gemini-live-2.5-flash-native-audio`,
+  auth: { apiKey: token },
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  connectOptions: {
+    host: `${location}-aiplatform.googleapis.com`,
+    path: '/ws/google.cloud.aiplatform.v1beta1.LlmBidiService/BidiGenerateContent'
+  },
+  llmOptions: {
+    setup: {
+      generationConfig: {
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
+        }
+      },
+      systemInstruction: {
+        parts: [{ text: 'You are a helpful assistant named Barbara.' }]
+      }
+    },
+    greeting: 'Greet the caller warmly and ask how you can help.'
+  }
+});
+```
+
+**Setup checklist for Vertex AI**:
+
+1. GCP project with `aiplatform.googleapis.com` API enabled and billing attached.
+2. Service account with the `roles/aiplatform.user` IAM role on the project.
+3. Service-account JSON key file accessible to the application (store outside repo, reference via env var).
+4. Host region prefix in `connectOptions.host` must match the `locations/<region>` segment in `model`. e.g. `us-central1-aiplatform.googleapis.com` with `projects/.../locations/us-central1/...`. Mismatched regions return `Publisher Model not found`.
+
+**OAuth token lifetime**: tokens issued from a service-account JWT expire after ~1 hour. jambonz uses whatever token the application provides at session start; it is not refreshed mid-session. The WebSocket stays open across expiry, but a reconnect with a stale token will fail. For typical call durations this is fine; mint a fresh token per call.
+
+### Google-specific `connectOptions` fields
+
+<ParamField path="host" type="string" required={false}>
+  WebSocket host. Default: `generativelanguage.googleapis.com` (Gemini Developer). For Vertex AI use `{LOCATION}-aiplatform.googleapis.com` matching the region in your `model` resource path.
+</ParamField>
+
+<ParamField path="path" type="string" required={false}>
+  WebSocket path. Default: `/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent` (Gemini Developer). For Vertex AI use `/ws/google.cloud.aiplatform.v1beta1.LlmBidiService/BidiGenerateContent`.
+</ParamField>
+
+<ParamField path="version" type="string" required={false}>
+  Legacy — Gemini Developer API version string (`v1`, `v1beta`, `v1alpha`). Ignored when `path` is set. Kept for backward compatibility.
+</ParamField>
 
 ### Google-specific llmOptions fields
 
