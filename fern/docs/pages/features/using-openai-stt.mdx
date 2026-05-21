@@ -32,6 +32,10 @@ To begin with, here are the possible options that you use with OpenAI STT:
         prefix_padding_ms: 300, // only for server_vad
         silence_duration_ms: 800 // only for server_vad
       },
+      // local VAD knobs, only used with 'gpt-realtime-whisper'
+      vadMode: 2,        // 0-3, higher is more aggressive
+      vadSilenceMs: 500, // ms of silence to end an utterance
+      vadVoiceMs: 250,   // ms of voice to start an utterance
       promptTemplates: {
         hintsTemplate: 'string',
         conversationHistoryTemplate: 'string',

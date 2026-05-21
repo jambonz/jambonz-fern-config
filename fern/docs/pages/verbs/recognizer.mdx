@@ -770,6 +770,18 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Defaults to 500ms. With shorter values the model will respond more quickly, but may jump in on short pauses from the user.
     </ParamField>
 
+    <ParamField path="vadMode" type="number" required={false}>
+      Used only with 'gpt-realtime-whisper'. Sensitivity of the local voice activity detector; integer 0-3. Higher is more aggressive. Defaults to 2.
+    </ParamField>
+
+    <ParamField path="vadSilenceMs" type="number" required={false}>
+      Used only with 'gpt-realtime-whisper'. Milliseconds of silence required to detect end-of-speech and commit the buffer. Defaults to 500ms.
+    </ParamField>
+
+    <ParamField path="vadVoiceMs" type="number" required={false}>
+      Used only with 'gpt-realtime-whisper'. Milliseconds of voice required to detect start-of-speech. Defaults to 250ms.
+    </ParamField>
+
   </Accordion>
 
   <Accordion title="houndifyOptions">
