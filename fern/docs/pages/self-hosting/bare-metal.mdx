@@ -60,16 +60,63 @@ echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stab
 sudo apt-get update
 ```
 
+## Choose your portal DNS name
+
+<Warning>
+Before installing, you need to decide on the DNS name you'll use for the jambonz portal (for example `portal.example.com`). This is **required**: jambonz uses the portal domain for nginx routing, certbot TLS, and your software license is keyed to it.
+</Warning>
+
+Pick a hostname you control DNS for. The installer will configure nginx for that name and these related subdomains:
+
+- `portal.example.com` — the admin webapp
+- `api.portal.example.com` — the REST API
+- `grafana.portal.example.com` — metrics dashboards
+
+You should create A records for all of the above pointing at your host's public IP. You can do this before *or* after the install, but it must be done before you obtain TLS certificates with certbot. See [Post-Install Steps](/self-hosting/overview/post-install) for the DNS record list.
+
+### Supplying the domain to the installer
+
+You have three options:
+
+1. **Inline on the install command** (recommended / simplest):
+
+   ```bash
+   sudo -E JAMBONES_PORTAL_DOMAIN=portal.example.com \
+     DEBIAN_FRONTEND=noninteractive apt-get install -y jambonz-mini
+   ```
+
+   The `-E` flag preserves the environment variable through `sudo`.
+
+2. **Pre-supply via `/etc/jambonz/install.conf`** (good for terraform / ansible / cloud-init):
+
+   ```bash
+   sudo install -d /etc/jambonz
+   echo "JAMBONES_PORTAL_DOMAIN=portal.example.com" | sudo tee /etc/jambonz/install.conf
+   ```
+
+   Then run the normal install — the postinst will read `install.conf` automatically.
+
+3. **Configure it after installing**, if you forgot:
+
+   ```bash
+   sudo jambonz-configure-domain portal.example.com
+   ```
+
+   This idempotent helper updates the nginx server name, writes `JAMBONES_PORTAL_DOMAIN` to `/var/lib/jambonz/host.env`, and is the same logic the postinst would have run with the env var set.
+
+If you install without specifying a domain, the install completes but the postinst prints a `NO PORTAL DOMAIN configured` warning — license validation will not succeed until you run `jambonz-configure-domain`.
+
 ## Install jambonz mini
 
-rtpengine includes a kernel module that DKMS will compile on the host, so the matching Linux headers must be installed first:
+rtpengine includes a kernel module that DKMS will compile on the host, so the matching Linux headers must be installed first. Then run the install with your portal domain:
 
 ```bash
-sudo apt-get install -y linux-headers-$(uname -r)
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y jambonz-mini
+sudo apt-get install -y linux-headers-cloud-amd64 || sudo apt-get install -y linux-headers-$(uname -r)
+sudo -E JAMBONES_PORTAL_DOMAIN=portal.example.com \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y jambonz-mini
 ```
 
-That's it. apt resolves the full dependency tree (jambonz-common, jambonz-monitoring-agent, jambonz-rtpengine, jambonz-rtpengine-dkms, drachtio, jambonz-freeswitch, telegraf, nodejs, MariaDB, Redis, nginx, Grafana).
+apt resolves the full dependency tree (jambonz-common, jambonz-monitoring-agent, jambonz-rtpengine, jambonz-rtpengine-dkms, drachtio, jambonz-freeswitch, telegraf, nodejs, MariaDB, Redis, nginx, Grafana).
 
 ### What the postinst did
 
