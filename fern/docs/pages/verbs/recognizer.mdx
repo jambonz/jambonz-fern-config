@@ -706,7 +706,8 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="model" type="string" required={false}>
-      OpenAI model.  Currently 'whisper-1', 'gpt-4o-mini-transcribe', and 'gpt-4o-transcribe' are supported.
+      OpenAI model.  Currently 'whisper-1', 'gpt-4o-mini-transcribe', 'gpt-4o-transcribe', and 'gpt-realtime-whisper' are supported.
+      Note: 'gpt-realtime-whisper' does not support OpenAI's server-side turn detection any `turn_detection` settings are ignored for this model.
     </ParamField>
 
     <ParamField path="prompt" type="string" required={false}>
