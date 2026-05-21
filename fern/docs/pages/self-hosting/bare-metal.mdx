@@ -1,0 +1,352 @@
+---
+title: Bare metal / VPS
+subtitle: Install jambonz mini on any Debian 12 host using our apt repository.
+---
+
+For bare metal, any VPS provider (Hetzner, Vultr, DigitalOcean, Linode, OVH, on-prem, etc.), or an existing Debian 12 host, jambonz publishes a `.deb` package that installs the whole single-host stack from `apt`. This is the simplest deployment path when you're not on AWS / Azure / GCP / OCI and don't want to use one of the prebuilt images.
+
+<Note>
+This guide installs the **jambonz mini** all-in-one deployment (every component on a single host). Multi-host topologies — separate SBC, feature-server, web, and monitoring tiers — currently still require the cloud-image guides (AWS, Azure, GCP, OCI). Multi-host Debian packages are in development.
+</Note>
+
+## Prerequisites
+
+- Debian 12 (bookworm), amd64
+- `sudo` access
+- At least **4 vCPU**, **8 GB RAM**, **100 GB disk**
+- Public IPv4 address
+- Network rules / firewall configured to allow the ports below
+
+### Required open ports
+
+| Service | Ports |
+|---|---|
+| SIP | `5060/udp`, `5060/tcp`, `5061/tcp`, `8443/tcp` |
+| HTTP / HTTPS | `80/tcp`, `443/tcp` |
+| RTP media | `40000–60000/udp` |
+
+How you open these depends on your provider — security groups on a cloud VPS, an OS-level firewall (`ufw`, `nftables`) on bare metal, or a hardware firewall in front. Consult your provider's documentation.
+
+## Add the apt sources
+
+Four apt sources are required: the jambonz repository itself, plus three upstream sources that ship dependencies Debian doesn't include directly.
+
+```bash
+sudo apt-get update -qq
+sudo apt-get install -y -qq curl ca-certificates gnupg systemd
+
+# 1. jambonz APT source
+sudo install -d /etc/apt/keyrings
+curl -fsSL https://jambonz-debian-packages.s3.us-east-2.amazonaws.com/jambonz.gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/jambonz.gpg
+echo "deb [signed-by=/etc/apt/keyrings/jambonz.gpg] https://jambonz-debian-packages.s3.us-east-2.amazonaws.com/debian bookworm main" \
+  | sudo tee /etc/apt/sources.list.d/jambonz.list
+
+# 2. InfluxData APT source (for telegraf — not in Debian's repos)
+curl -fsSL https://repos.influxdata.com/influxdata-archive.key \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/influxdata.gpg
+echo "deb [signed-by=/etc/apt/keyrings/influxdata.gpg] https://repos.influxdata.com/debian stable main" \
+  | sudo tee /etc/apt/sources.list.d/influxdata.list
+
+# 3. NodeSource APT source (Node 22 — Debian ships 18)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+
+# 4. Grafana APT source (for the metrics dashboard)
+curl -fsSL https://apt.grafana.com/gpg.key \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/grafana.gpg
+echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" \
+  | sudo tee /etc/apt/sources.list.d/grafana.list
+
+sudo apt-get update
+```
+
+## Install jambonz mini
+
+rtpengine includes a kernel module that DKMS will compile on the host, so the matching Linux headers must be installed first:
+
+```bash
+sudo apt-get install -y linux-headers-$(uname -r)
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y jambonz-mini
+```
+
+That's it. apt resolves the full dependency tree (jambonz-common, jambonz-monitoring-agent, jambonz-rtpengine, jambonz-rtpengine-dkms, drachtio, jambonz-freeswitch, telegraf, nodejs, MariaDB, Redis, nginx, Grafana).
+
+### What the postinst did
+
+While apt was running, the `jambonz-mini` package's post-install script:
+
+- Generated per-host secrets in `/var/lib/jambonz/secrets.env` (mode `600`)
+- Auto-detected the host's local subnet and wrote it to `/var/lib/jambonz/host.env`
+- Waited for MariaDB to be ready, then created the `jambones` database, ran the schema and seed, and applied any pending migrations
+- Enabled and started the `jambonz-apps.target` systemd target and its child services
+
+On a clean install this completes in a minute or two.
+
+## Verify the install
+
+```bash
+echo "=== mysql admin user ==="
+sudo mysql -e "SELECT user, host FROM mysql.user WHERE user='admin';"
+
+echo "=== schema version ==="
+sudo mysql -e "USE jambones; SELECT version FROM schema_version;"
+
+echo "=== telegraf listening on :8125 ==="
+sudo ss -tnlp '( sport = :8125 )'
+
+echo "=== systemd units ==="
+systemctl --no-pager list-units 'jambonz-*' --all
+
+echo "=== webapp returns HTTP 200 ==="
+curl -sI http://localhost/ | head -1
+
+echo "=== no ECONNREFUSED in recent logs (should be 0) ==="
+sudo journalctl -u 'jambonz-*' -n 200 --no-pager 2>/dev/null | grep -c 'ECONNREFUSED.*8125'
+```
+
+All `jambonz-*` units should be `active (running)`. The webapp should return `HTTP/1.1 200 OK`. The `ECONNREFUSED` count should be `0`.
+
+## First login
+
+Browse to `http://<host-ip>/` (make sure port 80 is open).
+
+Default admin credentials, seeded by the postinst:
+
+- **Email**: `joe@foo.bar`
+- **Password**: `admin`
+
+`force_change` is set on the account, so you'll be required to set a new password on first login.
+
+## Next steps
+
+Before going to production:
+
+- **DNS records and HTTPS** — see the [Post-Install Steps](/self-hosting/overview/post-install) article. It walks through creating the A records (`api.`, `grafana.`, `homer.`, `public-apps.`, `sip.`) and using `certbot` to obtain a TLS certificate for the portal.
+- **WebRTC and SIP TLS** — see [Setting up WebRTC and SIP TLS](/self-hosting/overview/wss-siptls) if you need WSS or SIPS.
+- **Licensing** — obtain a license key as described in the [Licensing](/self-hosting/overview/licensing) article. Free trial licenses are available; extended licenses for non-commercial use and pre-revenue startups can be requested at `support@jambonz.org`.
+
+## The `jambonz` CLI
+
+The `jambonz-common` package ships a `jambonz` command at `/usr/bin/jambonz` for day-2 operations:
+
+| Command | Description |
+|---|---|
+| `sudo jambonz upgrade` | Refresh apt indexes, list which jambonz packages have new versions, prompt for confirmation, run the upgrade, then run `jambonz health`. No-op when there's nothing new. |
+| `jambonz health` | Quick check of every jambonz systemd unit + connectivity to MariaDB, Redis, telegraf, drachtio, and FreeSWITCH. |
+| `jambonz version` | Print the installed package versions (apt + bundled Node apps). |
+| `jambonz status` | Compact `systemctl status` summary across `jambonz-*` units. |
+| `jambonz env <app>` | Print the resolved environment that `<app>` would see (after merging the 4-layer env chain). Useful for debugging config. |
+| `jambonz crash <app>` | Show a bracketed `journalctl` window around the most recent (re)start of `<app>` — the fastest way to look at a crash. |
+
+## Customizing config
+
+Environment variables for the Node apps come from four files, layered in order — later files override earlier ones on conflict:
+
+1. `/etc/jambonz/jambonz.env` — shared, customer-editable config
+2. `/etc/jambonz/<app>.env` — per-app overrides (e.g. `feature-server.env`)
+3. `/var/lib/jambonz/host.env` — per-host runtime (auto-generated; also the right place for terraform/ansible to write)
+4. `/var/lib/jambonz/secrets.env` — generated cluster secrets, mode `600`
+
+### Files you can edit (conffile-protected)
+
+These files are tracked by dpkg. Your edits survive upgrades; if a release ships a new default you'll be prompted (see [Upgrading](#upgrading) below).
+
+| File | Purpose |
+|---|---|
+| `/etc/jambonz/jambonz.env` | Shared env for all Node apps (DB host, Redis host, log level) |
+| `/etc/jambonz/feature-server.env` | feature-server overrides |
+| `/etc/jambonz/api-server.env` | api-server overrides |
+| `/etc/jambonz/inbound.env` | sbc-inbound overrides |
+| `/etc/jambonz/outbound.env` | sbc-outbound overrides |
+| `/etc/jambonz/sbc-call-router.env` | sbc-call-router overrides |
+| `/etc/jambonz/sbc-sip-sidecar.env` | sbc-sip-sidecar overrides |
+| `/etc/jambonz/sbc-rtpengine-sidecar.env` | sbc-rtpengine-sidecar overrides |
+| `/etc/nginx/sites-available/jambonz` | nginx reverse proxy + webapp + SIP trace ingest |
+| `/etc/drachtio/drachtio-5070.conf.xml` | FS-tier drachtio config |
+| `/etc/drachtio.conf.xml` | SBC-tier drachtio config |
+| `/etc/freeswitch/...` | FreeSWITCH config |
+| `/etc/rtpengine/rtpengine.conf` | rtpengine config |
+
+### Files that are generated — do NOT edit
+
+These get rewritten on every upgrade. Edits will be lost. If you need to change a value, edit the *source* env file instead.
+
+| File | Source of truth |
+|---|---|
+| `/etc/default/upload-recordings` | `/var/lib/jambonz/secrets.env` + `/etc/jambonz/jambonz.env` |
+| `/etc/systemd/system/drachtio.service.d/jambonz.conf` | `/etc/jambonz/jambonz.env` |
+| `/etc/systemd/system/drachtio.service.d/jambonz-execstart.conf` | static — systemd-252 workaround |
+| `/etc/systemd/system/drachtio.service.d/homer.conf` | static — HEP wiring |
+| `/etc/systemd/system/freeswitch.service.d/jambonz.conf` | `/etc/jambonz/jambonz.env` |
+| `/etc/systemd/system/grafana-server.service.d/jambonz.conf` | static — port 3010 to avoid collision with feature-server |
+
+After editing any of the conffile-protected files above, apply with:
+
+```bash
+sudo systemctl restart jambonz-apps.target
+```
+
+## Adding custom systemd directives
+
+If you need extra `Environment=` or `ExecStartPre=` directives on a system unit (for example to enable SIP over TLS on drachtio), don't edit the shipped service file or the `jambonz*.conf` drop-ins — both get reset on upgrade. Create your own drop-in whose name does **not** start with `jambonz`:
+
+```bash
+sudo install -d -m 755 /etc/systemd/system/drachtio.service.d
+sudo tee /etc/systemd/system/drachtio.service.d/local.conf >/dev/null <<'EOF'
+[Service]
+ExecStartPre=/usr/local/sbin/setup-tls-cert.sh
+Environment="DRACHTIO_EXTRA_ARGS=--sips-port 5061"
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl restart drachtio
+```
+
+jambonz upgrades will never touch a drop-in not named `jambonz*.conf`. Your `local.conf` survives every upgrade.
+
+## Upgrading
+
+The simplest path:
+
+```bash
+sudo jambonz upgrade
+```
+
+This refreshes apt indexes, lists which jambonz packages have new versions, asks for confirmation, runs the upgrade, and finishes with a `jambonz health` so you immediately see whether anything came back failing. If there's nothing new, it's a no-op with a clean message.
+
+The equivalent raw apt commands:
+
+```bash
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+Schema migrations run automatically — the `jambonz-mini` postinst detects the existing `schema_version` table, skips the seed, and applies only pending migrations. Existing data is preserved.
+
+### Conffile prompts
+
+If an upgrade ships a new default for a config file under `/etc/` **and** you've edited that file, dpkg will prompt you:
+
+```
+Configuration file '/etc/jambonz/feature-server.env'
+ ==> Modified (by you or by a script) since installation.
+ ==> Package distributor has shipped an updated version.
+   What would you like to do about it?  Your options are:
+    Y or I  : install the package maintainer's version
+    N or O  : keep your currently-installed version
+      D     : show the differences between the versions
+      Z     : start a shell to examine the situation
+ The default action is to keep your current version.
+*** feature-server.env (Y/I/N/O/D/Z) [default=N] ?
+```
+
+The default (`N` — keep your edits) is almost always the right answer for env files. Press **D first** to see what changed — sometimes the new version adds variables worth adopting, in which case keep your file with `N` and add the new variables manually.
+
+<Warning>
+For the two third-party conffiles `/etc/heplify-server.toml` and `/etc/default/pcap-server`, **always** pick `N`. The `jambonz-mini` postinst sed-edits credential lines into those files. Picking `Y` would lose the generated credentials and break the services. If you accidentally pick `Y`, restore with `sudo dpkg-reconfigure jambonz-mini`.
+</Warning>
+
+### Recommended pre-upgrade ritual
+
+For production boxes:
+
+```bash
+# 1. Snapshot the database
+sudo mysqldump --single-transaction --routines --triggers jambones \
+  > /tmp/jambones-$(date +%F).sql
+
+# 2. Capture current versions for rollback reference
+jambonz version > /tmp/versions-before.txt
+
+# 3. Confirm the system is healthy before upgrading
+jambonz health
+
+# 4. Upgrade
+sudo jambonz upgrade
+
+# 5. Confirm health after (jambonz upgrade does this automatically too)
+jambonz health
+```
+
+## Rolling back
+
+If an upgrade breaks something and you need to drop back to a previous version:
+
+```bash
+# Show available versions
+apt-cache madison jambonz-mini
+
+# Pin back to a specific version
+sudo apt-get install --allow-downgrades \
+  jambonz-mini=10.1.5 \
+  jambonz-common=10.1.5
+```
+
+Schema migrations do **not** auto-roll-back — once new tables or columns exist, they persist. That's safe because the migration policy guarantees backward compatibility (no `DROP TABLE`, no new `NOT NULL` columns without defaults), so old code reading a newer schema works correctly. You don't need to restore the database to roll back code.
+
+If you ever do need the schema rolled back, restore MySQL from your pre-upgrade backup *before* downgrading the deb.
+
+## Removing
+
+```bash
+sudo apt-get purge jambonz-mini jambonz-common jambonz-monitoring-agent
+```
+
+`apt-get purge` removes configuration files but **does not** drop the `jambones` database — your data is preserved. For a true reset, drop it manually:
+
+```bash
+sudo mysql -e "DROP DATABASE jambones; DROP USER 'admin'@'%';"
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="A jambonz-* unit shows failed after upgrade">
+    Use `jambonz crash <app>` to see a bracketed `journalctl` window around the most recent restart of the failing app. This is usually faster than scrolling through `journalctl -xe`.
+  </Accordion>
+
+  <Accordion title="MySQL connection errors from a Node app">
+    Confirm `/var/lib/jambonz/secrets.env` has the expected password:
+
+    ```bash
+    sudo grep JAMBONES_MYSQL_PASSWORD /var/lib/jambonz/secrets.env
+    sudo mysql -uroot -e "SELECT user FROM mysql.user WHERE user='admin'\\G"
+    ```
+
+    If the password and the MySQL user are out of sync, re-run `sudo dpkg-reconfigure jambonz-mini` to regenerate.
+  </Accordion>
+
+  <Accordion title="Recording 404s after upgrade">
+    Check the feature-server's recording websocket URL:
+
+    ```bash
+    jambonz env feature-server | grep -i record
+    ```
+
+    `JAMBONZ_RECORD_WS_BASE_URL` should be `ws://127.0.0.1:3017`. Then confirm the recording service is up with `jambonz status` — `upload_recordings` should be `active`.
+  </Accordion>
+
+  <Accordion title="pcap retrieval suddenly returns empty">
+    The drachtio HEP-encapsulation drop-in may have been clobbered. Confirm it still exists:
+
+    ```bash
+    sudo cat /etc/systemd/system/drachtio.service.d/jambonz-execstart.conf
+    ```
+
+    It should include `--homer 127.0.0.1:9060 --homer-id 10`. If missing or different, re-run `sudo dpkg-reconfigure jambonz-mini`.
+  </Accordion>
+
+  <Accordion title="TLS certificate expired">
+    `sudo certbot renew`. Certbot installs a systemd timer that handles renewals automatically — only run this manually if you see "Your certificate has expired" in the portal.
+  </Accordion>
+
+  <Accordion title="Something else is wrong and I don't know where to start">
+    Run `jambonz health` first. It narrows the problem to a specific layer (database, Redis, telegraf, drachtio, FreeSWITCH, or a Node app) much faster than reading logs unaided.
+  </Accordion>
+</AccordionGroup>
+
+## Known limitations
+
+<Warning>
+Multi-host topologies (separate SBC, feature-server, web, and monitoring tiers) are not yet supported via apt. Only the single-host `jambonz-mini` package is currently published. If you need a clustered deployment, use the [AWS](/self-hosting/aws), [Azure](/self-hosting/azure), [GCP](/self-hosting/gcp), [OCI](/self-hosting/oci), or [Kubernetes](/self-hosting/kubernetes) guides instead.
+</Warning>

@@ -297,6 +297,8 @@ navigation:
         path: ./docs/pages/self-hosting/gcp.mdx
       - page: OCI
         path: ./docs/pages/self-hosting/oci.mdx
+      - page: Bare metal / VPS
+        path: ./docs/pages/self-hosting/bare-metal.mdx
       - section: Kubernetes
         path: ./docs/pages/self-hosting/k8s-overview.mdx
         contents:
