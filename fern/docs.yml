@@ -289,14 +289,16 @@ navigation:
             path: ./docs/pages/self-hosting/post-install.mdx
           - page: Setting up WebRTC and SIP TLS
             path: ./docs/pages/self-hosting/wss-siptls.mdx
-      - page: AWS
-        path: ./docs/pages/self-hosting/aws.mdx
-      - page: Azure
-        path: ./docs/pages/self-hosting/azure.mdx
-      - page: GCP
-        path: ./docs/pages/self-hosting/gcp.mdx
-      - page: OCI
-        path: ./docs/pages/self-hosting/oci.mdx
+      - section: Hosting Providers
+        contents:
+          - page: AWS
+            path: ./docs/pages/self-hosting/aws.mdx
+          - page: Azure
+            path: ./docs/pages/self-hosting/azure.mdx
+          - page: GCP
+            path: ./docs/pages/self-hosting/gcp.mdx
+          - page: OCI
+            path: ./docs/pages/self-hosting/oci.mdx
       - page: Bare metal / VPS
         path: ./docs/pages/self-hosting/bare-metal.mdx
       - section: Kubernetes

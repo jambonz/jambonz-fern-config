@@ -106,24 +106,22 @@ sudo journalctl -u 'jambonz-*' -n 200 --no-pager 2>/dev/null | grep -c 'ECONNREF
 
 All `jambonz-*` units should be `active (running)`. The webapp should return `HTTP/1.1 200 OK`. The `ECONNREFUSED` count should be `0`.
 
-## First login
+## Post-install steps
 
-Browse to `http://<host-ip>/` (make sure port 80 is open).
+Before logging in for the first time, complete these steps:
 
-Default admin credentials, seeded by the postinst:
-
-- **Email**: `joe@foo.bar`
-- **Password**: `admin`
-
-`force_change` is set on the account, so you'll be required to set a new password on first login.
-
-## Next steps
-
-Before going to production:
-
-- **DNS records and HTTPS** — see the [Post-Install Steps](/self-hosting/overview/post-install) article. It walks through creating the A records (`api.`, `grafana.`, `homer.`, `public-apps.`, `sip.`) and using `certbot` to obtain a TLS certificate for the portal.
+- **DNS records and HTTPS** — see the [Post-Install Steps](/self-hosting/overview/post-install) article. It walks through creating the A records (`api.`, `grafana.`, `public-apps.`, `sip.`) and using `certbot` to obtain a TLS certificate for the portal.
 - **WebRTC and SIP TLS** — see [Setting up WebRTC and SIP TLS](/self-hosting/overview/wss-siptls) if you need WSS or SIPS.
 - **Licensing** — obtain a license key as described in the [Licensing](/self-hosting/overview/licensing) article. Free trial licenses are available; extended licenses for non-commercial use and pre-revenue startups can be requested at `support@jambonz.org`.
+
+## First login
+
+Browse to your portal's DNS name (e.g. `https://my-domain.example.com`) and log in with:
+
+- **Username**: `admin`
+- **Password**: `admin`
+
+You'll be required to set a new password on first login.
 
 ## The `jambonz` CLI
 
@@ -132,11 +130,35 @@ The `jambonz-common` package ships a `jambonz` command at `/usr/bin/jambonz` for
 | Command | Description |
 |---|---|
 | `sudo jambonz upgrade` | Refresh apt indexes, list which jambonz packages have new versions, prompt for confirmation, run the upgrade, then run `jambonz health`. No-op when there's nothing new. |
-| `jambonz health` | Quick check of every jambonz systemd unit + connectivity to MariaDB, Redis, telegraf, drachtio, and FreeSWITCH. |
+| `jambonz health` | Stack-level check: every jambonz Node app, drachtio, FreeSWITCH, rtpengine, upload-recordings, pcap-server, heplify-server, MariaDB, Redis, PostgreSQL, and nginx — are they all active and listening on the right ports? |
 | `jambonz version` | Print the installed package versions (apt + bundled Node apps). |
-| `jambonz status` | Compact `systemctl status` summary across `jambonz-*` units. |
+| `jambonz status` (alias `ls`) | List jambonz Node apps with state, PID, restart count, last-start age, and memory usage. Flags apps that have restarted. |
+| `jambonz logs [-f] [<app>]` | Tail logs. With no `<app>`, streams the merged journal of every jambonz Node app. With `<app>`, scoped to that unit. `-f` follows in real time. |
+| `jambonz show <app>` | Detailed `systemctl status` block + the last 30 journal lines + the listening ports owned by that app's PID. |
 | `jambonz env <app>` | Print the resolved environment that `<app>` would see (after merging the 4-layer env chain). Useful for debugging config. |
-| `jambonz crash <app>` | Show a bracketed `journalctl` window around the most recent (re)start of `<app>` — the fastest way to look at a crash. |
+| `jambonz crash <app>` | Show a bracketed `journalctl` window — 30s before through 60s after the most recent (re)start of `<app>`. The fastest way to look at a crash. |
+| `jambonz start\|stop\|restart <app\|all>` | Lifecycle control for one app or every jambonz Node app at once. Auto-elevates via `sudo`. |
+
+### Tailing logs
+
+Common usage:
+
+```bash
+# Stream every jambonz Node app's journal, live
+jambonz logs -f
+
+# Same, scoped to one app (short form — "feature-server" → jambonz-feature-server)
+jambonz logs -f feature-server
+
+# Print recent logs and exit (no -f)
+jambonz logs api-server
+
+# For non-Node services, pass the full unit name
+jambonz logs -f drachtio
+jambonz logs -f freeswitch
+```
+
+App-name resolution is forgiving: short forms like `feature-server`, `api-server`, `inbound`, `outbound` are expanded to their `jambonz-*` unit names. For drachtio, FreeSWITCH, and rtpengine — which aren't part of the jambonz Node-app set — pass the full unit name.
 
 ## Customizing config
 
