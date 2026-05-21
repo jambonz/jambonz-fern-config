@@ -23,7 +23,7 @@ To begin with, here are the possible options that you use with OpenAI STT:
     vendor: 'openai',
     ..other recognition options
     openaiOptions: {
-      model: 'gpt-4o-transcribe', // or 'gpt-4o-mini-transcribe' or 'whisper-1'
+      model: 'gpt-4o-transcribe', // or 'gpt-4o-mini-transcribe', 'whisper-1', or 'gpt-realtime-whisper'
       input_audio_noise_reduction: 'near_field', // or 'far_field'
       prompt: 'string',
       turn_detection: {
@@ -32,6 +32,10 @@ To begin with, here are the possible options that you use with OpenAI STT:
         prefix_padding_ms: 300, // only for server_vad
         silence_duration_ms: 800 // only for server_vad
       },
+      // local VAD knobs, only used with 'gpt-realtime-whisper'
+      vadMode: 2,        // 0-3, higher is more aggressive
+      vadSilenceMs: 500, // ms of silence to end an utterance
+      vadVoiceMs: 250,   // ms of voice to start an utterance
       promptTemplates: {
         hintsTemplate: 'string',
         conversationHistoryTemplate: 'string',
@@ -52,6 +56,23 @@ The `turn_detection` object controls how OpenAI detects when a speaker has finis
   - `high`: Returns transcription events faster with smaller chunks
 
 The `eagerness` setting affects how audio is chunked even in transcription mode. Use `high` if you want faster transcription events, or `low` if you prefer larger, more complete transcript chunks.
+
+### Using `gpt-realtime-whisper`
+
+The `gpt-realtime-whisper` model does not support OpenAI's server-side turn detection.
+
+Any `turn_detection` settings in `openaiOptions` are ignored when this model is selected. Partial deltas continue to be delivered while the user is speaking, and a single final transcript is delivered per utterance once VAD detects silence.
+
+```
+{
+  recognizer: {
+    vendor: 'openai',
+    openaiOptions: {
+      model: 'gpt-realtime-whisper',
+    }
+  }
+}
+```
 
 In this article we want to explore the various ways to construct a prompt for OpenAI STT.  
 
