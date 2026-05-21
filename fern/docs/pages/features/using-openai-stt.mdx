@@ -55,7 +55,7 @@ The `eagerness` setting affects how audio is chunked even in transcription mode.
 
 ### Using `gpt-realtime-whisper`
 
-The `gpt-realtime-whisper` model does not support OpenAI's server-side turn detection. To produce final transcripts, jambonz runs FreeSWITCH-side VAD on the inbound audio and sends `input_audio_buffer.commit` to OpenAI when end-of-speech is detected; the server then emits the final `conversation.item.input_audio_transcription.completed` event as usual.
+The `gpt-realtime-whisper` model does not support OpenAI's server-side turn detection.
 
 Any `turn_detection` settings in `openaiOptions` are ignored when this model is selected. Partial deltas continue to be delivered while the user is speaking, and a single final transcript is delivered per utterance once VAD detects silence.
 
