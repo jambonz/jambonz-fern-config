@@ -118,14 +118,25 @@ sudo -E JAMBONES_PORTAL_DOMAIN=portal.example.com \
 
 apt resolves the full dependency tree (jambonz-common, jambonz-monitoring-agent, jambonz-rtpengine, jambonz-rtpengine-dkms, drachtio, jambonz-freeswitch, telegraf, nodejs, MariaDB, Redis, nginx, Grafana).
 
+<Warning>
+On some cloud instances, `linux-headers-cloud-amd64` will install headers for a **newer** kernel than the one currently running (because the running kernel image is older than what's in the repos). DKMS can build the rtpengine module only for kernels whose headers it has, so it builds against the newer one. The postinst detects this and prints a **REBOOT RECOMMENDED** message at the end of the install. Reboot to use the newer kernel, after which rtpengine will use kernel-mode forwarding. Until you reboot, rtpengine works in userspace-only mode (functional but less efficient).
+</Warning>
+
 ### What the postinst did
 
-While apt was running, the `jambonz-mini` package's post-install script:
+While apt was running, the `jambonz-common` and `jambonz-mini` post-install scripts:
 
-- Generated per-host secrets in `/var/lib/jambonz/secrets.env` (mode `600`)
+- Created the `jambonz` system user with passwordless sudo and copied the cloud-init user's SSH `authorized_keys` so you can `ssh jambonz@<host>` with the same keypair
+- Generated per-host secrets in `/var/lib/jambonz/secrets.env` (mode `600` — JWT signing key, MySQL password, Homer/heplify credentials, recording auth)
 - Auto-detected the host's local subnet and wrote it to `/var/lib/jambonz/host.env`
-- Waited for MariaDB to be ready, then created the `jambones` database, ran the schema and seed, and applied any pending migrations
-- Enabled and started the `jambonz-apps.target` systemd target and its child services
+- Waited for MariaDB, then created the `jambones` database, ran the schema and seed, and applied any pending migrations
+- Wrote systemd drop-ins for drachtio and FreeSWITCH so they pick up the generated DB/Redis credentials
+- Set up PostgreSQL plus the HEP / SIP-capture stack (`heplify-server` + `pcap-server`) with a generated `heplify` role and the `homer_data` / `homer_config` databases
+- Configured InfluxDB and Grafana (moved Grafana to port 3010 to avoid colliding with the Node apps on 3000)
+- Configured the `upload_recordings` C++ daemon with the matching `ENCRYPTION_SECRET` so it can decrypt bucket credentials
+- Checked the rtpengine DKMS kernel module against the running kernel — building it if headers are available, or queueing a **REBOOT RECOMMENDED** warning if a newer kernel was installed
+- Wrote the nginx config (vhosts for portal / api / grafana if a portal domain was supplied, otherwise a catch-all on the default server) and reloaded nginx
+- Enabled and started the `jambonz-apps.target` systemd target and its child services, plus drachtio, FreeSWITCH, rtpengine, heplify-server, pcap-server, InfluxDB, and Grafana
 
 On a clean install this completes in a minute or two.
 
@@ -157,7 +168,7 @@ All `jambonz-*` units should be `active (running)`. The webapp should return `HT
 
 Before logging in for the first time, complete these steps:
 
-- **DNS records and HTTPS** — see the [Post-Install Steps](/self-hosting/overview/post-install) article. It walks through creating the A records (`api.`, `grafana.`, `public-apps.`, `sip.`) and using `certbot` to obtain a TLS certificate for the portal.
+- **DNS records and HTTPS** — see the [Post-Install Steps](/self-hosting/overview/post-install) article. It walks through creating the A records (`api.` and `grafana.`) and using `certbot` to obtain a TLS certificate for the portal.
 - **WebRTC and SIP TLS** — see [Setting up WebRTC and SIP TLS](/self-hosting/overview/wss-siptls) if you need WSS or SIPS.
 - **Licensing** — obtain a license key as described in the [Licensing](/self-hosting/overview/licensing) article. Free trial licenses are available; extended licenses for non-commercial use and pre-revenue startups can be requested at `support@jambonz.org`.
 
@@ -170,9 +181,19 @@ Browse to your portal's DNS name (e.g. `https://my-domain.example.com`) and log 
 
 You'll be required to set a new password on first login.
 
+## Logging in as the `jambonz` user
+
+The install creates a `jambonz` system user with passwordless `sudo` and copies the cloud-init user's SSH keys into `/home/jambonz/.ssh/authorized_keys`. Day-2 operations are intended to be performed as this user — not as `root`, `admin`, `ubuntu`, or `ec2-user`.
+
+```bash
+ssh jambonz@<this-host>
+```
+
+You should see this user mentioned in the final lines of the install output. Once logged in, the `jambonz` CLI is on `$PATH` and `sudo` works without a password prompt.
+
 ## The `jambonz` CLI
 
-The `jambonz-common` package ships a `jambonz` command at `/usr/bin/jambonz` for day-2 operations:
+The `jambonz-common` package ships a `jambonz` command at `/usr/bin/jambonz` for day-2 operations. Run it as the `jambonz` user:
 
 | Command | Description |
 |---|---|
@@ -230,7 +251,6 @@ These files are tracked by dpkg. Your edits survive upgrades; if a release ships
 | `/etc/jambonz/sbc-call-router.env` | sbc-call-router overrides |
 | `/etc/jambonz/sbc-sip-sidecar.env` | sbc-sip-sidecar overrides |
 | `/etc/jambonz/sbc-rtpengine-sidecar.env` | sbc-rtpengine-sidecar overrides |
-| `/etc/nginx/sites-available/jambonz` | nginx reverse proxy + webapp + SIP trace ingest |
 | `/etc/drachtio/drachtio-5070.conf.xml` | FS-tier drachtio config |
 | `/etc/drachtio.conf.xml` | SBC-tier drachtio config |
 | `/etc/freeswitch/...` | FreeSWITCH config |
@@ -242,12 +262,15 @@ These get rewritten on every upgrade. Edits will be lost. If you need to change 
 
 | File | Source of truth |
 |---|---|
+| `/etc/nginx/sites-available/jambonz` | written by `jambonz-configure-domain` — to change vhosts, re-run that script |
 | `/etc/default/upload-recordings` | `/var/lib/jambonz/secrets.env` + `/etc/jambonz/jambonz.env` |
 | `/etc/systemd/system/drachtio.service.d/jambonz.conf` | `/etc/jambonz/jambonz.env` |
-| `/etc/systemd/system/drachtio.service.d/jambonz-execstart.conf` | static — systemd-252 workaround |
-| `/etc/systemd/system/drachtio.service.d/homer.conf` | static — HEP wiring |
+| `/etc/systemd/system/drachtio.service.d/jambonz-execstart.conf` | static — systemd-252 workaround + HEP wiring |
+| `/etc/systemd/system/drachtio-feature-server.service.d/jambonz.conf` | `/etc/jambonz/jambonz.env` |
+| `/etc/default/drachtio-feature-server` | static — FS-tier port + config overrides |
 | `/etc/systemd/system/freeswitch.service.d/jambonz.conf` | `/etc/jambonz/jambonz.env` |
 | `/etc/systemd/system/grafana-server.service.d/jambonz.conf` | static — port 3010 to avoid collision with feature-server |
+| `/etc/sudoers.d/jambonz` | written by `jambonz-common.postinst` — passwordless sudo for the `jambonz` user |
 
 After editing any of the conffile-protected files above, apply with:
 
