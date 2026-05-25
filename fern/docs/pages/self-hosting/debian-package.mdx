@@ -1,5 +1,5 @@
 ---
-title: Bare metal / VPS
+title: Debian package
 subtitle: Install jambonz mini on any Debian 12 host using our apt repository.
 ---
 
@@ -102,7 +102,13 @@ You have three options:
    sudo jambonz-configure-domain portal.example.com
    ```
 
-   This idempotent helper updates the nginx server name, writes `JAMBONES_PORTAL_DOMAIN` to `/var/lib/jambonz/host.env`, and is the same logic the postinst would have run with the env var set.
+   This idempotent helper:
+   - Writes the nginx config (vhosts for `portal.example.com`, `api.portal.example.com`, `grafana.portal.example.com`) and reloads nginx
+   - Writes `JAMBONES_PORTAL_DOMAIN` to `/var/lib/jambonz/host.env`
+   - Updates the `system_information` row in MySQL (required for drachtio's license validation)
+   - Restarts drachtio, freeswitch, and the jambonz Node services so they pick up the new domain
+
+   Safe to re-run any number of times. Same logic the postinst runs with the env var set.
 
 If you install without specifying a domain, the install completes but the postinst prints a `NO PORTAL DOMAIN configured` warning — license validation will not succeed until you run `jambonz-configure-domain`.
 
