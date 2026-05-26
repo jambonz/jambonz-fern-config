@@ -21,29 +21,39 @@ Using the DNS name that you specified during deployment (e.g. `my-domain.example
 - `my-domain.example.com`
 - `api.my-domain.example.com`
 - `grafana.my-domain.example.com`
-- `homer.my-domain.example.com`
-- `public-apps.my-domain.example.com`
+- `public-apps.my-domain.example.com` *(cloud-image deployments only)*
 
 **Pointing to SbcServerIP:**
-- `sip.my-domain.example.com`
+- `sip.my-domain.example.com` *(cloud-image deployments only)*
+
+<Note>
+**bare-metal / Debian package installs** only require the first three records (`my-domain`, `api.`, `grafana.`). The `public-apps.` and `sip.` subdomains are used by the cloud-image (AMI) deployments and aren't proxied through nginx in the Debian package — SIP traffic on a mini install reaches drachtio directly at the host's public IP, and the `public-apps` demo content is served from the main portal vhost.
+</Note>
 
 # Enable HTTPS for the portal
 
-SSH into the Web/Monitoring server and install TLS certificates:
+SSH into the Web/Monitoring server as the `jambonz` user and install TLS certificates:
 
 ```bash
-#ssh into the server
 ssh -i <your-ssh-keypair> jambonz@<WebServerIP>
 
- # generate TLS certs
-sudo certbot --nginx
-
-# edit the VITE_API_BASE_URL param to use https
-cd ~/apps/webapp && vi .env 
-
-# restart the webapp under https
-npm run build && pm2 restart webapp 
+# Generate TLS certs for the portal vhosts
+sudo certbot --nginx \
+  -d my-domain.example.com \
+  -d api.my-domain.example.com \
+  -d grafana.my-domain.example.com
 ```
+
+<Note>
+**Cloud-image (AMI) deployments only** — after running certbot, edit `~/apps/webapp/.env` to set `VITE_API_BASE_URL` to the `https://` URL, then rebuild and restart the webapp:
+
+```bash
+cd ~/apps/webapp && vi .env
+npm run build && pm2 restart webapp
+```
+
+This step is **not** required for the bare-metal / Debian package install. The webapp in the Debian package falls back to `window.location.protocol` at runtime, so it picks up HTTPS automatically once certbot finishes.
+</Note>
 
 # First time login
 
