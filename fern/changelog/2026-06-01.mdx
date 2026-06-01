@@ -1,0 +1,71 @@
+<Card title="10.2.0" icon="regular crown" iconPosition="left">
+jambonz Commercial 10.2.0 — Major Release
+</Card>
+
+**10.2.0** is a major release headlined by the maturation of the [agent](/verbs/verbs/agent) verb. Introduced as an experimental capability in 10.1.0, the agent verb is now a fully deployable foundation for building **cascaded voice pipelines** — STT, LLM, and TTS composed à la carte, with the platform handling turn-taking, barge-in, and tool calls. A substantial body of supporting work landed in this release to get it there: a **tool-filler** capability that covers slow LLM tool calls with either LLM-generated backchannel phrases (pre-warmed at agent startup using the agent's own LLM) or a background audio loop, **Deepgram Flux multilingual** with automatic STT/TTS language locking, mid-call `agent:update`, and richer turn-end telemetry that surfaces vendor metadata (provider, region, request id, processing times, cache token counts, rate-limit headers) end-to-end into `turn_end` events, `session.json`, and the transcript and bundle viewers.
+
+Powering those pipelines, the LLM platform has been substantially broadened. A new manifest-driven LLM credential architecture (built on `@jambonz/llm`) means adding an LLM vendor no longer requires api-server or webapp code changes — and on top of that contract this release adds six new LLM providers: **DeepSeek**, **Google Vertex** (with `vertex-gemini` and `vertex-openai` as distinct endpoints), **Azure OpenAI**, **Groq**, **HuggingFace Inference Providers**, and **Baseten**. On the realtime speech side, 10.2.0 adds **OpenAI Realtime GA** support (with Whisper VAD), a new **AssemblyAI speech-to-speech** engine, **Vertex AI** as a Google S2S backend, and `generation_config` for Cartesia Sonic-3 voices.
+
+10.2.0 also makes jambonz substantially easier to run yourself. A new bare-metal / VPS installer brings up a complete single-host **jambonz-mini** stack from [Debian packages](/self-hosting/bare-metal-vps/debian-package) with a single command — no Docker, Kubernetes, or cloud templates required — and ongoing upgrades are a simple `apt upgrade`. For mini deployments installed via AWS CloudFormation or Terraform on other clouds, a new **System Updates** admin panel in the jambonz portal detects available upgrades, lets you schedule, reschedule, or cancel them, and runs the upgrade with live progress streamed into the UI — so keeping a cloud-deployed mini current no longer requires SSH and shell scripts.
+
+Finally, 10.2.0 lands a notable batch of platform reliability and scale work. The drachtio-server includes several critical stability fixes that meaningfully harden long-running deployments. Across feature-server and both SBCs, optional multi-process worker forking provides pm2-style scaling under systemd without the pm2 dependency. And a long-standing curl + boost::asio race condition shared by every FreeSWITCH streaming-TTS module has been fixed.
+
+#### New Features & Improvements
+
+1. **Agent verb — production ready** — The [agent](/verbs/verbs/agent) verb graduates from experimental in 10.1.0 to a fully deployable building block for cascaded voice AI pipelines. Compose any supported STT, LLM, and TTS together and let the platform handle turn-taking, barge-in, and tool execution on your behalf.
+1. **Agent tool-filler** — Cover the silence during slow LLM tool calls with either LLM-generated backchannel phrases or a background audio loop. In `backchannel` mode the agent's own LLM is used to generate a fresh set of natural filler phrases in the configured TTS language (with an optional `style` hint), pre-warmed at agent startup so they're ready the moment a tool call fires. In `audio` mode the agent loops a URL of your choice. Both modes are tuned with `startDelaySecs` and `escalationSecs`.
+1. **Deepgram Flux multilingual with auto-locking** — Detect the caller's language on the first utterance, then automatically lock STT to that language and switch the TTS voice to match. New `autoLockLanguage` (`true` / `false` / `'always'`) and `languageConfig` (per-language voice mapping) properties on the agent verb, plus a WebSocket `stt:reconfigure` command for mid-call control.
+1. **Manifest-driven LLM credentials** — The API server and webapp now render LLM credential forms and handle encryption from a shared `@jambonz/llm` manifest, so adding a new LLM vendor no longer requires changes in api-server or webapp. Fully backward compatible with all existing encrypted credentials.
+1. **DeepSeek LLM support** — Add DeepSeek as an LLM provider for the agent verb and any HTTP `llm.toolHook` flow.
+1. **Google Vertex AI LLM support** — Add Google Vertex AI as an LLM provider, with `vertex-gemini` and `vertex-openai` exposed as distinct credential types rather than being inferred from the model name.
+1. **Azure OpenAI LLM support** — Add Azure OpenAI as an LLM provider with full credential management in the API server and webapp.
+1. **Groq LLM support** — Add Groq as an LLM provider, exposing Groq's low-latency inference of open-weight models (Llama, Mixtral, and others) to the agent verb and `llm.toolHook` flows.
+1. **HuggingFace Inference Providers** — Add HuggingFace Inference Providers as an LLM provider, opening up the broad catalog of models served through the HuggingFace inference network.
+1. **Baseten LLM support** — Add Baseten as an LLM provider, letting you wire Baseten-hosted open-weight model deployments directly into the agent verb.
+1. **Vendor metadata end-to-end** — Surface provider-specific telemetry — region, request id, processing time, cache hit/miss token counts, rate-limit headers, HuggingFace inference provider, Bedrock latency, Groq processing-ms — through `turn_end` event hooks, `session.json`, the webapp transcript view, and the offline bundle viewer. A generic renderer means new vendors light up the diagnostics view without UI changes.
+1. **LLM connect-time diagnostics** — Optional client-side timing breakdown (request → headers, headers → first token, plus TCP/TLS connect timing via undici diagnostics_channel). Enable with `JAMBONES_DEBUG_LLM_TIMING=1` on the feature-server.
+1. **HTTP `llm.toolHook` for OpenAI** — The HTTP `llm.toolHook` integration now supports OpenAI in addition to the existing providers.
+1. **OpenAI Realtime GA** — Full support for OpenAI's general-availability Realtime API. The platform detects the session shape on the wire and converts legacy formats transparently while stripping GA-invalid fields from older `response_create` payloads.
+1. **OpenAI Realtime Whisper VAD** — Use OpenAI's Whisper-based voice activity detection in the OpenAI Realtime STT pipeline.
+1. **AssemblyAI speech-to-speech** — New `mod_assemblyai_s2s` FreeSWITCH module provides real-time speech-to-speech via AssemblyAI's streaming API.
+1. **Vertex AI for Google S2S** — Use `vertex-gemini` and `vertex-openai` as Google speech-to-speech backends, expanding model availability beyond the standard Google Cloud Speech endpoints.
+1. **Cartesia `generation_config`** — Support `generation_config` for Cartesia Sonic-3 and higher voices, enabling more advanced TTS control.
+1. **Google STT `parentPath`** — New `recognizer.googleOptions.parentPath` lets you point Google STT at a custom GCP resource hierarchy.
+1. **jambonz-mini Debian install** — A new one-command bare-metal / VPS installer brings up a complete single-host jambonz stack from the public Debian package repository. No Docker, Kubernetes, or cloud templates required — ideal for small deployments, lab environments, and edge installs. See the [Debian package install guide](/self-hosting/bare-metal-vps/debian-package) for details.
+1. **System Updates admin panel** — Jambonz-mini deployments installed via AWS CloudFormation or Terraform (on other clouds) can now detect available upgrades, install immediately, schedule (or reschedule, or cancel) future upgrades, and watch live progress streamed back into the portal via Server-Sent Events. A site-wide banner flags any pending upgrade. Visibility is gated by `VITE_ENABLE_SYSTEM_UPDATES` and a valid license. (Bare-metal Debian installs upgrade via `apt upgrade` instead.)
+1. **Multi-process clustering** — Optional `cluster.js` worker forking is now available in feature-server, sbc-inbound, sbc-outbound, and api-server. Enable via `JAMBONES_FORK_INSTANCE=<n>` (or `JAMBONES_FORK_INSTANCE=max` for one worker per core) to get pm2-style scaling under systemd without the pm2 dependency.
+1. **Krisp failure alerts** — Generate alerts on Krisp noise-isolation or turn-taking failure so operators can spot degraded sessions in time-series dashboards.
+1. **Slow End-of-Turn metric alerts** — The webapp now badge-flags slow-turn detection in the EOT metric alerts view, making it easier to triage latency outliers.
+1. **Inline action events in transcript** — Agent transcript action events (TTS language switches, configuration changes, etc.) are now interleaved inline with conversation turns sorted by timestamp, rather than grouped at the bottom.
+1. **`dial` re-anchor `X-Reason` header** — Pass an `X-Reason` header when re-anchoring media endpoints to FreeSWITCH, allowing the re-anchor to skip license validation.
+1. **FreeSWITCH module updates** — A new `uuid_deepgramflux_configure` API command for runtime Deepgram Flux configuration, AVMD `fast_math` optimization for audio pattern detection, improved 11Labs alignment-tracking logging, and `mod_deepgram_transcribe` added to the default `modules.conf.xml` autoload list.
+
+#### Bug Fixes
+
+- Fixed AMD tone detection stopping prematurely on `machine-stopped-speaking`; tone detection now continues as expected.
+- Fixed a TTS streaming race condition with fast LLMs that trigger tool calls — the streaming connection is now pre-warmed and channel variables are set before `startTtsStream` is invoked.
+- Fixed agent preflight-hit transitions (direct jump to Thinking) not calling `autoLockLanguage` when they should.
+- Fixed Deepgram Flux STT metadata capture by reading the `languages` array directly from `EndOfTurn` events.
+- Fixed LLM tool history being dropped across internal `toolCallResponse` reprompts, which could cause the LLM to hallucinate a refusal mid-conversation. Tools from the last `prompt()` are now cached and reused.
+- Fixed Rimelab voice-model handling so each model uses its own voice rather than being forced to a single hardcoded default.
+- Fixed a quick-CANCEL race condition in sbc-inbound where rapid CANCEL requests on inbound calls could cause missed state transitions and stale call-count entries.
+- Fixed a UTC date-handling bug in the webapp's `/Updates/sessions/{path}` route that produced inconsistent session and bundle paths across timezones.
+- **drachtio-server (critical):** Fixed a delayed crash that could occur when in-dialog requests (INFO, NOTIFY, OPTIONS, MESSAGE, PUBLISH, SUBSCRIBE) arrived during an active INVITE transaction.
+- **drachtio-server (critical):** Fixed a memory leak on WebSocket BYE when the transport closed before the application responded.
+- **drachtio-server (critical):** Fixed a crash on shutdown caused by improper cleanup ordering during SIGTERM.
+- **drachtio-server:** Corrected session-expires refresher timing, and fixed an edge case where a late ACK after dialog teardown could destabilize the transaction layer.
+- **FreeSWITCH:** Fixed a long-standing curl + boost::asio race condition across all 11 streaming-TTS modules by replacing double-map lookups with an iterator pattern in HTTP completion callbacks.
+- **FreeSWITCH:** Fixed a missing semicolon in `mod_rimelabs_tts_streaming` and removed obsolete libwebsockets logging symbols to support current `libwebsockets` versions.
+
+#### SQL Changes
+
+No database schema changes are required for this release. The LLM vendor expansion is handled entirely via the new `@jambonz/llm` manifest layer and the `@jambonz/schema` package — existing `llm_credentials` storage is reused.
+
+#### Availability
+
+- Available now on jambonz.cloud.
+- Available now for AWS self-hosting via CloudFormation scripts.
+- Available now as a Debian package for jambonz-mini bare-metal / VPS deployments.
+- Coming shortly to all other self-hosting platforms.
+
+**Questions?** Contact us at <a href="mailto:support@jambonz.org">support@jambonz.org</a>
