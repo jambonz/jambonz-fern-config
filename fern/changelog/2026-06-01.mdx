@@ -8,7 +8,7 @@ Powering those pipelines, the LLM platform has been substantially broadened. A n
 
 10.2.0 also makes jambonz substantially easier to run yourself. A new bare-metal / VPS installer brings up a complete single-host **jambonz-mini** stack from Debian packages with a single command — no Docker, Kubernetes, or cloud templates required — and ongoing upgrades are a simple `apt upgrade`. For mini deployments installed via AWS CloudFormation or Terraform on other clouds, a new **System Updates** admin panel in the jambonz portal detects available upgrades, lets you schedule, reschedule, or cancel them, and runs the upgrade with live progress streamed into the UI — so keeping a cloud-deployed mini current no longer requires SSH and shell scripts.
 
-Finally, 10.2.0 lands a notable batch of platform reliability and scale work. The drachtio-server includes several critical stability fixes that meaningfully harden long-running deployments. Across feature-server and both SBCs, optional multi-process worker forking provides pm2-style scaling under systemd without the pm2 dependency. And FreeSWITCH 1.10.12 fixes a long-standing curl + boost::asio race condition shared by every streaming-TTS module.
+Finally, 10.2.0 lands a notable batch of platform reliability and scale work. The drachtio-server includes several critical stability fixes that meaningfully harden long-running deployments. Across feature-server and both SBCs, optional multi-process worker forking provides pm2-style scaling under systemd without the pm2 dependency. And a long-standing curl + boost::asio race condition shared by every FreeSWITCH streaming-TTS module has been fixed.
 
 #### New Features & Improvements
 
@@ -35,7 +35,7 @@ Finally, 10.2.0 lands a notable batch of platform reliability and scale work. Th
 1. **Slow End-of-Turn metric alerts** — The webapp now badge-flags slow-turn detection in the EOT metric alerts view, making it easier to triage latency outliers.
 1. **Inline action events in transcript** — Agent transcript action events (TTS language switches, configuration changes, etc.) are now interleaved inline with conversation turns sorted by timestamp, rather than grouped at the bottom.
 1. **`dial` re-anchor `X-Reason` header** — Pass an `X-Reason` header when re-anchoring media endpoints to FreeSWITCH, allowing the re-anchor to skip license validation.
-1. **FreeSWITCH 1.10.12 module updates** — A new `uuid_deepgramflux_configure` API command for runtime Deepgram Flux configuration, AVMD `fast_math` optimization for audio pattern detection, improved 11Labs alignment-tracking logging, and `mod_deepgram_transcribe` added to the default `modules.conf.xml` autoload list.
+1. **FreeSWITCH module updates** — A new `uuid_deepgramflux_configure` API command for runtime Deepgram Flux configuration, AVMD `fast_math` optimization for audio pattern detection, improved 11Labs alignment-tracking logging, and `mod_deepgram_transcribe` added to the default `modules.conf.xml` autoload list.
 
 #### Bug Fixes
 
