@@ -181,6 +181,14 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   - `model` — Optional Krisp model name override.
 </ParamField>
 
+<Warning title="Krisp Licensing for Self-Hosted Systems">
+Krisp turn detection and noise isolation features require a Krisp API license key on self-hosted jambonz deployments. This license is **not included** with the jambonz software license and must be obtained separately from Krisp.
+
+Contact [support@jambonz.org](mailto:support@jambonz.org) for information on obtaining a Krisp license for your self-hosted deployment.
+
+This requirement does not apply to jambonz.cloud customers — Krisp features are included with all jambonz.cloud plans.
+</Warning>
+
 ## Tool Calling
 
 Define tools in `llm.llmOptions.tools` and handle calls via `toolHook`. The tool call payload includes `tool_call_id`, `name`, and `arguments` (already parsed — an object, not a JSON string).

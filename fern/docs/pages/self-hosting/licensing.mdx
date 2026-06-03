@@ -90,6 +90,29 @@ license you wish to cancel.  Select "Modify" and then on the subsequent dialog b
 "I'd like to cancel my subscription".
 
 You will see that the license status changes to "Final Bill Cycle".
-You will have full use of the license until the end of the current billing cycle, 
+You will have full use of the license until the end of the current billing cycle,
 at which point the license will expire
-and your jambonz system will revert to unlicensed status. 
+and your jambonz system will revert to unlicensed status.
+
+## Third-Party Feature Licenses
+
+Some jambonz features require separate licenses from third-party vendors. These are **not included** with the jambonz software license.
+
+### Krisp Turn Detection and Noise Isolation
+
+<Warning title="Krisp API License Required">
+The [agent](/verbs/verbs/agent) verb's Krisp turn detection and noise isolation features require a **separate Krisp API license key** for self-hosted deployments. Without a valid Krisp license, these features will not function.
+
+This applies to:
+- `turnDetection: "krisp"` in the agent verb
+- `noiseIsolation: "krisp"` in the agent verb
+
+**To obtain a Krisp license:** Contact [support@jambonz.org](mailto:support@jambonz.org) for information on pricing and how to configure your Krisp API credentials.
+
+This requirement does not apply to jambonz.cloud customers — Krisp features are included with all jambonz.cloud plans.
+</Warning>
+
+**Alternatives that don't require additional licensing:**
+- Use `turnDetection: "stt"` (the default) to rely on your STT vendor's native end-of-utterance detection
+- Use STT vendors with built-in turn detection: Deepgram Flux, AssemblyAI, or Speechmatics
+- Use `noiseIsolation: "rnnoise"` for open-source noise cancellation (no license required)
