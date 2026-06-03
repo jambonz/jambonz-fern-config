@@ -1,0 +1,96 @@
+---
+title: Krisp Turn-Taking
+subtitle: Configuring Krisp turn detection and noise isolation for self-hosted deployments
+---
+
+The [agent](/verbs/verbs/agent) verb supports [Krisp](https://krisp.ai/) for two features:
+
+- **Turn detection** — Krisp's acoustic end-of-turn model analyzes speech patterns (not just silence) to determine when a user has finished speaking. This produces more natural conversations where users can pause mid-thought without the agent interrupting.
+- **Noise isolation** — Krisp's voice isolation removes background noise from the caller's audio, improving STT accuracy in noisy environments.
+
+## Licensing Requirement
+
+<Warning title="Krisp API License Required">
+Krisp features require a **separate Krisp API license key** for self-hosted jambonz deployments. This license is **not included** with the jambonz software license and must be obtained separately.
+
+**This requirement does not apply to jambonz.cloud customers** — Krisp features are included with all jambonz.cloud plans at no additional cost.
+</Warning>
+
+## Obtaining a Krisp License
+
+Contact [support@jambonz.org](mailto:support@jambonz.org) to obtain a Krisp API license for your self-hosted deployment. We will provide:
+
+1. Pricing information based on your expected usage
+2. Your Krisp API credentials
+3. Configuration instructions for your deployment
+
+## Configuration
+
+Once you have obtained your Krisp API credentials, configure them on your feature server(s) using the following environment variables:
+
+| Environment Variable | Description |
+|---------------------|-------------|
+| `KRISP_APPLICATION_ID` | Your Krisp application ID |
+| `KRISP_CLIENT_SECRET` | Your Krisp client secret |
+
+After setting these environment variables and restarting the feature server, you can use Krisp features in the agent verb:
+
+```js
+session.agent({
+  llm: { vendor: 'openai', model: 'gpt-4.1-mini', /* ... */ },
+  turnDetection: 'krisp',           // Enable Krisp turn detection
+  noiseIsolation: 'krisp',          // Enable Krisp noise isolation
+  // ...
+}).send();
+```
+
+## Alternatives Without Krisp
+
+If you don't have a Krisp license, you can still build effective voice agents using these alternatives:
+
+### Turn Detection Alternatives
+
+| Option | Configuration | Notes |
+|--------|--------------|-------|
+| STT-based (default) | `turnDetection: "stt"` | Uses your STT vendor's native end-of-utterance detection |
+| Deepgram Flux | Use `vendor: "deepgramflux"` for STT | Built-in acoustic + semantic turn detection |
+| AssemblyAI | Use `vendor: "assemblyai"` with `u3-rt-pro` model | Native turn-taking support |
+| Speechmatics | Use `vendor: "speechmatics"` for STT | Built-in turn detection |
+
+### Noise Isolation Alternative
+
+| Option | Configuration | Notes |
+|--------|--------------|-------|
+| RNNoise | `noiseIsolation: "rnnoise"` | Open-source, no license required |
+
+## Usage in the Agent Verb
+
+### Turn Detection
+
+```js
+// Krisp turn detection with custom threshold
+session.agent({
+  turnDetection: {
+    mode: 'krisp',
+    threshold: 0.5  // 0.0-1.0, lower = more aggressive
+  },
+  earlyGeneration: true,  // Enable speculative LLM prompting
+  // ...
+}).send();
+```
+
+### Noise Isolation
+
+```js
+// Krisp noise isolation with custom settings
+session.agent({
+  noiseIsolation: {
+    mode: 'krisp',
+    level: 80,           // 0-100, higher = more aggressive
+    direction: 'read'    // 'read' (caller audio) or 'write' (outbound)
+  },
+  // ...
+}).send();
+```
+
+See the [agent verb reference](/verbs/verbs/agent) for complete documentation of these parameters.

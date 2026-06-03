@@ -3,10 +3,6 @@ title: Agent
 subtitle: Orchestrate a complete voice agent by creating a cascaded voice pipeline consisting of your choice of STT, LLM, TTS, VAD and turn-taking components.
 ---
 
-<Warning>
-The agent verb is an **experimental feature** in jambonz v10.1.1
-</Warning>
-
 ```js maxLines=100
 session
   .agent({
@@ -180,6 +176,14 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   - `threshold` — Confidence threshold 0.0–1.0. Lower values trigger earlier turn transitions. Default: 0.5.
   - `model` — Optional Krisp model name override.
 </ParamField>
+
+<Warning title="Krisp Licensing for Self-Hosted Systems">
+Krisp turn detection and noise isolation features require a Krisp API license key on self-hosted jambonz deployments. This license is **not included** with the jambonz software license and must be obtained separately from Krisp.
+
+Contact [support@jambonz.org](mailto:support@jambonz.org) for information on obtaining a Krisp license for your self-hosted deployment.
+
+This requirement does not apply to jambonz.cloud customers — Krisp features are included with all jambonz.cloud plans.
+</Warning>
 
 ## Tool Calling
 

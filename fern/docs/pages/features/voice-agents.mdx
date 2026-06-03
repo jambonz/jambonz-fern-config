@@ -3,10 +3,6 @@ title: Voice Agents
 subtitle: Build conversational AI agents using the [agent](/verbs/verbs/agent) verb.
 ---
 
-<Warning>
-The agent verb is an **experimental feature** and requires jambonz version **10.1.1 or above**.
-</Warning>
-
 The [agent](/verbs/verbs/agent) verb orchestrates a complete voice AI agent by wiring together three separate components — STT, LLM, and TTS — with integrated turn detection. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs where a single vendor handles everything), the agent verb lets you mix and match: for example, Deepgram for STT, Anthropic for the LLM, and Cartesia for TTS.
 
 The agent verb manages the full conversational turn cycle:
@@ -181,9 +177,13 @@ Uses the Krisp acoustic end-of-turn model, which analyzes speech patterns rather
 
 The shorthand `"turnDetection": "krisp"` uses default settings.
 
-<Info>
-You must have a Krisp API key configured in order to use Krisp turn detection on a self-hosted jambonz system. Contact support@jambonz.org for details.
-</Info>
+<Warning title="Krisp Licensing for Self-Hosted Systems">
+Krisp turn detection requires a Krisp API license key on self-hosted jambonz deployments. This license is **not included** with the jambonz software license and must be obtained separately from Krisp.
+
+Contact [support@jambonz.org](mailto:support@jambonz.org) for information on obtaining a Krisp license for your self-hosted deployment.
+
+This requirement does not apply to jambonz.cloud customers — Krisp features are included with all jambonz.cloud plans.
+</Warning>
 
 ## Early Generation (Speculative Preflight)
 
@@ -671,8 +671,12 @@ A `history_summarized` event is sent to the `eventHook`:
 The `noiseIsolation` property enables server-side noise cancellation on call audio, improving STT accuracy in noisy environments.
 
 Two vendors are available:
-- **`"krisp"`** — Krisp's proprietary noise cancellation. Requires a Krisp API key on self-hosted systems. [Listen to audio samples](https://lab.krisp.ai/products/voice-isolation/audio-samples) to hear the model in action.
+- **`"krisp"`** — Krisp's proprietary noise cancellation. [Listen to audio samples](https://lab.krisp.ai/products/voice-isolation/audio-samples) to hear the model in action.
 - **`"rnnoise"`** — Open-source RNNoise-based noise cancellation. No API key required.
+
+<Note>
+Krisp noise isolation has the same licensing requirement as Krisp turn detection — see the [warning above](#krisp-turn-detection) for self-hosted licensing details.
+</Note>
 
 Shorthand:
 
