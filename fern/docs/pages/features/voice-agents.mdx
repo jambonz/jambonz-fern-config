@@ -3,10 +3,6 @@ title: Voice Agents
 subtitle: Build conversational AI agents using the [agent](/verbs/verbs/agent) verb.
 ---
 
-<Warning>
-The agent verb is an **experimental feature** and requires jambonz version **10.1.1 or above**.
-</Warning>
-
 The [agent](/verbs/verbs/agent) verb orchestrates a complete voice AI agent by wiring together three separate components — STT, LLM, and TTS — with integrated turn detection. Unlike the [llm](/verbs/verbs/llm) verb (which connects to speech-to-speech APIs where a single vendor handles everything), the agent verb lets you mix and match: for example, Deepgram for STT, Anthropic for the LLM, and Cartesia for TTS.
 
 The agent verb manages the full conversational turn cycle:
