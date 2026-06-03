@@ -18,22 +18,43 @@ Krisp features require a **separate Krisp API license key** for self-hosted jamb
 
 ## Obtaining a Krisp License
 
-Contact [support@jambonz.org](mailto:support@jambonz.org) to obtain a Krisp API license for your self-hosted deployment. We will provide:
+Contact [support@jambonz.org](mailto:support@jambonz.org) to obtain a Krisp API key for your self-hosted deployment. We will provide:
 
 1. Pricing information based on your expected usage
-2. Your Krisp API credentials
+2. Your Krisp API key
 3. Configuration instructions for your deployment
 
 ## Configuration
 
-Once you have obtained your Krisp API credentials, configure them on your feature server(s) using the following environment variables:
+Once you have obtained your Krisp API key, configure it on your jambonz system using one of the methods below.
 
-| Environment Variable | Description |
-|---------------------|-------------|
-| `KRISP_APPLICATION_ID` | Your Krisp application ID |
-| `KRISP_CLIENT_SECRET` | Your Krisp client secret |
+### New Deployments
 
-After setting these environment variables and restarting the feature server, you can use Krisp features in the agent verb:
+When deploying jambonz via **AWS CloudFormation** or **Terraform**, provide your Krisp API key as a parameter or input variable during installation. The deployment scripts will configure the system automatically.
+
+### Existing Deployments
+
+For systems already deployed, add the Krisp API key to the FreeSWITCH service configuration on the feature-server or mini:
+
+1. Edit the FreeSWITCH systemd service file:
+   ```bash
+   sudo vi /etc/systemd/system/freeswitch.service
+   ```
+
+2. Locate the `KRISP_LICENSE_KEY` environment variable and add your API key:
+   ```ini
+   Environment="KRISP_LICENSE_KEY=your-api-key-here"
+   ```
+
+3. Reload systemd and restart FreeSWITCH:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl restart freeswitch
+   ```
+
+### Verify Configuration
+
+Once configured, you can use Krisp features in the agent verb:
 
 ```js
 session.agent({

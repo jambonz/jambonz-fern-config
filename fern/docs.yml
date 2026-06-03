@@ -285,12 +285,12 @@ navigation:
         contents:
           - page: Licensing
             path: ./docs/pages/self-hosting/licensing.mdx
-          - page: Krisp Turn-Taking
-            path: ./docs/pages/self-hosting/krisp.mdx
           - page: Post-Install Steps
             path: ./docs/pages/self-hosting/post-install.mdx
           - page: Setting up WebRTC and SIP TLS
             path: ./docs/pages/self-hosting/wss-siptls.mdx
+          - page: Krisp Turn-Taking
+            path: ./docs/pages/self-hosting/krisp.mdx
       - section: Hosting Providers
         contents:
           - page: AWS
