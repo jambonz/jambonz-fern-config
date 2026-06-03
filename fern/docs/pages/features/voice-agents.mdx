@@ -142,8 +142,12 @@ For AWS Bedrock, pass `accessKeyId`, `secretAccessKey`, and `region` in the `aut
 
 ## Turn Detection
 
-The `turnDetection` property controls how the agent verb decides the user has finished speaking. 
+The `turnDetection` property controls how the agent verb decides the user has finished speaking.
 We currently support only two modes — STT-based detection and [Krisp's turn detection model](https://lab.krisp.ai/products/turn-taking).
+
+<Note title="Self-Hosted Licensing">
+Krisp turn detection requires a separate Krisp API license on self-hosted deployments. See [Krisp configuration](/self-hosting/krisp) for details. This does not apply to jambonz.cloud customers.
+</Note>
 
 ### STT-based detection (default)
 
