@@ -108,6 +108,12 @@ session.llm({
   Array of event names listing the events requested (wildcards allowed).
 </ParamField>
 
+<ParamField path="handoff" type="object" required={false}>
+  Declarative transfer-to-human configuration. When present, the runtime injects a
+  `transfer_to_human` tool and runs the packaged [transfer](/verbs/transfer) choreography
+  when the model calls it. See [Transfer-to-human handoff](#transfer-to-human-handoff).
+</ParamField>
+
 <ParamField path="llmOptions" type="object" required={false}>
   Object containing instructions for the LLM; format dependent on the LLM model.
 </ParamField>
@@ -412,6 +418,40 @@ AssemblyAI's protocol requires a `session.update` message, but every field insid
 ### Tool calls
 
 The agent invokes a tool by emitting a `tool.call` server event. jambonz routes it to the application's `toolHook` with `{name, args, tool_call_id}`. The application replies via `session.sendToolOutput(tool_call_id, {type: 'tool.result', tool_call_id, result})`. The `result` should be a string (JSON-stringify objects before sending) — jambonz JSON-stringifies non-string `result` values automatically.
+
+## Transfer-to-human handoff
+
+Add a `handoff` block to let the realtime model transfer the caller to a human. The runtime
+injects a `transfer_to_human` tool — no `toolHook` is needed for it. When the caller asks
+for a human and the model calls the tool, jambonz runs the packaged
+[transfer](/verbs/transfer) choreography to the configured destination.
+
+```js
+session
+  .llm({
+    vendor: 'openai',
+    model: 'gpt-realtime',
+    auth: { apiKey: process.env.OPENAI_API_KEY },
+    llmOptions: {
+      response_create: { instructions: 'You are a helpful support agent.' },
+      session_update: { type: 'realtime', instructions: 'You are a helpful support agent.' },
+    },
+    handoff: {
+      mode: 'blind',
+      blindMethod: 'dial',
+      target: [{ type: 'user', name: 'agent-desk@sip.example.com' }],
+    },
+    actionHook: '/llm-complete',
+  })
+  .send();
+```
+
+The `handoff` block accepts every [transfer](/verbs/transfer#parameters) option (`mode`,
+`target`, `blindMethod`, `disposition`, `confirm`, etc.), plus `brief` (`'auto'` | `'none'`
+| `{ template }`), `briefSynthesizer`, `toolName`, and `toolDescription` — see
+[the agent verb's handoff section](/verbs/agent#transfer-to-human-handoff) for the details,
+which apply identically here. When the human leg bridges, the `actionHook` reports the
+[transfer outcome](/verbs/transfer#actionhook-properties).
 
 ## Example Applications
 Please checkout the following example applications:

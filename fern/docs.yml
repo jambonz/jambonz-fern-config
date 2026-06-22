@@ -210,6 +210,8 @@ navigation:
             path: ./docs/pages/verbs/tag.mdx
           - page: Transcribe
             path: ./docs/pages/verbs/transcribe.mdx
+          - page: Transfer
+            path: ./docs/pages/verbs/transfer.mdx
   - tab: reference
     layout:
       - page: Introduction

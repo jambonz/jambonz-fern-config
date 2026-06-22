@@ -96,6 +96,13 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   Whether the LLM should generate an initial greeting before the user speaks. Set to `false` if you want the agent to wait silently for the user to speak first.
 </ParamField>
 
+<ParamField path="handoff" type="object" required={false}>
+  Declarative transfer-to-human configuration. When present, the runtime injects a
+  `transfer_to_human` tool into the LLM's toolset and runs the packaged
+  [transfer](/verbs/transfer) choreography when the model calls it. See
+  [Transfer-to-human handoff](#transfer-to-human-handoff).
+</ParamField>
+
 <ParamField path="id" type="string" required={false}>
   An optional unique identifier for this verb instance.
 </ParamField>
@@ -228,6 +235,57 @@ session
 ```
 
 When the LLM requests a tool call, the agent verb checks MCP servers first. If the tool name matches one discovered from an MCP server, the call is dispatched there directly. If no MCP server provides the tool, it falls through to the `toolHook`.
+
+## Transfer-to-human handoff
+
+Add a `handoff` block to let the agent transfer the caller to a human. The runtime injects
+a `transfer_to_human` tool into the LLM's toolset — you don't write a `toolHook` for it.
+When the caller asks for a human and the model calls the tool, jambonz runs the packaged
+[transfer](/verbs/transfer) choreography to the configured destination.
+
+```js
+session
+  .agent({
+    stt: { vendor: 'deepgram', language: 'en-US' },
+    tts: { vendor: 'cartesia', voice: 'sonic-english' },
+    llm: { vendor: 'openai', model: 'gpt-4.1', llmOptions: {
+      messages: [{ role: 'system', content: 'You are a helpful support agent.' }],
+    }},
+    handoff: {
+      mode: 'blind',
+      blindMethod: 'dial',
+      brief: 'none',
+      target: [{ type: 'user', name: 'agent-desk@sip.example.com' }],
+    },
+    actionHook: '/agent-complete',
+  })
+  .send();
+```
+
+The `handoff` block accepts every [transfer](/verbs/transfer#parameters) option (`mode`,
+`target`, `blindMethod`, `disposition`, `confirm`, etc.), plus:
+
+<ParamField path="handoff.brief" type="string or object" required={false} default="auto">
+  Controls the spoken summary delivered to the human on a warm transfer. `'auto'` lets the
+  LLM write the summary; `'none'` sends no spoken brief (and keeps the injected tool
+  argument-free); `{ template: '...' }` guides the LLM's summary.
+</ParamField>
+
+<ParamField path="handoff.briefSynthesizer" type="object" required={false}>
+  Optional voice/vendor ([synthesizer](/verbs/synthesizer) object) for the spoken brief.
+  Defaults to the session synthesizer.
+</ParamField>
+
+<ParamField path="handoff.toolName" type="string" required={false} default="transfer_to_human">
+  Override the injected tool name.
+</ParamField>
+
+<ParamField path="handoff.toolDescription" type="string" required={false}>
+  Override the injected tool description shown to the LLM.
+</ParamField>
+
+When the human leg bridges, the agent's `actionHook` reports the transfer outcome (see the
+[transfer actionHook properties](/verbs/transfer#actionhook-properties)).
 
 ## eventHook Events
 
