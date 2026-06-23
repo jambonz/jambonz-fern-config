@@ -72,7 +72,7 @@ Pick a hostname you control DNS for. The installer will configure nginx for that
 - `api.portal.example.com` — the REST API
 - `grafana.portal.example.com` — metrics dashboards
 
-You should create A records for all of the above pointing at your host's public IP. You can do this before *or* after the install, but it must be done before you obtain TLS certificates with certbot. See [Post-Install Steps](/self-hosting/overview/post-install) for the DNS record list.
+You should create A records for all of the above pointing at your host's public IP. You can do this before *or* after the install, but it must be done before you obtain TLS certificates with certbot. See [Post-Install Steps](/self-hosting/overview/post-install-steps) for the DNS record list.
 
 ### Supplying the domain to the installer
 
@@ -174,7 +174,7 @@ All `jambonz-*` units should be `active (running)`. The webapp should return `HT
 
 Before logging in for the first time, complete these steps:
 
-- **DNS records and HTTPS** — see the [Post-Install Steps](/self-hosting/overview/post-install) article. It walks through creating the A records (`api.` and `grafana.`) and using `certbot` to obtain a TLS certificate for the portal.
+- **DNS records and HTTPS** — see the [Post-Install Steps](/self-hosting/overview/post-install-steps) article. It walks through creating the A records (`api.` and `grafana.`) and using `certbot` to obtain a TLS certificate for the portal.
 - **WebRTC and SIP TLS** — see [Setting up WebRTC and SIP TLS](/self-hosting/overview/wss-siptls) if you need WSS or SIPS.
 - **Licensing** — obtain a license key as described in the [Licensing](/self-hosting/overview/licensing) article. Free trial licenses are available; extended licenses for non-commercial use and pre-revenue startups can be requested at `support@jambonz.org`.
 
