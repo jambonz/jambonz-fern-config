@@ -113,6 +113,15 @@ paths:
                   example: en-US
                 amd:
                   $ref: '#/components/schemas/amd'
+                dual_streams:
+                  type: boolean
+                  description: >-
+                    If set to true, jambonz generates an outbound INVITE whose SDP offer contains two
+                    audio media streams (two `m=audio` lines) instead of one.  This is useful when the
+                    far end (for example a carrier or recording system) requires the inbound and outbound
+                    audio to be delivered on separate RTP streams.  Defaults to false. Supported only when
+                    creating a call via the REST API (i.e. not available from the `dial` verb).
+                  example: false
       responses:
         '201':
           description: call successfully created

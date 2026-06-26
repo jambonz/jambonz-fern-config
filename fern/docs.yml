@@ -124,8 +124,10 @@ navigation:
             path: ./docs/pages/features/continuous-asr.mdx
           - page: Handling ActionHook Delays
             path: ./docs/pages/features/handling-action-hook-delays.mdx 
-          - page: Managing media anchors 
+          - page: Managing media anchors
             path: ./docs/pages/features/managing-media-anchors.mdx
+          - page: Dual media streams
+            path: ./docs/pages/features/dual-streams.mdx
           - page: Call Recording
             path: ./docs/pages/features/call-recording.mdx
           - page: SIPREC Server
