@@ -263,6 +263,10 @@ The injected tool accepts an optional `reason` argument that the LLM may fill in
 
 Pass an empty object (`hangup: {}`) to enable the tool with no default reason.
 
+<Note>
+When the LLM calls the hangup tool, the call is released immediately. The `actionHook` still fires (with `completion_reason: "hangup"`), but any follow-on verbs it returns are discarded because the call is already being torn down.
+</Note>
+
 ## eventHook Events
 
 The `eventHook` receives real-time events during the conversation. In WebSocket mode, listen with `session.on('/your-event-hook', handler)`.

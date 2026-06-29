@@ -451,6 +451,10 @@ The injected tool accepts an optional `reason` argument that the model may fill 
 Pass an empty object (`hangup: {}`) to enable the tool with no default reason.
 
 <Note>
+When the model calls the hangup tool, the call is released immediately. The `actionHook` still fires, but any follow-on verbs it returns are discarded because the call is already being torn down.
+</Note>
+
+<Note>
 For ElevenLabs, tools are configured on the ElevenLabs agent rather than injected per-session; configure a client tool named `hangup` on your agent and jambonz will intercept it and end the call.
 </Note>
 
