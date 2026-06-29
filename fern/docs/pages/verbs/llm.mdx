@@ -108,6 +108,14 @@ session.llm({
   Array of event names listing the events requested (wildcards allowed).
 </ParamField>
 
+<ParamField path="hangup" type="object" required={false}>
+  Enable the built-in hangup tool. When present, the runtime injects a `hangup` tool into the model's toolset; when the model calls it, the call is ended. Works across all supported s2s vendors. See [Built-in Hangup Tool](#built-in-hangup-tool) below.
+</ParamField>
+
+<ParamField path="hangup.reason" type="string" required={false}>
+  Default reason placed in the `X-Reason` SIP header on the outbound BYE. Used as a fallback when the model does not supply its own reason at call time.
+</ParamField>
+
 <ParamField path="llmOptions" type="object" required={false}>
   Object containing instructions for the LLM; format dependent on the LLM model.
 </ParamField>
@@ -412,6 +420,39 @@ AssemblyAI's protocol requires a `session.update` message, but every field insid
 ### Tool calls
 
 The agent invokes a tool by emitting a `tool.call` server event. jambonz routes it to the application's `toolHook` with `{name, args, tool_call_id}`. The application replies via `session.sendToolOutput(tool_call_id, {type: 'tool.result', tool_call_id, result})`. The `result` should be a string (JSON-stringify objects before sending) — jambonz JSON-stringifies non-string `result` values automatically.
+
+## Built-in Hangup Tool
+
+Set `hangup` to let the model end the call on its own. The runtime injects a `hangup` tool into the model's toolset; you do not define it in `llmOptions` and you do not handle it in your `toolHook` — the runtime intercepts the call, hangs up, and ends the llm verb. This works the same way across every supported s2s vendor (OpenAI, Deepgram Voice Agent, Ultravox, ElevenLabs, Google Gemini Live, AssemblyAI).
+
+```js
+session.llm({
+  vendor: 'openai',
+  model: 'gpt-realtime',
+  auth: { apiKey },
+  hangup: { reason: 'conversation complete' },
+  actionHook: '/final',
+  llmOptions: {
+    session_update: {
+      type: 'realtime',
+      instructions:
+        'You are a helpful voice assistant. When the caller says goodbye, call the hangup tool.',
+    },
+  },
+});
+```
+
+The injected tool accepts an optional `reason` argument that the model may fill in when it decides to end the call. The reason placed in the `X-Reason` SIP header on the outbound BYE is resolved as follows:
+
+1. The model-supplied `reason` argument, if present.
+2. Otherwise the app-supplied `hangup.reason` default, if configured.
+3. Otherwise no `X-Reason` header is sent.
+
+Pass an empty object (`hangup: {}`) to enable the tool with no default reason.
+
+<Note>
+For ElevenLabs, tools are configured on the ElevenLabs agent rather than injected per-session; configure a client tool named `hangup` on your agent and jambonz will intercept it and end the call.
+</Note>
 
 ## Example Applications
 Please checkout the following example applications:
