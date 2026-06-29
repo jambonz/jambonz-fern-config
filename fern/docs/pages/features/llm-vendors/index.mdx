@@ -1,6 +1,6 @@
 ---
 title: Bring Your Own LLM
-subtitle: Configure jambonz to use your own credentials with any of 11 supported LLM providers.
+subtitle: Configure jambonz to use your own credentials with any of 13 supported LLM providers.
 ---
 
 The [agent verb](/verbs/verbs/agent) wires together STT, LLM, and TTS into a complete voice agent. The `llm` block selects which LLM vendor jambonz talks to. Credentials live in the **LLM Services** section of the jambonz portal — once added there, you reference them from any agent verb by `vendor`.
@@ -19,9 +19,11 @@ This section walks through configuring each supported vendor, including known is
 | [Google AI Studio](/guides/features/bring-your-own-llm/google) | `google` | API key | ✓ | Gemini family, generous free tier |
 | [Groq](/guides/features/bring-your-own-llm/groq) | `groq` | API key | ✓ | Sub-100ms TTFT — Llama on LPU silicon |
 | [HuggingFace](/guides/features/bring-your-own-llm/huggingface) | `huggingface` | HF token | ✓ | Multi-provider broker (Inference Providers) — one token, many backends |
+| [Moonshot (Kimi)](/guides/features/bring-your-own-llm/moonshot) | `moonshot` | API key | ✓ | Kimi K2 MoE family over an OpenAI-compatible API |
 | [OpenAI](/guides/features/bring-your-own-llm/openai) | `openai` | API key | ✓ | Industry standard, broadest model catalog |
 | [Vertex AI — Gemini](/guides/features/bring-your-own-llm/vertex-gemini) | `vertex-gemini` | Service account | ✓ | Gemini on GCP infrastructure with enterprise data controls |
 | [Vertex AI — Partner Models](/guides/features/bring-your-own-llm/vertex-openai) | `vertex-openai` | Service account | ✓ | Llama, Mistral, AI21 hosted on Vertex |
+| [Z.ai (GLM)](/guides/features/bring-your-own-llm/zai) | `zai` | API key | ✓ | GLM family over an OpenAI-compatible API |
 
 <Note>
 This page covers the **agent verb's** `llm` block (cascaded STT → LLM → TTS pipelines). For speech-to-speech vendors that handle audio in and audio out directly (OpenAI Realtime, Ultravox, Google Gemini Live, ElevenLabs), see the [llm verb](/verbs/verbs/llm).
