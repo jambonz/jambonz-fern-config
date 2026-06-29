@@ -1,0 +1,72 @@
+---
+title: Moonshot (Kimi)
+subtitle: Configure jambonz to use Moonshot AI's Kimi models over its OpenAI-compatible API.
+---
+
+[Moonshot AI](https://www.moonshot.ai) serves its Kimi models (including the Kimi K2 mixture-of-experts family) behind an OpenAI-compatible API. The wire is OpenAI-compatible (chat completions, streaming, tools), so the integration is straightforward — jambonz talks to it via a base URL override.
+
+Two endpoints are available:
+
+- **Global** (default) — `https://api.moonshot.ai/v1`
+- **China** — `https://api.moonshot.cn/v1`
+
+## Get credentials
+
+1. Sign in at the global console ([platform.moonshot.ai](https://platform.moonshot.ai)) or the China console ([platform.moonshot.cn](https://platform.moonshot.cn)).
+2. Open **API Keys** and create a key.
+3. Copy the value — it is shown only once.
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Moonshot**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The key from Moonshot's console.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://api.moonshot.ai/v1` (global). Set to `https://api.moonshot.cn/v1` for the China endpoint, or to your own proxy.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'moonshot',
+    model: 'kimi-k2-0711-preview',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+## Available models
+
+| Model id | Notes |
+|---|---|
+| `kimi-k2-0711-preview` | Kimi K2 — large MoE model, strong tool use |
+| `kimi-latest` | Alias tracking the latest Kimi chat model |
+| `moonshot-v1-8k` | Moonshot v1, 8k context — cheaper/faster for simple turns |
+| `moonshot-v1-32k` | Moonshot v1, 32k context |
+| `moonshot-v1-128k` | Moonshot v1, 128k context |
+
+Check `GET /v1/models` against your endpoint for the live list.
+
+## Quirks & errors
+
+<Note>
+**Global vs China**: keep `vendor: 'moonshot'` constant — only the `Base URL` (in the portal credential) differs between the two regions. Keys are not interchangeable across endpoints.
+</Note>
+
+<Warning>
+**`401`** — key revoked, copied with whitespace, or used against the wrong region's endpoint. Regenerate in the Moonshot console and confirm the `Base URL` matches the console you created the key in.
+</Warning>
