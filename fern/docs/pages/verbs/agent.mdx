@@ -105,7 +105,7 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 </ParamField>
 
 <ParamField path="llm.vendor" type="string" required={true}>
-  LLM vendor id. One of: `anthropic`, `azure-openai`, `baseten`, `bedrock`, `deepseek`, `google`, `groq`, `huggingface`, `openai`, `vertex-gemini`, `vertex-openai`. See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for setup of each.
+  LLM vendor id. One of: `anthropic`, `azure-openai`, `baseten`, `bedrock`, `deepseek`, `google`, `groq`, `huggingface`, `moonshot`, `openai`, `vertex-gemini`, `vertex-openai`, `zai`. See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for setup of each.
 </ParamField>
 
 <ParamField path="llm.model" type="string" required={true}>
@@ -386,9 +386,11 @@ session.updateAgent({
 | Google AI Studio | `google` | `gemini-2.5-flash`, `gemini-2.5-pro` |
 | Groq | `groq` | `llama-3.3-70b-versatile`, `llama-3.1-8b-instant` |
 | HuggingFace | `huggingface` | `meta-llama/Llama-3.3-70B-Instruct`, `…:fastest` |
+| Moonshot (Kimi) | `moonshot` | `kimi-k2-0711-preview`, `kimi-latest`, `moonshot-v1-8k` |
 | OpenAI | `openai` | `gpt-5.4-mini`, `gpt-5.4`, `gpt-5.5`, `gpt-4o-mini` |
 | Vertex AI — Gemini | `vertex-gemini` | `gemini-2.5-flash`, `gemini-2.5-pro` |
 | Vertex AI — Partner Models | `vertex-openai` | `meta/llama-3.3-70b-instruct-maas`, `mistral-large` |
+| Z.ai (GLM) | `zai` | `glm-4.6`, `glm-4.5-air` |
 
 <Tip>
 See [Bring Your Own LLM](/guides/features/bring-your-own-llm) for per-vendor credential setup, model recommendations, and known issues.
