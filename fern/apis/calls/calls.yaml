@@ -583,21 +583,134 @@ paths:
           required: true
           schema:
             type: string
+        - name: expand
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - participants
+          description: >-
+            When set to "participants", returns live rooms with duration and
+            per-member details (call_sid, label, memberTag) instead of a plain
+            list of conference names. Only in-progress call legs are included.
       responses:
         '200':
-          description: list of conferences for a specified account
+          description: >-
+            list of conferences for a specified account. A plain array of
+            conference names by default; an array of ConferenceRoom objects
+            when expand=participants.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
+                oneOf:
+                  - type: array
+                    items:
+                      type: string
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/ConferenceRoom'
         '500':
           description: system error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+  /Accounts/{AccountSid}/Conferences/{ConferenceName}/listen:
+    parameters:
+      - name: AccountSid
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: ConferenceName
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - Conferences
+      summary: start a conference listen fork
+      description: >-
+        Streams the conference's mixed audio (L16 PCM) to the supplied
+        WebSocket URL. Addressed by conference name — no participant call leg
+        is required. The fork is media-server-owned: it is excluded from
+        participant counts, never keeps a room alive, and is torn down
+        automatically when the conference ends. Starting a fork for a
+        conference that already has one is idempotent and returns the existing
+        bot member (200 rather than 201).
+      operationId: startConferenceListen
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - url
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: ws(s):// URL the media server streams the room mix to
+                  example: wss://example.com/audio-sink
+                sampleRate:
+                  type: integer
+                  description: PCM sample rate of the fork (e.g. 8000, 16000)
+                  example: 16000
+                wsAuth:
+                  type: object
+                  description: HTTP basic-auth credentials presented on the WebSocket connection
+                  properties:
+                    username:
+                      type: string
+                    password:
+                      type: string
+                metadata:
+                  type: object
+                  description: >-
+                    Arbitrary JSON delivered verbatim as the fork's first text
+                    frame, so the receiving WebSocket can identify and
+                    configure itself
+      responses:
+        '201':
+          description: listen fork started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  botMemberId:
+                    type: integer
+                    description: conference member id of the fork bot
+                  botId:
+                    type: string
+        '200':
+          description: a listen fork is already active for this conference (idempotent)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  botMemberId:
+                    type: integer
+                  botId:
+                    type: string
+        '400':
+          description: url is required
+        '404':
+          description: no such conference
+        '502':
+          description: the conference's home feature-server is unknown or unreachable
+    delete:
+      tags:
+        - Conferences
+      summary: stop a conference listen fork
+      operationId: stopConferenceListen
+      responses:
+        '204':
+          description: listen fork stopped
+        '404':
+          description: no active listen fork for this conference
   /Accounts/{AccountSid}/CallCount:
     get:
       tags:
@@ -642,6 +755,50 @@ components:
       scheme: bearer
       bearerFormat: token
   schemas:
+    ConferenceParticipant:
+      type: object
+      description: a live member of a conference (derived from in-progress call legs)
+      properties:
+        call_sid:
+          type: string
+          format: uuid
+          description: call_sid of this member's leg (usable with updateCall, e.g. conferenceParticipantAction)
+        label:
+          type: string
+          description: caller id when available, otherwise the bare number
+        memberTag:
+          type: string
+          description: the member's conference tag (empty string when untagged)
+        isAgent:
+          type: boolean
+          description: convenience flag, true when memberTag is "agent"
+      required:
+        - call_sid
+        - label
+        - memberTag
+        - isAgent
+    ConferenceRoom:
+      type: object
+      description: a live conference with its participants (expand=participants)
+      properties:
+        id:
+          type: string
+          description: conference name (account-scoped)
+        name:
+          type: string
+          description: conference name
+        durationSec:
+          type: integer
+          description: seconds since the conference started
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConferenceParticipant'
+      required:
+        - id
+        - name
+        - durationSec
+        - participants
     GeneralError:
       type: object
       required:
