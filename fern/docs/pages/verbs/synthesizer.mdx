@@ -134,6 +134,21 @@ Example: "Hi. \<200> I'd love to have a conversation with you." adds a 200ms pau
     </ParamField>
   </Accordion>
 
+  <Accordion title="murf">
+    <ParamField path="style" type="string" required={false}>
+      The speaking style for the voice, e.g. `Conversational` (see [Murf docs](https://murf.ai/api/docs/text-to-speech/web-sockets))
+    </ParamField>
+    <ParamField path="rate" type="number" required={false}>
+      Adjusts the speaking rate. (see [Murf docs](https://murf.ai/api/docs/text-to-speech/web-sockets))
+    </ParamField>
+    <ParamField path="pitch" type="number" required={false}>
+      Adjusts the voice pitch. (see [Murf docs](https://murf.ai/api/docs/text-to-speech/web-sockets))
+    </ParamField>
+    <ParamField path="variation" type="number" required={false}>
+      Controls the amount of variation in pace, pitch and emphasis. (see [Murf docs](https://murf.ai/api/docs/text-to-speech/web-sockets))
+    </ParamField>
+  </Accordion>
+
   <Accordion title="verbio">
     <ParamField path="engine_version" type="string" required={false}>
       The engine version to use. (see [Verbio docs](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text/Available-languages-and-features))
