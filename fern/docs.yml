@@ -114,6 +114,8 @@ navigation:
                 path: ./docs/pages/features/llm-vendors/vertex-openai.mdx
               - page: Z.ai (GLM)
                 path: ./docs/pages/features/llm-vendors/zai.mdx
+              - page: xAI (Grok)
+                path: ./docs/pages/features/llm-vendors/xai.mdx
           - page: Using OpenAI STT
             path: ./docs/pages/features/using-openai-stt.mdx
           - page: Custom STT providers

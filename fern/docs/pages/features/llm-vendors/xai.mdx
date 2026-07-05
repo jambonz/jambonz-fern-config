@@ -1,0 +1,74 @@
+---
+title: xAI (Grok)
+subtitle: Configure jambonz to use xAI's Grok models — reasoning + vision over an OpenAI-compatible API.
+---
+
+xAI's Grok family is available to the [agent verb](/verbs/verbs/agent) over an OpenAI-compatible Chat Completions API — streaming, tool calls, and vision are all supported. This is a good fit for voice agents that need strong reasoning and the option to reason over images.
+
+<Note>
+This page covers the **agent verb's** `llm` block (cascaded STT → LLM → TTS). For xAI's realtime speech-to-speech offering, see [xAI Voice Agent](/verbs/verbs/llm#xai-voice-agent) on the llm verb page.
+</Note>
+
+## Get credentials
+
+1. Sign in at [https://console.x.ai](https://console.x.ai).
+2. Open **API Keys** (direct link: [https://console.x.ai/team/default/api-keys](https://console.x.ai/team/default/api-keys)).
+3. Click **Create API Key**, copy the `xai-...` string.
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → xAI (Grok)**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The `xai-...` key from xAI's console.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://api.x.ai/v1`. Override only for proxies — xAI's production endpoint is the default.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'xai',
+    model: 'grok-4.3',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+## Available Models
+
+Model slugs move quickly — see xAI's [docs](https://docs.x.ai/) for the live catalog. The jambonz manifest ships these; you can also call `listAvailableModels()` or query xAI's `/v1/models` endpoint directly.
+
+| Model | Notes |
+|---|---|
+| `grok-4.3` | Flagship — reasoning, vision, tool calls, ~1M context. Best general pick. |
+| `grok-4.20-0309-reasoning` | Reasoning variant. |
+| `grok-4.20-0309-non-reasoning` | Lower-latency non-reasoning variant. |
+| `grok-4.20-multi-agent-0309` | Deep-research multi-agent — high latency; **not suited to real-time voice**. |
+
+## Quirks & errors
+
+<Note>
+**Chat Completions is "legacy" but fully functional.** xAI has marked the Chat Completions endpoint legacy in favor of its Responses API, but it continues to support streaming and tool calls in full — which is what jambonz relies on. No action needed.
+</Note>
+
+<Note>
+**Retired model slugs silently redirect.** `grok-4`, `grok-3`, `grok-3-mini`, and `grok-4-fast` still resolve, but xAI redirects them to `grok-4.3` and bills at flagship rates. Use the current ids listed above to avoid surprise cost.
+</Note>
+
+<Warning>
+**`401`** — bad or revoked key. Regenerate at [console.x.ai/team/default/api-keys](https://console.x.ai/team/default/api-keys).
+</Warning>
