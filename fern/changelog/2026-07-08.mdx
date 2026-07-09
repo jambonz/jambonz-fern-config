@@ -1,0 +1,53 @@
+<Card title="11.0.0" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.0.0 — Major Release
+</Card>
+
+**11.0.0** is headlined by a foundational change to the media path: jambonz no longer runs on **FreeSWITCH**. 
+In its place is **mediajam**, a purpose-built media server written in Go that the feature-server drives directly. 
+mediajam is designed to scale to far more concurrent sessions per server than FreeSWITCH, to scale linearly on 
+large multi-core machines, and to run with a much smaller footprint — it's available on both amd and arm64
+and as a minimal Docker image, with no SIP stack and no per-channel sockets. 
+It handles audio (PCMU/PCMA/Opus/G.722 + telephone-event) over RTP with symmetric latching, RFC 2833 DTMF, 
+file/HTTP/tone/silence playback, bridging, conferencing, and hosts the Krisp noise-isolation and turn-taking engines 
+(separate license required from [Krisp](https://krisp.ai/developers) when self hosting). This is the biggest architectural change in the 
+platform's history and is the reason 11.0.0 is a major-version bump.  For further details on the media server, including 
+benchmarks please check out our blog [here](https://jambonz.org/blog/jambonz-v11-release).
+
+On top of the new media server, 11.0.0 adds a **transfer verb** that packages the common transfer 
+choreographies (blind, and warm parked / three-way) into a single declarative verb with 
+built-in briefing, confirmation, and failure handling — and exposes the same capability 
+to the **agent** and **llm** verbs through a declarative `handoff` block that transfers the caller to a 
+human when the model asks for it. Both AI verbs also gain a **built-in hangup tool** that lets 
+the model end the call on its own. Conferences become observable and controllable from the API, 
+the speech-vendor lineup is refreshed (with several legacy vendors removed), and the SBCs 
+get accuracy fixes around live call counts plus a round of cross-account authorization hardening in the API server.
+
+#### Media server
+
+1. **mediajam replaces FreeSWITCH** — The feature-server media path now runs on the new Go-based mediajam media server instead of FreeSWITCH. Higher session density, linear multi-core scaling, and a small footprint that builds on any Linux distro and as a minimal Docker image. Audio-only (PCMU/PCMA + telephone-event), RTP via Pion, RFC 2833 DTMF, resampling via libspeexdsp, with Krisp and RNNoise available for noise isolation and turn-taking.
+
+#### New Features & Improvements
+
+1. **Transfer verb** — New [transfer](/verbs/verbs/transfer) verb that hands a call off to another destination as a **blind** transfer (SIP REFER or bridged dial) or a **warm** transfer (caller parked on hold, or joined into a three-way conference), with spoken briefs, confirmation gates, hold music, and a configurable disposition (return to the app, go to voicemail, or hang up) when the transfer does not complete.
+1. **Transfer-to-human handoff for AI verbs** — The [agent](/verbs/verbs/agent) and [llm](/verbs/verbs/llm) verbs accept a declarative `handoff` block. When present, the runtime injects a `transfer_to_human` tool into the model's toolset and runs the packaged transfer choreography when the model calls it — no `toolHook` required.
+1. **Built-in hangup tool for AI verbs** — The [agent](/verbs/verbs/agent) and [llm](/verbs/verbs/llm) verbs accept a `hangup` block that injects a `hangup` tool the model can call to end the call on its own, with an optional `reason` placed in the `X-Reason` header on the outbound BYE.
+1. **Conference observability & control (API)** — `GET /Accounts/{sid}/Conferences?expand=participants` returns live conference rooms with their participants and durations; new `POST`/`DELETE /Accounts/{sid}/Conferences/{name}/listen` endpoints start and stop a conference-scoped listen fork, addressed by conference name with no participant leg.
+1. **Bidirectional conference listen stream** — The conference listen fork is **bidirectional**: the room's mixed audio streams to your WebSocket endpoint, and audio the WebSocket server streams back is mixed into the room and heard by every participant (unless disabled with `disableBidirectionalAudio`).
+1. **Play or speak to a whole room** — The media server can play an audio file (or tone) and speak TTS to an entire conference/room, mixed into the room mix so all participants hear it, with the ability to stop an in-flight playout.
+1. **Live Call Control — transfer** — `updateCall` now accepts `transfer` as a live call control operation.
+1. **New speech vendors and models** — Added support for **xAI** (STT), **Murf** (STT and TTS), **Rime `coda`**, **Cartesia Sonic 3.5** (with word timestamps), **Soniox v5** real-time model (`stt-rt-v5`), and **NVIDIA Riva cloud (NVCF)** credentials with refreshed Magpie voices. The webapp exposes the new vendors in the speech-services UI.
+1. **Speech vendors removed** — Verbio, Cobalt, Nuance, Voxist, and PlayHT have been deprecated and removed across the feature-server, API server, and webapp.
+1. **gather interim events** — Interim `gather` events now include a `verb_id`.
+1. **API security hardening** — Added cross-account authorization checks (CWE-639) across API server resources (tenants, LCR carrier-set entries, SIP/SMPP gateways, custom voices, and more) to prevent access to records outside the caller's scope.
+1. **SBC gateway safety** — Carrier configuration now rejects `0.0.0.0` and `/0` gateways, and `sbc_addresses` enforces a unique `host:port` index.
+
+#### Bug Fixes
+
+- **Call counts on transfer/abandon** — A call transferred off a feature-server now correctly decrements the SBC call count (inbound and outbound), and abandoned outbound calls decrement the count as well. Long-running calls are no longer reaped by the cleanup cron (the `debug:incalls` keys for active calls are refreshed).
+- **Krisp/noise alerts** — Alerts raised when Krisp noise isolation or turn detection fails now report the real vendor and underlying error instead of a hardcoded message.
+- **Conference timeLimit** — `timeLimit` is now preserved on a transferred feature-server when joining a conference.
+- **Speech-to-speech teardown** — The call now ends cleanly when an s2s session ends with no follow-on verbs; ElevenLabs s2s coerces non-string `client_tool_result.result` values to strings; and s2s disconnect logging no longer mislabels `_onDisconnect` as `_onConnectFailure`.
+- **listen verb** — Fixed the listen verb being torn down (with the wrong handler) when a background listen task failed.
+- **dial verb** — An unanswered `actionHook` is no longer logged as a dial error.
+- **Scale-in** — Resource teardown in `_clearResources` is now bounded so scale-in can't hang.
+- **Security/logging** — The carrier `register_password` is no longer written to the log.
