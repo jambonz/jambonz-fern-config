@@ -11,7 +11,7 @@ This guide installs the **jambonz mini** all-in-one deployment (every component 
 
 ## Prerequisites
 
-- Debian 12 (bookworm), amd64
+- Debian 12 (bookworm), amd64 or arm64
 - `sudo` access
 - At least **4 vCPU**, **8 GB RAM**, **100 GB disk**
 - Public IPv4 address
@@ -106,7 +106,7 @@ You have three options:
    - Writes the nginx config (vhosts for `portal.example.com`, `api.portal.example.com`, `grafana.portal.example.com`) and reloads nginx
    - Writes `JAMBONES_PORTAL_DOMAIN` to `/var/lib/jambonz/host.env`
    - Updates the `system_information` row in MySQL (required for drachtio's license validation)
-   - Restarts drachtio, freeswitch, and the jambonz Node services so they pick up the new domain
+   - Restarts drachtio, mediajam, and the jambonz Node services so they pick up the new domain
 
    Safe to re-run any number of times. Same logic the postinst runs with the env var set.
 
@@ -117,15 +117,16 @@ If you install without specifying a domain, the install completes but the postin
 rtpengine includes a kernel module that DKMS will compile on the host, so the matching Linux headers must be installed first. Then run the install with your portal domain:
 
 ```bash
-sudo apt-get install -y linux-headers-cloud-amd64 || sudo apt-get install -y linux-headers-$(uname -r)
+sudo apt-get install -y linux-headers-cloud-$(dpkg --print-architecture) \
+  || sudo apt-get install -y linux-headers-$(uname -r)
 sudo -E JAMBONES_PORTAL_DOMAIN=portal.example.com \
   DEBIAN_FRONTEND=noninteractive apt-get install -y jambonz-mini
 ```
 
-apt resolves the full dependency tree (jambonz-common, jambonz-monitoring-agent, jambonz-rtpengine, jambonz-rtpengine-dkms, drachtio, jambonz-freeswitch, telegraf, nodejs, MariaDB, Redis, nginx, Grafana).
+apt resolves the full dependency tree (jambonz-common, jambonz-monitoring-agent, jambonz-rtpengine, jambonz-rtpengine-dkms, drachtio, mediajam, telegraf, nodejs, MariaDB, Redis, nginx, Grafana). All of these are published for both amd64 and arm64.
 
 <Warning>
-On some cloud instances, `linux-headers-cloud-amd64` will install headers for a **newer** kernel than the one currently running (because the running kernel image is older than what's in the repos). DKMS can build the rtpengine module only for kernels whose headers it has, so it builds against the newer one. The postinst detects this and prints a **REBOOT RECOMMENDED** message at the end of the install. Reboot to use the newer kernel, after which rtpengine will use kernel-mode forwarding. Until you reboot, rtpengine works in userspace-only mode (functional but less efficient).
+On some cloud instances, the `linux-headers-cloud-*` metapackage will install headers for a **newer** kernel than the one currently running (because the running kernel image is older than what's in the repos). DKMS can build the rtpengine module only for kernels whose headers it has, so it builds against the newer one. The postinst detects this and prints a **REBOOT RECOMMENDED** message at the end of the install. Reboot to use the newer kernel, after which rtpengine will use kernel-mode forwarding. Until you reboot, rtpengine works in userspace-only mode (functional but less efficient).
 </Warning>
 
 ### What the postinst did
@@ -136,13 +137,13 @@ While apt was running, the `jambonz-common` and `jambonz-mini` post-install scri
 - Generated per-host secrets in `/var/lib/jambonz/secrets.env` (mode `600` — JWT signing key, MySQL password, Homer/heplify credentials, recording auth)
 - Auto-detected the host's local subnet and wrote it to `/var/lib/jambonz/host.env`
 - Waited for MariaDB, then created the `jambones` database, ran the schema and seed, and applied any pending migrations
-- Wrote systemd drop-ins for drachtio and FreeSWITCH so they pick up the generated DB/Redis credentials
+- Wrote systemd drop-ins for drachtio and mediajam so they pick up the generated DB/Redis credentials
 - Set up PostgreSQL plus the HEP / SIP-capture stack (`heplify-server` + `pcap-server`) with a generated `heplify` role and the `homer_data` / `homer_config` databases
 - Configured InfluxDB and Grafana (moved Grafana to port 3010 to avoid colliding with the Node apps on 3000)
 - Configured the `upload_recordings` C++ daemon with the matching `ENCRYPTION_SECRET` so it can decrypt bucket credentials
 - Checked the rtpengine DKMS kernel module against the running kernel — building it if headers are available, or queueing a **REBOOT RECOMMENDED** warning if a newer kernel was installed
 - Wrote the nginx config (vhosts for portal / api / grafana if a portal domain was supplied, otherwise a catch-all on the default server) and reloaded nginx
-- Enabled and started the `jambonz-apps.target` systemd target and its child services, plus drachtio, FreeSWITCH, rtpengine, heplify-server, pcap-server, InfluxDB, and Grafana
+- Enabled and started the `jambonz-apps.target` systemd target and its child services, plus drachtio, mediajam, rtpengine, heplify-server, pcap-server, InfluxDB, and Grafana
 
 On a clean install this completes in a minute or two.
 
@@ -204,7 +205,7 @@ The `jambonz-common` package ships a `jambonz` command at `/usr/bin/jambonz` for
 | Command | Description |
 |---|---|
 | `sudo jambonz upgrade` | Refresh apt indexes, list which jambonz packages have new versions, prompt for confirmation, run the upgrade, then run `jambonz health`. No-op when there's nothing new. |
-| `jambonz health` | Stack-level check: every jambonz Node app, drachtio, FreeSWITCH, rtpengine, upload-recordings, pcap-server, heplify-server, MariaDB, Redis, PostgreSQL, and nginx — are they all active and listening on the right ports? |
+| `jambonz health` | Stack-level check: every jambonz Node app, drachtio, mediajam, rtpengine, upload-recordings, pcap-server, heplify-server, MariaDB, Redis, PostgreSQL, and nginx — are they all active and listening on the right ports? |
 | `jambonz version` | Print the installed package versions (apt + bundled Node apps). |
 | `jambonz status` (alias `ls`) | List jambonz Node apps with state, PID, restart count, last-start age, and memory usage. Flags apps that have restarted. |
 | `jambonz logs [-f] [<app>]` | Tail logs. With no `<app>`, streams the merged journal of every jambonz Node app. With `<app>`, scoped to that unit. `-f` follows in real time. |
@@ -229,10 +230,10 @@ jambonz logs api-server
 
 # For non-Node services, pass the full unit name
 jambonz logs -f drachtio
-jambonz logs -f freeswitch
+jambonz logs -f mediajam
 ```
 
-App-name resolution is forgiving: short forms like `feature-server`, `api-server`, `inbound`, `outbound` are expanded to their `jambonz-*` unit names. For drachtio, FreeSWITCH, and rtpengine — which aren't part of the jambonz Node-app set — pass the full unit name.
+App-name resolution is forgiving: short forms like `feature-server`, `api-server`, `inbound`, `outbound` are expanded to their `jambonz-*` unit names. For drachtio, mediajam, and rtpengine — which aren't part of the jambonz Node-app set — pass the full unit name.
 
 ## Customizing config
 
@@ -259,7 +260,7 @@ These files are tracked by dpkg. Your edits survive upgrades; if a release ships
 | `/etc/jambonz/sbc-rtpengine-sidecar.env` | sbc-rtpengine-sidecar overrides |
 | `/etc/drachtio/drachtio-5070.conf.xml` | FS-tier drachtio config |
 | `/etc/drachtio.conf.xml` | SBC-tier drachtio config |
-| `/etc/freeswitch/...` | FreeSWITCH config |
+| `/etc/default/mediajam` | mediajam config (Krisp key, model/lib paths) |
 | `/etc/rtpengine/rtpengine.conf` | rtpengine config |
 
 ### Files that are generated — do NOT edit
@@ -274,7 +275,7 @@ These get rewritten on every upgrade. Edits will be lost. If you need to change 
 | `/etc/systemd/system/drachtio.service.d/jambonz-execstart.conf` | static — systemd-252 workaround + HEP wiring |
 | `/etc/systemd/system/drachtio-feature-server.service.d/jambonz.conf` | `/etc/jambonz/jambonz.env` |
 | `/etc/default/drachtio-feature-server` | static — FS-tier port + config overrides |
-| `/etc/systemd/system/freeswitch.service.d/jambonz.conf` | `/etc/jambonz/jambonz.env` |
+| `/etc/systemd/system/mediajam.service.d/jambonz.conf` | `/etc/jambonz/jambonz.env` (Redis host/port) |
 | `/etc/systemd/system/grafana-server.service.d/jambonz.conf` | static — port 3010 to avoid collision with feature-server |
 | `/etc/sudoers.d/jambonz` | written by `jambonz-common.postinst` — passwordless sudo for the `jambonz` user |
 
@@ -439,7 +440,7 @@ sudo mysql -e "DROP DATABASE jambones; DROP USER 'admin'@'%';"
   </Accordion>
 
   <Accordion title="Something else is wrong and I don't know where to start">
-    Run `jambonz health` first. It narrows the problem to a specific layer (database, Redis, telegraf, drachtio, FreeSWITCH, or a Node app) much faster than reading logs unaided.
+    Run `jambonz health` first. It narrows the problem to a specific layer (database, Redis, telegraf, drachtio, mediajam, or a Node app) much faster than reading logs unaided.
   </Accordion>
 </AccordionGroup>
 
