@@ -110,8 +110,16 @@ session.llm({
 
 <ParamField path="handoff" type="object" required={false}>
   Declarative transfer-to-human configuration. When present, the runtime injects a
-  `transfer_to_human` tool and runs the packaged [transfer](/verbs/transfer) choreography
+  `transfer_to_human` tool and runs the packaged [transfer](/verbs/verbs/transfer) choreography
   when the model calls it. See [Transfer-to-human handoff](#transfer-to-human-handoff).
+</ParamField>
+
+<ParamField path="hangup" type="object" required={false}>
+  Enable the built-in hangup tool. When present, the runtime injects a `hangup` tool into the model's toolset; when the model calls it, the call is ended. Works across all supported s2s vendors. See [Built-in Hangup Tool](#built-in-hangup-tool) below.
+</ParamField>
+
+<ParamField path="hangup.reason" type="string" required={false}>
+  Default reason placed in the `X-Reason` SIP header on the outbound BYE. Used as a fallback when the model does not supply its own reason at call time.
 </ParamField>
 
 <ParamField path="llmOptions" type="object" required={false}>
@@ -129,6 +137,7 @@ The following LLMs are currently supported:
 - ElevenLabs
 - Google Gemini Live API (via Gemini Developer API or Vertex AI)
 - AssemblyAI Voice Agent
+- xAI Voice Agent
 
 ## OpenAI Realtime
 
@@ -213,6 +222,71 @@ The compatibility layer is intended as a transitional shim — plan to update ap
 <ParamField path="session_update.tool_choice" type="string" required={false}>
   `'auto'` (default), `'none'`, or a specific tool name to force.
 </ParamField>
+
+## xAI Voice Agent
+
+Set `vendor: 'xai'` and supply an xAI API key via `auth.apiKey`. xAI's [Voice Agent](https://docs.x.ai/developers/model-capabilities/audio/voice-agent) speaks the same OpenAI Realtime GA dialect described in the [OpenAI Realtime](#openai-realtime) section above — `llmOptions` carries the same `response_create` and `session_update` payloads, in the same GA shape, forwarded as the [`response.create`](https://platform.openai.com/docs/api-reference/realtime-client-events/response/create) and [`session.update`](https://platform.openai.com/docs/api-reference/realtime-client-events/session/update) client events. jambonz connects to `wss://api.x.ai/v1/realtime`.
+
+```js
+session.llm({
+  vendor: 'xai',
+  model: 'grok-voice-latest',
+  auth: { apiKey: process.env.XAI_API_KEY },
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  llmOptions: {
+    session_update: {
+      type: 'realtime',
+      instructions:
+        'You are a friendly, helpful voice assistant on a phone call. ' +
+        'Always respond in English unless the caller explicitly speaks another language. ' +
+        'Keep responses concise and natural for spoken conversation.',
+      turn_detection: { type: 'server_vad' },
+      audio: {
+        output: { voice: 'eve' }
+      }
+    },
+    response_create: {
+      output_modalities: ['audio'],
+      instructions: 'Greet the caller warmly in English and ask how you can help today.'
+    }
+  }
+});
+```
+
+### Model selection
+
+<ParamField path="model" type="string" required={true}>
+  xAI Voice Agent model name.
+
+  - **`grok-voice-latest`** — default; currently aliases to `grok-voice-think-fast-1.0`.
+  - **`grok-voice-think-fast-1.0`** — flagship model.
+</ParamField>
+
+### Voices
+
+Set the voice via `session_update.audio.output.voice` (or `response_create.audio.output.voice`), same field as OpenAI. Available voices: **`eve`** (default), `ara`, `rex`, `sal`, `leo`.
+
+### Required session_update
+
+Unlike OpenAI, **`llmOptions.session_update` is required** for xai — audio does not begin flowing until after the first `session.updated` server event is received.
+
+### Audio format
+
+Audio on the wire to xAI is pcm16 at 24 kHz. jambonz forces this rate/format regardless of what is set in `session_update.audio`; do not attempt to select a different format or sample rate.
+
+### Turn detection
+
+Unlike OpenAI GA, which nests turn detection under `session_update.audio.input.turn_detection`, xAI expects **`turn_detection` top-level in `session_update`** — i.e. `session_update.turn_detection`, not `session_update.audio.input.turn_detection`. `{ type: 'server_vad' }` is the common setting. If `turn_detection` is omitted or set to `null` (manual turn mode), the application is responsible for turn-taking and can send `input_audio_buffer.commit` / `input_audio_buffer.clear` client events via an `llm:update` command.
+
+### Tool calls
+
+Tool/function calling follows the same shape as OpenAI's (`session_update.tools`, `tool_choice`). The completed tool call arrives on the `response.function_call_arguments.done` event rather than OpenAI's `response.output_item.done`; jambonz routes it to your `toolHook` the same way.
+
+### Input transcription
+
+When `session_update.audio.input.transcription` is configured, caller-speech transcripts arrive on `conversation.item.input_audio_transcription.updated`. Unlike OpenAI's `.completed` event, this event is **cumulative** — each update contains the full transcript so far, not just a delta.
 
 ## Google Gemini Live
 
@@ -424,7 +498,7 @@ The agent invokes a tool by emitting a `tool.call` server event. jambonz routes 
 Add a `handoff` block to let the realtime model transfer the caller to a human. The runtime
 injects a `transfer_to_human` tool — no `toolHook` is needed for it. When the caller asks
 for a human and the model calls the tool, jambonz runs the packaged
-[transfer](/verbs/transfer) choreography to the configured destination.
+[transfer](/verbs/verbs/transfer) choreography to the configured destination.
 
 ```js
 session
@@ -446,12 +520,49 @@ session
   .send();
 ```
 
-The `handoff` block accepts every [transfer](/verbs/transfer#parameters) option (`mode`,
+The `handoff` block accepts every [transfer](/verbs/verbs/transfer#parameters) option (`mode`,
 `target`, `blindMethod`, `disposition`, `confirm`, etc.), plus `brief` (`'auto'` | `'none'`
 | `{ template }`), `briefSynthesizer`, `toolName`, and `toolDescription` — see
-[the agent verb's handoff section](/verbs/agent#transfer-to-human-handoff) for the details,
+[the agent verb's handoff section](/verbs/verbs/agent#transfer-to-human-handoff) for the details,
 which apply identically here. When the human leg bridges, the `actionHook` reports the
-[transfer outcome](/verbs/transfer#actionhook-properties).
+[transfer outcome](/verbs/verbs/transfer#actionhook-properties).
+
+## Built-in Hangup Tool
+
+Set `hangup` to let the model end the call on its own. The runtime injects a `hangup` tool into the model's toolset; you do not define it in `llmOptions` and you do not handle it in your `toolHook` — the runtime intercepts the call, hangs up, and ends the llm verb. This works the same way across every supported s2s vendor (OpenAI, Deepgram Voice Agent, Ultravox, ElevenLabs, Google Gemini Live, AssemblyAI, xAI Voice Agent).
+
+```js
+session.llm({
+  vendor: 'openai',
+  model: 'gpt-realtime',
+  auth: { apiKey },
+  hangup: { reason: 'conversation complete' },
+  actionHook: '/final',
+  llmOptions: {
+    session_update: {
+      type: 'realtime',
+      instructions:
+        'You are a helpful voice assistant. When the caller says goodbye, call the hangup tool.',
+    },
+  },
+});
+```
+
+The injected tool accepts an optional `reason` argument that the model may fill in when it decides to end the call. The reason placed in the `X-Reason` SIP header on the outbound BYE is resolved as follows:
+
+1. The model-supplied `reason` argument, if present.
+2. Otherwise the app-supplied `hangup.reason` default, if configured.
+3. Otherwise no `X-Reason` header is sent.
+
+Pass an empty object (`hangup: {}`) to enable the tool with no default reason.
+
+<Note>
+When the model calls the hangup tool, the call is released immediately. The `actionHook` still fires, but any follow-on verbs it returns are discarded because the call is already being torn down.
+</Note>
+
+<Note>
+For ElevenLabs, tools are configured on the ElevenLabs agent rather than injected per-session; configure a client tool named `hangup` on your agent and jambonz will intercept it and end the call.
+</Note>
 
 ## Example Applications
 Please checkout the following example applications:

@@ -37,6 +37,9 @@ SSH into the Web/Monitoring server as the `jambonz` user and install TLS certifi
 ```bash
 ssh -i <your-ssh-keypair> jambonz@<WebServerIP>
 
+# Install certbot and the nginx plugin (you may already have this)
+sudo apt-get install -y certbot python3-certbot-nginx
+
 # Generate TLS certs for the portal vhosts
 sudo certbot --nginx \
   -d my-domain.example.com \

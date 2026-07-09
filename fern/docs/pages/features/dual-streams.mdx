@@ -1,0 +1,58 @@
+---
+title: Dual media streams
+hidden: false
+---
+
+Some call scenarios require the outbound INVITE to offer **two separate audio media streams** rather than
+the single stream that jambonz normally generates. For example, a carrier, gateway, or recording system on the
+far end may expect the inbound and outbound audio to be delivered on distinct RTP streams.
+
+jambonz supports this through the `dual_streams` parameter on the REST [create call](/reference/rest-call-control/calls/create-call)
+endpoint (`POST /v1/Accounts/{AccountSid}/Calls`).
+
+<Note>
+`dual_streams` is supported **only** when placing an outbound call through the REST API. It is not available
+as a property of the [dial](/verbs/verbs/dial) verb.
+</Note>
+
+## How it works
+
+When you set `dual_streams: true` in the request body, jambonz:
+
+1. Allocates **two** media endpoints instead of one.
+2. Merges the SDP from both endpoints into a single offer, producing an INVITE whose SDP contains two
+   `m=audio` lines (two media streams).
+3. When the far end answers, splits the answering SDP back into its two audio streams, connects each one to its
+   corresponding media endpoint, and bridges the two endpoints together.
+
+The result is a single established call in which the SDP negotiated two audio media streams.
+
+## Usage
+
+Set `dual_streams` to `true` in the body of the create-call request:
+
+```json
+{
+  "from": "16175551212",
+  "to": {
+    "type": "phone",
+    "number": "15085551000",
+    "trunk": "My Carrier"
+  },
+  "application_sid": "f4790f7e-...-7e75c8c0d9c1",
+  "dual_streams": true
+}
+```
+
+<ParamField path="dual_streams" type="boolean" required={false}>
+  If `true`, the outbound INVITE's SDP offer will contain two audio media streams (two `m=audio` lines)
+  instead of one. Defaults to `false`.
+</ParamField>
+
+## Notes and limitations
+
+- This feature depends on the far end accepting and answering an SDP offer that contains two audio media
+  streams. Not all carriers, gateways, or SIP endpoints support multi-stream offers, so you should test it
+  with your specific provider before relying on it in production.
+- `dual_streams` only affects how the outbound call's SDP is generated; it does not change the dialed
+  destination or the application logic that runs on the call.

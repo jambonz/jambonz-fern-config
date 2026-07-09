@@ -104,12 +104,18 @@ navigation:
                 path: ./docs/pages/features/llm-vendors/groq.mdx
               - page: HuggingFace
                 path: ./docs/pages/features/llm-vendors/huggingface.mdx
+              - page: Moonshot (Kimi)
+                path: ./docs/pages/features/llm-vendors/moonshot.mdx
               - page: OpenAI
                 path: ./docs/pages/features/llm-vendors/openai.mdx
               - page: Vertex AI — Gemini
                 path: ./docs/pages/features/llm-vendors/vertex-gemini.mdx
               - page: Vertex AI — Partner Models
                 path: ./docs/pages/features/llm-vendors/vertex-openai.mdx
+              - page: Z.ai (GLM)
+                path: ./docs/pages/features/llm-vendors/zai.mdx
+              - page: xAI (Grok)
+                path: ./docs/pages/features/llm-vendors/xai.mdx
           - page: Using OpenAI STT
             path: ./docs/pages/features/using-openai-stt.mdx
           - page: Custom STT providers
@@ -124,8 +130,10 @@ navigation:
             path: ./docs/pages/features/continuous-asr.mdx
           - page: Handling ActionHook Delays
             path: ./docs/pages/features/handling-action-hook-delays.mdx 
-          - page: Managing media anchors 
+          - page: Managing media anchors
             path: ./docs/pages/features/managing-media-anchors.mdx
+          - page: Dual media streams
+            path: ./docs/pages/features/dual-streams.mdx
           - page: Call Recording
             path: ./docs/pages/features/call-recording.mdx
           - page: SIPREC Server

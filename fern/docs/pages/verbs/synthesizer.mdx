@@ -134,6 +134,45 @@ Example: "Hi. \<200> I'd love to have a conversation with you." adds a 200ms pau
     </ParamField>
   </Accordion>
 
+  <Accordion title="murf">
+    <ParamField path="style" type="string" required={false}>
+      The speaking style for the voice, e.g. `Conversational` (see [Murf docs](https://murf.ai/api/docs/text-to-speech/web-sockets))
+    </ParamField>
+    <ParamField path="rate" type="number" required={false}>
+      Adjusts the speaking rate. (see [Murf docs](https://murf.ai/api/docs/text-to-speech/web-sockets))
+    </ParamField>
+    <ParamField path="pitch" type="number" required={false}>
+      Adjusts the voice pitch. (see [Murf docs](https://murf.ai/api/docs/text-to-speech/web-sockets))
+    </ParamField>
+    <ParamField path="variation" type="number" required={false}>
+      Controls the amount of variation in pace, pitch and emphasis. (see [Murf docs](https://murf.ai/api/docs/text-to-speech/web-sockets))
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="xai">
+    Voices: `eve` (default), `ara`, `leo`, `rex`, `sal`.
+
+    Supported languages: `auto`, `en`, `ar-EG`, `ar-SA`, `ar-AE`, `bn`, `zh`, `fr`, `de`, `hi`, `id`, `it`, `ja`, `ko`, `pt-BR`, `pt-PT`, `ru`, `es-MX`, `es-ES`, `tr`, `vi`.
+
+    <ParamField path="speed" type="number" required={false}>
+      Controls the speaking speed. A number between 0.7 and 1.5, inclusive. Defaults to 1.0.
+    </ParamField>
+
+    <ParamField path="optimize_streaming_latency" type="number" required={false}>
+      Latency optimization level. 0 (default, no optimization), 1, or 2 (max latency reduction).
+    </ParamField>
+
+    <ParamField path="text_normalization" type="boolean" required={false}>
+      Enable text normalization (expands numbers, dates, abbreviations for more natural speech). Defaults to false.
+    </ParamField>
+
+    <ParamField path="with_timestamps" type="boolean" required={false}>
+      Return word-level timestamps alongside audio. Supported on the STREAMING TTS path only (ignored for one-shot `say` synthesis). Defaults to false.
+    </ParamField>
+
+    Note: xAI TTS supports both one-shot synthesis (via the `say` verb) and low-latency streaming TTS. It uses the same xAI API key credential that is used for xAI STT.
+  </Accordion>
+
   <Accordion title="verbio">
     <ParamField path="engine_version" type="string" required={false}>
       The engine version to use. (see [Verbio docs](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text/Available-languages-and-features))

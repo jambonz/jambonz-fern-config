@@ -1,0 +1,74 @@
+---
+title: Z.ai (GLM)
+subtitle: Configure jambonz to use Z.ai's GLM models over its OpenAI-compatible API.
+---
+
+[Z.ai](https://z.ai) (Zhipu AI) serves its GLM family of models behind an OpenAI-compatible API. The wire is OpenAI-compatible (chat completions, streaming, tools), so the integration is straightforward — jambonz talks to it via a base URL override.
+
+Two endpoints are available:
+
+- **Global** (default) — `https://api.z.ai/api/paas/v4`
+- **China** — `https://open.bigmodel.cn/api/paas/v4`
+
+## Get credentials
+
+1. Sign in at the global console ([z.ai](https://z.ai)) or the China console ([open.bigmodel.cn](https://open.bigmodel.cn)).
+2. Open **API Keys** and create a key.
+3. Copy the value.
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → Z.ai**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The key from Z.ai's console.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://api.z.ai/api/paas/v4` (global). Set to `https://open.bigmodel.cn/api/paas/v4` for the China (BigModel) endpoint, or to your own proxy.
+</ParamField>
+
+Click **Test** to verify.
+
+## Use in an agent verb
+
+```js
+session.agent({
+  llm: {
+    vendor: 'zai',
+    model: 'glm-4.6',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+## Available models
+
+| Model id | Notes |
+|---|---|
+| `glm-4.6` | GLM 4.6 — flagship, strong reasoning and tool use |
+| `glm-4.5` | GLM 4.5 |
+| `glm-4.5-air` | Lighter/faster variant — good for low-latency voice turns |
+
+Check the [Z.ai model catalog](https://docs.z.ai) for the live list.
+
+## Quirks & errors
+
+<Note>
+**Global vs China**: keep `vendor: 'zai'` constant — only the `Base URL` (in the portal credential) differs between the global Z.ai endpoint and the China BigModel endpoint. Keys are not interchangeable across endpoints.
+</Note>
+
+<Warning>
+**Tool-calling capability varies by model.** GLM 4.6 handles tools well; lighter `-air` variants may be less consistent. Test thoroughly before relying on function calling.
+</Warning>
+
+<Warning>
+**`401`** — key revoked, copied with whitespace, or used against the wrong region's endpoint. Regenerate in the console and confirm the `Base URL` matches.
+</Warning>

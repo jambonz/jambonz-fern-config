@@ -351,6 +351,40 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
   </Accordion>
 
+  <Accordion title="xaiOptions">
+    xAI (`xai`) is a live streaming recognizer: both interim and final transcripts are supported.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      xAI API key to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="endpointing" type="integer" required={false}>
+      Number of milliseconds of silence before an utterance is considered final.  
+      Valid values are between 0 and 5000.
+    </ParamField>
+
+    <ParamField path="diarize" type="boolean" required={false}>
+      Enable speaker diarization.
+    </ParamField>
+
+    <ParamField path="fillerWords" type="boolean" required={false}>
+      Include filler words (e.g. "um", "uh") in the transcript.
+    </ParamField>
+
+    <ParamField path="keyterms" type="array" required={false}>
+      An array of key terms to boost recognition.
+    </ParamField>
+
+    <ParamField path="smartTurn" type="number" required={false}>
+      End-of-turn confidence threshold, between `0.0` and `1.0`.
+    </ParamField>
+
+    <ParamField path="smartTurnTimeout" type="integer" required={false}>
+      Maximum number of milliseconds of silence before forcing an end-of-turn final result.  
+      Valid values are between 1 and 5000.
+    </ParamField>
+  </Accordion>
+
   <Accordion title="houndifyOptions">
     <ParamField path="houndifyOptions" type="number" required={false}>
       Latitude of caller.

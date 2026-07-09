@@ -55,7 +55,7 @@ A warm, parked transfer with a spoken brief, hold music, and a fallback when nob
 </ParamField>
 
 <ParamField path="target" type="array" required={true}>
-  One or more call [destinations](/verbs/dial#target-types) (same shape as the `dial`
+  One or more call [destinations](/verbs/verbs/dial#target-types) (same shape as the `dial`
   verb's target). All targets are attempted simultaneously and the first to answer wins.
 </ParamField>
 
@@ -96,7 +96,7 @@ A warm, parked transfer with a spoken brief, hold music, and a fallback when nob
 </ParamField>
 
 <ParamField path="brief.synthesizer" type="object" required={false}>
-  Optional voice/vendor for the brief (a [synthesizer](/verbs/synthesizer) object).
+  Optional voice/vendor for the brief (a [synthesizer](/verbs/verbs/synthesizer) object).
   Defaults to the session synthesizer.
 </ParamField>
 
@@ -115,7 +115,7 @@ A warm, parked transfer with a spoken brief, hold music, and a fallback when nob
 </ParamField>
 
 <ParamField path="amd" type="object" required={false}>
-  `warm` only. Optional [answering-machine detection](/verbs/dial) run on the
+  `warm` only. Optional [answering-machine detection](/verbs/verbs/dial) run on the
   destination leg (same `amd` shape as the `dial` verb). Off by default; a `machine`
   result is treated as a `decline`.
 </ParamField>
@@ -194,7 +194,7 @@ eventHook failures never interrupt the transfer.
 
 If you want a voice agent to hand off to a human as a tool call, you do not use the
 `transfer` verb directly — instead add a declarative `handoff` block to the
-[agent](/verbs/agent#transfer-to-human-handoff) or [llm](/verbs/llm#transfer-to-human-handoff)
+[agent](/verbs/verbs/agent#transfer-to-human-handoff) or [llm](/verbs/verbs/llm#transfer-to-human-handoff)
 verb. The runtime injects a `transfer_to_human` tool and runs this same transfer
 choreography when the model calls it.
 
