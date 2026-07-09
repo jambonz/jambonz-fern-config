@@ -2,9 +2,24 @@
 jambonz Commercial 11.0.0 — Major Release
 </Card>
 
-**11.0.0** is headlined by a foundational change to the media path: jambonz no longer runs on **FreeSWITCH**. In its place is **mediajam**, a purpose-built media server written in Go that the feature-server drives directly. mediajam is designed to scale to far more concurrent sessions per server than FreeSWITCH, to scale linearly on large multi-core machines, and to run with a much smaller footprint — it builds on any Linux distribution and as a minimal Docker image, with no SIP stack and no per-channel sockets. It handles audio (PCMU/PCMA + telephone-event) over RTP with symmetric latching, RFC 2833 DTMF, file/HTTP/tone/silence playback, bridging, mute, and media timeout, and hosts the Krisp and RNNoise noise-isolation and turn-taking engines. This is the biggest architectural change in the platform's history and is the reason 11.0.0 is a major-version bump.
+**11.0.0** is headlined by a foundational change to the media path: jambonz no longer runs on **FreeSWITCH**. 
+In its place is **mediajam**, a purpose-built media server written in Go that the feature-server drives directly. 
+mediajam is designed to scale to far more concurrent sessions per server than FreeSWITCH, to scale linearly on 
+large multi-core machines, and to run with a much smaller footprint — it's available on both amd and arm64
+and as a minimal Docker image, with no SIP stack and no per-channel sockets. 
+It handles audio (PCMU/PCMA/Opus/G.722 + telephone-event) over RTP with symmetric latching, RFC 2833 DTMF, 
+file/HTTP/tone/silence playback, bridging, conferencing, and hosts the Krisp noise-isolation and turn-taking engines 
+(separate license required from Krisp when self hosting). This is the biggest architectural change in the 
+platform's history and is the reason 11.0.0 is a major-version bump.
 
-On top of the new media server, 11.0.0 adds a **transfer verb** that packages the common transfer choreographies (blind, and warm parked / three-way) into a single declarative verb with built-in briefing, confirmation, and failure handling — and exposes the same capability to the **agent** and **llm** verbs through a declarative `handoff` block that transfers the caller to a human when the model asks for it. Both AI verbs also gain a **built-in hangup tool** that lets the model end the call on its own. Conferences become observable and controllable from the API, the speech-vendor lineup is refreshed (with several legacy vendors removed), and the SBCs get accuracy fixes around live call counts plus a round of cross-account authorization hardening in the API server.
+On top of the new media server, 11.0.0 adds a **transfer verb** that packages the common transfer 
+choreographies (blind, and warm parked / three-way) into a single declarative verb with 
+built-in briefing, confirmation, and failure handling — and exposes the same capability 
+to the **agent** and **llm** verbs through a declarative `handoff` block that transfers the caller to a 
+human when the model asks for it. Both AI verbs also gain a **built-in hangup tool** that lets 
+the model end the call on its own. Conferences become observable and controllable from the API, 
+the speech-vendor lineup is refreshed (with several legacy vendors removed), and the SBCs 
+get accuracy fixes around live call counts plus a round of cross-account authorization hardening in the API server.
 
 #### Media server
 
