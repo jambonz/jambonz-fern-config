@@ -10,7 +10,8 @@ and as a minimal Docker image, with no SIP stack and no per-channel sockets.
 It handles audio (PCMU/PCMA/Opus/G.722 + telephone-event) over RTP with symmetric latching, RFC 2833 DTMF, 
 file/HTTP/tone/silence playback, bridging, conferencing, and hosts the Krisp noise-isolation and turn-taking engines 
 (separate license required from [Krisp](https://krisp.ai/developers) when self hosting). This is the biggest architectural change in the 
-platform's history and is the reason 11.0.0 is a major-version bump.
+platform's history and is the reason 11.0.0 is a major-version bump.  For further details on the media server, including 
+benchmarks please check out our blog [here](https://jambonz.org/blog/jambonz-v11-release).
 
 On top of the new media server, 11.0.0 adds a **transfer verb** that packages the common transfer 
 choreographies (blind, and warm parked / three-way) into a single declarative verb with 
