@@ -1171,6 +1171,11 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="transcription_config.operating_point" type="string" required={false}>
+      Deprecated by Speechmatics in favor of `model`. "standard" or "enhanced".
+    </ParamField>
+
+    <ParamField path="transcription_config.model" type="string" required={false}>
+      Model selection (replaces the deprecated `operating_point`), e.g. "standard", "enhanced", or "melia-1". See [Speechmatics model docs](https://docs.speechmatics.com/speech-to-text/models) for the current list.
     </ParamField>
 
     <ParamField path="transcription_config.punctuation_overrides" type="object" required={false}>
@@ -1181,6 +1186,18 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="transcription_config.punctuation_overrides.sensitivity" type="number" required={false}>
+    </ParamField>
+
+    <ParamField path="transcription_config.transcript_filtering_config" type="object" required={false}>
+      Transcript filtering configuration. See [Speechmatics formatting docs](https://docs.speechmatics.com/speech-to-text/formatting) for details.
+    </ParamField>
+
+    <ParamField path="transcription_config.transcript_filtering_config.remove_disfluencies" type="boolean" required={false}>
+      Remove hesitation sounds ("um", "uh") from the transcript. English only. Default: false.
+    </ParamField>
+
+    <ParamField path="transcription_config.transcript_filtering_config.replacements" type="array" required={false}>
+      Word replacement rules applied to the transcript. Each entry is an object with `from` (a plain word or a `/regex/`) and `to` (the replacement text). Example: `[{"from": "foo", "to": "bar"}]`.
     </ParamField>
 
     <ParamField path="transcription_config.conversation_config" type="object" required={false}>
