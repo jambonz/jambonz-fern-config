@@ -9,6 +9,7 @@ subtitle: Create a new call by dialing out to a telephone number, a registered s
   "actionHook": "/outdial",
   "callerId": "+161755511234",
   "answerOnBridge": true,
+  "srtpEncryption": "sdes",
   "dtmfCapture": ["*2", "*3"],
   "dtmfHook": {
     "url": "/dtmf",
@@ -137,6 +138,13 @@ There are several types of endpoints that you can dial:
   See [this example app](https://github.com/jambonz/sip-blind-transfer) for more details.
 </ParamField>
 
+<ParamField path="srtpEncryption" type="string" required={false}>
+  Request encrypted media (SRTP) on an outbound call to a `sip` [target](#target-types).  
+  Set to `sdes` to negotiate SRTP via SDES crypto attributes in the SDP offer (the `RTP/SAVP` profile with an `a=crypto` line) — this is what SIP endpoints such as LiveKit expect.  
+  Pair it with a `sips:` / `transport=tls` `sipUri` so that both the signaling (TLS) and the media (SRTP) are encrypted; the `sips:` scheme controls TLS on signaling, while `srtpEncryption` controls encryption of the media.  
+  When omitted, media is sent unencrypted (`RTP/AVP`). Applies to `sip` targets only.
+</ParamField>
+
 <ParamField path="timeLimit" type="number" required={false}>
   max length of call in seconds.
 </ParamField>
@@ -230,3 +238,27 @@ For more details on controlling the media path during a call, please see [Contro
 #### proxy
 
 If you set a `proxy` value on the target then jambonz will use this as a SIP Proxy for the outgoing INVITE, for example `sip:192.168.0.1:5060`
+
+#### srtpEncryption
+
+By default jambonz sends media to a dialed `sip` target as unencrypted RTP. Set `srtpEncryption` to `sdes` to request encrypted media (SRTP) on the outbound leg — jambonz will offer the `RTP/SAVP` profile with an `a=crypto` SDES key in the SDP.
+
+This is independent of signaling encryption: the `sips:` scheme (or `;transport=tls`) on the `sipUri` is what makes the SIP signaling go over TLS, while `srtpEncryption` is what encrypts the media. To secure both — as required by endpoints such as [LiveKit](https://docs.livekit.io/sip/) — use a `sips:` uri together with `srtpEncryption`:
+
+```json maxLines=100
+{
+  "verb": "dial",
+  "answerOnBridge": true,
+  "srtpEncryption": "sdes",
+  "target": [
+    {
+      "type": "sip",
+      "sipUri": "sips:1234567890@your-project.sip.livekit.cloud:5061;transport=tls"
+    }
+  ]
+}
+```
+
+<Note>
+`srtpEncryption` applies to `sip` uri targets only. It has no effect on `phone`, `user`, or `teams` targets (for a Carrier, configure SRTP on the Carrier's SIP gateway instead).
+</Note>
