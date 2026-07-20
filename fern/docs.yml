@@ -377,6 +377,8 @@ navigation:
             path: ./docs/pages/tutorials/gemini.mdx
           - page: OpenAI Realtime API
             path: ./docs/pages/tutorials/openai.mdx
+          - page: Qwen Omni Realtime
+            path: ./docs/pages/tutorials/qwen.mdx
           - page: Ultravox
             path: ./docs/pages/tutorials/ultravox.mdx
       - section: Telephony integrations
