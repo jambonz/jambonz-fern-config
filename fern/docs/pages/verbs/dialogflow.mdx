@@ -1,32 +1,76 @@
 ---
 title: Dialogflow
-subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialogflow) bot.
+subtitle: connect a call to a [Google Dialogflow](https://cloud.google.com/dialogflow) bot.
 ---
+
+The `dialogflow` verb streams the caller's audio to a Google Dialogflow agent
+and plays the agent's spoken replies back to the caller. Three agent types
+are supported, selected by the `model` parameter:
+
+| `model` | Product | Built in | Notes |
+|---------|---------|----------|-------|
+| `es` (default) | Dialogflow ES | Dialogflow ES console | Legacy intent-based agents; one agent per GCP project |
+| `cx` | Dialogflow CX | **Conversational Agents** console | Flow-based *and* generative Playbook agents. Supports [client-side tool calls](#client-side-tool-calls-dialogflow-cx) |
+| `ces` | CX Agent Studio | "Go to CX Agent Studio" in the console | A newer, separate product with its own API |
+
+<Warning>
+Agents built in the **Conversational Agents** console (Google markets it
+under the "Customer Engagement Suite" umbrella) speak the CX API — use
+`model: "cx"` for them, not `ces`.
+</Warning>
+
+## Examples
+
+Connecting to a Dialogflow **ES** agent:
 
 ```json
 {
   "verb": "dialogflow",
-  "project": "ai-in-rtc-drachtio-tsjjpn",
+  "project": "my-gcp-project",
   "lang": "en-US",
-  "credentials": "{\"type\": \"service_account\",\"project_id\": \"prj..",
+  "credentials": "{\"type\":\"service_account\",\"project_id\":\"my-gcp-project\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\\n...\"}",
   "welcomeEvent": "welcome",
   "eventHook": "/dialogflow-event",
   "actionHook": "/dialogflow-action"
 }
 ```
 
+Connecting to a Dialogflow **CX** (Playbook) agent with client-side tools:
+
+```json
+{
+  "verb": "dialogflow",
+  "model": "cx",
+  "project": "my-gcp-project",
+  "agent": "99e7b4c8-259c-4de4-b9da-cb44dc42b792",
+  "region": "us-central1",
+  "lang": "en-US",
+  "credentials": "{\"type\":\"service_account\",\"project_id\":\"my-gcp-project\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\\n...\"}",
+  "events": ["intent", "transcription", "tool-calls", "start-play", "stop-play"],
+  "eventHook": "/dialogflow-event",
+  "toolHook": "/dialogflow-tool",
+  "actionHook": "/dialogflow-action"
+}
+```
+
+The `agent` value is the uuid from the agent's resource name
+(`projects/my-gcp-project/locations/us-central1/agents/99e7b4c8-...`), shown
+in the Conversational Agents console URL.
+
 ## Parameters
 
 <ParamField path="credentials" type="string" required={true}>
-  The service account key in JSON string form that is used to authenticate to Dialogflow.
+  The service account key in JSON **string** form (i.e. `JSON.stringify` the
+  key file's contents). The service account needs the `Dialogflow API Client`
+  role (`roles/dialogflow.client`).
 </ParamField>
 
 <ParamField path="lang" type="string" required={true}>
-  Language to use for speech recognition.
+  Language for speech recognition, e.g. `en-US`.
 </ParamField>
 
 <ParamField path="project" type="string" required={true}>
-  The Google Dialogflow project ID.
+  The GCP project ID hosting the agent, e.g. `my-gcp-project`.
 </ParamField>
 
 <ParamField path="actionHook" type="string" required={false}>
@@ -34,8 +78,19 @@ subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialo
   See below for specified request parameters.
 </ParamField>
 
+<ParamField path="agent" type="string" required={false}>
+  The Dialogflow agent ID (uuid), e.g.
+  `99e7b4c8-259c-4de4-b9da-cb44dc42b792`. **Required** when `model` is `cx`
+  or `ces`.
+</ParamField>
+
 <ParamField path="bargein" type="boolean" required={false}>
   If true, kill playback immediately when the user begins speaking.
+</ParamField>
+
+<ParamField path="environment" type="string" required={false}>
+  The Dialogflow CX environment to use, e.g. `production`. Omit to use the
+  draft environment.
 </ParamField>
 
 <ParamField path="eventHook" type="string" required={false}>
@@ -43,20 +98,45 @@ subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialo
   The response to the event hook may contain a new Jambonz application to execute.
 </ParamField>
 
+<ParamField path="events" type="array" required={false}>
+  Which event types to receive on the eventHook, e.g.
+  `["intent", "transcription", "tool-calls"]`. Defaults to all supported
+  events for the selected model. See the [event list](#eventhook-properties).
+</ParamField>
+
+<ParamField path="model" type="string" required={false}>
+  The agent type: `es` (default) | `cx` | `ces`. See the table above.
+</ParamField>
+
 <ParamField path="noInputEvent" type="string" required={false}>
-  Name of the Dialogflow event to send in query when no input timeout expires.
+  Name of the Dialogflow event to send in query when no input timeout
+  expires. Default: `actions_intent_NO_INPUT`.
 </ParamField>
 
 <ParamField path="noInputTimeout" type="number" required={false}>
   Number of seconds of no speech detected after which to reprompt.
+  Default: `20`.
 </ParamField>
 
 <ParamField path="passDtmfAsTextInput" type="boolean" required={false}>
   If true, pass user DTMF entries as text inputs to the Dialogflow bot.
 </ParamField>
 
+<ParamField path="region" type="string" required={false}>
+  The GCP region hosting the agent, e.g. `us-central1` (the default for
+  CX/CES). The matching regional API endpoint
+  (`us-central1-dialogflow.googleapis.com`) is used automatically — a CX
+  agent created in a region is **not** reachable via the global endpoint.
+</ParamField>
+
 <ParamField path="thinkingMusic" type="string" required={false}>
   A URL to a .wav or .mp3 file to play as filler music while the Dialogflow back-end is executing.
+</ParamField>
+
+<ParamField path="toolHook" type="string" required={false}>
+  A webhook invoked when a Dialogflow CX agent requests a client-side tool
+  call, e.g. `/dialogflow-tool`. Respond with the tool result to resume the
+  conversation. See [Client-side tool calls](#client-side-tool-calls-dialogflow-cx).
 </ParamField>
 
 <ParamField path="tts" type="object" required={false}>
@@ -80,11 +160,16 @@ subtitle: connect a call to a [Google Dialogflow](https://cloud.Google.com/dialo
 </ParamField>
 
 <ParamField path="welcomeEvent" type="string" required={false}>
-  An event to send to Dialogflow when first connecting; e.g., to trigger a welcome prompt.
+  An event to send to Dialogflow when first connecting; e.g., to trigger a
+  welcome prompt. The agent must define a handler for this event — Playbook
+  agents typically do not (sending one returns a Google *"No handler is
+  defined for the event"* error); they respond to the caller's first spoken
+  turn instead.
 </ParamField>
 
 <ParamField path="welcomeEventParams" type="object" required={false}>
-  An object containing parameters to send with the welcome event.
+  An object containing parameters to send with the welcome event, e.g.
+  `{"customer_tier": "gold"}`.
 </ParamField>
 
 #### actionHook properties
@@ -93,20 +178,161 @@ The *actionHook* webhook will contain the following additional parameters:
 
 - `dialogflowResult`: the completion reason:
     - `redirect` - a new application was returned from an event webhook
-    - `completed` - an intent with `end iteraction` set to true was received from dialogflow
+    - `completed` - an intent with `end interaction` set to true was received from dialogflow
+    - `caller hungup` - the caller hung up
 
 #### eventHook properties
 
-The *eventHook* webhook will contain two parameters: `event` and `data`.  The `event` parameter identifies the specific event and the `data` parameter is an object containng event data associated with the event.  The following events are supported:
+The *eventHook* webhook contains two parameters: `event` (the event name) and
+`data` (the event payload). Supported events:
 
 - `intent`: dialogflow detected an intent
 - `transcription`: a speech transcription was returned from dialogflow
-- `dmtf`: a dtmf key was pressed by the caller
+- `dtmf`: a dtmf key was pressed by the caller
 - `start-play`: an audio segment returned from dialogflow started to play
-- `stop-play`: an audio segment returned from dialogflow completing playing
+- `stop-play`: an audio segment returned from dialogflow completed playing
 - `no-input`: the no input timer elapsed with no input detected from the caller
+- `tool-calls`: the agent requested one or more client-side tool calls (CX/CES; informational — use `toolHook` to answer them)
+
+A `transcription` event (CX):
+
+```json
+{
+  "event": "transcription",
+  "data": {
+    "recognition_result": {
+      "message_type": "TRANSCRIPT",
+      "transcript": "hi, I need a flight",
+      "is_final": true,
+      "confidence": 0.98,
+      "language_code": "en-us"
+    }
+  }
+}
+```
+
+A `start-play` event (the path is the agent audio jambonz is playing):
+
+```json
+{
+  "event": "start-play",
+  "data": {"path": "/tmp/4f3a2b1c-..._3.wav"}
+}
+```
 
 Please refer to [this tutorial](/tutorials/#building-voicebots-using-jambonz-and-dialogflow) for a detailed example.
+
+### Client-side tool calls (Dialogflow CX)
+
+Dialogflow CX agents (including generative Playbook agents) can define
+client-side **Function tools** — tools with no server backend, where *your
+application* executes the action and returns the result. When the agent
+needs one, it stops speaking and waits. jambonz handles the round trip
+through the `toolHook`.
+
+<Tip>
+A tool's **description must not be empty** in the Dialogflow console.
+Dialogflow passes the description to the model as that action's
+documentation — with no description the tool is never offered to the model,
+and the agent silently escalates instead of calling it.
+</Tip>
+
+**1.** The agent requests a tool. jambonz POSTs to your `toolHook`:
+
+```json
+{
+  "event": "tool-call",
+  "tool_call": {
+    "tool": "projects/my-gcp-project/locations/us-central1/agents/99e7b4c8-.../tools/4f58a625-...",
+    "action": "getGeolocation",
+    "input_parameters": {}
+  },
+  "call_sid": "df01a-...",
+  "direction": "inbound",
+  "from": "+15083084809",
+  "to": "+15082084810"
+}
+```
+
+`input_parameters` carries the arguments the agent gathered from the
+conversation. For example, a flight-search tool called after the caller has
+given a destination and date arrives populated:
+
+```json
+{
+  "event": "tool-call",
+  "tool_call": {
+    "tool": "projects/.../tools/e85ff4ee-...",
+    "action": "getFlights",
+    "input_parameters": {
+      "origin_airport_code": "JFK",
+      "destination_airport_code": "CDG",
+      "destination_city_name": "Paris",
+      "travel_date": "2026-12-05",
+      "timezone_difference_minutes": 360,
+      "flight_duration_minutes": 450
+    }
+  }
+}
+```
+
+**2.** Your application executes the tool and responds to the webhook with
+the result — a **raw JSON object**, not a list of verbs:
+
+```json
+{
+  "outputParameters": {
+    "flights": [
+      {"flight_number": "CA101", "origin": "JFK", "destination": "CDG",
+       "departure_time": "08:30", "arrival_time": "21:45", "price_usd": 640},
+      {"flight_number": "CA205", "origin": "JFK", "destination": "CDG",
+       "departure_time": "17:10", "arrival_time": "06:25", "price_usd": 545}
+    ]
+  }
+}
+```
+
+or, to report a failure so the agent can react gracefully:
+
+```json
+{"error": "flight search service unavailable"}
+```
+
+**3.** jambonz returns the result to Dialogflow and the agent resumes
+speaking — e.g. *"I have two flights for you: flight CA101 leaves JFK at
+8:30... which of these flights would you like to book?"*
+
+A complete toolHook handler:
+
+```js
+app.post('/dialogflow-tool', (req, res) => {
+  const {tool_call} = req.body;
+  switch (tool_call.action) {
+    case 'getGeolocation':
+      // no input_parameters: return the caller's location
+      return res.json({
+        outputParameters: {city: 'New York', country_code: 'us', postcode: '10001'}
+      });
+    case 'getFlights': {
+      const {origin_airport_code, destination_airport_code, travel_date} = tool_call.input_parameters;
+      const flights = searchFlights(origin_airport_code, destination_airport_code, travel_date);
+      return res.json({outputParameters: {flights}});
+    }
+    default:
+      return res.json({error: `no handler for tool '${tool_call.action}'`});
+  }
+});
+```
+
+Notes:
+
+- A reliable sign a tool call is pending: an `intent` event arrives with a
+  `tool_call` response message and **no audio is played** — the agent
+  produced no speech because it is waiting on you.
+- Without a `toolHook`, tool calls are surfaced via the `tool-calls` event
+  only (informational) and the conversation waits for caller input.
+- Timing measured on a live agent: caller stops speaking → tool call ≈ 2-3s;
+  tool result → agent resumes speaking ≈ 2-4s.
 
 ### call transfer in Dialogflow
 
@@ -136,4 +362,3 @@ if (evt.event === 'intent') {
     }
 }
 ```
-
