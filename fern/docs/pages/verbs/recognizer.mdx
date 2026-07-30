@@ -740,8 +740,24 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="model" type="string" required={false}>
-      OpenAI model.  Currently 'whisper-1', 'gpt-4o-mini-transcribe', 'gpt-4o-transcribe', and 'gpt-realtime-whisper' are supported.
-      Note: 'gpt-realtime-whisper' does not support OpenAI's server-side turn detection. Any `turn_detection` settings are ignored for this model.
+      OpenAI model.  Currently 'whisper-1', 'gpt-4o-mini-transcribe', 'gpt-4o-transcribe', 'gpt-realtime-whisper', and 'gpt-live-transcribe' are supported.
+      Note: 'gpt-live-transcribe' and 'gpt-realtime-whisper' do not support OpenAI's server-side turn detection. Any `turn_detection` settings are 
+      ignored for these models; jambonz detects end of speech locally instead (see `vadMode`, `vadSilenceMs`, `vadVoiceMs`).
+    </ParamField>
+
+    <ParamField path="languages" type="string[]" required={false}>
+      Used only with 'gpt-live-transcribe', which accepts a list of language hints rather than a single code, e.g. ["en", "fr"]. 
+      Takes precedence over `language` and over the recognizer-level language.
+    </ParamField>
+
+    <ParamField path="keywords" type="string[]" required={false}>
+      Used only with 'gpt-live-transcribe'. Literal terms that may appear in the audio — product names, acronyms, medications. 
+      These are hints, not required output. If you do not set a value here but you do provide hints, the hints are sent as keywords.
+    </ParamField>
+
+    <ParamField path="delay" type="string" required={false}>
+      Used only with 'gpt-live-transcribe'. One of 'minimal', 'low', 'medium', 'high', or 'xhigh' — the latency/accuracy trade-off. 
+      Lower values emit partial text sooner; higher values give the model more audio context and can improve accuracy.
     </ParamField>
 
     <ParamField path="prompt" type="string" required={false}>
@@ -805,15 +821,15 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="vadMode" type="number" required={false}>
-      Used only with 'gpt-realtime-whisper'. Sensitivity of the local voice activity detector; integer 0-3. Higher is more aggressive. Defaults to 2.
+      Used only with 'gpt-live-transcribe' or 'gpt-realtime-whisper'. Sensitivity of the local voice activity detector; integer 0-3. Higher is more aggressive. Defaults to 2.
     </ParamField>
 
     <ParamField path="vadSilenceMs" type="number" required={false}>
-      Used only with 'gpt-realtime-whisper'. Milliseconds of silence required to detect end-of-speech and commit the buffer. Defaults to 500ms.
+      Used only with 'gpt-live-transcribe' or 'gpt-realtime-whisper'. Milliseconds of silence required to detect end-of-speech and commit the buffer. Defaults to 500ms.
     </ParamField>
 
     <ParamField path="vadVoiceMs" type="number" required={false}>
-      Used only with 'gpt-realtime-whisper'. Milliseconds of voice required to detect start-of-speech. Defaults to 250ms.
+      Used only with 'gpt-live-transcribe' or 'gpt-realtime-whisper'. Milliseconds of voice required to detect start-of-speech. Defaults to 250ms.
     </ParamField>
 
   </Accordion>
