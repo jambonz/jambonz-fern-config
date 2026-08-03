@@ -280,10 +280,14 @@ Everything the model wants from outside the audio conversation arrives as a **de
   `'responses'` — the model runs a Responses API turn. Its `response.*` events stream inline on the same connection, and function calls are answered with `delegation.function_call_output.create`. Put your tool definitions in `session_update.delegation.tools` using the Responses shape: `{type: 'function', name, description, parameters}`.
 </ParamField>
 
+<Warning>
+The GPT Live Event API reference documents only `delegation.type` on the session object — the `delegation.tools` and `delegation.model` fields above are inferred from the Responses API and are **not yet confirmed against the alpha**. If OpenAI's field names differ, the server accepts the `session.update` and silently drops the tool block, so injected `handoff`, `hangup` and MCP tools would never reach the model. Verify against your alpha access before relying on tools.
+</Warning>
+
 Answering a client delegation:
 
 ```js
-session.on('llm:event', (evt) => {
+session.on('/event', (evt) => {
   if (evt.type === 'delegation.created' && evt.item.target === 'client') {
     session.sendCommand('llm:update', {
       type: 'delegation.context.append',
@@ -296,7 +300,7 @@ session.on('llm:event', (evt) => {
 
 ### Tool calls
 
-Tool calling requires `delegation.type: 'responses'` — a `client` delegation has no function-calling protocol, so `mcpServers`, `handoff` and `hangup` cannot be declared on it (jambonz logs when it has to skip them).
+Tool calling requires `delegation.type: 'responses'` — a `client` delegation has no function-calling protocol, so `mcpServers`, `handoff` and `hangup` cannot be declared on it. Configuring any of them without a `responses` delegation is rejected when the verb is executed, rather than starting a call in which the model was never told the tools exist.
 
 With a Responses delegation, jambonz picks the completed call off `response.output_item.done` (`item.type: 'function_call'`) and routes `{name, args, tool_call_id}` to your `toolHook`. Return the result as a `delegation.function_call_output.create` client event:
 
@@ -325,7 +329,9 @@ A later `session.update` is **sparse**: omitted fields keep their current values
 
 ### Usage and session end
 
-`session.usage.updated` reports cumulative session usage roughly once a minute, and `session.closed` carries the final totals. jambonz ends the llm verb on `session.closed`, on an `error` event, and on `response.failed`, reporting the reason on the `actionHook`.
+`session.usage.updated` reports cumulative session usage roughly once a minute, and `session.closed` carries the final totals. jambonz ends the llm verb on `session.closed`, reporting the reason on the `actionHook`.
+
+Errors are treated according to the spec's own distinction. An `error` arriving **before** `session.started` is a startup error: the session never starts and caller audio never flows, so jambonz ends the verb with `completionReason: 'server error'`. An `error` **after** `session.started` is a command error — one rejected client event, such as a stale `delegation_item_id` or an over-long context append — and does **not** end the call; it is forwarded to your `eventHook` so you can recover. A `response.failed` likewise does not end the call: a Responses delegation is a side-channel unit of work, not the voice session, so the model keeps talking.
 
 <Note>
 Because GPT Live has no `response.cancel`, the `cancelOnBargeIn` and `cancelOnResponseTimeout` options have nothing to cancel. `responseTimeoutMs` still works: jambonz arms its stall watchdog when a Responses delegation is created and emits `response.timeout` on your `eventHook` if the Responses lifecycle never acknowledges it, so your application can recover via `llm:update`.
@@ -637,7 +643,8 @@ which apply identically here. When the human leg bridges, the `actionHook` repor
 
 <Note>
 For `vendor: 'gptlive'` the injected `transfer_to_human` tool needs a function-calling channel, so
-`llmOptions.session_update.delegation.type` must be `'responses'` — see [OpenAI GPT Live](#openai-gpt-live).
+`llmOptions.session_update.delegation.type` must be `'responses'`; the verb is rejected otherwise, rather
+than silently leaving the caller with no way to reach a human — see [OpenAI GPT Live](#openai-gpt-live).
 </Note>
 
 ## Built-in Hangup Tool
