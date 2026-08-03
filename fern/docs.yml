@@ -379,6 +379,8 @@ navigation:
             path: ./docs/pages/tutorials/openai.mdx
           - page: Qwen Omni Realtime
             path: ./docs/pages/tutorials/qwen.mdx
+          - page: xAI Grok Voice ThinkFast 2.0
+            path: ./docs/pages/tutorials/xai.mdx
           - page: Ultravox
             path: ./docs/pages/tutorials/ultravox.mdx
       - section: Telephony integrations

@@ -1,0 +1,101 @@
+---
+title: xAI Grok Voice ThinkFast 2.0
+subtitle: Using jambonz to connect custom telephony to xAI's speech-to-speech API
+---
+
+<Note>
+The jambonz application referenced in this article can be
+found [here](https://github.com/jambonz/v10-examples/tree/main/examples/s2s/xai).
+</Note>
+
+This is an example jambonz application that connects to xAI's Grok Voice ThinkFast 2.0
+speech-to-speech API and illustrates how to build a Voice-AI application using jambonz
+and xAI. The flow uses the same realtime-style `llm` verb wiring as the other speech-to-
+speech tutorials, but with xAI-specific configuration required by the vendor.
+
+## Authentication
+You must have an xAI API key with access to the speech-to-speech models. Provide it in the
+`auth` property of the `llm` verb (or as an application environment variable, as the
+example does).
+
+```js
+session.llm({
+  vendor: 'xai',
+  model: 'grok-voice-think-fast-2.0',
+  auth: { apiKey: process.env.XAI_API_KEY },
+  ...
+})
+```
+
+<Warning>
+Use `grok-voice-think-fast-2.0` explicitly for this integration. `grok-voice-latest`
+still resolves to the 1.0 family until August 5, so it is not the right choice if you want
+this new model today.
+</Warning>
+
+## Configuring the assistant
+Configuration is provided in the form of `session_update` and `response_create` client
+messages inside `llmOptions`. xAI requires both of them for a session to start properly:
+audio does not begin flowing until the first `session.updated` event is received.
+
+```js
+llmOptions: {
+  session_update: {
+    type: 'realtime',
+    instructions: 'You are a friendly, helpful voice assistant.',
+    turn_detection: { type: 'server_vad' },
+    reasoning: { effort: 'high' },
+    pronunciation: {
+      replace: [{ from: 'jambonz', to: 'jam bonz' }],
+    },
+    audio: {
+      output: { voice: 'eve' },
+    },
+  },
+  response_create: {
+    output_modalities: ['audio'],
+    instructions: 'Greet the caller warmly and ask how you can help today.',
+  },
+}
+```
+
+### xAI-specific options
+The example highlights two xAI-specific knobs that are worth using when you want the
+assistant to feel more deliberate or more natural on the phone:
+
+- `reasoning.effort` — set this to `'high'` for a more deliberate, analytical response,
+or `'none'` for a faster, more direct reply.
+- `pronunciation.replace` — use this inside `session_update` to guide the model on how to
+say custom names, brand terms, or other words that are easy for TTS to mispronounce.
+
+<Note>
+Do not set audio formats in your application. mediajam handles the transport format
+for xAI automatically.
+</Note>
+
+## Greeting the caller
+Because `response_create` is required, the assistant can speak immediately after the
+session is configured. That makes it a good fit for greeting-first flows, IVR handoffs,
+and other phone experiences where the assistant should begin talking right away.
+
+## Interrupting the assistant
+xAI handles barge-in server-side. When the caller speaks over the assistant, jambonz
+flushes queued audio as soon as the interruption event arrives, so the caller can jump in
+without waiting for the previous utterance to finish.
+
+## Events
+xAI sends realtime-style server events such as `session.updated`,
+`input_audio_buffer.speech_started`, `input_audio_buffer.speech_stopped`, and the usual
+response lifecycle events. Your application can request the ones it cares about in the
+`events` property of the `llm` verb with wildcard support for broader subscriptions.
+
+## actionHook properties
+Like many jambonz verbs, the `llm` verb sends an `actionHook` with a final status when the
+session completes. The payload includes a `completion_reason` property indicating why the
+session ended, such as:
+
+- normal conversation end
+- connection failure
+- disconnect from remote end
+- server failure
+- server error
