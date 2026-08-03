@@ -132,6 +132,7 @@ session.llm({
 
 The following LLMs are currently supported:
 - OpenAI Realtime API
+- OpenAI GPT Live API (limited-access alpha)
 - Deepgram Voice Agent
 - Ultravox
 - ElevenLabs
@@ -222,6 +223,113 @@ The compatibility layer is intended as a transitional shim — plan to update ap
 <ParamField path="session_update.tool_choice" type="string" required={false}>
   `'auto'` (default), `'none'`, or a specific tool name to force.
 </ParamField>
+
+## OpenAI GPT Live
+
+Set `vendor: 'gptlive'` and supply an OpenAI API key via `auth.apiKey` to use OpenAI's **GPT Live API**, currently a limited-access alpha. jambonz connects to `wss://api.openai.com/v1/live?model=<model>`.
+
+<Warning>
+GPT Live is a **different wire protocol** from the [OpenAI Realtime API](#openai-realtime) — it is not a drop-in replacement for `vendor: 'openai'`. There is no `response_create`, no `response.create`/`response.cancel`, and tool calls arrive through a *delegation* rather than directly. Access requires enrollment in OpenAI's Early Access Program; event names and payloads may change while the API is in alpha.
+</Warning>
+
+```js
+session.llm({
+  vendor: 'gptlive',
+  model: 'gpt-live-1-boulder-alpha',
+  auth: { apiKey: process.env.OPENAI_API_KEY },
+  actionHook: '/final',
+  eventHook: '/event',
+  llmOptions: {
+    session_update: {
+      instructions:
+        'You are a friendly, helpful voice assistant on a phone call. ' +
+        'Always respond in English unless the caller explicitly speaks another language. ' +
+        'Keep responses concise and natural for spoken conversation.',
+      audio: {
+        output: { voice: 'marin' }
+      },
+      delegation: { type: 'client' }
+    }
+  }
+});
+```
+
+### Model selection
+
+<ParamField path="model" type="string" required={false}>
+  GPT Live model name; defaults to `gpt-live-1-boulder-alpha`. The model travels in the connection URL, so it must **not** be repeated inside `session_update` — jambonz rejects the verb if you do.
+</ParamField>
+
+### Required session_update
+
+**`llmOptions.session_update` is required.** The GPT Live server withholds `session.started` — and therefore does not accept caller audio — until it receives the startup configuration, so jambonz sends `session_update` as the first client event and gates the caller's audio until `session.started` arrives.
+
+There is no `response_create` and no initial `response.create`: the model starts and drives the conversation itself once the session is started.
+
+### Audio format
+
+Audio on the wire is fixed by the GPT Live spec at raw, headerless, mono, signed 16-bit little-endian PCM at 24 kHz in both directions. jambonz resamples to and from the channel's native rate (typically G.711) automatically. There is no audio-format field to configure.
+
+### Delegation: how the model asks for work
+
+Everything the model wants from outside the audio conversation arrives as a **delegation**, chosen by `session_update.delegation.type`:
+
+<ParamField path="session_update.delegation.type" type="string" required={false}>
+  `'client'` — the model asks your application for free-form text context. You receive a `delegation.created` server event with `item.target: 'client'`; answer it with an `llm:update` carrying `delegation.context.append` and the `item.id` from that event as `delegation_item_id`. Exactly one `input_text` part, limited to 500 tokens.
+
+  `'responses'` — the model runs a Responses API turn. Its `response.*` events stream inline on the same connection, and function calls are answered with `delegation.function_call_output.create`. Put your tool definitions in `session_update.delegation.tools` using the Responses shape: `{type: 'function', name, description, parameters}`.
+</ParamField>
+
+Answering a client delegation:
+
+```js
+session.on('llm:event', (evt) => {
+  if (evt.type === 'delegation.created' && evt.item.target === 'client') {
+    session.sendCommand('llm:update', {
+      type: 'delegation.context.append',
+      delegation_item_id: evt.item.id,
+      content: [{ type: 'input_text', text: 'It is 62 degrees and raining in Seattle.' }]
+    });
+  }
+});
+```
+
+### Tool calls
+
+Tool calling requires `delegation.type: 'responses'` — a `client` delegation has no function-calling protocol, so `mcpServers`, `handoff` and `hangup` cannot be declared on it (jambonz logs when it has to skip them).
+
+With a Responses delegation, jambonz picks the completed call off `response.output_item.done` (`item.type: 'function_call'`) and routes `{name, args, tool_call_id}` to your `toolHook`. Return the result as a `delegation.function_call_output.create` client event:
+
+```js
+session.sendToolOutput(tool_call_id, {
+  type: 'delegation.function_call_output.create',
+  item: {
+    type: 'function_call_output',
+    call_id: tool_call_id,
+    output: JSON.stringify({ temperature: 62, conditions: 'rain' })
+  }
+});
+```
+
+Parallel calls need one event per result. Unlike the Realtime API, there is no follow-on `response.create` to send — the server resumes the delegation itself.
+
+### Transcripts and turns
+
+Caller and assistant transcripts arrive as `input_transcript.added` / `output_transcript.added` fragments, each with a `start_ms`/`end_ms` range on the server timeline. Fragment boundaries reflect cadence, **not** semantic turn boundaries. The `turn.created` / `turn.delta` / `turn.done` events are a higher-level projection over those fragments; they are not context items and do not change session state. jambonz also uses a `turn.created` with `role: 'user'` as its barge-in signal, since GPT Live has no dedicated speech-started event.
+
+### Mid-call updates
+
+An `llm:update` command accepts only the GPT Live client event set — `session.update`, `session.context.append`, `delegation.context.append`, `delegation.function_call_output.create` and `session.close`. Realtime-only events (`response.create`, `response.cancel`, `input_audio_buffer.*`, `conversation.item.create`) are rejected with a log message.
+
+A later `session.update` is **sparse**: omitted fields keep their current values. Replacing `delegation`, however, requires the complete delegation object.
+
+### Usage and session end
+
+`session.usage.updated` reports cumulative session usage roughly once a minute, and `session.closed` carries the final totals. jambonz ends the llm verb on `session.closed`, on an `error` event, and on `response.failed`, reporting the reason on the `actionHook`.
+
+<Note>
+Because GPT Live has no `response.cancel`, the `cancelOnBargeIn` and `cancelOnResponseTimeout` options have nothing to cancel. `responseTimeoutMs` still works: jambonz arms its stall watchdog when a Responses delegation is created and emits `response.timeout` on your `eventHook` if the Responses lifecycle never acknowledges it, so your application can recover via `llm:update`.
+</Note>
 
 ## xAI Voice Agent
 
@@ -527,9 +635,14 @@ The `handoff` block accepts every [transfer](/verbs/verbs/transfer#parameters) o
 which apply identically here. When the human leg bridges, the `actionHook` reports the
 [transfer outcome](/verbs/verbs/transfer#actionhook-properties).
 
+<Note>
+For `vendor: 'gptlive'` the injected `transfer_to_human` tool needs a function-calling channel, so
+`llmOptions.session_update.delegation.type` must be `'responses'` — see [OpenAI GPT Live](#openai-gpt-live).
+</Note>
+
 ## Built-in Hangup Tool
 
-Set `hangup` to let the model end the call on its own. The runtime injects a `hangup` tool into the model's toolset; you do not define it in `llmOptions` and you do not handle it in your `toolHook` — the runtime intercepts the call, hangs up, and ends the llm verb. This works the same way across every supported s2s vendor (OpenAI, Deepgram Voice Agent, Ultravox, ElevenLabs, Google Gemini Live, AssemblyAI, xAI Voice Agent).
+Set `hangup` to let the model end the call on its own. The runtime injects a `hangup` tool into the model's toolset; you do not define it in `llmOptions` and you do not handle it in your `toolHook` — the runtime intercepts the call, hangs up, and ends the llm verb. This works the same way across every supported s2s vendor (OpenAI, Deepgram Voice Agent, Ultravox, ElevenLabs, Google Gemini Live, AssemblyAI, xAI Voice Agent, OpenAI GPT Live — the last requires `delegation.type: 'responses'`).
 
 ```js
 session.llm({
