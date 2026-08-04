@@ -21,7 +21,7 @@ Most TTS vendors expose knobs that go beyond picking a voice — speaking rate, 
 }
 ```
 
-The shape of `options` is defined entirely by the vendor — jambonz does not validate it. See each vendor's page for the fields it accepts.
+The fields `options` accepts are defined entirely by the vendor — jambonz does not validate them. See each vendor's page below for what it supports.
 
 ## Where settings can be set
 
@@ -65,4 +65,4 @@ Vendors not listed here take no options beyond voice, language and model.
 
 ## Fallback vendors
 
-`synthesizer.options` applies to the primary vendor only. If you configure a `fallbackVendor`, it is used with its own credential-level Extra Options — the primary vendor's `options` are not carried over, since the two vendors' option shapes are unrelated.
+`synthesizer.options` applies to the primary vendor only. If you configure a `fallbackVendor`, it is used with its own credential-level Extra Options — the primary vendor's `options` are not carried over, since the two vendors' options are unrelated.
