@@ -55,7 +55,7 @@ A warm, parked transfer with a spoken brief, hold music, and a fallback when nob
 </ParamField>
 
 <ParamField path="target" type="array" required={true}>
-  One or more call [destinations](/verbs/verbs/dial#target-types) (same shape as the `dial`
+  One or more call [destinations](/verbs/verbs/dial#target-types) (same structure as the `dial`
   verb's target). All targets are attempted simultaneously and the first to answer wins.
 </ParamField>
 
@@ -116,7 +116,7 @@ A warm, parked transfer with a spoken brief, hold music, and a fallback when nob
 
 <ParamField path="amd" type="object" required={false}>
   `warm` only. Optional [answering-machine detection](/verbs/verbs/dial) run on the
-  destination leg (same `amd` shape as the `dial` verb). Off by default; a `machine`
+  destination leg (same `amd` structure as the `dial` verb). Off by default; a `machine`
   result is treated as a `decline`.
 </ParamField>
 
