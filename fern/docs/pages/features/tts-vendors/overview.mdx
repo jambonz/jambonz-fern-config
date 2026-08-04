@@ -1,0 +1,68 @@
+---
+title: TTS Vendor Settings
+subtitle: How to pass vendor-specific tuning to a TTS provider, and which vendors support it.
+---
+
+Most TTS vendors expose knobs that go beyond picking a voice — speaking rate, expressiveness, stability, and so on. jambonz passes these through untouched in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "cartesia",
+    "language": "en",
+    "voice": "a0e99841-438c-4a64-b679-ae501e7d6091",
+    "options": {
+      "speed": -0.3,
+      "emotion": "positivity:high"
+    }
+  }
+}
+```
+
+The shape of `options` is defined entirely by the vendor — jambonz does not validate it. See each vendor's page for the fields it accepts.
+
+## Where settings can be set
+
+There are two places, and they combine:
+
+1. **On the speech credential**, under **Extra Options** in the portal (**Account → Speech →** your credential). These apply to every request using that credential.
+2. **On the verb**, in `synthesizer.options`. These apply to that verb only.
+
+Where both are present, **the verb wins**.
+
+Setting them on the credential is the better default when you want one consistent voice character across an application. Use the verb when a particular prompt needs to differ — a slower, clearer reading of an account number, for example.
+
+<Note>
+Options are passed to the vendor as-is. If you send a field a vendor doesn't recognise, most vendors ignore it silently rather than returning an error — so a typo usually shows up as "my setting had no effect", not as a failure.
+</Note>
+
+## Vendors with settings
+
+<CardGroup cols={2}>
+  <Card title="Cartesia" href="/guides/features/tts-vendors/cartesia">
+    Speaking rate and emotion, with model-family differences.
+  </Card>
+  <Card title="ElevenLabs" href="/guides/features/tts-vendors/elevenlabs">
+    Stability, similarity boost, style, speaker boost, latency optimisation.
+  </Card>
+  <Card title="Gradium" href="/guides/features/tts-vendors/gradium">
+    Temperature, voice similarity, speaking rate, pronunciation dictionaries.
+  </Card>
+  <Card title="Inworld" href="/guides/features/tts-vendors/inworld">
+    Pitch, speaking rate, temperature.
+  </Card>
+  <Card title="Murf" href="/guides/features/tts-vendors/murf">
+    Style, rate, pitch, variation.
+  </Card>
+  <Card title="Rime Labs" href="/guides/features/tts-vendors/rimelabs">
+    Speed, latency reduction, and per-model sampling controls.
+  </Card>
+</CardGroup>
+
+Vendors not listed here take no options beyond voice, language and model.
+
+## Fallback vendors
+
+`synthesizer.options` applies to the primary vendor only. If you configure a `fallbackVendor`, it is used with its own credential-level Extra Options — the primary vendor's `options` are not carried over, since the two vendors' option shapes are unrelated.

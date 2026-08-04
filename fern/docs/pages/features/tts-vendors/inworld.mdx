@@ -1,0 +1,53 @@
+---
+title: Inworld
+subtitle: Pitch, speaking rate and temperature controls for Inworld TTS.
+---
+
+Inworld tuning is passed in `synthesizer.options`. Audio shaping lives under a nested `audioConfig` object, matching Inworld's own API.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "inworld",
+    "language": "en",
+    "voice": "Ashley",
+    "options": {
+      "temperature": 0.8,
+      "audioConfig": {
+        "pitch": 0.0,
+        "speakingRate": 1.0
+      }
+    }
+  }
+}
+```
+
+## Options
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature. Defaults to `0.8`. Lower values give a more consistent, predictable read; higher values more variation between renders of the same text.
+</ParamField>
+
+### audioConfig
+
+<ParamField path="audioConfig.speakingRate" type="number" required={false}>
+  Speaking rate multiplier. Defaults to `1.0`. Values above `1.0` are faster, below are slower.
+</ParamField>
+
+<ParamField path="audioConfig.pitch" type="number" required={false}>
+  Pitch adjustment. Defaults to `0.0`, the voice's natural pitch.
+</ParamField>
+
+<ParamField path="audioConfig.sampleRateHertz" type="number" required={false}>
+  Output sample rate. jambonz already requests the rate that matches the call's codec, so leave this unset unless you have a specific reason — overriding it forces a resample.
+</ParamField>
+
+<ParamField path="audioConfig.bitRate" type="number" required={false}>
+  Output bit rate.
+</ParamField>
+
+## Streaming
+
+Inworld supports [TTS streaming](/guides/features/tts-streaming).

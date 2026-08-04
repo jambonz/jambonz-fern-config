@@ -1,0 +1,48 @@
+---
+title: Murf
+subtitle: Style, rate, pitch and variation controls for Murf TTS.
+---
+
+Murf tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "murf",
+    "language": "en-US",
+    "voice": "en-US-natalie",
+    "options": {
+      "style": "Conversational",
+      "rate": 0
+    }
+  }
+}
+```
+
+## Options
+
+<ParamField path="style" type="string" required={false}>
+  Speaking style, e.g. `Conversational`. Defaults to `Conversational`. The available styles differ per voice — a style one voice supports may be rejected or ignored for another, so check the voice in Murf's library.
+</ParamField>
+
+<ParamField path="rate" type="number" required={false}>
+  Speaking rate. Defaults to `0`, which is the voice's natural pace. Positive values are faster, negative slower.
+</ParamField>
+
+<ParamField path="pitch" type="number" required={false}>
+  Pitch adjustment. Defaults to the voice's natural pitch.
+</ParamField>
+
+<ParamField path="variation" type="number" required={false}>
+  How much prosody varies between sentences. Higher values sound less uniform across a long prompt.
+</ParamField>
+
+## Endpoint override
+
+Murf credentials accept an optional **API base URL** in the portal, for customers pointed at a non-default Murf endpoint. Leave it blank to use Murf's standard API.
+
+## Streaming
+
+Murf supports [TTS streaming](/guides/features/tts-streaming).
