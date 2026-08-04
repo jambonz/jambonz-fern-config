@@ -268,6 +268,38 @@ session.llm({
 
 There is no `response_create` and no initial `response.create`: the model starts and drives the conversation itself once the session is started.
 
+### Getting the agent to speak first
+
+There is no `response_create`, so there is no explicit "speak now" trigger like the Realtime API's `response.create`. **The agent opens the conversation on its own as soon as input audio starts flowing** — and because jambonz begins streaming the caller's audio the moment `session.started` lifts the media server's input gate, that happens automatically on every call, typically within a second of the session starting.
+
+Verified against the alpha:
+
+| What you send | Agent speaks first? |
+|---|---|
+| `instructions` only, no audio at all | **no** — it waits indefinitely |
+| Any input audio, even pure silence | **yes** |
+| `session.context.append` with no audio | **no** — context alone does not trigger generation |
+
+So the trigger is the audio stream, not the prompt and not a client event. Silence counts: a caller who says nothing still causes the agent to open.
+
+To control *what* it opens with, put it in `session_update.instructions` — that is the only lever, since there is no per-response instruction override:
+
+```js
+llmOptions: {
+  session_update: {
+    instructions: SYSTEM_PROMPT +
+      ' Open the conversation yourself: as soon as the call connects, greet the caller ' +
+      'and ask how you can help. Do not wait for the caller to speak first.',
+    audio: { output: { voice: 'marin' } },
+    delegation: { type: 'client' }
+  }
+}
+```
+
+<Note>
+Two consequences of the trigger being audio rather than an explicit event. First, you cannot deterministically sequence "greet, then listen" the way `response.create` allows — the model decides when to start. Second, if the agent is **silent** on a call, the cause is almost always that no audio reached the vendor: check your `eventHook` for `session.started` (without it the media server's input gate never lifts and every caller frame is dropped), and check for an `error` event before it.
+</Note>
+
 ### Audio format
 
 Audio on the wire is fixed by the GPT Live spec at raw, headerless, mono, signed 16-bit little-endian PCM at 24 kHz in both directions. jambonz resamples to and from the channel's native rate (typically G.711) automatically. There is no audio-format field to configure.
