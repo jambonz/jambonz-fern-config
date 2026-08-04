@@ -301,7 +301,7 @@ Answering a client delegation:
 ```js
 session.on('/event', (evt) => {
   if (evt.type === 'delegation.created' && evt.item.target === 'client') {
-    session.sendCommand('llm:update', {
+    session.updateLlm({
       type: 'delegation.context.append',
       delegation_item_id: evt.item.id,
       content: [{ type: 'input_text', text: 'It is 62 degrees and raining in Seattle.' }]
