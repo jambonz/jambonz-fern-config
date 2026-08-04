@@ -226,10 +226,12 @@ The compatibility layer is intended as a transitional shim — plan to update ap
 
 ## OpenAI GPT Live
 
-Set `vendor: 'gptlive'` and supply an OpenAI API key via `auth.apiKey` to use OpenAI's **GPT Live API**, currently a limited-access alpha. jambonz connects to `wss://api.openai.com/v1/live?model=<model>`.
+Set `vendor: 'gptlive'` and supply an OpenAI API key via `auth.apiKey` to use OpenAI's **GPT Live API**, currently a limited-access alpha. jambonz connects to `wss://api.openai.com/v1/live?model=<model>` with a `Bearer` token and the alpha opt-in header `OpenAI-Alpha: quicksilver=v2`, which `/v1/live` requires (the media server sends it; override with the `JAMBONES_GPTLIVE_ALPHA` environment variable if OpenAI bumps the tag).
 
 <Warning>
-GPT Live is a **different wire protocol** from the [OpenAI Realtime API](#openai-realtime) — it is not a drop-in replacement for `vendor: 'openai'`. There is no `response_create`, no `response.create`/`response.cancel`, and tool calls arrive through a *delegation* rather than directly. Access requires enrollment in OpenAI's Early Access Program; event names and payloads may change while the API is in alpha.
+GPT Live is a **different wire protocol** from the [OpenAI Realtime API](#openai-realtime) — it is not a drop-in replacement for `vendor: 'openai'`. There is no `response_create`, no `response.create`/`response.cancel`, and tool calls arrive through a *delegation* rather than directly.
+
+Access requires enrollment in OpenAI's Early Access Program. A key that is not enrolled completes the websocket handshake and is then refused at the first server event with `{"code":"forbidden","message":"Voice session access denied."}`, which jambonz reports as `completionReason: 'server error'`. Event names and payloads may change while the API is in alpha.
 </Warning>
 
 ```js
@@ -277,12 +279,22 @@ Everything the model wants from outside the audio conversation arrives as a **de
 <ParamField path="session_update.delegation.type" type="string" required={false}>
   `'client'` — the model asks your application for free-form text context. You receive a `delegation.created` server event with `item.target: 'client'`; answer it with an `llm:update` carrying `delegation.context.append` and the `item.id` from that event as `delegation_item_id`. Exactly one `input_text` part, limited to 500 tokens.
 
-  `'responses'` — the model runs a Responses API turn. Its `response.*` events stream inline on the same connection, and function calls are answered with `delegation.function_call_output.create`. Put your tool definitions in `session_update.delegation.tools` using the Responses shape: `{type: 'function', name, description, parameters}`.
+  `'responses'` — the model runs a Responses API turn. Its `response.*` events stream inline on the same connection, and function calls are answered with `delegation.function_call_output.create`. This variant carries a **required nested object**, `delegation.responses`, whose `model` is mandatory; put your tool definitions in `session_update.delegation.responses.tools` using the flat Responses shape `{type: 'function', name, description, parameters}`.
 </ParamField>
 
-<Warning>
-The GPT Live Event API reference documents only `delegation.type` on the session object — the `delegation.tools` and `delegation.model` fields above are inferred from the Responses API and are **not yet confirmed against the alpha**. If OpenAI's field names differ, the server accepts the `session.update` and silently drops the tool block, so injected `handoff`, `hangup` and MCP tools would never reach the model. Verify against your alpha access before relying on tools.
-</Warning>
+```js
+delegation: {
+  type: 'responses',
+  responses: {
+    model: 'gpt-5.5',          // required — the Responses-side model, NOT the voice model
+    tools: [ /* {type:'function', name, description, parameters} */ ]
+  }
+}
+```
+
+<Note>
+`delegation.responses.model` is the model the *delegated* turn runs on, and is separate from the GPT Live voice model in the connection URL (the verb's `model` property). Omitting the nested object, or its `model`, is rejected at session start with `Invalid AVAS session_data … Missing required parameter: 'delegation.responses'` (or `'delegation.responses.model'`); jambonz catches both up front when tools are configured.
+</Note>
 
 Answering a client delegation:
 
@@ -302,7 +314,7 @@ session.on('/event', (evt) => {
 
 Tool calling requires `delegation.type: 'responses'` — a `client` delegation has no function-calling protocol, so `mcpServers`, `handoff` and `hangup` cannot be declared on it. Configuring any of them without a `responses` delegation is rejected when the verb is executed, rather than starting a call in which the model was never told the tools exist.
 
-With a Responses delegation, jambonz picks the completed call off `response.output_item.done` (`item.type: 'function_call'`) and routes `{name, args, tool_call_id}` to your `toolHook`. Return the result as a `delegation.function_call_output.create` client event:
+With a Responses delegation — declared at `session_update.delegation.responses.tools` — jambonz picks the completed call off `response.output_item.done` (`item.type: 'function_call'`) and routes `{name, args, tool_call_id}` to your `toolHook`. Return the result as a `delegation.function_call_output.create` client event:
 
 ```js
 session.sendToolOutput(tool_call_id, {
