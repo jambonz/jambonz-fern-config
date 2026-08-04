@@ -1,0 +1,62 @@
+---
+title: xAI
+subtitle: Speed, latency optimisation and text normalization for xAI TTS.
+---
+
+xAI tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Your balance is $42.50.",
+  "synthesizer": {
+    "vendor": "xai",
+    "language": "en",
+    "voice": "eve",
+    "options": {
+      "speed": 1.0,
+      "optimize_streaming_latency": 0,
+      "text_normalization": false
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+An xAI credential can be enabled for both TTS and STT. **Extra Options applies to TTS only** — speech recognition settings are configured per-verb via `recognizer.xaiOptions`, not on the credential.
+
+## Options
+
+<ParamField path="speed" type="number" required={false}>
+  Speech speed multiplier, `0.7` – `1.5`. Defaults to `1.0`. Values below `1.0` slow the voice down, above `1.0` speed it up.
+</ParamField>
+
+<ParamField path="optimize_streaming_latency" type="number" required={false}>
+  `0` (default) or `1`. `1` shrinks the first audio chunk to lower time-to-first-audio, with a minor quality tradeoff.
+</ParamField>
+
+<ParamField path="text_normalization" type="boolean" required={false}>
+  Convert written-form text — numbers, abbreviations, symbols — into spoken form before synthesis, so `$42.50` is read as "forty-two dollars and fifty cents". Defaults to `false`.
+</ParamField>
+
+<Warning>
+xAI is one of the vendors jambonz uses **word-level timestamps** with, to trim already-spoken audio on barge-in. Normalization rewrites the text that is actually spoken, which makes the returned timestamps disagree with the text jambonz sent. When timestamps are in use, `text_normalization` is therefore suppressed — alignment wins. If you need normalized readings of numbers or currency in an agent, write them out in the text you send rather than relying on this option.
+</Warning>
+
+## Endpoint override
+
+xAI credentials have no API base URL field in the portal. If you need to point at a non-default endpoint — a proxy, for example — set `api_uri` in **Extra Options** alongside the tuning fields:
+
+```json
+{
+  "api_uri": "my-proxy.example.com",
+  "speed": 1.0
+}
+```
+
+Leave it out to use xAI's standard endpoint (`api.x.ai`).
+
+## Streaming
+
+xAI supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token-by-token from an LLM using `tts:tokens`. Word-level timestamps are returned, so alignment events are available — see the warning above for how that interacts with `text_normalization`.

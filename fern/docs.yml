@@ -136,8 +136,12 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/inworld.mdx
               - page: Murf
                 path: ./docs/pages/features/tts-vendors/murf.mdx
+              - page: Resemble
+                path: ./docs/pages/features/tts-vendors/resemble.mdx
               - page: Rime Labs
                 path: ./docs/pages/features/tts-vendors/rimelabs.mdx
+              - page: xAI
+                path: ./docs/pages/features/tts-vendors/xai.mdx
           - page: Answering machine detection
             path: ./docs/pages/features/answering-machine-detection.mdx
           - page: Conferencing "coach" mode
