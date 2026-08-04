@@ -122,6 +122,8 @@ navigation:
             path: ./docs/pages/features/custom-speech-stt.mdx
           - page: Custom TTS providers
             path: ./docs/pages/features/custom-speech-tts.mdx
+          - page: Gradium TTS
+            path: ./docs/pages/features/gradium-tts.mdx
           - page: Answering machine detection
             path: ./docs/pages/features/answering-machine-detection.mdx
           - page: Conferencing "coach" mode
