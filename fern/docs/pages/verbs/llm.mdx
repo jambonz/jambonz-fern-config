@@ -270,34 +270,41 @@ There is no `response_create` and no initial `response.create`: the model starts
 
 ### Getting the agent to speak first
 
-There is no `response_create`, so there is no explicit "speak now" trigger like the Realtime API's `response.create`. **The agent opens the conversation on its own as soon as input audio starts flowing** — and because jambonz begins streaming the caller's audio the moment `session.started` lifts the media server's input gate, that happens automatically on every call, typically within a second of the session starting.
+There is no `response_create`, so nothing forces a first turn — and putting the greeting in `instructions` alone does **not** work. Measured against the alpha:
 
-Verified against the alpha:
-
-| What you send | Agent speaks first? |
+| What you do | Agent opens the call |
 |---|---|
-| `instructions` only, no audio at all | **no** — it waits indefinitely |
-| Any input audio, even pure silence | **yes** |
-| `session.context.append` with no audio | **no** — context alone does not trigger generation |
+| greeting in `session_update.instructions` only | **0 / 5** |
+| `session.context.append` after `session.started` | **5 / 5** |
 
-So the trigger is the audio stream, not the prompt and not a client event. Silence counts: a caller who says nothing still causes the agent to open.
+When the model stays quiet it does **not** simply send nothing: it streams `output_audio.delta` frames of **digital silence**. The caller hears dead air while the media server correctly reports playing audio, so never treat playback events as evidence the agent spoke.
 
-To control *what* it opens with, put it in `session_update.instructions` — that is the only lever, since there is no per-response instruction override:
+Per OpenAI's prompting guide for the alpha, request the greeting with a `session.context.append` that supplies the **intended wording** and says **when** to speak:
 
 ```js
-llmOptions: {
-  session_update: {
-    instructions: SYSTEM_PROMPT +
-      ' Open the conversation yourself: as soon as the call connects, greet the caller ' +
-      'and ask how you can help. Do not wait for the caller to speak first.',
-    audio: { output: { voice: 'marin' } },
-    delegation: { type: 'client' }
+session.on('/event', (evt) => {
+  if (evt.type === 'session.started') {
+    session.updateLlm({
+      type: 'session.context.append',
+      content: [{
+        type: 'input_text',
+        text: 'Immediately greet the caller using the exact text below. Do not wait for the '
+          + 'caller to speak first. After the greeting, pause and listen.\n\n'
+          + 'Hi, I am your support assistant. How can I help you today?',
+      }],
+    });
   }
-}
+});
 ```
 
+The same pattern works for any required spoken message — a disclosure, a transfer notice, a closing.
+
+<Warning>
+A context append **guides** the model; it is not a playback command. OpenAI's guidance is explicit that the model may stay silent, paraphrase, or be interrupted — and we measured paraphrasing on every attempt when the wording was not supplied. **When exact wording is a legal or brand requirement, do not rely on the model: speak it with a [`say`](/verbs/verbs/say) verb before the `llm` verb** so jambonz TTS plays it deterministically.
+</Warning>
+
 <Note>
-Two consequences of the trigger being audio rather than an explicit event. First, you cannot deterministically sequence "greet, then listen" the way `response.create` allows — the model decides when to start. Second, if the agent is **silent** on a call, the cause is almost always that no audio reached the vendor: check your `eventHook` for `session.started` (without it the media server's input gate never lifts and every caller frame is dropped), and check for an `error` event before it.
+`session.context.append` is currently reachable only over **WebSocket** (`session.updateLlm(...)`). The REST `updateCall` API does not accept `llm_update`, so a webhook-transport application cannot send it — another reason s2s applications should use WebSocket transport.
 </Note>
 
 ### Audio format
