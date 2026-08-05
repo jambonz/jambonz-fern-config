@@ -1,0 +1,224 @@
+---
+title: OpenAI GPT Live
+subtitle: Using jambonz to connect custom telephony to OpenAI's GPT Live API
+---
+
+<Note>
+The jambonz application referenced in this article can be
+found [here](https://github.com/jambonz/v10-examples/tree/main/examples/s2s/gptlive).
+</Note>
+
+This is an example jambonz application that connects a phone call to OpenAI's GPT Live API.
+It answers the call, asks the agent to greet the caller, and implements a "get weather"
+function the agent can call.
+
+<Warning>
+GPT Live is a limited-access alpha and requires an OpenAI key enrolled in their Early Access
+Program. An ordinary OpenAI key will be refused.
+
+It is also a **different API** from the OpenAI Realtime API, not just a newer model — if you
+already have an app built on the Realtime API, the configuration is not interchangeable. The
+[`llm` verb article](/verbs/llm#migrating-from-the-realtime-api) has a field-by-field
+migration table.
+</Warning>
+
+## Authentication
+
+Provide your API key in the `auth` property of the `llm` verb. The example reads it from an
+environment variable:
+
+```bash
+GPTLIVE_API_KEY=sk-proj-XXXXXXX npm start
+```
+
+## Configuring the assistant
+
+All the interesting code is in
+[src/index.ts](https://github.com/jambonz/v10-examples/blob/main/examples/s2s/gptlive/src/index.ts).
+Configuration goes in a `session_update` inside `llmOptions`:
+
+```js
+session.s2s({
+  vendor: 'gptlive',
+  model: 'gpt-live-1-boulder-alpha',
+  auth: { apiKey: process.env.GPTLIVE_API_KEY },
+  llmOptions: {
+    session_update: {
+      instructions: 'You are a friendly and helpful voice assistant for Jambonz Mobile. '
+        + 'Keep your responses concise and conversational. '
+        + 'You are speaking via voice, so respond in plain prose with no markdown.',
+      audio: {
+        output: { voice: 'marin' },
+      },
+      delegation,   // see below
+    },
+  },
+  toolHook: '/tool-call',
+  eventHook: '/s2s-event',
+  actionHook: '/s2s-complete',
+});
+```
+
+Two things to note if you are used to the other speech-to-speech tutorials:
+
+- There is **no `response_create`**. GPT Live has no such client event.
+- There is **nothing to configure for audio format or turn detection**. GPT Live fixes the
+  audio at 24 kHz mono PCM and handles endpointing itself, and jambonz converts to and from
+  the caller's codec for you.
+
+`session_update` is required — GPT Live will not accept the caller's audio until it has
+your configuration.
+
+## Delegations
+
+This is the part of GPT Live with no equivalent in the other vendors. Whenever the model
+needs something from outside the spoken conversation, it creates a **delegation**. You choose
+which kind up front, and the choice decides whether you can use function calling at all.
+
+The example exposes this as a `DELEGATION_MODE` environment variable so you can try both.
+
+### `responses` — the agent can call your functions
+
+```js
+const delegation = {
+  type: 'responses',
+  responses: {
+    model: 'gpt-5.5',
+    tools: [weatherTool],
+  },
+};
+```
+
+The nested `responses` object is required, and so is its `model` — that is a second model,
+which runs the delegated turn, and it is separate from the voice model on the verb. Your
+tool definitions go in `responses.tools`, not at the top level of the session.
+
+Use this mode if you want function calling, MCP servers, or jambonz's built-in
+`handoff` and `hangup` tools.
+
+### `client` — the agent asks your app for context
+
+```js
+const delegation = { type: 'client' };
+```
+
+In this mode the model asks *your application* for background information in prose rather
+than calling a function. You get a `delegation.created` event and answer it with up to 500
+tokens of text:
+
+```js
+session.on('/s2s-event', (evt) => {
+  if (evt.type === 'delegation.created' && evt.item?.target === 'client') {
+    session.updateLlm({
+      type: 'delegation.context.append',
+      delegation_item_id: evt.item.id,
+      content: [{
+        type: 'input_text',
+        text: 'The caller is a Jambonz Mobile customer on the Unlimited plan. '
+          + 'Their account is in good standing.',
+      }],
+    });
+  }
+});
+```
+
+## Greeting the caller
+
+This is the one thing most likely to trip you up. Because there is no `response_create`,
+nothing tells the model to take the first turn — and **putting the greeting in
+`instructions` does not work**. The model waits for the caller, who hears silence.
+
+To open the call, ask for the greeting when you receive `session.started`:
+
+```js
+session.on('/s2s-event', (evt) => {
+  if (evt.type === 'session.started') {
+    session.updateLlm({
+      type: 'session.context.append',
+      content: [{
+        type: 'input_text',
+        text: 'Immediately greet the caller using the exact text below. Do not wait for the '
+          + 'caller to speak first. After the greeting, pause and listen.\n\n'
+          + 'Hi, I am the Jambonz Mobile assistant. How can I help you today?',
+      }],
+    });
+  }
+});
+```
+
+Give it both the wording you want and an instruction about *when* to speak. Leave the wording
+out and the agent will invent its own greeting every time.
+
+<Warning>
+This requests a greeting, it does not guarantee one. OpenAI is explicit that a context append
+guides the model — it may paraphrase, or occasionally stay quiet. If the exact words matter,
+play them yourself with a [`say`](/verbs/verbs/say) verb before the `llm` verb.
+</Warning>
+
+## Function calling
+
+The example implements a `get_weather` function using the free APIs from
+[open-meteo.com](https://open-meteo.com/). The tool is declared in
+`delegation.responses.tools`, and jambonz calls your `toolHook` when the model wants to run
+it — the same as every other vendor.
+
+What differs is the envelope you return the result in:
+
+```js
+session.on('/tool-call', async (evt) => {
+  const { tool_call_id, name, args } = evt;
+  const result = await lookupWeather(args.location);
+
+  session.sendToolOutput(tool_call_id, {
+    type: 'delegation.function_call_output.create',
+    item: {
+      type: 'function_call_output',
+      call_id: tool_call_id,
+      output: result,          // must be a string
+    },
+  });
+});
+```
+
+Unlike the Realtime API, there is no follow-on `response.create` to send — the server picks
+the conversation back up on its own once it has your result.
+
+## Events
+
+Request the events you want in the `events` property of the `llm` verb, with wildcard support.
+The most useful one for following the conversation is `turn.done`, which carries a completed
+utterance:
+
+```js
+session.on('/s2s-event', (evt) => {
+  if (evt.type === 'turn.done') {
+    log.info({ role: evt.turn?.role, transcript: evt.turn?.transcript }, 'turn');
+  }
+});
+```
+
+If you want live partials instead, `input_transcript.added` and `output_transcript.added`
+stream fragments as speech is recognized — but their boundaries follow speech cadence rather
+than complete thoughts, so one sentence may arrive in several pieces.
+
+Barge-in needs no work on your part: when the caller talks over the agent, jambonz flushes the
+queued audio automatically.
+
+## actionHook properties
+
+Like many jambonz verbs, the `llm` verb sends an `actionHook` with a final status when the
+session completes. The payload includes a `completion_reason` property indicating why the
+session ended, such as:
+
+- normal conversation end
+- connection failure
+- disconnect from remote end
+- server failure
+- server error
+
+A `connection failure` or an immediate `server error` on this vendor almost always means the
+API key does not have alpha access.
+
+Note that not every problem ends the call. Once the session is running, a rejected client
+event or a failed delegation is reported on your `eventHook` and the conversation carries on,
+so you can recover if you want to.
