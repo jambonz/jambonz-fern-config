@@ -375,6 +375,8 @@ navigation:
             path: ./docs/pages/tutorials/elevenlabs.mdx
           - page: Google Gemini Live
             path: ./docs/pages/tutorials/gemini.mdx
+          - page: OpenAI GPT Live
+            path: ./docs/pages/tutorials/gptlive.mdx
           - page: OpenAI Realtime API
             path: ./docs/pages/tutorials/openai.mdx
           - page: Qwen Omni Realtime
