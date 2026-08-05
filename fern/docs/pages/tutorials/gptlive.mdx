@@ -18,18 +18,37 @@ Program. An ordinary OpenAI key will be refused.
 
 It is also a **different API** from the OpenAI Realtime API, not just a newer model — if you
 already have an app built on the Realtime API, the configuration is not interchangeable. The
-[`llm` verb article](/verbs/llm#migrating-from-the-realtime-api) has a field-by-field
+[`llm` verb article](/verbs/verbs/llm#migrating-from-the-realtime-api) has a field-by-field
 migration table.
 </Warning>
 
-## Authentication
-
-Provide your API key in the `auth` property of the `llm` verb. The example reads it from an
-environment variable:
+## Running the example
 
 ```bash
-GPTLIVE_API_KEY=sk-proj-XXXXXXX npm start
+git clone https://github.com/jambonz/v10-examples.git
+cd v10-examples/examples/s2s/gptlive
+npm install
+npm start
 ```
+
+The app listens on `ws://localhost:3000/` by default (`PORT` and `LOG_LEVEL` are ordinary
+environment variables). Create a jambonz application pointing its calling webhook at that
+URL over WebSocket, and assign a phone number to it.
+
+## Configuration
+
+Everything else is configured with **application variables**, which you set in the jambonz
+portal — the example declares them so the portal discovers them automatically, and reads them
+from `session.data.env_vars` at call time. They are not shell environment variables.
+
+| Application variable | Purpose |
+|---|---|
+| `GPTLIVE_API_KEY` | OpenAI API key enrolled in the Early Access Program (required) |
+| `GPTLIVE_MODEL` | Voice model; defaults to `gpt-live-1-boulder-alpha` |
+| `DELEGATION_MODE` | `responses` (default) or `client` — see [Delegations](#delegations) |
+| `DELEGATION_MODEL` | Model for delegated turns; defaults to `gpt-5.5` |
+| `VOICE` | Output voice; defaults to `marin` |
+| `GREETING` | The wording the agent opens the call with |
 
 ## Configuring the assistant
 
@@ -37,11 +56,18 @@ All the interesting code is in
 [src/index.ts](https://github.com/jambonz/v10-examples/blob/main/examples/s2s/gptlive/src/index.ts).
 Configuration goes in a `session_update` inside `llmOptions`:
 
+<Note>
+`s2s()` and `llm()` are the same verb — `s2s()` is the current SDK method and `llm()` is
+retained for compatibility, which is why the [reference documentation](/verbs/verbs/llm) calls
+it the `llm` verb. There is no `gptlive_s2s()` shortcut, so pass `vendor: 'gptlive'` to
+`s2s()`.
+</Note>
+
 ```js
 session.s2s({
   vendor: 'gptlive',
-  model: 'gpt-live-1-boulder-alpha',
-  auth: { apiKey: process.env.GPTLIVE_API_KEY },
+  model: env.GPTLIVE_MODEL,
+  auth: { apiKey: env.GPTLIVE_API_KEY },
   llmOptions: {
     session_update: {
       instructions: 'You are a friendly and helpful voice assistant for Jambonz Mobile. '
@@ -59,11 +85,13 @@ session.s2s({
 });
 ```
 
+`voice` accepts the GPT Live voice names; the example defaults to `marin`.
+
 Two things to note if you are used to the other speech-to-speech tutorials:
 
 - There is **no `response_create`**. GPT Live has no such client event.
 - There is **nothing to configure for audio format or turn detection**. GPT Live fixes the
-  audio at 24 kHz mono PCM and handles endpointing itself, and jambonz converts to and from
+  audio at 24 kHz mono PCM and handles turn detection itself, and jambonz converts to and from
   the caller's codec for you.
 
 `session_update` is required — GPT Live will not accept the caller's audio until it has
@@ -75,7 +103,7 @@ This is the part of GPT Live with no equivalent in the other vendors. Whenever t
 needs something from outside the spoken conversation, it creates a **delegation**. You choose
 which kind up front, and the choice decides whether you can use function calling at all.
 
-The example exposes this as a `DELEGATION_MODE` environment variable so you can try both.
+The example exposes this as the `DELEGATION_MODE` application variable so you can try both.
 
 ### `responses` — the agent can call your functions
 
@@ -124,9 +152,9 @@ session.on('/s2s-event', (evt) => {
 
 ## Greeting the caller
 
-This is the one thing most likely to trip you up. Because there is no `response_create`,
-nothing tells the model to take the first turn — and **putting the greeting in
-`instructions` does not work**. The model waits for the caller, who hears silence.
+Because there is no `response_create`, nothing tells the model to take the first turn — and
+**putting the greeting in `instructions` does not work**. The model waits for the caller, who
+hears silence.
 
 To open the call, ask for the greeting when you receive `session.started`:
 
@@ -147,7 +175,7 @@ session.on('/s2s-event', (evt) => {
 ```
 
 Give it both the wording you want and an instruction about *when* to speak. Leave the wording
-out and the agent will invent its own greeting every time.
+out and the agent will use its own.
 
 <Warning>
 This requests a greeting, it does not guarantee one. OpenAI is explicit that a context append
@@ -185,9 +213,13 @@ the conversation back up on its own once it has your result.
 
 ## Events
 
-Request the events you want in the `events` property of the `llm` verb, with wildcard support.
+Name the events you want in the `events` property of the verb — if you omit it, jambonz
+forwards everything, including high-volume transcript fragments. The
+[reference documentation](/verbs/verbs/llm#following-the-conversation) has the full list;
+GPT Live is in alpha and has no public event reference of its own.
+
 The most useful one for following the conversation is `turn.done`, which carries a completed
-utterance:
+utterance and a `turn.role` of `'user'` or `'assistant'`:
 
 ```js
 session.on('/s2s-event', (evt) => {
@@ -207,18 +239,29 @@ queued audio automatically.
 ## actionHook properties
 
 Like many jambonz verbs, the `llm` verb sends an `actionHook` with a final status when the
-session completes. The payload includes a `completion_reason` property indicating why the
-session ended, such as:
+session completes. Handle it and acknowledge it — on WebSocket transport a session that never
+replies will hang:
 
-- normal conversation end
-- connection failure
-- disconnect from remote end
-- server failure
-- server error
+```js
+session.on('/s2s-complete', (evt) => {
+  log.info(evt, 's2s complete');
+  session.reply();
+});
+```
 
-A `connection failure` or an immediate `server error` on this vendor almost always means the
-API key does not have alpha access.
+The payload includes a `completion_reason` explaining why the session ended. The
+[reference documentation](/verbs/verbs/llm#how-the-session-ends) lists the values in full; the
+one you are most likely to see while getting started is `server error`, which almost always
+means the API key is not enrolled in the Early Access Program. The payload carries an `error`
+object with OpenAI's own reason — check that first.
 
 Note that not every problem ends the call. Once the session is running, a rejected client
 event or a failed delegation is reported on your `eventHook` and the conversation carries on,
 so you can recover if you want to.
+
+## Resources
+
+- The [`llm` verb reference](/verbs/verbs/llm) — full field and event documentation
+- [Migrating from the OpenAI Realtime API](/verbs/verbs/llm#migrating-from-the-realtime-api)
+- The [`say`](/verbs/verbs/say) verb — for greetings that must use exact wording
+- The [example application](https://github.com/jambonz/v10-examples/tree/main/examples/s2s/gptlive)
