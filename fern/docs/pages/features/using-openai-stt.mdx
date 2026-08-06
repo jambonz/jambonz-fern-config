@@ -23,7 +23,8 @@ To begin with, here are the possible options that you use with OpenAI STT:
     vendor: 'openai',
     ..other recognition options
     openaiOptions: {
-      model: 'gpt-4o-transcribe', // or 'gpt-4o-mini-transcribe', 'whisper-1', or 'gpt-realtime-whisper'
+      model: 'gpt-4o-transcribe', // or 'gpt-4o-mini-transcribe', 'whisper-1',
+                                  // 'gpt-live-transcribe', or 'gpt-realtime-whisper'
       input_audio_noise_reduction: 'near_field', // or 'far_field'
       prompt: 'string',
       turn_detection: {
@@ -32,7 +33,12 @@ To begin with, here are the possible options that you use with OpenAI STT:
         prefix_padding_ms: 300, // only for server_vad
         silence_duration_ms: 800 // only for server_vad
       },
-      // local VAD knobs, only used with 'gpt-realtime-whisper'
+      // only for 'gpt-live-transcribe'
+      languages: ['en', 'fr'], // language hints as a LIST; do not combine with language
+      keywords: ['jambonz', 'drachtio'], // literal term hints; defaults to the recognizer hints
+      delay: 'low', // 'minimal', 'low', 'medium', 'high', or 'xhigh' — latency/accuracy trade-off
+      // local VAD knobs, only used with the client-endpointed models
+      // ('gpt-live-transcribe' and 'gpt-realtime-whisper')
       vadMode: 2,        // 0-3, higher is more aggressive
       vadSilenceMs: 500, // ms of silence to end an utterance
       vadVoiceMs: 250,   // ms of voice to start an utterance
@@ -57,11 +63,23 @@ The `turn_detection` object controls how OpenAI detects when a speaker has finis
 
 The `eagerness` setting affects how audio is chunked even in transcription mode. Use `high` if you want faster transcription events, or `low` if you prefer larger, more complete transcript chunks.
 
-### Using `gpt-realtime-whisper`
+### Client-endpointed models: `gpt-live-transcribe` and `gpt-realtime-whisper`
 
-The `gpt-realtime-whisper` model does not support OpenAI's server-side turn detection.
+These two models do not support OpenAI's server-side turn detection — the API rejects a
+`turn_detection` block for them, and left alone they would stream partial text forever without
+ever finalizing a transcript. jambonz therefore detects the end of each utterance itself, using
+a local voice-activity detector on the media server, and tells OpenAI when to finalize.
 
-Any `turn_detection` settings in `openaiOptions` are ignored when this model is selected. Partial deltas continue to be delivered while the user is speaking, and a single final transcript is delivered per utterance once VAD detects silence.
+Any `turn_detection` settings in `openaiOptions` are ignored when these models are selected.
+Instead, the local VAD knobs apply:
+
+- `vadMode` (0–3, default 2): detection aggressiveness — higher opens a turn on quieter speech
+- `vadVoiceMs` (default 250): milliseconds of sustained voice that starts an utterance
+- `vadSilenceMs` (default 500): milliseconds of silence that ends an utterance and finalizes it
+
+Partial deltas continue to be delivered while the user is speaking (when `interim` is set on the
+recognizer), and a single final transcript is delivered per utterance once the local VAD detects
+silence.
 
 ```
 {
@@ -69,6 +87,36 @@ Any `turn_detection` settings in `openaiOptions` are ignored when this model is 
     vendor: 'openai',
     openaiOptions: {
       model: 'gpt-realtime-whisper',
+    }
+  }
+}
+```
+
+### Using `gpt-live-transcribe`
+
+`gpt-live-transcribe` is OpenAI's newest realtime transcription model. In addition to the
+client-endpointed behavior above, it accepts three fields the other models do not:
+
+- `languages`: language hints as a **list** (e.g. `['en', 'fr']`). This replaces the singular
+  `language` for this model — jambonz sends whichever form the model accepts, so set one or the
+  other, not both. When unset, the recognizer's `language` is used.
+- `keywords`: literal term hints — product names, acronyms, medications — that the model should
+  be primed to recognize. These are hints, not required output. When unset, the recognizer's
+  `hints` are used.
+- `delay`: the latency/accuracy trade-off, one of `minimal`, `low`, `medium`, `high`, or
+  `xhigh`. Lower emits partial text sooner; higher gives the model more audio context per chunk
+  and can improve accuracy.
+
+```
+{
+  recognizer: {
+    vendor: 'openai',
+    interim: true,
+    openaiOptions: {
+      model: 'gpt-live-transcribe',
+      keywords: ['jambonz', 'drachtio', 'SIP'],
+      delay: 'low',
+      vadSilenceMs: 500,
     }
   }
 }
