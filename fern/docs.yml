@@ -6,8 +6,12 @@ instances:
         owner: jambonz
         repo: jambonz-fern-config
         branch: main
-  
-tabs: 
+
+analytics:
+  ga4:
+    measurement-id: G-9E7CLZZKG5
+
+tabs:
   home: 
     display-name: Home
     icon: fa-regular fa-home
