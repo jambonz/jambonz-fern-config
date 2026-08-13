@@ -34,23 +34,26 @@ When deploying jambonz via **AWS CloudFormation** or **Terraform**, provide your
 
 ### Existing Deployments
 
-For systems already deployed, add the Krisp API key to the FreeSWITCH service configuration on the feature-server or mini:
+For systems already deployed, add the Krisp API key to the mediajam environment file on the feature-server or mini. As of jambonz 11, mediajam is the media server and reads its configuration from `/etc/default/mediajam` — the key no longer belongs in the FreeSWITCH systemd unit.
 
-1. Edit the FreeSWITCH systemd service file:
+1. Edit the mediajam environment file:
    ```bash
-   sudo vi /etc/systemd/system/freeswitch.service
+   sudo vi /etc/default/mediajam
    ```
 
-2. Locate the `KRISP_LICENSE_KEY` environment variable and add your API key:
+2. Set the `KRISP_API_KEY` variable to your API key (the file ships with an empty value):
    ```ini
-   Environment="KRISP_LICENSE_KEY=your-api-key-here"
+   KRISP_API_KEY=your-api-key-here
    ```
 
-3. Reload systemd and restart FreeSWITCH:
+3. Restart mediajam:
    ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl restart freeswitch
+   sudo systemctl restart mediajam
    ```
+
+<Note>
+Krisp is initialized only when `KRISP_API_KEY` is non-empty at startup, and licensing is validated against `sdkapi.krisp.ai`, so the media server needs outbound HTTPS to that host.
+</Note>
 
 ### Verify Configuration
 
