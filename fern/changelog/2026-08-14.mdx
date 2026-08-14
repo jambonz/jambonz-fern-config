@@ -59,8 +59,13 @@ have been removed.
 | pcap-server | 1.0.3 | 1.0.3 |
 | heplify-server | 1.0.3 | 1.0.3 |
 
-#### Self-hosting
+#### Availability
 
-AWS AMIs are published for all nine deployment variants on both amd64 and arm64,
-in all 30 regions the CloudFormation templates support. The AMIs and their EBS
-snapshots are public, so `generate-cf.sh` copies them into your own account.
+**jambonz.cloud** — 11.1.1 is available on our hosted platform, with nothing to
+install or upgrade.
+
+**AWS** — AMIs are published for all nine deployment variants on both amd64 and
+arm64, in all 30 regions the CloudFormation templates support. The AMIs and
+their EBS snapshots are public, so `generate-cf.sh` copies them into your own
+account. See the [AWS installation instructions](/self-hosting/aws) to deploy or
+upgrade a self-hosted cluster.
