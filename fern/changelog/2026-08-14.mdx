@@ -1,0 +1,71 @@
+<Card title="11.1.1" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.1
+</Card>
+
+**11.1.1** rolls up everything since 11.0.0, including the 11.1.0 changes.
+The speech lineup grows again — **Deepgram Flux**, **Gradium**, and **Inworld**
+streaming TTS on the text-to-speech side, and **Alibaba Qwen Omni-Realtime** and
+**OpenAI GPT live** for speech-to-speech, plus OpenAI live transcription.
+**Dialogflow** gains client-side tool calling on both CX and CES, with CES also
+getting streaming playout and turn-by-turn observability in Recent Calls.
+Conference `listen` can now fork each participant separately, `dial` supports
+SRTP to SIP URI targets, and **SMPP** and the last **FreeSWITCH** dependencies
+have been removed.
+
+#### New Features & Improvements
+
+1. **Deepgram Flux TTS** — Added Deepgram's Flux model as a text-to-speech vendor across the feature-server, API server, and webapp.
+1. **Gradium TTS** — Added [Gradium](/verbs/verbs/say) as a text-to-speech vendor.
+1. **Inworld streaming TTS** — Inworld TTS streams with word-level alignment, and the API adds the `inworld-tts-2` generation. The older `tts-1` generation is deprecated.
+1. **Qwen Omni-Realtime (speech-to-speech)** — Added Alibaba's Qwen Omni-Realtime (Qwen-Audio-3.0) as a speech-to-speech vendor for the [agent](/verbs/verbs/agent) verb.
+1. **OpenAI GPT live** — Added OpenAI's GPT live models for speech-to-speech, and OpenAI live transcription is selectable for [transcribe](/verbs/verbs/transcribe).
+1. **xAI and Resemble in the portal** — The webapp exposes xAI and Resemble text-to-speech options in Extra Options.
+1. **Speechmatics filtering** — Speechmatics accepts filtering configuration.
+1. **Dialogflow CX tool calls** — Dialogflow CX supports a client-side tool-call round trip through `toolHook`.
+1. **Dialogflow CES tool calls, streaming playout, and observability** — Dialogflow CES supports the same client-side tool-call round trip, streams playout as it arrives, and reports turn-by-turn detail. Recent Calls in the portal has a turn-by-turn transcript view for Dialogflow sessions.
+1. **Per-member conference recording** — [listen](/verbs/verbs/listen) accepts `scope=members` at the conference level, producing one fork per participant instead of a single mixed stream.
+1. **Remote party on conference participants** — Conference participants report the remote party's number.
+1. **SRTP on outbound SIP URI calls** — [dial](/verbs/verbs/dial) accepts `srtpEncryption` for SIP URI targets, and the SBC honors the `X-Jambonz-SRTP` header on forwarded SIP URI calls. `rtcp-mux` is now the default for SRTP on both inbound and outbound.
+1. **transfer onholdHook** — The [transfer](/verbs/verbs/transfer) verb and handoff accept an `onholdHook`.
+1. **Multi-arch Docker images** — The feature-server, API server, webapp, inbound, and outbound images are built for both amd64 and arm64.
+
+#### Removals
+
+1. **SMPP removed** — SMPP support has been removed from the feature-server, API server, and webapp.
+1. **FreeSWITCH dependencies removed** — Integration tests run against mediajam, and the cron jobs no longer reference FreeSWITCH.
+
+#### Bug Fixes
+
+- **transfer/handoff caller ID** — A transfer or handoff no longer loses the caller ID.
+- **Speech-to-speech teardown** — Speech-to-speech sessions are torn down cleanly.
+- **DTMF** — `lcc_DTMF` prefers RFC 2833 through the media server.
+- **say on the streaming path** — The [say](/verbs/verbs/say) verb executes correctly when streaming.
+- **Ultravox errors** — A failed call registration reports the real underlying error rather than a generic failure.
+- **Outbound SDP** — The SBC no longer emits an SDP `m=` line with no audio codec.
+- **3PCC detection** — Inbound no longer misidentifies certain calls as third-party call control.
+- **CLI environment** — The API server loads the ecosystem environment in the `bin/` and `upgrade-db` CLIs.
+- **SSO login** — SSO login no longer returns a 500 for enterprise users, and service-provider-scoped users are no longer redirected to registration after signing in.
+- **Enterprise upgrade billing** — Upgrading an enterprise account keeps the customer's existing Stripe subscription.
+- **Portal** — Users land on Home after opting into the new console; the carrier KYC prompt is hidden when prepaid isn't offered; the placeholder "Est. next invoice" card is parked; and the enterprise welcome dialog no longer pushes account creation.
+
+#### Component versions
+
+| Component | 11.0.0 | 11.1.1 |
+|---|---|---|
+| mediajam | v0.4.15 | **v0.5.3** |
+| drachtio | 10.0.22 | **10.1.2** |
+| upload-recordings | 1.8.5 | **1.8.6** |
+| rtpengine | 14.1.1.8-jambonz10 | 14.1.1.8-jambonz10 |
+| pcap-server | 1.0.3 | 1.0.3 |
+| heplify-server | 1.0.3 | 1.0.3 |
+
+#### Availability
+
+**jambonz.cloud** — 11.1.1 is available on our hosted platform, with nothing to
+install or upgrade.
+
+**AWS** — AMIs are published for all nine deployment variants on both amd64 and
+arm64, in all 30 regions the CloudFormation templates support. The AMIs and
+their EBS snapshots are public, so `generate-cf.sh` copies them into your own
+account. See the [AWS installation instructions](/self-hosting/aws) to deploy or
+upgrade a self-hosted cluster.
