@@ -55,9 +55,15 @@ have been removed.
 | mediajam | v0.4.15 | **v0.5.3** |
 | drachtio | 10.0.22 | **10.1.2** |
 | upload-recordings | 1.8.5 | **1.8.6** |
-| rtpengine | 14.1.1.8-jambonz10 | 14.1.1.8-jambonz10 |
-| pcap-server | 1.0.3 | 1.0.3 |
-| heplify-server | 1.0.3 | 1.0.3 |
+| rtpengine | 14.1.1.8-jambonz10 | 14.1.1.8-jambonz10 (AMI) / **-jambonz11** (deb) |
+| pcap-server | 1.0.3 | 1.0.3 (AMI) / **1.0.4** (deb) |
+| heplify-server | 1.0.3 | 1.0.3 (AMI) / **1.0.4** (deb) |
+
+The three components that differ between the AMI and Debian package installs
+differ only in packaging: `jambonz11` adds a multi-arch Docker build and an RPM
+build-dependency fix, and the pcap-server and heplify-server point releases each
+add a multi-arch Docker image. No functional difference, and the two converge at
+the next release.
 
 #### Availability
 
@@ -69,3 +75,12 @@ arm64, in all 30 regions the CloudFormation templates support. The AMIs and
 their EBS snapshots are public, so `generate-cf.sh` copies them into your own
 account. See the [AWS installation instructions](/self-hosting/aws) to deploy or
 upgrade a self-hosted cluster.
+
+**Debian packages** — `jambonz-mini` 11.1.1 is published in the apt repository
+for **both amd64 and arm64**, installable on a fresh Debian 12 (bookworm) host
+with `apt-get install jambonz-mini`. See the
+[Debian package instructions](/self-hosting/debian-package).
+
+As of this release the package pins every jambonz component to an exact version,
+so an install resolves to a known-good set rather than to whatever is newest in
+the repository.
