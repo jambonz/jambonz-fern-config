@@ -458,3 +458,149 @@ typography:
 
 experimental: 
   openapi-parser-v3: true
+
+redirects:
+  - source: "/guides/features/bring-your-own-llm/xai"
+    destination: "/guides/features/bring-your-own-llm/x-ai-grok"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/deepseek"
+    destination: "/guides/features/bring-your-own-llm/deep-seek"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/vertex-gemini"
+    destination: "/guides/features/bring-your-own-llm/vertex-ai-gemini"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/google"
+    destination: "/guides/features/bring-your-own-llm/google-ai-studio"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/openai"
+    destination: "/guides/features/bring-your-own-llm/open-ai"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/azure-openai"
+    destination: "/guides/features/bring-your-own-llm/azure-open-ai"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/bedrock"
+    destination: "/guides/features/bring-your-own-llm/aws-bedrock"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/huggingface"
+    destination: "/guides/features/bring-your-own-llm/hugging-face"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/moonshot"
+    destination: "/guides/features/bring-your-own-llm/moonshot-kimi"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/zai"
+    destination: "/guides/features/bring-your-own-llm/z-ai-glm"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/vertex-openai"
+    destination: "/guides/features/bring-your-own-llm/vertex-ai-partner-models"
+    permanent: true
+  - source: "/self-hosting/aws"
+    destination: "/self-hosting/hosting-providers/aws"
+    permanent: true
+  - source: "/self-hosting/gcp"
+    destination: "/self-hosting/hosting-providers/gcp"
+    permanent: true
+  - source: "/self-hosting/azure"
+    destination: "/self-hosting/hosting-providers/azure"
+    permanent: true
+  - source: "/self-hosting/oci"
+    destination: "/self-hosting/hosting-providers/oci"
+    permanent: true
+  - source: "/self-hosting/debian-package"
+    destination: "/self-hosting/bare-metal-vps/debian-package"
+    permanent: true
+  - source: "/self-hosting/licensing"
+    destination: "/self-hosting/overview/licensing"
+    permanent: true
+  - source: "/self-hosting/krisp"
+    destination: "/self-hosting/overview/krisp-turn-taking"
+    permanent: true
+  - source: "/self-hosting/overview/post-install"
+    destination: "/self-hosting/overview/post-install-steps"
+    permanent: true
+  - source: "/self-hosting/overview/wss-siptls"
+    destination: "/self-hosting/overview/setting-up-web-rtc-and-sip-tls"
+    permanent: true
+  - source: "/reference/websocket-api/call-control/docs/ws/tts-tokens"
+    destination: "/reference/websocket-api/call-control/tts-tokens"
+    permanent: true
+  - source: "/reference/websocket-api/call-control/docs/ws/tts-tokens-result"
+    destination: "/reference/websocket-api/call-control/tts-tokens-result"
+    permanent: true
+  - source: "/reference/websocket-api/call-control/docs/ws/tts-streaming-event"
+    destination: "/reference/websocket-api/call-control/tts-streaming-event"
+    permanent: true
+  - source: "/reference/websocket-api/call-control/docs/ws/llm-tool-call"
+    destination: "/reference/websocket-api/call-control/llm-tool-call"
+    permanent: true
+  - source: "/reference/websocket-api/call-control/docs/webhooks/llm"
+    destination: "/reference/websocket-api/call-control/llm-event"
+    permanent: true
+  - source: "/reference/websocket-api/call-control/docs/webhooks/dub"
+    destination: "/verbs/verbs/dub"
+    permanent: true
+  - source: "/docs/webhooks/overview"
+    destination: "/reference/websocket-api/call-control/overview"
+    permanent: true
+  - source: "/docs/webhooks/dub"
+    destination: "/verbs/verbs/dub"
+    permanent: true
+  - source: "/docs/webhooks/config"
+    destination: "/verbs/verbs/config"
+    permanent: true
+  - source: "/docs/ws/ack"
+    destination: "/reference/websocket-api/call-control/ack"
+    permanent: true
+  - source: "/webhooks/auth"
+    destination: "/guides/features/securing-http-endpoints"
+    permanent: true
+  - source: "/docs/supporting-articles/using-dub-tracks"
+    destination: "/guides/features/dub-tracks"
+    permanent: true
+  - source: "/docs/supporting-articles/bidirectional-audio"
+    destination: "/guides/features/dual-media-streams"
+    permanent: true
+  - source: "/docs/supporting-articles/conferencing-coach-mode"
+    destination: "/guides/features/conferencing-coach-mode"
+    permanent: true
+  - source: "/rest"
+    destination: "/reference/introduction"
+    permanent: true
+  - source: "/sdks/nodered"
+    destination: "/sdks/node-red"
+    permanent: true
+  - source: "/sdks/npx"
+    destination: "/sdks/sd-ks"
+    permanent: true
+  - source: "/transcribe"
+    destination: "/verbs/verbs/transcribe"
+    permanent: true
+  - source: "/verbs/llm"
+    destination: "/verbs/verbs/llm"
+    permanent: true
+  - source: "/verbs/verbs/stream"
+    destination: "/verbs/verbs/listen"
+    permanent: true
+  - source: "/tutorials/voice-ai/ultravox"
+    destination: "/tutorials/voice-ai-examples/ultravox"
+    permanent: true
+  - source: "/tutorials/voice-ai/retell-ai"
+    destination: "/tutorials/hosted-applications/retell"
+    permanent: true
+  - source: "/guides/features/siprec-client"
+    destination: "/guides/features/siprec-server"
+    permanent: true
+  - source: "/guides/features/adding-speech-providers"
+    destination: "/guides/using-the-jambonz-portal/basic-concepts/creating-speech-credentials"
+    permanent: true
+  - source: "/guides/telephony-integrations"
+    destination: "/tutorials/telephony-integrations"
+    permanent: true
+  - source: "/eference/rest-call-control/calls/update-call"
+    destination: "/reference/rest-call-control/calls/update-call"
+    permanent: true
+  - source: "/api-reference/rest/calls/update-call"
+    destination: "/reference/rest-call-control/calls/update-call"
+    permanent: true
+  - source: "/jambonz"
+    destination: "/reference/websocket-api/call-control/overview"
+    permanent: true
