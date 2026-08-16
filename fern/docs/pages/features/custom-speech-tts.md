@@ -1,3 +1,8 @@
+---
+title: Custom TTS providers
+description: Connect any text-to-speech provider to jambonz with a custom TTS integration. Configuration, supported formats, and credential setup.
+---
+
 # Text-to-speech API
 > Added in 0.8.2
 
