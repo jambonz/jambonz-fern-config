@@ -16,9 +16,37 @@ You will need:
 The Terraform templates for deploying jambonz on GCP [are available here](https://github.com/jambonz-selfhosting/terraform/tree/main/gcp).
 - Clone the repository to your local machine.
 - Choose whether to deploy a mini, medium, or large jambonz configuration.
+- Choose amd64 (x86) or arm64 -- see [Choosing an architecture](#choosing-an-architecture) below.
 - Follow the instructions in the README of the corresponding directory of the terraform repo (e.g [mini](https://github.com/jambonz-selfhosting/terraform/tree/main/gcp/provision-vm-mini), [medium](https://github.com/jambonz-selfhosting/terraform/tree/main/gcp/provision-vm-medium), [large](https://github.com/jambonz-selfhosting/terraform/tree/main/gcp/provision-vm-large))
 - Once jambonz is deployed, follow the post-install steps outlined in the [Post-Install Steps](/self-hosting/overview/post-install-steps) article to complete the setup.
 - Generate a software license key as described in the [Software Licensing](/self-hosting/overview/licensing) article.
+
+## Choosing an architecture
+
+jambonz publishes GCP images for both **amd64** (x86) and **arm64**, for every
+size. Each architecture has its own variables file in the terraform directory:
+
+| architecture | copy this |
+|---|---|
+| amd64 (x86) | `terraform.tfvars.example` |
+| arm64 | `terraform.tfvars.arm64.example` |
+
+amd64 is the default and the safe choice if you have no reason to prefer
+otherwise.
+
+The arm64 file differs by more than the image links. An arm64 deployment also
+needs `c4a-*` machine types and `disk_type = "hyperdisk-balanced"`, because
+Google's Axion (`c4a`) family does not support `pd-*` disks at all. The example
+file sets all three consistently, and `terraform plan` will fail with a clear
+message if they ever disagree -- so you cannot get half-way into an apply with a
+mismatched configuration.
+
+Two things to check before choosing arm64:
+
+- `c4a-*` machine types are not offered in every zone. Confirm availability in
+  the zone you intend to deploy to.
+- arm64 CPU quota is tracked separately from x86 quota, so an existing x86 quota
+  increase does not cover it.
 
 ## Resources
 
