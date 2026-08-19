@@ -50,4 +50,23 @@ Inworld tuning is passed in `synthesizer.options`. Audio shaping lives under a n
 
 ## Streaming
 
-Inworld supports [TTS streaming](/guides/features/tts-streaming).
+Inworld supports [TTS streaming](/guides/features/tts-streaming), including
+token-by-token streaming for `say` with `stream: true` and for the `agent` verb,
+where text is spoken as your LLM produces it.
+
+`audioConfig.pitch` applies to non-streaming synthesis only; Inworld's streaming
+API does not accept it.
+
+## Word timestamps
+
+On `inworld-tts-1.5-mini`, `inworld-tts-1.5-max` and `inworld-tts-2`, Inworld
+returns word-level timing along with the audio. jambonz uses it to track how much
+of a response the caller actually heard, which powers
+[`trackTtsPlayout`](/guides/features/tts-streaming) and lets a barge-in trim the
+conversation history to the words spoken before the interruption. No configuration
+is needed beyond enabling that feature — jambonz requests the timing itself.
+
+`inworld-tts-1` and `inworld-tts-1-max` return no timing, so playout tracking is
+unavailable on them. Both are marked deprecated in the portal and are no longer
+offered for new speech credentials; existing credentials that use them keep
+working, and you can still select them if you need to.

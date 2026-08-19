@@ -13,7 +13,7 @@ OpenAI deprecated the Realtime preview API on 2026-05-12. The example below uses
 
 Apps written for the preview API still work without changes — jambonz auto-converts the legacy flat format (`voice`, `input_audio_format`, `input_audio_transcription`, `turn_detection` directly under `session_update`) to the GA format on the wire, logs a one-time deprecation warning, and aliases GA event names back to the preview names so your existing `events` filters keep matching. Plan to update to the GA format before that compatibility layer is removed.
 
-See the [`llm` verb article](/verbs/llm) for the canonical GA-format example and field reference.
+See the [`llm` verb article](/verbs/verbs/llm) for the canonical GA-shape example and field reference.
 </Note>
 
 This is an example jambonz application that connect to the OpenAI Realtime API and illustrates how to
