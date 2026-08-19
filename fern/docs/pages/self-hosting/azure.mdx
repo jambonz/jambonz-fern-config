@@ -17,9 +17,54 @@ You will need:
 The Terraform templates for deploying jambonz on Azure [are available here](https://github.com/jambonz-selfhosting/terraform/tree/main/azure).
 - Clone the repository to your local machine.
 - Choose whether to deploy a mini, medium, or large jambonz configuration.
+- Choose amd64 (x86) or arm64 -- see [Choosing an architecture](#choosing-an-architecture) below.
 - Follow the instructions in the README of the corresponding directory of the terraform repo (e.g [mini](https://github.com/jambonz-selfhosting/terraform/tree/main/azure/provision-vm-mini), [medium](https://github.com/jambonz-selfhosting/terraform/tree/main/azure/provision-vm-medium), [large](https://github.com/jambonz-selfhosting/terraform/tree/main/azure/provision-vm-large))
 - Once jambonz is deployed, follow the post-install steps outlined in the [Post-Install Steps](/self-hosting/overview/post-install-steps) article to complete the setup.
 - Generate a software license key as described in the [Software Licensing](/self-hosting/overview/licensing) article.
+
+## Choosing an architecture
+
+jambonz publishes Azure images for both **amd64** (x86) and **arm64** (Ampere),
+for every size. Each architecture has its own variables file in the terraform
+directory:
+
+| architecture | copy this |
+|---|---|
+| amd64 (x86) | `terraform.tfvars.example` |
+| arm64 (Ampere) | `terraform.tfvars.arm64.example` |
+
+amd64 is the default and the safe choice if you have no reason to prefer
+otherwise.
+
+The arm64 file differs by more than the image reference. Setting
+`architecture = "arm64"` selects the `-arm64` community gallery image
+definitions, and an arm64 deployment also needs Ampere VM sizes -- the
+`Standard_D*pls_v6` and `Standard_D*ps_v6` families -- for every role. The
+example file sets both consistently, and `terraform plan` fails with a clear
+message if they ever disagree, so you cannot get part-way into an apply with an
+arm64 image on an x86 size.
+
+Two things to check before choosing arm64:
+
+- **Ampere vCPU quota is tracked separately from x86 quota**, so an existing x86
+  increase does not cover it, and it is often zero on a subscription that has
+  never used Ampere. It also cannot be raised with `az quota update` -- that
+  returns `QuotaNotAvailableForResource` -- so plan for a support request if you
+  need more. Check what you have with:
+
+  ```bash
+  az vm list-usage --location <region> \
+    --query "[?contains(name.value,'Dplsv6')].{name:localName,current:currentValue,limit:limit}" \
+    -o table
+  ```
+
+- **Ampere is offered in most Azure regions but not all.** Confirm the size
+  exists in the region you intend to deploy to:
+
+  ```bash
+  az vm list-skus --location <region> --size Standard_D4pls_v6 \
+    --resource-type virtualMachines -o table
+  ```
 
 ## Resources
 
