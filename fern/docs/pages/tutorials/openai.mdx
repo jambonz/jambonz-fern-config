@@ -11,7 +11,7 @@ found [here](https://github.com/jambonz/openai-s2s-example).
 <Note title="Migrating from preview">
 OpenAI deprecated the Realtime preview API on 2026-05-12. The example below uses the GA-format payloads (`response.create.audio.output`, `session.update.audio.input`, `output_modalities`, `session.type: "realtime"`).
 
-Apps written for the preview API still work without changes — jambonz auto-converts the legacy flat shape (`voice`, `input_audio_format`, `input_audio_transcription`, `turn_detection` directly under `session_update`) to the GA shape on the wire, logs a one-time deprecation warning, and aliases GA event names back to the preview names so your existing `events` filters keep matching. Plan to update to the GA shape before that compatibility layer is removed.
+Apps written for the preview API still work without changes — jambonz auto-converts the legacy flat format (`voice`, `input_audio_format`, `input_audio_transcription`, `turn_detection` directly under `session_update`) to the GA format on the wire, logs a one-time deprecation warning, and aliases GA event names back to the preview names so your existing `events` filters keep matching. Plan to update to the GA format before that compatibility layer is removed.
 
 See the [`llm` verb article](/verbs/verbs/llm) for the canonical GA-shape example and field reference.
 </Note>

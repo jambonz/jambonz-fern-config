@@ -1,0 +1,125 @@
+---
+title: Gradium
+subtitle: Voice settings and configuration for Gradium TTS.
+---
+
+[Gradium](https://gradium.ai) is a low-latency text-to-speech vendor. It supports token-level streaming over a websocket, native telephony sample rates, and word-level timestamps, which makes it well suited to voice agents.
+
+## Get credentials
+
+1. Sign in at [gradium.ai](https://gradium.ai).
+2. Open **API Keys** and create a key.
+3. Copy the value (it begins with `gsk_`).
+
+## Configure in jambonz
+
+In the portal: **Account → Speech → Add speech service → Gradium**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The key from Gradium's console.
+</ParamField>
+
+<ParamField path="Model" type="string" required={false}>
+  `default` (recommended) or `gradium-tts-beta`. Defaults to `default`.
+</ParamField>
+
+Gradium is text-to-speech only, so the **Use for STT** option is not offered.
+
+Once saved, click **Test** to verify the credential. The voice list is fetched live from your account, so any custom or cloned voices you have created appear alongside the catalog voices.
+
+## Voices and languages
+
+Gradium groups voices by bare language code rather than a locale — `en`, `de`, `fr`, `es`, `pt`. There is no `en-US`; use `en`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "gradium",
+    "language": "en",
+    "voice": "YTpq7expH9539ERJ"
+  }
+}
+```
+
+The `voice` value is a Gradium voice id, which you can find in the portal's voice dropdown or in Gradium's voice library.
+
+## Voice settings
+
+Vendor-specific tuning is passed in `synthesizer.options`. For Gradium this holds a `json_config` object plus an optional `pronunciation_id`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "gradium",
+    "language": "en",
+    "voice": "YTpq7expH9539ERJ",
+    "options": {
+      "json_config": {
+        "temp": 0.7,
+        "cfg_coef": 2.0,
+        "padding_bonus": -1.5
+      }
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+### json_config
+
+<ParamField path="temp" type="float" required={false}>
+  Sampling temperature, `0.0` – `1.5`. Defaults to `0.7`. `0.0` is deterministic; higher values produce more varied delivery.
+</ParamField>
+
+<ParamField path="cfg_coef" type="float" required={false}>
+  Voice similarity. Defaults to `2.0`. Higher values stay closer to the target voice; very high values can introduce artifacts.
+</ParamField>
+
+<ParamField path="padding_bonus" type="float" required={false}>
+  Speaking rate, `-5.0` – `5.0`. Defaults to `0.0`. **Negative values are faster, positive values are slower** — note the direction is the opposite of most vendors' speed controls.
+</ParamField>
+
+<ParamField path="rewrite_rules" type="string" required={false}>
+  Enables language-specific text rewriting applied before synthesis. Takes a language code, e.g. `"en"`.
+</ParamField>
+
+<Note>
+`padding_bonus` has a large effect on duration. On a short sentence, `-4.0` produced 2.6 seconds of audio where the default produced 3.8 and `+4.0` produced 9.3. Tune it before assuming a voice is simply slow.
+</Note>
+
+<Warning>
+Gradium validates `temp` and `padding_bonus` and rejects out-of-range values, but silently accepts out-of-range `cfg_coef` and unknown `json_config` fields. A typo will not raise an error — it will just have no effect.
+</Warning>
+
+### pronunciation_id
+
+<ParamField path="pronunciation_id" type="string" required={false}>
+  Id of a pronunciation dictionary created in your Gradium account.
+</ParamField>
+
+This goes at the top level of `options`, alongside `json_config` rather than inside it:
+
+```json
+"options": {
+  "pronunciation_id": "your-dictionary-id",
+  "json_config": { "padding_bonus": -1.0 }
+}
+```
+
+An invalid `pronunciation_id` fails the request with `Pronunciation dictionary <id> not found`.
+
+## Streaming
+
+Gradium supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token-by-token from an LLM using `tts:tokens`. Word-level timestamps are returned, so alignment events are available.
+
+Two behaviours are worth knowing about when reasoning about latency:
+
+- Gradium has no cancel message, so a barge-in is handled by dropping and re-establishing the connection.
+- Completing an utterance ends the vendor's session, so each turn uses a fresh connection.
+
+Both are handled for you by jambonz; they cost a connection setup per turn, which is typically well under 300 ms.

@@ -142,7 +142,7 @@ The following LLMs are currently supported:
 
 ## OpenAI Realtime
 
-Set `vendor: 'openai'` and supply an OpenAI API key via `auth.apiKey`. `llmOptions` carries two payloads — `response_create` and `session_update` — that are forwarded to OpenAI as the corresponding [`response.create`](https://platform.openai.com/docs/api-reference/realtime-client-events/response/create) and [`session.update`](https://platform.openai.com/docs/api-reference/realtime-client-events/session/update) client events. The example at the top of this page shows the GA-format shape.
+Set `vendor: 'openai'` and supply an OpenAI API key via `auth.apiKey`. `llmOptions` carries two payloads — `response_create` and `session_update` — that are forwarded to OpenAI as the corresponding [`response.create`](https://platform.openai.com/docs/api-reference/realtime-client-events/response/create) and [`session.update`](https://platform.openai.com/docs/api-reference/realtime-client-events/session/update) client events. The example at the top of this page uses the GA format.
 
 ### Model selection
 
@@ -164,15 +164,15 @@ Set `vendor: 'openai'` and supply an OpenAI API key via `auth.apiKey`. `llmOptio
 
 The audio format on the wire to OpenAI is fixed at `{type: 'audio/pcm', rate: 24000}`. jambonz resamples to and from the channel's native rate (typically G.711) automatically. Any `audio.input.format` or `audio.output.format` set in the application is overridden — they are present in the example only for completeness.
 
-### Legacy preview-shape compatibility
+### Legacy preview-format compatibility
 
-Apps written against the preview API still work without changes. jambonz detects the legacy flat shape — top-level `modalities`, `voice`, `input_audio_format`, `output_audio_format`, `input_audio_transcription`, `turn_detection`, `temperature` — inside `session_update` or `response_create`, converts it to the GA shape on the wire, and aliases GA event names back to their preview names before forwarding to your `eventHook`. For example, an app that subscribed to `response.audio_transcript.done` continues to receive events with that exact `type` even though the server now emits `response.output_audio_transcript.done`. A one-time deprecation warning is logged when the legacy shape is detected.
+Apps written against the preview API still work without changes. jambonz detects the legacy flat format — top-level `modalities`, `voice`, `input_audio_format`, `output_audio_format`, `input_audio_transcription`, `turn_detection`, `temperature` — inside `session_update` or `response_create`, converts it to the GA format on the wire, and aliases GA event names back to their preview names before forwarding to your `eventHook`. For example, an app that subscribed to `response.audio_transcript.done` continues to receive events with that exact `type` even though the server now emits `response.output_audio_transcript.done`. A one-time deprecation warning is logged when the legacy format is detected.
 
 GA-invalid fields are stripped silently with a WARN log:
 - `temperature` in `response_create` — no longer accepted in GA.
 - `output_audio_format` as a flat string — replaced by `audio.output.format: {type, rate}` (which jambonz overrides to `pcm` 24 kHz anyway).
 
-The compatibility layer is intended as a transitional shim — plan to update applications to the GA shape before it is removed.
+The compatibility layer is intended as a transitional shim — plan to update applications to the GA format before it is removed.
 
 ### OpenAI-specific llmOptions fields
 
@@ -486,7 +486,7 @@ If you are porting an app from `vendor: 'openai'`:
 
 ## xAI Voice Agent
 
-Set `vendor: 'xai'` and supply an xAI API key via `auth.apiKey`. xAI's [Voice Agent](https://docs.x.ai/developers/model-capabilities/audio/voice-agent) speaks the same OpenAI Realtime GA dialect described in the [OpenAI Realtime](#openai-realtime) section above — `llmOptions` carries the same `response_create` and `session_update` payloads, in the same GA shape, forwarded as the [`response.create`](https://platform.openai.com/docs/api-reference/realtime-client-events/response/create) and [`session.update`](https://platform.openai.com/docs/api-reference/realtime-client-events/session/update) client events. jambonz connects to `wss://api.x.ai/v1/realtime`.
+Set `vendor: 'xai'` and supply an xAI API key via `auth.apiKey`. xAI's [Voice Agent](https://docs.x.ai/developers/model-capabilities/audio/voice-agent) speaks the same OpenAI Realtime GA dialect described in the [OpenAI Realtime](#openai-realtime) section above — `llmOptions` carries the same `response_create` and `session_update` payloads, in the same GA format, forwarded as the [`response.create`](https://platform.openai.com/docs/api-reference/realtime-client-events/response/create) and [`session.update`](https://platform.openai.com/docs/api-reference/realtime-client-events/session/update) client events. jambonz connects to `wss://api.x.ai/v1/realtime`.
 
 ```js
 session.llm({
@@ -543,7 +543,7 @@ Unlike OpenAI GA, which nests turn detection under `session_update.audio.input.t
 
 ### Tool calls
 
-Tool/function calling follows the same shape as OpenAI's (`session_update.tools`, `tool_choice`). The completed tool call arrives on the `response.function_call_arguments.done` event rather than OpenAI's `response.output_item.done`; jambonz routes it to your `toolHook` the same way.
+Tool/function calling uses the same fields as OpenAI's (`session_update.tools`, `tool_choice`). The completed tool call arrives on the `response.function_call_arguments.done` event rather than OpenAI's `response.output_item.done`; jambonz routes it to your `toolHook` the same way.
 
 ### Input transcription
 

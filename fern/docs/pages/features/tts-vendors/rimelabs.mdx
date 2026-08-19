@@ -1,0 +1,82 @@
+---
+title: Rime Labs
+subtitle: Speed, latency and sampling controls for Rime Labs TTS.
+---
+
+Rime Labs tuning is passed in `synthesizer.options`. Which fields apply depends on the model — Rime's model families expose quite different controls.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "rimelabs",
+    "language": "eng",
+    "voice": "luna",
+    "options": {
+      "speedAlpha": 1.0,
+      "reduceLatency": true
+    }
+  }
+}
+```
+
+## mist, mistv2 and v1
+
+<ParamField path="speedAlpha" type="number" required={false}>
+  Speaking rate. Defaults to `1.0`. Values **above** `1.0` are slower and below are faster — the opposite of a multiplier, so `0.9` speeds the voice up.
+</ParamField>
+
+<ParamField path="reduceLatency" type="boolean" required={false}>
+  Defaults to `true`. Reduces time-to-first-audio at a small cost in prosody.
+</ParamField>
+
+<ParamField path="pauseBetweenBrackets" type="boolean" required={false}>
+  Treat bracketed numbers in the text as pause durations in milliseconds — `<200>` inserts a 200 ms pause.
+</ParamField>
+
+<ParamField path="phonemizeBetweenBrackets" type="boolean" required={false}>
+  Treat bracketed text as explicit phonemes rather than words, for controlling pronunciation of names and jargon.
+</ParamField>
+
+<ParamField path="inlineSpeedAlpha" type="string" required={false}>
+  Per-segment speed values, letting one utterance change pace partway through.
+</ParamField>
+
+## arcana
+
+Arcana is a sampling-based model and takes the usual generation controls instead:
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature. Higher values give more varied delivery.
+</ParamField>
+
+<ParamField path="top_p" type="number" required={false}>
+  Nucleus sampling cutoff.
+</ParamField>
+
+<ParamField path="repetition_penalty" type="number" required={false}>
+  Discourages repeated audio patterns.
+</ParamField>
+
+<ParamField path="max_tokens" type="number" required={false}>
+  Caps the audio generated for one request.
+</ParamField>
+
+## coda
+
+<ParamField path="timeScaleFactor" type="number" required={false}>
+  Playback speed — above `1.0` slows down, below speeds up. **Applies to the non-streaming HTTP path only**, so it affects `say` but not token streaming.
+</ParamField>
+
+<ParamField path="segment" type="string" required={false}>
+  How text is chunked over the streaming websocket: `immediate`, `never`, or `bySentence`. `bySentence` generally gives the best prosody; `immediate` the lowest latency.
+</ParamField>
+
+<Warning>
+These three groups are not interchangeable. Sending `speedAlpha` to arcana, or `temperature` to mistv2, has no effect rather than raising an error — check which model the credential uses before concluding a value is wrong.
+</Warning>
+
+## Streaming
+
+Rime Labs supports [TTS streaming](/guides/features/tts-streaming) with word-level alignment and a native clear for barge-in. Its flush ends the vendor connection, so jambonz redials per turn.

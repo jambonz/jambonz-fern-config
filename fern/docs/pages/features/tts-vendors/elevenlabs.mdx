@@ -1,0 +1,66 @@
+---
+title: ElevenLabs
+subtitle: Voice settings and latency optimisation for ElevenLabs TTS.
+---
+
+ElevenLabs tuning is passed in `synthesizer.options`. Most of it lives under a nested `voice_settings` object, matching ElevenLabs' own API.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "elevenlabs",
+    "language": "en",
+    "voice": "21m00Tcm4TlvDq8ikWAM",
+    "options": {
+      "optimize_streaming_latency": 3,
+      "voice_settings": {
+        "stability": 0.5,
+        "similarity_boost": 0.5,
+        "use_speaker_boost": true
+      }
+    }
+  }
+}
+```
+
+## Options
+
+<ParamField path="optimize_streaming_latency" type="number" required={false}>
+  Latency optimisation level. Defaults to `3`. Higher values reduce time-to-first-audio, trading off some quality — `0` disables the optimisation entirely.
+</ParamField>
+
+<ParamField path="pronunciation_dictionary_locators" type="array" required={false}>
+  Pronunciation dictionaries to apply, in ElevenLabs' locator form.
+</ParamField>
+
+### voice_settings
+
+<ParamField path="voice_settings.stability" type="number" required={false}>
+  `0.0` – `1.0`, defaults to `0.5`. Lower values make delivery more varied and expressive; higher values make it more consistent and monotone.
+</ParamField>
+
+<ParamField path="voice_settings.similarity_boost" type="number" required={false}>
+  `0.0` – `1.0`, defaults to `0.5`. How closely the output tracks the original voice.
+</ParamField>
+
+<ParamField path="voice_settings.style" type="number" required={false}>
+  Style exaggeration. Raising it increases expressiveness but costs latency, and can destabilise the voice at high values.
+</ParamField>
+
+<ParamField path="voice_settings.use_speaker_boost" type="boolean" required={false}>
+  Defaults to `true`. Improves similarity to the original speaker at a small latency cost.
+</ParamField>
+
+<ParamField path="voice_settings.speed" type="number" required={false}>
+  Speaking rate.
+</ParamField>
+
+<Note>
+`stability` and `style` pull against each other. If you raise `style` for expressiveness and the voice starts to wander or produce artifacts, raise `stability` rather than lowering `style` back down.
+</Note>
+
+## Streaming
+
+ElevenLabs supports [TTS streaming](/guides/features/tts-streaming) with word-level alignment. It has no cancel message, so barge-in is handled by dropping and re-establishing the connection.

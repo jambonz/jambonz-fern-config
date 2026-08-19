@@ -128,8 +128,24 @@ navigation:
             path: ./docs/pages/features/custom-speech-tts.mdx
           - section: TTS Vendor Settings
             contents:
+              - page: Overview
+                path: ./docs/pages/features/tts-vendors/overview.mdx
+              - page: Cartesia
+                path: ./docs/pages/features/tts-vendors/cartesia.mdx
+              - page: ElevenLabs
+                path: ./docs/pages/features/tts-vendors/elevenlabs.mdx
+              - page: Gradium
+                path: ./docs/pages/features/tts-vendors/gradium.mdx
               - page: Inworld
                 path: ./docs/pages/features/tts-vendors/inworld.mdx
+              - page: Murf
+                path: ./docs/pages/features/tts-vendors/murf.mdx
+              - page: Resemble
+                path: ./docs/pages/features/tts-vendors/resemble.mdx
+              - page: Rime Labs
+                path: ./docs/pages/features/tts-vendors/rimelabs.mdx
+              - page: xAI
+                path: ./docs/pages/features/tts-vendors/xai.mdx
           - page: Answering machine detection
             path: ./docs/pages/features/answering-machine-detection.mdx
           - page: Conferencing "coach" mode

@@ -1,0 +1,51 @@
+---
+title: Resemble
+subtitle: Project selection and HD synthesis for Resemble.ai TTS.
+---
+
+Resemble tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "resemble",
+    "voice": "your-voice-uuid",
+    "options": {
+      "project_uuid": "your-project-uuid"
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+The `voice` value is a Resemble voice uuid. Resemble is text-to-speech only, so the **Use for STT** option is not offered.
+
+## Options
+
+<ParamField path="project_uuid" type="string" required={false}>
+  Uuid of the Resemble project the generated clip is stored in. Optional — omit it unless you want synthesised clips filed under a particular project in your Resemble account.
+</ParamField>
+
+<ParamField path="use_hd" type="boolean" required={false}>
+  Higher-definition synthesis, at a small latency cost. Defaults to `false`.
+</ParamField>
+
+<Warning>
+`use_hd` only takes effect on the non-streaming synthesis path — that is, when TTS streaming is disabled or when jambonz is pre-rendering audio for the cache. Resemble's streaming websocket request does not carry it, so on the default streaming path setting `use_hd` has no effect.
+</Warning>
+
+## On-prem container
+
+Resemble credentials can point at a self-hosted Resemble container instead of Resemble's cloud. In the portal, check **Use on-prem Resemble container** and supply the **TTS Container URI**, plus **Use TLS** if the container terminates TLS. Leave the checkbox clear to use `f.cluster.resemble.ai`.
+
+## Streaming
+
+Resemble supports [TTS streaming](/guides/features/tts-streaming). Two behaviours are worth knowing about when reasoning about latency:
+
+- Resemble has no cancel message, so a barge-in is handled by dropping and re-establishing the connection.
+- The vendor closes the connection after each completed utterance, so each turn uses a fresh connection.
+
+Both are handled for you by jambonz; they cost a connection setup per turn.

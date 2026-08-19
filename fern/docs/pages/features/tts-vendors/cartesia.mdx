@@ -1,0 +1,55 @@
+---
+title: Cartesia
+subtitle: Speaking rate and emotion controls for Cartesia TTS.
+---
+
+Cartesia's tuning is passed in `synthesizer.options`. Which fields take effect depends on the model family, because Cartesia moved these controls between API versions.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "cartesia",
+    "language": "en",
+    "voice": "a0e99841-438c-4a64-b679-ae501e7d6091",
+    "options": {
+      "speed": -0.3,
+      "emotion": "positivity:high"
+    }
+  }
+}
+```
+
+## Options
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate. Defaults to `0.0`. Negative values are slower, positive faster.
+</ParamField>
+
+<ParamField path="emotion" type="string" required={false}>
+  An emotion tag in `name:level` form — for example `positivity:high`. Supported names are `anger`, `positivity`, `surprise`, `sadness` and `curiosity`; levels are `lowest`, `low`, `high` and `highest` (not every combination is offered for every emotion).
+</ParamField>
+
+<ParamField path="volume" type="number" required={false}>
+  Output volume. Applies to the `sonic-3` family only.
+</ParamField>
+
+<ParamField path="max_buffer_delay_ms" type="number" required={false}>
+  How long Cartesia may buffer incoming text before synthesising, in milliseconds. Raising it can improve prosody across token boundaries at the cost of latency. Not exposed in the portal — set it on the verb.
+</ParamField>
+
+## Model family differences
+
+<Warning>
+`speed`, `emotion` and `volume` are sent differently depending on the model, and a control sent to the wrong family is ignored:
+
+- **`sonic-3` and later** — sent as `generation_config`. All three of `speed`, `emotion` and `volume` apply.
+- **`sonic-2`** — sent as experimental voice controls. Only `speed` and `emotion` apply; `volume` has no effect.
+</Warning>
+
+If a speed or emotion setting appears to do nothing, check which model the credential is using before assuming the value is wrong.
+
+## Streaming
+
+Cartesia supports [TTS streaming](/guides/features/tts-streaming), including a native cancel for barge-in and word-level timestamps for alignment.

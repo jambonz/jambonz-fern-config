@@ -4,7 +4,7 @@ subtitle: One HuggingFace token, many backends — Groq, Together, Fireworks, Ce
 ---
 
 <Note>
-This vendor specifically integrates with **HuggingFace Inference Providers** — HF's multi-provider broker at `https://router.huggingface.co/v1`. It is **not** for HuggingFace's older shared Inference API (different wire shape) or dedicated Inference Endpoints (those are per-customer URLs that work with `vendor: openai` and a `baseURL` override).
+This vendor specifically integrates with **HuggingFace Inference Providers** — HF's multi-provider broker at `https://router.huggingface.co/v1`. It is **not** for HuggingFace's older shared Inference API (a different wire protocol) or dedicated Inference Endpoints (those are per-customer URLs that work with `vendor: openai` and a `baseURL` override).
 </Note>
 
 HuggingFace Inference Providers is a multi-provider broker. One HF token at `https://router.huggingface.co/v1` routes requests to whichever inference shop hosts the requested model — Groq, Together, Fireworks, Cerebras, Nebius, Hyperbolic, SambaNova, etc. The wire is OpenAI-compatible.
