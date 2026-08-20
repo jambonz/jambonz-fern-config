@@ -58,5 +58,14 @@ The 11.1.2 images are the first to carry neither, verified on a booted instance.
 If you deployed a GCP image from an earlier release, rebuild from 11.1.2 rather
 than continuing to run it, and rotate anything that host had access to.
 
-**Azure** — images for 11.1.2 are not published yet; 11.1.1 remains the current
-release on Azure.
+**Azure** — images are published to the community gallery for all nine
+deployment variants on both amd64 and arm64: amd64 in 30 regions, arm64 in the
+29 regions that offer Ampere VM sizes. The terraform examples reference them,
+and `architecture = "arm64"` selects the arm64 image definitions. See the
+[Azure installation instructions](/self-hosting/azure) to deploy or upgrade.
+
+The 11.1.1 gallery image versions have been **deleted**. Azure has no
+deprecation state for gallery versions, so retiring a release removes it;
+deleting a version does not affect already-running VMs, which reference their
+own OS disk rather than the gallery. Pin `jambonz_version = "11.1.2"` before
+your next `terraform apply`.
