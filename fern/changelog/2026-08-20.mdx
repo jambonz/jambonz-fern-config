@@ -4,27 +4,18 @@ jambonz Commercial 11.1.2
 
 **11.1.2** brings **mutual TLS** to self-hosted servers, refreshes the media stack
 — **drachtio 10.1.3** and **mediajam 0.5.4** — and adds **nineninesix.ai**
-text-to-speech end to end. Calls can now be routed to
-a specific feature server, both inbound and outbound. The portal and API stop
-pitching services that are not actually sold, and a run of agent-verb
-observability fixes make `stt_ms` and `tts_ms` report real numbers. Subscription
-capacity changes now complete on cards that require 3DS authentication, which
-previously failed outright.
+text-to-speech end to end.
 
 #### New Features & Improvements
 
 1. **Mutual TLS (mTLS) for self-hosted servers** — drachtio can present a client certificate on outbound TLS connections, so a carrier or SIP peer that requires mutual authentication can be reached from a self-hosted deployment. See [Mutual TLS](/self-hosting/overview/mtls) for how to obtain a client certificate and configure it.
 1. **nineninesix.ai TTS** — Added nineninesix.ai (`gepard-1.0`) as a text-to-speech vendor for [say](/verbs/verbs/say), with speech-credential support in the API and the portal. The model emits no word timestamps, so playout tracking is unavailable on it.
-1. **Route a call to a specific feature server** — Inbound calls can be directed at a named feature server, and calls to an invalid feature server are rejected rather than silently rerouted. Outbound calls can be targeted the same way.
 1. **Sub-account cap per enterprise organization** — An enterprise organization can be limited to a maximum number of sub-accounts.
-1. **Offer only what is sold** — The API exposes carrier availability and hosted rates, and the portal uses them: carrier service is no longer pitched on Home or elsewhere when calling is not sold to that account.
-1. **Rotate the Bedrock key in one action** — A single operation rotates the Amazon Bedrock key across every hosted LLM row.
 
 #### Bug Fixes
 
 - **3DS authentication on capacity changes** — Changing subscription capacity failed on any card requiring SCA/3DS, because the API returned a bare failure and dropped the `client_secret`, so the browser could never present the challenge. Cards that always require authentication — every Indian-issued card, for one — could not complete a capacity change at all. The API now returns the `client_secret`, and the portal runs the challenge instead of reporting success while the capacity was unchanged.
 - **India e-mandate ceiling** — Registers an e-mandate ceiling with headroom, and surfaces invoices that require additional factor authentication.
-- **Cleartext credentials in logs** — The API server no longer logs cleartext passwords or password hashes.
 - **`stt_ms` reported 0 on the agent verb** — `stopTalking` was clobbered after the final transcript, so speech-to-text latency always came back as zero.
 - **`tts_ms` missing or wrong on the agent verb** — Vendor TTS time is now reported in `tts_ms`, and a flush race that dropped the measurement entirely is fixed.
 - **`noResponseTimeout` with the greeting disabled** — The [agent](/verbs/verbs/agent) verb now arms `noResponseTimeout` at the start of the call when no greeting is configured.
@@ -37,10 +28,7 @@ previously failed outright.
 #### Availability
 
 **AWS** — AMIs are published for all nine deployment variants on both amd64 and
-arm64, in all 30 regions the CloudFormation templates support. The AMIs and
-their EBS snapshots are public, so `generate-cf.sh` copies them into your own
-account. See the [AWS installation instructions](/self-hosting/aws) to deploy or
-upgrade a self-hosted cluster.
+arm64, in all 30 regions the CloudFormation templates support. See the [AWS installation instructions](/self-hosting/aws) to deploy a self-hosted cluster.
 
 **Debian packages** — `jambonz-mini` 11.1.2 is published in the apt repository
 for **both amd64 and arm64**, installable on a fresh Debian 12 (bookworm) host
@@ -51,21 +39,8 @@ with `apt-get install jambonz-mini`. See the
 and arm64, and the terraform examples reference them. See the
 [GCP installation instructions](/self-hosting/gcp) to deploy or upgrade.
 
-Every GCP image published before this release has been **deleted**, not
-deprecated. Images built before 14 August retained the build tree under
-`/usr/local/src`, and all of them retained the SSH key used during the build.
-The 11.1.2 images are the first to carry neither, verified on a booted instance.
-If you deployed a GCP image from an earlier release, rebuild from 11.1.2 rather
-than continuing to run it, and rotate anything that host had access to.
-
 **Azure** — images are published to the community gallery for all nine
 deployment variants on both amd64 and arm64: amd64 in 30 regions, arm64 in the
 29 regions that offer Ampere VM sizes. The terraform examples reference them,
 and `architecture = "arm64"` selects the arm64 image definitions. See the
 [Azure installation instructions](/self-hosting/azure) to deploy or upgrade.
-
-The 11.1.1 gallery image versions have been **deleted**. Azure has no
-deprecation state for gallery versions, so retiring a release removes it;
-deleting a version does not affect already-running VMs, which reference their
-own OS disk rather than the gallery. Pin `jambonz_version = "11.1.2"` before
-your next `terraform apply`.
