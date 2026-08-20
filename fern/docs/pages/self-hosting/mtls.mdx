@@ -1,0 +1,388 @@
+---
+title: Mutual TLS (mTLS) for SIP
+subtitle: Present a client certificate on outbound SIP calls over TLS
+---
+
+<Note>
+Requires jambonz **11.1.2** or later (drachtio **10.1.3** or later).
+</Note>
+
+# Overview
+
+Some carriers will not accept SIP over TLS unless the *caller* also proves who it is, by
+presenting a certificate of its own during the TLS handshake. This is known as mutual TLS, or mTLS.
+Ordinary SIP over TLS only proves the carrier's identity to you; mTLS proves yours to them.
+
+As of release 11.1.2 jambonz now supports mTLS. It can present a client certificate on outbound TLS connections. You configure one identity
+per server and it is used for every outbound TLS call.
+
+There is **nothing to enable per carrier**. The requirement is signaled during the handshake: the
+carrier's SBC asks for a certificate, and jambonz answers with the one you configured. Carriers that
+don't ask are sent nothing, so configuring an identity is harmless for the rest of your trunks.
+
+The consequence is that you cannot discover the requirement and retry. The handshake fails before
+any SIP is exchanged, so a missing certificate looks like a call that failed to connect, not a SIP
+rejection you can inspect. The identity has to be in place before the first call.
+
+## You cannot reuse your existing SIP TLS certificate
+
+<Warning>
+The certificate you already use for receiving SIP over TLS calls will not work as a client certificate, and the
+failure can be a bit confusing. Read this before you spend time on it.
+</Warning>
+
+Two independent reasons:
+
+1. A carrier requiring mTLS wants a certificate issued by a CA **they** trust — usually one you
+   enrolled with them. If they accepted certificates from the public authorities, anyone holding a
+   Let's Encrypt certificate could authenticate as you.
+2. A certificate must carry the `clientAuth` extended key usage to be usable as a client
+   certificate at all. Public authorities have stopped issuing it — Let's Encrypt issued its last
+   on 2026-07-08, following a Chrome root program requirement that client and server authentication
+   live in separate hierarchies. A certificate with only `serverAuth` is rejected as
+   `unsuitable certificate purpose` no matter how well it is trusted.
+
+You can check any certificate you already hold with this command:
+
+```
+openssl verify -purpose sslclient -CAfile your-ca.pem your-cert.pem
+```
+
+A response of `your-cert.pem: OK` means it is valid for client authentication. If it prints
+`error 26 ... unsuitable certificate purpose`, it is not. Any other error is about the certificate
+chain rather than the purpose — `error 20 ... unable to get local issuer certificate` in particular
+just means `-CAfile` is not the authority that issued the certificate.
+
+## Ask the carrier which authority they will accept
+
+Settle this first, because it decides everything that follows. The question to put to them is: *which
+certificate authority may sign our client certificate?* There are three usual answers.
+
+**Option 1 — an authority you run.** You create a small private CA, issue your own client certificates
+from it, and send the carrier only the CA certificate to load into their trust store. Prefer this when
+they will accept it: you can then issue certificates for additional servers, and replace expiring
+ones, without involving the carrier again.
+
+**Option 2 — an authority they already trust.** If the carrier participates in an industry PKI, or
+already accepts a commercial client-authentication CA, you can buy a client certificate from it and
+nothing has to change on their side. Confirm the exact hierarchy with them before purchasing —
+"a well-known CA" is not specific enough, because a trust store used for client authentication is
+configured deliberately rather than populated with every public authority.
+
+**Option 3 — their own authority.** You send a certificate signing request and they return a
+certificate. Necessary when their SBC will only trust its own CA. Every renewal is a new request
+to them.
+
+Options 2 and 3 both work from a signing request, so the steps below are shared; only who signs it
+differs.
+
+<Warning>
+Do not plan on a certificate from one of the public authorities that already sit in the operating
+system trust store. Those hierarchies are being removed from client authentication entirely: under
+Chrome Root Program policy, subordinate CAs disclosed after **15 June 2026** may assert only
+server authentication, and from **15 March 2027** all newly issued public TLS certificates will be
+server-authentication only. Commercial CAs still sell client certificates, but from separate
+client-authentication hierarchies that a carrier must trust explicitly. Industry guidance is that
+client authentication belongs in a private or enterprise PKI.
+</Warning>
+
+## The four files
+
+Two of drachtio's TLS settings do not mean what their names suggest, so it is worth being explicit
+about what each file is for.
+
+| Setting | What it is |
+|---|---|
+| `cert-file` + `key-file` | the identity you present on **inbound** connections |
+| `chain-file` | the **inbound** trust store — authorities allowed to sign a peer's client certificate. Not the chain you serve. |
+| `client/cert-file` + `client/key-file` | the identity you present on **outbound** connections. This one *is* a chain. |
+| `client/ca-file` | the **outbound** trust store — authorities allowed to sign the carrier's server certificate |
+
+Only the `client/*` settings are new. Your existing inbound configuration is unaffected.
+
+## Option 1: you issue the certificate
+
+### Create your certificate authority
+
+Do this once. The CA does not have to live on the jambonz server, and generally should not — keep the
+key wherever you keep secrets, and use it to sign requests as they arrive. That also means you can
+create it before the server exists.
+
+```
+openssl req -x509 -newkey rsa:4096 -nodes -days 1825 \
+  -keyout example-client-ca.key -out example-client-ca.pem \
+  -subj "/O=Example Inc/CN=Example Inc SIP Client CA" \
+  -addext "basicConstraints=critical,CA:TRUE,pathlen:0" \
+  -addext "keyUsage=critical,keyCertSign,cRLSign"
+chmod 0600 example-client-ca.key
+```
+
+`example-client-ca.key` is the sensitive file — anyone holding it can issue certificates the carrier
+will accept. `example-client-ca.pem` is public and is what you send the carrier.
+
+### Generate a key and request on the jambonz server
+
+Do this on each server that will place calls to the carrier. Every server gets its own key, so that
+rebuilding or retiring one has no effect on the others.
+
+```
+sudo install -d -m 0750 /etc/drachtio/tls
+
+sudo tee /etc/drachtio/tls/carrier-client.cnf >/dev/null <<'CNF'
+[req]
+default_md         = sha256
+prompt             = no
+distinguished_name = dn
+req_extensions     = req_ext
+
+[dn]
+CN = sip.example.com
+
+[req_ext]
+basicConstraints = critical,CA:FALSE
+keyUsage         = critical,digitalSignature
+extendedKeyUsage = clientAuth
+subjectAltName   = DNS:sip.example.com
+CNF
+
+sudo openssl req -new -newkey rsa:2048 -nodes \
+  -keyout /etc/drachtio/tls/carrier-client.key \
+  -out    /tmp/carrier-client.csr \
+  -config /etc/drachtio/tls/carrier-client.cnf
+sudo chmod 0600 /etc/drachtio/tls/carrier-client.key
+```
+
+Use this server's SIP hostname as the `CN` unless the carrier asks for something specific.
+
+<Warning>
+Use absolute paths. `/etc/drachtio/tls` is mode 0750 and owned by root, so `cd` into it fails for a
+non-root user and openssl then writes your key into your home directory instead.
+</Warning>
+
+The private key never leaves the server. The request (`carrier-client.csr`) is not secret.
+
+### Sign the request
+
+On the machine holding the CA key:
+
+```
+openssl x509 -req -in carrier-client.csr \
+  -CA example-client-ca.pem -CAkey example-client-ca.key -CAcreateserial \
+  -days 365 -sha256 -copy_extensions copy -out carrier-client-leaf.pem
+```
+
+`-copy_extensions copy` carries `clientAuth` across from the request, so there is only one place it
+is declared. It requires OpenSSL 3.0 or later and is **silently ignored** on older versions and on
+the LibreSSL that ships with macOS, so confirm the result:
+
+```
+openssl x509 -in carrier-client-leaf.pem -noout -ext extendedKeyUsage
+```
+
+If `clientAuth` is missing, declare the extensions explicitly instead:
+
+```
+printf 'basicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature\nextendedKeyUsage=clientAuth\nsubjectAltName=DNS:sip.example.com\n' > leaf.ext
+openssl x509 -req -in carrier-client.csr \
+  -CA example-client-ca.pem -CAkey example-client-ca.key -CAcreateserial \
+  -days 365 -sha256 -extfile leaf.ext -out carrier-client-leaf.pem
+```
+
+### Assemble and send
+
+`client/cert-file` is a chain — the certificate first, then the CA:
+
+```
+sudo bash -c 'cat carrier-client-leaf.pem example-client-ca.pem \
+  > /etc/drachtio/tls/carrier-client.pem'
+sudo chmod 0644 /etc/drachtio/tls/carrier-client.pem
+```
+
+Send the carrier `example-client-ca.pem` and ask them to add it to the trust store their SBC uses for
+client authentication on the port your trunk uses. Never send a `.key` file.
+
+## Options 2 and 3: someone else issues the certificate
+
+Generate the key and request exactly as above, then send the signing request to whoever will sign it —
+the carrier, or the commercial or industry CA they accept — and ask explicitly for three things:
+
+- the certificate must include the **`clientAuth`** extended key usage. Most current server
+  certificate profiles omit it, and without it the certificate cannot work;
+- the **intermediate** certificates, not only the issued certificate. jambonz sends the whole chain,
+  and their trust store may contain only the root;
+- the validity period and how renewal is handled.
+
+When it arrives, assemble it the same way — issued certificate first, then any intermediates:
+
+```
+sudo bash -c 'cat issued.pem intermediate.pem > /etc/drachtio/tls/carrier-client.pem'
+```
+
+## Check the certificate before configuring drachtio
+
+A failed call tells you very little. These checks tell you a lot.
+
+```
+sudo openssl verify -purpose sslclient \
+  -CAfile example-client-ca.pem /etc/drachtio/tls/carrier-client.pem
+
+diff <(sudo openssl x509 -in /etc/drachtio/tls/carrier-client.pem -noout -pubkey) \
+     <(sudo openssl pkey -in /etc/drachtio/tls/carrier-client.key -pubout) \
+  && echo "key matches certificate"
+```
+
+The `-purpose sslclient` check is the one that catches a missing `clientAuth`.
+
+## Configure drachtio
+
+Add a `<client>` element to the existing `<tls>` section of `/etc/drachtio.conf.xml`. Nothing else in
+that section changes.
+
+```
+<sip>
+   <contacts>
+   </contacts>
+
+   <tls>
+      <key-file>/etc/letsencrypt/live/sip.example.com/privkey.pem</key-file>
+      <cert-file>/etc/letsencrypt/live/sip.example.com/fullchain.pem</cert-file>
+      <chain-file>/etc/letsencrypt/live/sip.example.com/fullchain.pem</chain-file>
+
+      <!-- START OF NEW SECTION FOR mTLS -->
+      <client>
+         <key-file>/etc/drachtio/tls/carrier-client.key</key-file>
+         <cert-file>/etc/drachtio/tls/carrier-client.pem</cert-file>
+         <ca-file>/etc/ssl/certs/ca-certificates.crt</ca-file>
+      </client>
+
+      <verify-server-cert>true</verify-server-cert>
+      <verify-server-name>true</verify-server-name>
+      <sni>true</sni>
+      <!-- END OF NEW SECTION FOR mTLS -->
+
+   </tls>
+
+   <udp-mtu>8192</udp-mtu>
+
+   <reject-register-with-no-realm>true</reject-register-with-no-realm>
+
+</sip>
+```
+
+An outbound TLS connection requires a `sips:` contact, since the certificate belongs to the TLS
+transport. Standard jambonz images already have one — see
+[Setting up TLS for WebRTC and SIP](/self-hosting/overview/setting-up-web-rtc-and-sip-tls).
+
+| Setting | Effect |
+|---|---|
+| `verify-server-cert` | verify the carrier's certificate against `client/ca-file` |
+| `verify-server-name` | additionally require their certificate to match the hostname you dialed |
+| `sni` | send the TLS server-name extension outbound. On by default; never sent for a bare IP address, per RFC 6066 |
+
+<Warning>
+These three apply to **every** outbound TLS connection this server makes, not only the one to this
+carrier. If you have other TLS carriers configured by IP address rather than hostname, set
+`verify-server-name` to `false` — an IP address cannot match a hostname in a certificate. You still
+validate the certificate chain.
+</Warning>
+
+Restart drachtio and confirm it read the identity:
+
+```
+sudo systemctl restart drachtio
+sudo grep -a "tls client\|tls verify policy" /var/log/drachtio/drachtio.log | tail -4
+```
+
+```
+tls client key file:   /etc/drachtio/tls/carrier-client.key
+tls client cert file:  /etc/drachtio/tls/carrier-client.pem
+tls client ca file:    /etc/ssl/certs/ca-certificates.crt
+tls verify policy: incoming cert no, outgoing cert yes, outgoing name yes
+```
+
+If those lines are missing, drachtio did not pick up the `<client>` element — usually a path it
+cannot read, or the element placed outside `<tls>`.
+
+### If the carrier uses a private authority
+
+`client/ca-file` is usually just the system bundle, but some carriers present a server certificate
+issued by a closed hierarchy whose root is deliberately not publicly trusted. Validation then fails
+with `self-signed certificate in certificate chain`, even though the issuer is a well-known
+commercial CA — it is a private hierarchy they operate.
+
+Ask them for their root and append it to the system bundle, so one file covers that carrier and every
+publicly trusted one:
+
+```
+sudo bash -c 'cat /etc/ssl/certs/ca-certificates.crt their-root.pem \
+  > /etc/drachtio/tls/outbound-ca-bundle.pem'
+```
+
+Point `client/ca-file` at the result. Check the fingerprint of the file they sent rather than trusting
+whatever the connection offers you:
+
+```
+openssl x509 -in their-root.pem -noout -fingerprint -sha256
+```
+
+## Test before placing a call
+
+This proves the certificates work independently of jambonz, which separates a certificate problem
+from a SIP or routing problem:
+
+```
+(sleep 4) | sudo openssl s_client \
+  -connect carrier.example.com:5061 -servername carrier.example.com \
+  -CAfile /etc/ssl/certs/ca-certificates.crt \
+  -cert /etc/drachtio/tls/carrier-client.pem \
+  -key /etc/drachtio/tls/carrier-client.key
+```
+
+Expect `Verify return code: 0 (ok)` and no fatal alert.
+
+## Configure the carrier in jambonz
+
+Create the carrier in the portal with one outbound SIP gateway pointing at the carrier's TLS host and
+port, and set the protocol to **TLS** or **TLS/SRTP** depending on whether they require encrypted
+media.
+
+<Warning>
+Set the port explicitly. Leaving it blank makes jambonz resolve the destination using DNS SRV
+records, which many carriers do not publish for this purpose — and if they do, the SRV target
+hostname may not be covered by their certificate, which breaks `verify-server-name`.
+</Warning>
+
+If the carrier only accepts `INVITE` — some SBCs reject `OPTIONS` outright — turn **off** the SIP
+OPTIONS ping on the gateway. Otherwise jambonz will ping it, receive a rejection, mark the gateway
+unavailable, and every call will fail for a reason unrelated to the trunk.
+
+## Troubleshooting
+
+TLS failures are reported in `/var/log/drachtio/drachtio.log` with the reason attached.
+
+| What you see | What it means |
+|---|---|
+| `tlsv1 alert unknown ca` | the carrier does not trust the issuer of your certificate — the wrong CA, or they have not loaded it yet |
+| `handshake_failure` after the client certificate step | no certificate was sent. Check the paths in `<client>` are readable by drachtio |
+| `TLS peer certificate rejected` | *their* certificate failed *your* check — wrong `client/ca-file`, or `verify-server-name` on with a hostname mismatch |
+| `unsuitable certificate purpose` | your certificate is missing the `clientAuth` extended key usage |
+| a failed call with nothing about TLS in the log | the connection was never attempted. Usually name resolution or the gateway port |
+
+Raise `--sofia-loglevel` to 9 for a full transport trace, including the SNI value sent and whether a
+client identity was loaded.
+
+## Renewal and additional servers
+
+Under option 1, renewing is the same three steps — new key and request on the server, signed by the
+**same** CA, then restart drachtio. The carrier is not involved, because their trust anchor has not
+changed. Adding another jambonz server is the same process with its own key.
+
+Under options 2 and 3 the trust anchor is also unchanged, so the carrier does not need to act — but
+each certificate has to be reissued by whoever owns that authority, on their timetable rather than
+yours.
+
+Track expiry:
+
+```
+sudo openssl x509 -in /etc/drachtio/tls/carrier-client.pem -noout -enddate
+```
