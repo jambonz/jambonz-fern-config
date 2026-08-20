@@ -170,8 +170,6 @@ navigation:
             path: ./docs/pages/features/using-filler-noise.mdx
           - page: Securing  HTTP Endpoints
             path: ./docs/pages/features/securing-webhooks.mdx
-          - page: Mutual TLS
-            path: ./docs/pages/features/mtls.mdx
           - page: API Rate Limits
             path: ./docs/pages/features/api-rate-limits.mdx
           - page: Application Environment Variables
@@ -323,10 +321,12 @@ navigation:
             path: ./docs/pages/self-hosting/licensing.mdx
           - page: Post-Install Steps
             path: ./docs/pages/self-hosting/post-install.mdx
-          - page: Setting up WebRTC and SIP TLS
-            path: ./docs/pages/self-hosting/wss-siptls.mdx
           - page: Krisp Turn-Taking
             path: ./docs/pages/self-hosting/krisp.mdx
+          - page: Setting up WebRTC and SIP TLS
+            path: ./docs/pages/self-hosting/wss-siptls.mdx
+          - page: Mutual TLS
+            path: ./docs/pages/self-hosting/mtls.mdx
       - section: Hosting Providers
         contents:
           - page: AWS
