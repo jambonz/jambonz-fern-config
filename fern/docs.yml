@@ -323,6 +323,8 @@ navigation:
             path: ./docs/pages/self-hosting/post-install.mdx
           - page: Setting up WebRTC and SIP TLS
             path: ./docs/pages/self-hosting/wss-siptls.mdx
+          - page: Mutual TLS to a carrier
+            path: ./docs/pages/self-hosting/mtls.mdx
           - page: Krisp Turn-Taking
             path: ./docs/pages/self-hosting/krisp.mdx
       - section: Hosting Providers
