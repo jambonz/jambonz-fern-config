@@ -40,7 +40,7 @@ Two independent reasons:
    certificate at all. Public authorities have stopped issuing it — Let's Encrypt issued its last
    on 2026-07-08, following a Chrome root program requirement that client and server authentication
    live in separate hierarchies. A certificate with only `serverAuth` is rejected as
-   `unsupported certificate purpose` no matter how well it is trusted.
+   `unsuitable certificate purpose` no matter how well it is trusted.
 
 You can check any certificate you already hold with this command:
 
@@ -48,7 +48,10 @@ You can check any certificate you already hold with this command:
 openssl verify -purpose sslclient -CAfile your-ca.pem your-cert.pem
 ```
 
-A response `OK` means it is valid for client authentication. If it prints `unsupported certificate purpose`, it is not.
+A response of `your-cert.pem: OK` means it is valid for client authentication. If it prints
+`error 26 ... unsuitable certificate purpose`, it is not. Any other error is about the certificate
+chain rather than the purpose — `error 20 ... unable to get local issuer certificate` in particular
+just means `-CAfile` is not the authority that issued the certificate.
 
 ## Ask the carrier which authority they will accept
 
@@ -362,7 +365,7 @@ TLS failures are reported in `/var/log/drachtio/drachtio.log` with the reason at
 | `tlsv1 alert unknown ca` | the carrier does not trust the issuer of your certificate — the wrong CA, or they have not loaded it yet |
 | `handshake_failure` after the client certificate step | no certificate was sent. Check the paths in `<client>` are readable by drachtio |
 | `TLS peer certificate rejected` | *their* certificate failed *your* check — wrong `client/ca-file`, or `verify-server-name` on with a hostname mismatch |
-| `unsupported certificate purpose` | your certificate is missing the `clientAuth` extended key usage |
+| `unsuitable certificate purpose` | your certificate is missing the `clientAuth` extended key usage |
 | a failed call with nothing about TLS in the log | the connection was never attempted. Usually name resolution or the gateway port |
 
 Raise `--sofia-loglevel` to 9 for a full transport trace, including the SNI value sent and whether a
