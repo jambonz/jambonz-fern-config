@@ -47,5 +47,16 @@ for **both amd64 and arm64**, installable on a fresh Debian 12 (bookworm) host
 with `apt-get install jambonz-mini`. See the
 [Debian package instructions](/self-hosting/debian-package).
 
-**Azure and GCP** — images for 11.1.2 are not published yet; 11.1.1 remains the
-current release on those platforms.
+**GCP** — images are published for all nine deployment variants on both amd64
+and arm64, and the terraform examples reference them. See the
+[GCP installation instructions](/self-hosting/gcp) to deploy or upgrade.
+
+Every GCP image published before this release has been **deleted**, not
+deprecated. Images built before 14 August retained the build tree under
+`/usr/local/src`, and all of them retained the SSH key used during the build.
+The 11.1.2 images are the first to carry neither, verified on a booted instance.
+If you deployed a GCP image from an earlier release, rebuild from 11.1.2 rather
+than continuing to run it, and rotate anything that host had access to.
+
+**Azure** — images for 11.1.2 are not published yet; 11.1.1 remains the current
+release on Azure.
