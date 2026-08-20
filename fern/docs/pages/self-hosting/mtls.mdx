@@ -50,22 +50,38 @@ openssl x509 -noout -ext extendedKeyUsage -in /etc/letsencrypt/live/sip.example.
 
 If that prints only `TLS Web Server Authentication`, it cannot be used here.
 
-## Ask the carrier which approach they use
+## Ask the carrier which authority they will accept
 
-This is the first thing to settle, because it decides everything that follows.
+Settle this first, because it decides everything that follows. The question to put to them is: *which
+certificate authority may sign our client certificate?* There are three usual answers.
 
-**Option 1 — they trust a certificate authority that you run.** You create a small private CA, issue
-your own client certificates from it, and send the carrier only the CA certificate to load into their
-trust store. Prefer this when they will accept it: you can issue certificates for additional servers,
-and renew expiring ones, without involving the carrier again.
+**Option 1 — an authority you run.** You create a small private CA, issue your own client certificates
+from it, and send the carrier only the CA certificate to load into their trust store. Prefer this when
+they will accept it: you can then issue certificates for additional servers, and replace expiring
+ones, without involving the carrier again.
 
-**Option 2 — their CA issues your certificate.** You send them a certificate signing request and they
-return a certificate. Necessary when their SBC will only trust its own authority. Every renewal is a
-new request to them.
+**Option 2 — an authority they already trust.** If the carrier participates in an industry PKI, or
+already accepts a commercial client-authentication CA, you can buy a client certificate from it and
+nothing has to change on their side. Confirm the exact hierarchy with them before purchasing —
+"a well-known CA" is not specific enough, because a trust store used for client authentication is
+configured deliberately rather than populated with every public authority.
 
-Some carriers will instead offer to load a single certificate of yours directly, rather than a CA.
-That works, but it has the same drawback as option 2: replacing the certificate means going back to
-them.
+**Option 3 — their own authority.** You send a certificate signing request and they return a
+certificate. Necessary when their SBC will only trust its own CA. Every renewal is a new request
+to them.
+
+Options 2 and 3 both work from a signing request, so the steps below are shared; only who signs it
+differs.
+
+<Warning>
+Do not plan on a certificate from one of the public authorities that already sit in the operating
+system trust store. Those hierarchies are being removed from client authentication entirely: under
+Chrome Root Program policy, subordinate CAs disclosed after **15 June 2026** may assert only
+server authentication, and from **15 March 2027** all newly issued public TLS certificates will be
+server-authentication only. Commercial CAs still sell client certificates, but from separate
+client-authentication hierarchies that a carrier must trust explicitly. Industry guidance is that
+client authentication belongs in a private or enterprise PKI.
+</Warning>
 
 ## The four files
 
@@ -182,10 +198,10 @@ sudo chmod 0644 /etc/drachtio/tls/carrier-client.pem
 Send the carrier `example-client-ca.pem` and ask them to add it to the trust store their SBC uses for
 client authentication on the port your trunk uses. Never send a `.key` file.
 
-## Option 2: the carrier issues the certificate
+## Options 2 and 3: someone else issues the certificate
 
-Generate the key and request exactly as above, then send the carrier `carrier-client.csr` and ask
-explicitly for three things:
+Generate the key and request exactly as above, then send the signing request to whoever will sign it —
+the carrier, or the commercial or industry CA they accept — and ask explicitly for three things:
 
 - the certificate must include the **`clientAuth`** extended key usage. Most current server
   certificate profiles omit it, and without it the certificate cannot work;
@@ -221,22 +237,32 @@ that section changes.
 
 ```
 <sip>
-  <contacts></contacts>
-  <tls>
-    <key-file>/etc/letsencrypt/live/sip.example.com/privkey.pem</key-file>
-    <cert-file>/etc/letsencrypt/live/sip.example.com/fullchain.pem</cert-file>
-    <chain-file>/etc/letsencrypt/live/sip.example.com/fullchain.pem</chain-file>
+   <contacts>
+   </contacts>
 
-    <client>
-      <key-file>/etc/drachtio/tls/carrier-client.key</key-file>
-      <cert-file>/etc/drachtio/tls/carrier-client.pem</cert-file>
-      <ca-file>/etc/ssl/certs/ca-certificates.crt</ca-file>
-    </client>
+   <tls>
+      <key-file>/etc/letsencrypt/live/sip.example.com/privkey.pem</key-file>
+      <cert-file>/etc/letsencrypt/live/sip.example.com/fullchain.pem</cert-file>
+      <chain-file>/etc/letsencrypt/live/sip.example.com/fullchain.pem</chain-file>
 
-    <verify-server-cert>true</verify-server-cert>
-    <verify-server-name>true</verify-server-name>
-    <sni>true</sni>
-  </tls>
+      <!-- START OF NEW SECTION FOR mTLS -->
+      <client>
+         <key-file>/etc/drachtio/tls/carrier-client.key</key-file>
+         <cert-file>/etc/drachtio/tls/carrier-client.pem</cert-file>
+         <ca-file>/etc/ssl/certs/ca-certificates.crt</ca-file>
+      </client>
+
+      <verify-server-cert>true</verify-server-cert>
+      <verify-server-name>true</verify-server-name>
+      <sni>true</sni>
+      <!-- END OF NEW SECTION FOR mTLS -->
+
+   </tls>
+
+   <udp-mtu>8192</udp-mtu>
+
+   <reject-register-with-no-realm>true</reject-register-with-no-realm>
+
 </sip>
 ```
 
@@ -348,7 +374,9 @@ Under option 1, renewing is the same three steps — new key and request on the 
 **same** CA, then restart drachtio. The carrier is not involved, because their trust anchor has not
 changed. Adding another jambonz server is the same process with its own key.
 
-Under option 2, each renewal is another request to the carrier.
+Under options 2 and 3 the trust anchor is also unchanged, so the carrier does not need to act — but
+each certificate has to be reissued by whoever owns that authority, on their timetable rather than
+yours.
 
 Track expiry:
 
