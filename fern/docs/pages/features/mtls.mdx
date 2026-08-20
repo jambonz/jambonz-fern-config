@@ -20,6 +20,10 @@ There is **nothing to enable per carrier**. The requirement is signaled during t
 carrier's SBC asks for a certificate, and jambonz answers with the one you configured. Carriers that
 don't ask are sent nothing, so configuring an identity is harmless for the rest of your trunks.
 
+The consequence is that you cannot discover the requirement and retry. The handshake fails before
+any SIP is exchanged, so a missing certificate looks like a call that failed to connect, not a SIP
+rejection you can inspect. The identity has to be in place before the first call.
+
 ## You cannot reuse your existing SIP TLS certificate
 
 <Warning>
@@ -261,6 +265,10 @@ that section changes.
 
 </sip>
 ```
+
+An outbound TLS connection requires a `sips:` contact, since the certificate belongs to the TLS
+transport. Standard jambonz images already have one — see
+[Setting up TLS for WebRTC and SIP](/self-hosting/overview/setting-up-web-rtc-and-sip-tls).
 
 | Setting | Effect |
 |---|---|
