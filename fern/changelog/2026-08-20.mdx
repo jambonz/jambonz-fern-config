@@ -1,0 +1,46 @@
+<Card title="11.1.2" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.2
+</Card>
+
+**11.1.2** brings **mutual TLS** to self-hosted servers, refreshes the media stack
+— **drachtio 10.1.3** and **mediajam 0.5.4** — and adds **nineninesix.ai**
+text-to-speech end to end.
+
+#### New Features & Improvements
+
+1. **Mutual TLS (mTLS) for self-hosted servers** — drachtio can present a client certificate on outbound TLS connections, so a carrier or SIP peer that requires mutual authentication can be reached from a self-hosted deployment. See [Mutual TLS](/self-hosting/overview/mtls) for how to obtain a client certificate and configure it.
+1. **nineninesix.ai TTS** — Added nineninesix.ai (`gepard-1.0`) as a text-to-speech vendor for [say](/verbs/verbs/say), with speech-credential support in the API and the portal. The model emits no word timestamps, so playout tracking is unavailable on it.
+1. **Sub-account cap per enterprise organization** — An enterprise organization can be limited to a maximum number of sub-accounts.
+
+#### Bug Fixes
+
+- **3DS authentication on capacity changes** — Changing subscription capacity failed on any card requiring SCA/3DS, because the API returned a bare failure and dropped the `client_secret`, so the browser could never present the challenge. Cards that always require authentication — every Indian-issued card, for one — could not complete a capacity change at all. The API now returns the `client_secret`, and the portal runs the challenge instead of reporting success while the capacity was unchanged.
+- **India e-mandate ceiling** — Registers an e-mandate ceiling with headroom, and surfaces invoices that require additional factor authentication.
+- **`stt_ms` reported 0 on the agent verb** — `stopTalking` was clobbered after the final transcript, so speech-to-text latency always came back as zero.
+- **`tts_ms` missing or wrong on the agent verb** — Vendor TTS time is now reported in `tts_ms`, and a flush race that dropped the measurement entirely is fixed.
+- **`noResponseTimeout` with the greeting disabled** — The [agent](/verbs/verbs/agent) verb now arms `noResponseTimeout` at the start of the call when no greeting is configured.
+- **TTS connect-failure alerts were dropped** — A streaming connect failure passed an object into the InfluxDB vendor tag, and the tag escaper threw on it, losing the alert.
+- **Speechmatics credential test** — Testing a Speechmatics credential crashed, and the preview sent an invalid `StartRecognition` message.
+- **Enterprise cold login** — A cold login landed enterprise users on Accounts instead of Home, because beta eligibility was read before the JWT had populated access.
+- **Google OAuth `rootDomain`** — Fixed the root domain used for Google OAuth.
+- **`app_env` dropdown** — The dropdown now shows the initially selected option.
+
+#### Availability
+
+**AWS** — AMIs are published for all nine deployment variants on both amd64 and
+arm64, in all 30 regions the CloudFormation templates support. See the [AWS installation instructions](/self-hosting/aws) to deploy a self-hosted cluster.
+
+**Debian packages** — `jambonz-mini` 11.1.2 is published in the apt repository
+for **both amd64 and arm64**, installable on a fresh Debian 12 (bookworm) host
+with `apt-get install jambonz-mini`. See the
+[Debian package instructions](/self-hosting/debian-package).
+
+**GCP** — images are published for all nine deployment variants on both amd64
+and arm64, and the terraform examples reference them. See the
+[GCP installation instructions](/self-hosting/gcp) to deploy or upgrade.
+
+**Azure** — images are published to the community gallery for all nine
+deployment variants on both amd64 and arm64: amd64 in 30 regions, arm64 in the
+29 regions that offer Ampere VM sizes. The terraform examples reference them,
+and `architecture = "arm64"` selects the arm64 image definitions. See the
+[Azure installation instructions](/self-hosting/azure) to deploy or upgrade.
