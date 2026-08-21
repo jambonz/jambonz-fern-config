@@ -14,6 +14,8 @@ A `call:status` message is sent by jambonz to the websocket server any time the 
 |b3|string|open telemetry span identifier for this call (only provided if otel tracing is enabled)|no|
 |data|object|current call information|yes|
 |data.call_status|string|one of 'trying', 'ringing', 'early-media', 'in-progress', 'completed', 'failed', 'no-answer', 'busy', 'queued'|yes|
+|data.sip_reason|string|the reason phrase from the SIP status LINE (e.g. 'OK'), not the RFC 3326 `Reason` header|no|
+|data.sip_reason_header|string|the RFC 3326 `Reason` header of the SIP message that caused this status change, if it carried one (e.g. `Q.850;cause=18`). Carriers on ISDN/E1 PRI trunks put the authoritative disconnect cause here rather than in the status line. Parse tolerantly: the header is re-serialized in transit so optional whitespace around `;` is normalized, and repeated headers arrive comma-separated (split outside quotes, as `text="..."` may contain a comma)|no|
 
 ```json
 {
@@ -29,6 +31,7 @@ A `call:status` message is sent by jambonz to the websocket server any time the 
     "call_id": "7ade3efb-7163-123b-e6ba-023fd61c5256",
     "sip_status": 200,
     "sip_reason": "OK",
+    "sip_reason_header": "Q.850;cause=16",
     "call_status": "completed",
     "account_sid": "300be250-5a79-46bd-8393-45e7d26c2e34",
     "trace_id": "654c5323d6f907233a1069136b8a330e",
