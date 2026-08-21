@@ -1,0 +1,42 @@
+<Card title="11.1.3" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.3
+</Card>
+
+**11.1.3** is a targeted release for self-hosted deployments that use a **managed
+MySQL on a non-standard port**. Application code is unchanged from 11.1.2 — the
+only difference is **drachtio 10.1.4**.
+
+If you run on AWS, GCP or Azure, **11.1.2 remains the current release for you**
+and there is nothing to do. Those platforms' managed MySQL listens on the
+standard port 3306, which 11.1.3 does not change. See Availability below.
+
+#### Bug Fixes
+
+1. **drachtio could not reach a MySQL server on a non-standard port** — license validation opens a connection to the jambonz database to check the licensed domain, and the port was not configurable: drachtio always used 3306. Where the database listens elsewhere, that connection blocked for the full TCP timeout on every attempt (roughly two minutes), the license never validated, and the server refused every call with `480 Temporarily Unavailable - Unlicensed`. Registrations still succeeded, which made the symptom look like a media or networking fault rather than a licensing one. drachtio 10.1.4 adds `JAMBONES_MYSQL_PORT` (default 3306), and the self-hosting images now pass the port through. This affected **Exoscale medium and large only**, where the managed database service allocates a per-service port.
+
+#### Availability
+
+**Exoscale** — qcow2 images are published for all nine deployment variants at
+11.1.3. Exoscale templates cannot be shared between accounts, so deploying
+starts by registering the images into your own account:
+
+```bash
+cd terraform/exoscale
+./prepare-images.sh --version 11.1.3
+```
+
+then `terraform apply` in `provision-vm-mini`, `provision-vm-medium` or
+`provision-vm-large`. Both the mini and medium layouts were verified end to end
+on this release. The large layout carries the same fixes but has not yet been
+deployment-tested.
+
+**AWS, GCP and Azure** — remain on **11.1.2**, which is correct rather than an
+oversight: the fix in 11.1.3 applies only to a database on a non-standard port,
+and managed MySQL on those platforms uses 3306. They will pick up 11.1.3 or
+later at their next release.
+
+**Debian packages** — `jambonz-mini` and `jambonz-common` 11.1.3 are published in
+the apt repository for both amd64 and arm64, alongside drachtio 10.1.4. The
+application code in these packages is identical to 11.1.2; the version moved so
+that a deployment can pin the drachtio fix. See the
+[Debian package instructions](/self-hosting/debian-package).
