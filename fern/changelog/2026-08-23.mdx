@@ -1,0 +1,58 @@
+<Card title="11.1.4" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.4
+</Card>
+
+**11.1.4** adds call evaluation as a first-class integration. Recordings and
+transcripts can now be sent to **Roark** or **Coval** for automated review of
+agent behaviour, configured per account from the portal. The release also
+carries a SIP diagnostics improvement and a new **upload-recordings 1.9.0**.
+
+#### New Features & Improvements
+
+1. **Roark and Coval as call-evaluation vendors** — a call's recording and
+   transcript can be posted to an evaluation provider for automated scoring.
+   Both vendors are selectable in the portal's call-evaluation vendor
+   selector, with credentials stored and masked like any other vendor key.
+1. **Signup links in the evaluation credential form** — when no evaluation
+   API key is set, the portal shows a signup link for the selected vendor
+   (Coval or Roark) and hides it once a key is entered. The verbose help text
+   under the key field was removed and the Test link placement made
+   consistent across the hosted console.
+1. **`sip_reason_header` in the status callback** — the SIP Reason header is
+   now included in status callback payloads, so the reason a call ended is
+   available to applications without inspecting SIP traces.
+1. **Presigned GCS URLs for recordings** — upload-recordings 1.9.0 generates
+   presigned URLs for recordings stored in Google Cloud Storage, matching the
+   behaviour already available for S3.
+1. **Portal alerts when a recording upload fails** — a failed POST from
+   upload-recordings now raises an alert in the portal instead of failing
+   silently.
+
+#### Component Versions
+
+| Component | 11.1.3 | 11.1.4 |
+|---|---|---|
+| jambonz | 11.1.3 | **11.1.4** |
+| upload-recordings | 1.8.6 | **1.9.0** |
+| mediajam | 0.5.4 | 0.5.4 |
+| drachtio | 10.1.4 | 10.1.4 |
+| rtpengine | 14.1.1.8-jambonz11 | 14.1.1.8-jambonz11 |
+| jambonz OSS (sbc-*) | 0.9.9 | 0.9.9 |
+| monitoring-agent | 10.2.1 | 10.2.1 |
+| pcap-server | 1.0.4 | 1.0.4 |
+| heplify-server | 1.0.4 | 1.0.4 |
+
+#### Availability
+
+**AWS** — AMIs are published for all nine deployment variants (`mini`, `fs`,
+`sip-rtp`, `sip`, `rtp`, `web`, `monitoring`, `web-monitoring`, `recording`)
+on both **amd64 and arm64**, in all **30** supported regions. The AMIs and
+their EBS snapshots are public, so `generate-cf.sh` can copy them from any
+account. A mini deployment was verified end to end on this release.
+
+**Debian packages** — `jambonz-mini` and `jambonz-common` 11.1.4 are published
+in the apt repository for both amd64 and arm64, alongside upload-recordings
+1.9.0. See the [Debian package instructions](/self-hosting/debian-package).
+
+**GCP, Azure and Exoscale** — not yet published at 11.1.4; they remain on
+their current releases and will pick this up at their next release.
