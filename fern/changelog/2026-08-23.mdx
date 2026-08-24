@@ -54,5 +54,14 @@ account. A mini deployment was verified end to end on this release.
 in the apt repository for both amd64 and arm64, alongside upload-recordings
 1.9.0. See the [Debian package instructions](/self-hosting/debian-package).
 
-**GCP, Azure and Exoscale** — not yet published at 11.1.4; they remain on
-their current releases and will pick this up at their next release.
+**GCP** — images are published for all nine deployment variants on both
+**amd64 and arm64** in the `drachtio-cpaas` project. GCP images are global, so
+there is no per-region availability to list. The terraform examples under
+`terraform/gcp/provision-vm-{mini,medium,large}` now pin the 11.1.4 images —
+`terraform.tfvars.example` for amd64 and `terraform.tfvars.arm64.example` for
+arm64. A mini deployment was verified end to end on this release. The 11.1.2
+images are deprecated rather than removed, so existing pinned deployments
+continue to resolve.
+
+**Azure and Exoscale** — not yet published at 11.1.4; they remain on their
+current releases and will pick this up at their next release.
