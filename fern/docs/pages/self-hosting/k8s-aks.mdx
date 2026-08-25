@@ -9,6 +9,11 @@ You will need:
 - Azure CLI installed and authenticated (`az login`)
 - Terraform >= 1.5
 - kubectl installed
+- [helm](https://helm.sh/docs/intro/install/) installed
+
+<Note>
+The Terraform runs `az` on your machine to attach the SIP and RTP network security groups to the node pools, so the CLI must be authenticated before you apply — not just installed.
+</Note>
 
 ## Provision the AKS Cluster
 The Terraform templates for provisioning an AKS cluster [are available here](https://github.com/jambonz-selfhosting/terraform/tree/main/azure/provision-aks-cluster).
@@ -19,17 +24,153 @@ The Terraform templates for provisioning an AKS cluster [are available here](htt
 - Run `terraform init && terraform plan && terraform apply` to provision the cluster.
 - Configure kubectl: `az aks get-credentials --resource-group <rg> --name <cluster-name>`
 
+The cluster takes roughly 10 minutes, then the node pools, then a minute for the NSG association.
+
+<Warning>
+**vCPU quota is per VM family, not just per region.** A default deployment uses `Standard_D2s_v3` / `Standard_D4s_v3`, all in the DSv3 family, and Azure caps each family separately — commonly at 10 vCPUs on a new subscription. If you see
+
+```
+ErrCode_InsufficientVCPUQuota: Insufficient vcpu quota requested 2, remaining 0
+for family standardDSv3Family
+```
+
+you have regional headroom but no family headroom. Either request an increase, or put one pool on a different family — e.g. `sip_vm_size = "Standard_D2as_v4"`, which draws on the DASv4 allowance instead. Check with `az vm list-usage --location <region>`.
+</Warning>
+
+Verify all three node pools, with their labels and taints:
+
+```bash
+kubectl get nodes -L voip-environment
+kubectl get nodes -o custom-columns='NODE:.metadata.name,TAINT:.spec.taints[*].key'
+```
+
+The Helm chart's SBC DaemonSets select on `voip-environment=sip` and `voip-environment=rtp`, so a missing label leaves pods `Pending` rather than producing an error.
+
+### How SIP and RTP are opened
+
+This is worth understanding, because the failure mode is silent. AKS attaches its own NSG to every node pool's VMSS NICs, and Azure requires traffic to be permitted by **both** the NIC NSG and the subnet NSG. Subnet rules alone are not enough — the NIC NSG's default deny drops SIP and RTP, and then everything *looks* healthy (all pods Running, drachtio listening on 5060, an explicit allow visible on the subnet NSG) while no call can arrive.
+
+The Terraform handles this: it creates `sip-nodes-nsg` and `rtp-nodes-nsg` in the AKS-managed resource group and attaches each to its own node pool, so SIP ports open only on SIP nodes and the media range only on RTP nodes. You should see this near the end of the apply:
+
+```
+null_resource.associate_voip_nsgs (local-exec): associating sip-nodes-nsg with aks-sip-...-vmss
+null_resource.associate_voip_nsgs (local-exec): associating rtp-nodes-nsg with aks-rtp-...-vmss
+```
+
+Confirm it took, and give it a couple of minutes:
+
+```bash
+nc -z <sip node public IP> 5060 && echo reachable
+```
+
 <Note>
-**Important**: After provisioning the cluster and before deploying the Helm chart, you must manually associate Network Security Groups (NSGs) with the SIP and RTP node pool VMSSs. See the [Terraform README](https://github.com/jambonz-selfhosting/terraform/tree/main/azure/provision-aks-cluster) for detailed instructions. Allow 5-10 minutes for the NSGs to take effect.
+This reaches into the AKS-managed resource group, and AKS may reset a NIC's NSG reference during some reconcile or upgrade operations. **If SIP stops arriving after a cluster upgrade, re-run `terraform apply` before looking anywhere else.**
 </Note>
 
 ## Deploy jambonz
-Once the cluster is provisioned and NSGs are associated, deploy jambonz using the [Helm chart](https://github.com/jambonz-selfhosting/helm-chart). Follow the instructions in the Helm chart README to configure and install.
 
-After deployment, complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
+Create the namespace and install the Traefik ingress controller:
+
+```bash
+kubectl create namespace jambonz
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+helm install traefik traefik/traefik --namespace jambonz \
+  --set service.spec.externalTrafficPolicy=Local
+```
+
+<Warning>
+`externalTrafficPolicy=Local` is required on AKS, not a preference. With the default (`Cluster`) the Azure load balancer distributes across **every** node, including the SIP and RTP pools — whose NSGs permit only VoIP ports, not the ingress nodePort. Traffic landing there is dropped, so roughly **half of all requests to the portal and API hang**, which presents as random flakiness rather than a clear failure. Measured on a four-node cluster: 4 of 8 requests timed out with `Cluster`, 8 of 8 succeeded with `Local`.
+</Warning>
+
+Then install the chart from a clone of the [Helm chart repository](https://github.com/jambonz-selfhosting/helm-chart), replacing the domain with your own:
+
+```bash
+helm install jambonz . --namespace jambonz \
+  --set cloud=azure \
+  --set baseUrl=jambonz.example.com \
+  --set sbc.eipAllocator.enabled=false
+```
+
+`baseUrl` drives every hostname: the portal is `jambonz.example.com`, the API `api.jambonz.example.com`, Grafana `grafana.jambonz.example.com`.
+
+<Note>
+`sbc.eipAllocator.enabled=false` because there is nothing for it to do on Azure: AKS gives the SIP and RTP nodes public IPs directly (the SIP pool from a reserved prefix), so no address needs claiming. Left enabled it does no harm — the init container logs `EIP allocation not supported for cloud provider: azure ... skipping` and exits cleanly — but turning it off keeps the deployment honest.
+</Note>
+
+Databases are initialized by two Jobs which must complete before the application pods start:
+
+```bash
+kubectl -n jambonz get jobs      # db-create and db-seed must show Complete
+kubectl -n jambonz get pods
+```
+
+Confirm the SBCs are advertising their public addresses, since media depends on it:
+
+```bash
+kubectl -n jambonz exec ds/jambonz-sbc-sip -c drachtio -- \
+  sh -c "tr '\0' ' ' < /proc/1/cmdline" | grep -o -- '--external-ip [0-9.]*'
+kubectl -n jambonz exec ds/jambonz-sbc-rtp -c rtpengine -- grep interface rtpengine.conf
+```
+
+which on a healthy cluster prints something like:
+
+```
+--external-ip 20.59.61.112
+interface=public/10.0.3.4!20.114.19.213
+```
+
+drachtio should show `--external-ip <public IP>`, and rtpengine `interface=public/<private>!<public>`. If rtpengine shows only a private address with no `!`, media will be one-way silence — upgrade the rtpengine image, as older ones could not discover a public IP on AKS.
+
+## Set up DNS
+
+Get the load balancer's address:
+
+```bash
+kubectl -n jambonz get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
+
+Azure gives an **IP address**, so create A records for your portal hostname plus the `api.` and `grafana.` subdomains.
+
+<Warning>
+Create the records **before** you look them up. A DNS zone's SOA sets how long a "does not exist" answer is cached, and it is often long — 86400 seconds (24 hours) is a common default. Resolve a hostname once before its record exists and your resolver may refuse to see it for a day, even though the record is live and public resolvers return it. If you have already done this, use a different hostname rather than waiting it out.
+</Warning>
+
+## Enable HTTPS
+
+Install cert-manager, then set `global.traefik.tls.enabled=true`, `global.traefik.clusterIssuer=letsencrypt-prod` and `global.traefik.email` in your values and run `helm upgrade`.
+
+```bash
+kubectl -n jambonz get certificate
+```
+
+## Log In
+
+Browse to your portal hostname and log in as `admin` / `admin`. You will be prompted to change the password immediately.
+
+Then complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
 
 ## Cleanup
-When tearing down, reverse the NSG associations from the VMSSs before running `terraform destroy`. See the Terraform README for details.
+Order matters. Kubernetes created the load balancer, and Terraform does not know about it.
+
+```bash
+helm -n jambonz uninstall jambonz
+helm -n jambonz uninstall traefik
+kubectl -n jambonz delete pvc --all     # PVCs are not removed with the release
+kubectl delete namespace jambonz
+```
+
+Wait until no LoadBalancer services remain, then:
+
+```bash
+terraform destroy
+```
+
+Destroying the cluster removes the AKS-managed resource group, and with it the node NSGs and the SIP public IP prefix — no separate cleanup is needed for those. Do check for managed disks left behind by the PVCs, since deleting the namespace can race the PVC deletion:
+
+```bash
+az disk list --query "[?diskState=='Unattached'].[name,resourceGroup]" -o table
+```
 
 ## Resources
 
