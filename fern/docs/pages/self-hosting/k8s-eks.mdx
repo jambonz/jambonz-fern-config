@@ -9,6 +9,7 @@ You will need:
 - AWS CLI installed and configured with your credentials
 - Terraform >= 1.5
 - kubectl installed
+- [helm](https://helm.sh/docs/intro/install/) installed
 
 ## Provision the EKS Cluster
 The Terraform templates for provisioning an EKS cluster [are available here](https://github.com/jambonz-selfhosting/terraform/tree/main/aws/provision-eks-cluster).
@@ -17,25 +18,137 @@ The Terraform templates for provisioning an EKS cluster [are available here](htt
 - Navigate to `aws/provision-eks-cluster`.
 - Copy `terraform.tfvars.example` to `terraform.tfvars` and edit it with your desired settings.
 - Run `terraform init && terraform plan && terraform apply` to provision the cluster.
-- Update your kubeconfig: `aws eks update-kubeconfig --region <region> --name <cluster-name>`
-- Verify: `kubectl get nodes --show-labels`
+
+<Warning>
+Set `region` deliberately — `terraform.tfvars.example` ships with `us-east-1`. Also note that `name_prefix` is validated at **20 characters or fewer**; a longer value fails at plan time before anything is created.
+</Warning>
+
+The cluster takes roughly 15 minutes to create, most of it the EKS control plane.
+
+- Update your kubeconfig. The cluster's real name is `<name_prefix>-<cluster_name>`, so take it from the Terraform output rather than from your `terraform.tfvars`:
+
+```bash
+aws eks update-kubeconfig --region <region> --name $(terraform output -raw cluster_name)
+```
+
+- Verify all three node pools are present, with their labels and taints:
+
+```bash
+kubectl get nodes -L voip-environment
+kubectl get nodes -o custom-columns='NODE:.metadata.name,TAINT:.spec.taints[*].key'
+```
+
+You should see nodes labelled `voip-environment=sip` and `voip-environment=rtp`, tainted `sip` and `rtp` respectively. The Helm chart's SBC DaemonSets select on exactly those, so a missing label produces pods that stay `Pending` rather than an error.
 
 <Note>
 EKS uses Elastic IPs for SIP and RTP nodes, assigned automatically via an `ec2-eip-allocator` init container. The Terraform templates configure the necessary IAM permissions for this.
 </Note>
 
 ## Deploy jambonz
-Once the cluster is provisioned, deploy jambonz using the [Helm chart](https://github.com/jambonz-selfhosting/helm-chart). Follow the instructions in the Helm chart README to configure and install.
 
-After deployment, complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
+Create the namespace and install the Traefik ingress controller:
+
+```bash
+kubectl create namespace jambonz
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+helm install traefik traefik/traefik --namespace jambonz
+```
+
+Then install the chart from a clone of the [Helm chart repository](https://github.com/jambonz-selfhosting/helm-chart), replacing the domain with your own:
+
+```bash
+helm install jambonz . --namespace jambonz \
+  --set cloud=aws \
+  --set baseUrl=jambonz.example.com \
+  --set storageClassName=gp3 \
+  --set sbc.eipAllocator.enabled=true
+```
+
+`baseUrl` drives every hostname: the portal is `jambonz.example.com`, the API is `api.jambonz.example.com`, and Grafana is `grafana.jambonz.example.com`.
+
+<Note>
+`storageClassName=gp3` matches the StorageClass the Terraform creates via the EBS CSI driver addon — cheaper and faster than gp2. `sbc.eipAllocator.enabled=true` assigns the Elastic IPs created in the previous step (tagged `role=sip-node` / `role=rtp-node`) to the SBC nodes.
+</Note>
+
+Databases are initialized by two Jobs, which must complete before the application pods can start. Watch them first, then the pods — allow about ten minutes:
+
+```bash
+kubectl -n jambonz get jobs        # db-create and db-seed must show Complete
+kubectl -n jambonz get pods
+```
+
+Confirm the SBC nodes picked up their Elastic IPs, since media depends on it:
+
+```bash
+terraform output -json sip_eip_public_ips
+kubectl -n jambonz logs ds/jambonz-sbc-sip -c eip-allocator | tail -1
+```
+
+<Warning>
+Do not verify this with `kubectl get nodes`. Kubernetes caches a node's `ExternalIP` when the kubelet registers, which happens **before** the allocator runs, so it can show the pre-EIP address indefinitely even though the node really is on its Elastic IP.
+</Warning>
+
+## Set up DNS
+
+Get the load balancer's address:
+
+```bash
+kubectl -n jambonz get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+```
+
+AWS load balancers are **DNS names, not IP addresses**, so create CNAME (or ALIAS/ANAME) records — not A records — pointing at it:
+
+| Record | Purpose |
+|--------|---------|
+| `jambonz.example.com` | portal |
+| `api.jambonz.example.com` | REST API |
+| `grafana.jambonz.example.com` | Grafana |
+
+If your DNS provider does not support ALIAS/ANAME at the zone apex, use a subdomain such as `portal.example.com` as your `baseUrl` instead.
+
+## Enable HTTPS
+
+Install cert-manager, then set `global.traefik.tls.enabled=true`, `global.traefik.clusterIssuer=letsencrypt-prod` and `global.traefik.email` in your values, and run `helm upgrade`. Certificates take one to three minutes to issue:
+
+```bash
+kubectl -n jambonz get certificate
+```
+
+## Log In
+
+Browse to `https://<your portal hostname>` and log in as `admin` / `admin`. You will be prompted to change the password immediately.
+
+Then complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
 
 ## Cleanup
-When tearing down, follow this order:
-1. `helm uninstall jambonz -n jambonz`
-2. `kubectl delete namespace jambonz`
-3. `kubectl delete svc --all-namespaces --field-selector spec.type=LoadBalancer`
-4. Wait 60 seconds for AWS to clean up load balancers.
-5. `terraform destroy`
+Order matters here. Kubernetes creates the load balancer and its security group, and Terraform does not know about them — the VPC will not delete while they exist.
+
+```bash
+helm -n jambonz uninstall jambonz
+helm -n jambonz uninstall traefik
+kubectl -n jambonz delete pvc --all      # PVCs are not removed with the release
+kubectl delete namespace jambonz
+```
+
+Wait until the load balancer is gone, then destroy the cluster:
+
+```bash
+kubectl -n jambonz get svc               # no LoadBalancer services should remain
+terraform destroy
+```
+
+Finally, check for EBS volumes orphaned by the PVCs. Deleting the namespace can race the PVC deletion, leaving volumes behind that bill indefinitely:
+
+```bash
+aws ec2 describe-volumes --region <region> \
+  --filters Name=status,Values=available \
+  --query 'Volumes[].[VolumeId,Size,Tags[?Key==`KubernetesCluster`].Value|[0]]' --output table
+```
+
+<Note>
+If `terraform destroy` fails with a dependency violation on a subnet or security group, a load balancer still exists. Delete it and re-run `terraform destroy` — do not force-delete the VPC.
+</Note>
 
 ## Resources
 
