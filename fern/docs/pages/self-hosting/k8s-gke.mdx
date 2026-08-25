@@ -14,6 +14,7 @@ You will need:
 - Required APIs enabled: `container.googleapis.com`, `compute.googleapis.com`
 - Terraform >= 1.5
 - kubectl installed
+- [helm](https://helm.sh/docs/intro/install/) installed
 
 ## Provision the GKE Cluster
 The Terraform templates for provisioning a GKE cluster [are available here](https://github.com/jambonz-selfhosting/terraform/tree/main/gcp/provision-gke-cluster).
@@ -25,14 +26,113 @@ The Terraform templates for provisioning a GKE cluster [are available here](http
 - Run `terraform init && terraform plan && terraform apply` to provision the cluster.
 - Configure kubectl: `gcloud container clusters get-credentials <cluster-name> --region <region> --project <project-id>`
 
-## Deploy jambonz
-Once the cluster is provisioned, deploy jambonz using the [Helm chart](https://github.com/jambonz-selfhosting/helm-chart). Follow the instructions in the Helm chart README to configure and install.
+<Warning>
+If `GOOGLE_APPLICATION_CREDENTIALS` is set in your environment it **silently overrides** `gcloud auth application-default login`, and Terraform will authenticate as that service account instead of you. A permission error on a project you own is almost always this. Check with `echo $GOOGLE_APPLICATION_CREDENTIALS` and unset it if it is not what you intend.
+</Warning>
 
-After deployment, complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
+The cluster takes roughly 10-12 minutes to create; the node pools follow.
+
+<Note>
+This is a **regional** cluster, so `system_node_count`, `sip_node_count` and `rtp_node_count` are counts **per zone**. The SIP and RTP pools are pinned to a single zone by default so that each node gets exactly one static IP; set `voip_node_locations` to spread them across zones, and the static IP pools scale with it automatically. A default deployment is 8 nodes: 6 system (2 per zone) plus one SIP and one RTP.
+</Note>
+
+Verify the node pools, their labels and their taints:
+
+```bash
+kubectl get nodes -L voip-environment
+kubectl get nodes -o custom-columns='NODE:.metadata.name,TAINT:.spec.taints[*].key'
+```
+
+The Helm chart's SBC DaemonSets select on `voip-environment=sip` and `voip-environment=rtp`, so a missing label produces pods that stay `Pending` rather than an error.
+
+## Deploy jambonz
+
+Create the namespace and install the Traefik ingress controller:
+
+```bash
+kubectl create namespace jambonz
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+helm install traefik traefik/traefik --namespace jambonz
+```
+
+Then install the chart from a clone of the [Helm chart repository](https://github.com/jambonz-selfhosting/helm-chart), replacing the domain with your own:
+
+```bash
+helm install jambonz . --namespace jambonz \
+  --set cloud=gcp \
+  --set baseUrl=jambonz.example.com \
+  --set sbc.eipAllocator.enabled=true
+```
+
+`baseUrl` drives every hostname: the portal is `jambonz.example.com`, the API is `api.jambonz.example.com`, and Grafana is `grafana.jambonz.example.com`.
+
+<Note>
+`sbc.eipAllocator.enabled=true` assigns the static IP addresses the Terraform created, matched by the label `role=sip-node` / `role=rtp-node`. Run `terraform output eip_allocator_helm_values` to see the exact values the chart expects. The nodes need the `compute-rw` scope for this, which the Terraform configures.
+</Note>
+
+Databases are initialized by two Jobs, which must complete before the application pods can start:
+
+```bash
+kubectl -n jambonz get jobs        # db-create and db-seed must show Complete
+kubectl -n jambonz get pods
+```
+
+Confirm the SBC nodes claimed their static IPs — media depends on it:
+
+```bash
+terraform output -json sip_static_ips
+terraform output -json rtp_static_ips
+kubectl -n jambonz logs ds/jambonz-sbc-sip -c eip-allocator | tail -1
+kubectl -n jambonz logs ds/jambonz-sbc-rtp -c eip-allocator | tail -1
+```
+
+Both should end with `Static IP assigned successfully`.
+
+## Set up DNS
+
+Get the load balancer's address:
+
+```bash
+kubectl -n jambonz get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
+
+On GCP this is an **IP address**, so create A records pointing at it for your portal hostname plus the `api.` and `grafana.` subdomains.
+
+## Enable HTTPS
+
+Install cert-manager, then set `global.traefik.tls.enabled=true`, `global.traefik.clusterIssuer=letsencrypt-prod` and `global.traefik.email` in your values and run `helm upgrade`. Certificates take one to three minutes:
+
+```bash
+kubectl -n jambonz get certificate
+```
+
+## Log In
+
+Browse to your portal hostname and log in as `admin` / `admin`. You will be prompted to change the password immediately.
+
+Then complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
 
 ## Cleanup
+Order matters. Kubernetes creates the load balancer, and Terraform does not know about it — the network will not delete while it exists.
+
+```bash
+helm -n jambonz uninstall jambonz
+helm -n jambonz uninstall traefik
+kubectl -n jambonz delete pvc --all      # PVCs are not removed with the release
+kubectl delete namespace jambonz
+```
+
+Wait until no LoadBalancer services remain, then:
+
 ```bash
 terraform destroy
+```
+
+Finally check for persistent disks orphaned by the PVCs — deleting the namespace can race the PVC deletion, leaving disks that bill indefinitely:
+
+```bash
+gcloud compute disks list --project <project-id> --filter="-users:*"
 ```
 
 ## Resources
