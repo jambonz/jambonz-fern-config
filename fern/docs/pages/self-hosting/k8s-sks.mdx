@@ -9,6 +9,8 @@ You will need:
 - API credentials (key and secret with full permissions)
 - Terraform >= 1.5
 - kubectl installed
+- [helm](https://helm.sh/docs/intro/install/) installed
+- The [Exoscale CLI](https://community.exoscale.com/documentation/tools/exoscale-command-line-interface/) (`exo`), for verification and cleanup
 
 ## Provision the SKS Cluster
 The Terraform templates for provisioning an SKS cluster [are available here](https://github.com/jambonz-selfhosting/terraform/tree/main/exoscale/provision-sks-cluster).
@@ -24,26 +26,111 @@ The Terraform templates for provisioning an SKS cluster [are available here](htt
 - Run `terraform init && terraform plan && terraform apply` to provision the cluster.
 - Configure kubectl: `export KUBECONFIG=$(pwd)/kubeconfig && kubectl get nodes`
 
+<Warning>
+Set `exoscale_api_key` and `exoscale_api_secret` in `terraform.tfvars` — the environment variables alone are **not** sufficient here. The Terraform provider falls back to `EXOSCALE_API_KEY` / `EXOSCALE_API_SECRET`, but the `exoscale-eip-creds` Kubernetes secret is built from the Terraform *variables*, which have no such fallback. Set only the environment variables and the cluster comes up fine with an empty credentials secret, and the EIP allocator then cannot authenticate.
+</Warning>
+
+The Terraform also creates the `jambonz` namespace and the `exoscale-eip-creds` secret for you, so those steps are already done when you deploy the chart.
+
 <Note>
-When deploying Traefik (or another ingress controller) with multiple node pools, Exoscale requires a load balancer annotation specifying the instance pool ID. See the [Terraform README](https://github.com/jambonz-selfhosting/terraform/tree/main/exoscale/provision-sks-cluster) for details.
+With multiple node pools, Exoscale requires a load balancer annotation naming the instance pool that should receive traffic. The exact command, with your cluster's instance pool ID filled in, is printed by `terraform output usage_instructions`.
 </Note>
 
 ## Deploy jambonz
-Once the cluster is provisioned, deploy jambonz using the [Helm chart](https://github.com/jambonz-selfhosting/helm-chart). Follow the instructions in the Helm chart README to configure and install.
 
-After deployment, complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
+Install Traefik with the instance pool annotation (the namespace already exists):
+
+```bash
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+helm install traefik traefik/traefik --namespace jambonz \
+  --set "service.annotations.service\.beta\.kubernetes\.io/exoscale-loadbalancer-service-instancepool-id=<system instance pool id>"
+```
+
+Then install the chart from a clone of the [Helm chart repository](https://github.com/jambonz-selfhosting/helm-chart):
+
+```bash
+helm install jambonz . --namespace jambonz \
+  --set cloud=exoscale \
+  --set baseUrl=jambonz.example.com \
+  --set storageClassName=exoscale-sbs \
+  --set sbc.eipAllocator.enabled=true \
+  --set sbc.eipAllocator.rtpEnabled=false \
+  --set sbc.eipAllocator.exoscaleApiKeySecret=exoscale-eip-creds \
+  --set sbc.eipAllocator.exoscaleZone=<zone>
+```
+
+<Note>
+`sbc.eipAllocator.rtpEnabled=false` is specific to Exoscale, and deliberate. The SIP nodes get a **managed** Elastic IP; the RTP nodes get none, because a managed Elastic IP requires a TCP healthcheck target and an RTP node has none that is safe to expose. RTP does not need one — Exoscale gives every SKS node a routable public IP directly, and that is what rtpengine advertises. Leave it at the default `true` and the RTP pod will fail to start, looking for a pool that intentionally does not exist.
+</Note>
+
+Databases are initialized by two Jobs, which must complete before the application pods can start:
+
+```bash
+kubectl -n jambonz get jobs        # db-create and db-seed must show Complete
+kubectl -n jambonz get pods
+```
+
+Confirm the SIP node claimed its Elastic IP, and that the address actually answers:
+
+```bash
+terraform output -json sip_eip_addresses
+kubectl -n jambonz logs ds/jambonz-sbc-sip -c eip-allocator | tail -1
+nc -z -w 5 <elastic ip> 5060 && echo reachable
+```
+
+## Set up DNS
+
+Get the load balancer's address:
+
+```bash
+kubectl -n jambonz get svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
+
+On Exoscale this is an **IP address**, so create A records pointing at it for your portal hostname plus the `api.` and `grafana.` subdomains.
+
+## Enable HTTPS
+
+Install cert-manager, then set `global.traefik.tls.enabled=true`, `global.traefik.clusterIssuer=letsencrypt-prod` and `global.traefik.email` in your values and run `helm upgrade`.
+
+## Log In
+
+Browse to your portal hostname and log in as `admin` / `admin`. You will be prompted to change the password immediately.
+
+Then complete the [Post-Install Steps](/self-hosting/overview/post-install-steps) and generate a license key as described in [Software Licensing](/self-hosting/overview/licensing).
 
 ## Cleanup
 <Note>
 You must delete any Kubernetes LoadBalancer services (which create Exoscale NLBs) before running `terraform destroy`, or the destroy will fail because the instance pools are locked by the NLBs.
 </Note>
 
-1. Delete NLBs via the Exoscale CLI:
+1. Uninstall the releases, which removes the Traefik service and with it the NLB:
+   ```bash
+   helm -n jambonz uninstall jambonz
+   helm -n jambonz uninstall traefik
+   kubectl -n jambonz delete pvc --all
+   kubectl delete namespace jambonz
+   ```
+2. Confirm no NLB remains, and delete any that does:
    ```bash
    exo compute load-balancer list --zone <zone>
    exo compute load-balancer delete <NLB_ID> --zone <zone>
    ```
-2. Run `terraform destroy`.
+3. Run `terraform destroy`.
+
+## Upgrading an existing cluster
+
+If your cluster predates managed Elastic IPs, adding the healthcheck that converts a manual Elastic IP to a managed one **crashes the Exoscale Terraform provider** in place:
+
+```
+Error: The terraform-provider-exoscale plugin crashed!
+```
+
+Recreate the address instead:
+
+```bash
+terraform apply -replace='exoscale_elastic_ip.sip[0]'
+```
 
 ## Resources
 
