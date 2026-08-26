@@ -48,6 +48,17 @@ Inworld tuning is passed in `synthesizer.options`. Audio shaping lives under a n
   Output bit rate.
 </ParamField>
 
+## Models
+
+Pick the model on the speech credential in the portal.
+
+| Model | Notes |
+| --- | --- |
+| `inworld-tts-2` | Current generation, the best quality. |
+| `inworld-tts-2-flash` | Same generation tuned for latency and cost — the fastest first byte. |
+| `inworld-tts-1.5-max` / `inworld-tts-1.5-mini` | Previous generation. |
+| `inworld-tts-1` / `inworld-tts-1-max` | Deprecated, no word timestamps. |
+
 ## Streaming
 
 Inworld supports [TTS streaming](/guides/features/tts-streaming), including
@@ -59,9 +70,9 @@ API does not accept it.
 
 ## Word timestamps
 
-On `inworld-tts-1.5-mini`, `inworld-tts-1.5-max` and `inworld-tts-2`, Inworld
-returns word-level timing along with the audio. jambonz uses it to track how much
-of a response the caller actually heard, which powers
+On `inworld-tts-2`, `inworld-tts-2-flash`, `inworld-tts-1.5-mini` and
+`inworld-tts-1.5-max`, Inworld returns word-level timing along with the audio.
+jambonz uses it to track how much of a response the caller actually heard, which powers
 [`trackTtsPlayout`](/guides/features/tts-streaming) and lets a barge-in trim the
 conversation history to the words spoken before the interruption. No configuration
 is needed beyond enabling that feature — jambonz requests the timing itself.
