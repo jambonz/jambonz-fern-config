@@ -356,6 +356,12 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
     Gemini Live transcription does not support speaker diarization or word timestamps, and Google limits a live session to 10 minutes; the `diarization` and `words` recognizer properties are ignored on that path.
 
+    Google serves the Gemini models through two interfaces that take different credentials and reject each other's: **studio**, the preview Gemini Developer API, authenticates with an AI Studio api key stored on the speech credential; **vertex**, the GA Vertex AI interface, authenticates as the credential's service account and additionally needs billing and `roles/aiplatform.user`, taking the project from the service account and the region from `parentPath`. jambonz picks the interface from the credential — an api key selects studio, a credential with only a service account selects vertex — and `geminiPlatform` overrides that.
+
+    <ParamField path="geminiPlatform" type="string" required={false}>
+      Force the interface: `studio` or `vertex`. Inferred from the credential when unset.
+    </ParamField>
+
     <ParamField path="apiMode" type="string" required={false}>
       Which API to use: `v1`, `v2` or `gemini`. Normally inferred from the model name; set this only to override that inference.
     </ParamField>
