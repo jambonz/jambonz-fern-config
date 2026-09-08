@@ -351,6 +351,53 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
   </Accordion>
 
+  <Accordion title="googleOptions">
+    Google serves three speech APIs from one set of credentials: Cloud Speech-to-Text v1, Cloud Speech-to-Text v2, and the Gemini Live transcription models. Which one runs is chosen by the recognizer `model`: a name beginning with `gemini-` selects the Gemini Live API, anything else a Cloud Speech recognizer. Leave `model` unset and jambonz picks a Cloud Speech model appropriate to the language, as it always has. A default model can also be stored on the Google speech credential in the jambonz portal, which applies to every call on that account unless the request overrides it.
+
+    Gemini Live transcription does not support speaker diarization or word timestamps, and Google limits a live session to 10 minutes; the `diarization` and `words` recognizer properties are ignored on that path.
+
+    <ParamField path="apiMode" type="string" required={false}>
+      Which API to use: `v1`, `v2` or `gemini`. Normally inferred from the model name; set this only to override that inference.
+    </ParamField>
+
+    <ParamField path="mode" type="string" required={false}>
+      Gemini transcription style (`gemini` only): `VERBATIM` (default) transcribes speech as spoken, `SMART` cleans up disfluencies and applies formatting.
+    </ParamField>
+
+    <ParamField path="customVocabulary" type="array" required={false}>
+      Up to 1000 terms, acronyms, brand names or proper nouns to bias recognition towards (`gemini` only). Example: `["jambonz", "drachtio"]`. When omitted, the recognizer's `hints` are used instead.
+    </ParamField>
+
+    <ParamField path="serviceVersion" type="string" required={false}>
+      Cloud Speech-to-Text API version, `v1` (default) or `v2`. Ignored when `apiMode` is `gemini`.
+    </ParamField>
+
+    <ParamField path="recognizerId" type="string" required={false}>
+      ID of a Google Speech recognizer resource (v2 only).
+    </ParamField>
+
+    <ParamField path="parentPath" type="string" required={false}>
+      Parent resource path for the Google Speech recognizer (v2 only), e.g. `projects/my-project/locations/us-central1`. A location other than `global` also routes the request to that region's endpoint.
+    </ParamField>
+
+    <ParamField path="speechStartTimeoutMs" type="number" required={false}>
+      Milliseconds to wait for speech to start (v2 only).
+    </ParamField>
+
+    <ParamField path="speechEndTimeoutMs" type="number" required={false}>
+      Milliseconds of silence used to detect the end of speech (v2 only).
+    </ParamField>
+
+    <ParamField path="enableVoiceActivityEvents" type="boolean" required={false}>
+      Enable Google's voice activity detection events (v2 only).
+    </ParamField>
+
+    <ParamField path="transcriptNormalization" type="array" required={false}>
+      Transcript normalization rules (v2 only), each `{search, replace, caseSensitive}`.
+    </ParamField>
+
+  </Accordion>
+
   <Accordion title="xaiOptions">
     xAI (`xai`) is a live streaming recognizer: both interim and final transcripts are supported.
 
