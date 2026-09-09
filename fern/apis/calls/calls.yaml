@@ -113,6 +113,8 @@ paths:
                   example: en-US
                 amd:
                   $ref: '#/components/schemas/amd'
+                noiseIsolation:
+                  $ref: '#/components/schemas/noiseIsolation'
                 dual_streams:
                   type: boolean
                   description: >-
@@ -968,3 +970,38 @@ components:
               type: number
               default: 20000
               description: Time in milliseconds to wait to hear a tone.
+    noiseIsolation:
+      type: object
+      description: >-
+        Enable server-side noise isolation on the call at answer time, before any callHook
+        verbs run. Useful for cleaning the far-end audio ahead of answering machine detection
+        on noisy outbound calls. Applied to the read (far-end/inbound) stream by default.
+      properties:
+        enable:
+          type: boolean
+          default: true
+          description: Set to false to disable; the object's presence otherwise enables it.
+          example: true
+        vendor:
+          type: string
+          default: krisp
+          description: Noise isolation vendor.
+          example: krisp
+        direction:
+          type: string
+          enum:
+            - read
+            - write
+          default: read
+          description: >-
+            'read' filters far-end/inbound audio (default, correct for AMD on outbound calls);
+            'write' filters audio sent to the far end.
+          example: read
+        level:
+          type: number
+          default: 100
+          description: Suppression level 0-100.
+          example: 100
+        model:
+          type: string
+          description: Optional model name/path override.
