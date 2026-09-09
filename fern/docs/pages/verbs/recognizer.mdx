@@ -358,20 +358,16 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
     Recognition runs on the GA Vertex AI interface, authenticating as the speech credential's own service account: no additional secret is needed, but the project must have billing enabled and the service account `roles/aiplatform.user`. The project comes from the service account and the region from `parentPath`, defaulting to `global`, where these models are served. Name the model as Vertex AI publishes it — the preview Gemini Developer API ("AI Studio") spells the same models differently and is not supported, since it rejects service accounts.
 
-    <ParamField path="apiMode" type="string" required={false}>
-      Which API to use: `v1`, `v2` or `gemini`. Normally inferred from the model name; set this only to override that inference.
-    </ParamField>
-
     <ParamField path="mode" type="string" required={false}>
-      Gemini transcription style (`gemini` only): `VERBATIM` (default) transcribes speech as spoken, `SMART` cleans up disfluencies and applies formatting.
+      Gemini transcription style, for the gemini models only: `VERBATIM` (default) transcribes speech as spoken, `SMART` cleans up disfluencies and applies formatting.
     </ParamField>
 
     <ParamField path="customVocabulary" type="array" required={false}>
-      Up to 1000 terms, acronyms, brand names or proper nouns to bias recognition towards (`gemini` only). Example: `["jambonz", "drachtio"]`. When omitted, the recognizer's `hints` are used instead.
+      Up to 1000 terms, acronyms, brand names or proper nouns to bias recognition towards, for the gemini models only. Example: `["jambonz", "drachtio"]`. When omitted, the recognizer's `hints` are used instead.
     </ParamField>
 
     <ParamField path="serviceVersion" type="string" required={false}>
-      Cloud Speech-to-Text API version, `v1` (default) or `v2`. Ignored when `apiMode` is `gemini`.
+      Cloud Speech-to-Text API version, `v1` (default) or `v2`. Ignored by the gemini models, which are a different API.
     </ParamField>
 
     <ParamField path="recognizerId" type="string" required={false}>
