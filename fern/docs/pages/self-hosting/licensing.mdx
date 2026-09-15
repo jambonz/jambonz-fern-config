@@ -118,30 +118,27 @@ This requirement does not apply to jambonz.cloud customers — Krisp features ar
 - Use `noiseIsolation: "rnnoise"` for open-source noise cancellation (no license required)
 
 
-##  Telemetry
+## Telemetry
 
 Licensed instances send a small amount of  data back to a central Jambonz hosted server so that we can monitor usage, We collect the following data:
 
-1. Hourly call statistics
-
+### Events
+#### Hourly call statistics
 Each instance reports, once per hour; inbound / outbound / total concurrent call counts, as min and max over the hour (inbound_min/max, outbound_min/max, total_min/max)
 
-2. License-install events — POST /licenses/installed → license_installed
-
+#### License-install events — POST /licenses/installed → license_installed
 Sent when a license is installed (trials, renewals, rebuilds):
-
 - maxSessions (or "unlimited"), expirationDate
 - hostingProvider and hostingRegion (e.g. cloud + region)
 
-3. Session-limit-reached events
-
+#### Session-limit-reached events
 When an instance hits its session cap: direction (inbound/outbound), currentSessions, maxSessions, sentBy
 Throttled to 1 per domain/direction/minute; also triggers an email to the customer + support team.
 
-4. Tampering events
+#### Tampering events
 When we detect license tampering.
 
-5. License check-ins
+#### License check-ins
 It records a check-in timestamp per domain and the version.
 
 ### Identifiers attached to every event
@@ -152,8 +149,9 @@ Across all measurements, each point is tagged/stamped with:
 - publicIp and privateIp of the instance
 - version, 
 
-### What it does not collect
-
+### What it does not collect
 No call content, no per-call CDRs, no caller/callee numbers, no SIP payloads, no customer PII beyond the systems domain/IP.
 
+<Note>
 If you require an air-gapped deployemnt without the requirement to send license data then please  contact us at support@jambonz.org.
+</Note>
