@@ -88,6 +88,12 @@ There are several types of endpoints that you can dial:
   Defaults to caller ID on inbound call.
 </ParamField>
 
+<ParamField path="codecs" type="array" required={false}>
+  Codec names, in preference order, to offer on the outbound INVITE, e.g. `["G722", "PCMU"]`. Names are case-insensitive.  
+  When omitted, jambonz offers its default codecs with the inbound leg's codec placed first, so that both legs of the bridged call use the same codec and media can be released from the media server.  
+  If any name is not supported by the media server, the whole list is ignored, an error is logged, an alert is written to the account, and default codec negotiation is used.
+</ParamField>
+
 <ParamField path="confirmHook" type="string" required={false}>
   webhook for an application to run on the callee's end after the dialed number answers but before the call is connected.  
   This allows the caller to provide information to the dialed number, giving them the opportunity to decline the call before they answer.  
