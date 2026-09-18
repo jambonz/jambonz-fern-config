@@ -170,6 +170,8 @@ navigation:
             path: ./docs/pages/features/using-filler-noise.mdx
           - page: Securing  HTTP Endpoints
             path: ./docs/pages/features/securing-webhooks.mdx
+          - page: Webhook and WebSocket retries
+            path: ./docs/pages/features/webhook-retries.mdx
           - page: API Rate Limits
             path: ./docs/pages/features/api-rate-limits.mdx
           - page: Application Environment Variables

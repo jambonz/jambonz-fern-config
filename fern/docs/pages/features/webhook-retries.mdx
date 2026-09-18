@@ -1,0 +1,123 @@
+---
+title: Webhook and WebSocket retries
+description: Control whether and how many times jambonz retries a failed HTTP webhook or WebSocket connection to your application, using the rc and rp parameters on your application URL.
+---
+
+jambonz drives a call by sending requests to your application, either as HTTP webhooks or over a
+WebSocket connection. When one of those requests fails, jambonz can retry it. You control that with
+two parameters that you append to your application URL as a URL fragment:
+
+- `rc` is the retry count: how many additional attempts to make after the first one fails.
+- `rp` is the retry policy: which kinds of failure are worth retrying.
+
+```text
+https://example.com/jambonz/call#rc=3&rp=5xx,ct
+wss://example.com/jambonz/ws#rc=2&rp=ct
+```
+
+The fragment (everything from `#` on) is never sent to your server. jambonz reads the parameters and
+strips them before making the request or opening the WebSocket, so nothing else in your URL needs to
+change.
+
+## Retry count: `rc`
+
+| Transport | Default | Maximum |
+|---|---|---|
+| HTTP webhook | 0 (no retries) | 5 |
+| WebSocket | 5 | 5 |
+
+`rc` counts retries, not total attempts. `rc=2` means up to three attempts in all. Values above 5
+are treated as 5.
+
+For a WebSocket application, `rc` does double duty. It bounds the retries when jambonz first opens
+the connection for a call, and it is also the reconnect budget if an established connection drops
+mid-call (see below).
+
+## Retry policy: `rp`
+
+`rp` is a comma-separated list of failure classes. A failed attempt is retried only if it matches one
+of them. The default is `ct`.
+
+| Value | Retries when | Applies to |
+|---|---|---|
+| `ct` | the connection could not be established: refused, reset, aborted, or timed out | HTTP and WebSocket |
+| `rt` | the connection was made but your server did not respond within the request timeout (10 seconds by default) | HTTP only |
+| `4xx` | your server answered with a 4xx status | HTTP only |
+| `5xx` | your server answered with a 5xx status | HTTP only |
+| `all` | any of the above | HTTP and WebSocket |
+
+For HTTP, any status other than 200, 202 or 204 is treated as a failure. For WebSocket, only the
+act of opening the connection is retried. Once the connection is up, a message that your application
+does not acknowledge is not re-sent.
+
+### WebSocket handshake timeouts
+
+There is one failure that behaves differently between the default policy and an explicit one. When
+jambonz opens a WebSocket, it waits a short time, 1.5 seconds by default, for the handshake to
+complete. If your host silently drops the connection attempt, or accepts the TCP connection but
+never finishes the WebSocket upgrade, that timer expires.
+
+- Under the **default** policy this failure is **not retried**. The call fails after the single
+  1.5 second attempt.
+- If you set `rp` explicitly to a policy that includes `ct` (or `all`), it **is retried**, up to
+  `rc` times.
+
+<Note>
+In feature-server release 11.1.5 only, a WebSocket handshake timeout was retried under the default
+policy. Releases after 11.1.5 behave as described here.
+</Note>
+
+## Backoff
+
+jambonz waits between attempts, starting at 500 milliseconds and growing: 0.5, 1, 2, 4, 6, 8 seconds
+and so on, adding 2 seconds per attempt once past 2 seconds. With `rc=5` the delays total 13.5
+seconds on top of the time the attempts themselves take.
+
+## When retries run out
+
+**HTTP webhook.** The request fails and jambonz proceeds as it would for any failed webhook. If it
+was the initial webhook for an inbound call, the call is rejected. For an action hook or status hook
+mid-call, the failure is logged and the call continues with whatever instructions it already has.
+
+**WebSocket, initial connection.** The call fails. jambonz does not attempt to deliver any further
+messages for that call, such as call status updates, over the connection it could not open.
+
+**WebSocket, mid-call drop.** If an established connection is closed by your side or the network,
+jambonz reconnects with the same backoff, up to `rc` times, and sends a `session:reconnect` message
+so your application can resume the call. If the reconnect budget is exhausted, jambonz ends the call
+and raises a webhook connection failure alert on the account, which you can see in the portal.
+
+## Examples
+
+Connection failures only, with three retries, for a WebSocket application:
+
+```text
+wss://app.example.com/jambonz#rc=3&rp=ct
+```
+
+Retry server errors and connection failures on an HTTP webhook, twice:
+
+```text
+https://app.example.com/jambonz/call#rc=2&rp=5xx,ct
+```
+
+Turn WebSocket connection retries off entirely:
+
+```text
+wss://app.example.com/jambonz#rc=0
+```
+
+## Time to failure against an unreachable host
+
+For an application host that drops connection attempts without answering:
+
+| Configuration | Attempts | Time before the call fails |
+|---|---|---|
+| HTTP, default | 1 | until the TCP connect times out |
+| WebSocket, default | 1 | 1.5 s |
+| WebSocket, `rp=ct` (default `rc=5`) | 6 | 22.5 s |
+| WebSocket, `rc=2&rp=ct` | 3 | 6 s |
+
+Self-hosted operators can change the WebSocket handshake timeout with the
+`JAMBONES_WS_HANDSHAKE_TIMEOUT_MS` environment variable on the feature server, and the HTTP request
+timeout with `JAMBONES_HTTP_TIMEOUT`.
