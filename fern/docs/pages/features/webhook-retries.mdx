@@ -62,11 +62,6 @@ never finishes the WebSocket upgrade, that timer expires.
 - If you set `rp` explicitly to a policy that includes `ct` (or `all`), it **is retried**, up to
   `rc` times.
 
-The reason for the distinction is cost. A refused or reset connection fails in milliseconds, so
-retrying it by default is cheap and usually helps. A silent host costs the full handshake timeout on
-every attempt, so with the default `rc=5` a caller would wait 22.5 seconds before the call failed.
-That should be a choice you make, not a default you inherit.
-
 <Note>
 In feature-server release 11.1.5 only, a WebSocket handshake timeout was retried under the default
 policy. Releases after 11.1.5 behave as described here.
