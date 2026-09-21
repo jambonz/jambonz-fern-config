@@ -618,7 +618,15 @@ Audio on the wire is pcm16 at 24 kHz, which matches Voice Live's default `input_
 
 ### Input transcription
 
-With a non-multimodal model (e.g. `gpt-4.1`), Azure speech to text is active automatically. Set `input_audio_transcription.model` to choose another: `azure-speech`, `mai-transcribe`, or — with `gpt-realtime` / `gpt-realtime-mini` — `whisper-1`, `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`, `gpt-4o-transcribe-diarize`.
+Azure speech to text is active automatically **only** with a non-multimodal model (e.g. `gpt-4.1`). A native-audio model such as `gpt-realtime-2.1` emits no `conversation.item.input_audio_transcription.completed` events at all unless you ask for transcription explicitly:
+
+```js
+session_update: {
+  input_audio_transcription: { model: 'azure-speech' }
+}
+```
+
+With a non-multimodal model, Azure speech to text is active automatically. Set `input_audio_transcription.model` to choose another: `azure-speech`, `mai-transcribe`, or — with `gpt-realtime` / `gpt-realtime-mini` — `whisper-1`, `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`, `gpt-4o-transcribe-diarize`.
 
 ### Voice Live-only events
 
