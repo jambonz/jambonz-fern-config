@@ -139,6 +139,7 @@ The following LLMs are currently supported:
 - Google Gemini Live API (via Gemini Developer API or Vertex AI)
 - AssemblyAI Voice Agent
 - xAI Voice Agent
+- Azure Voice Live
 
 ## OpenAI Realtime
 
@@ -549,6 +550,92 @@ Tool/function calling uses the same fields as OpenAI's (`session_update.tools`, 
 
 When `session_update.audio.input.transcription` is configured, caller-speech transcripts arrive on `conversation.item.input_audio_transcription.updated`. Unlike OpenAI's `.completed` event, this event is **cumulative** — each update contains the full transcript so far, not just a delta.
 
+## Azure Voice Live
+
+Set `vendor: 'voicelive'` and point `connectOptions.host` at your Microsoft Foundry or Azure Speech resource to use the [Azure Voice Live API](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/voice-live). jambonz connects to `wss://{host}/voice-live/realtime`.
+
+Voice Live is **not** the same thing as `vendor: 'microsoft'`. That vendor targets the older Azure OpenAI Realtime deployment endpoint (`openai/realtime`) and shares its payload shapes with `vendor: 'openai'`. Voice Live is a separate service that keeps the Realtime *event* vocabulary but uses its own flat session shape and adds Azure-only capabilities: Azure Speech voices, semantic VAD, server-side noise suppression and echo cancellation, word timestamps and visemes, and non-realtime chat models (e.g. `gpt-4.1`) paired with Azure speech to text.
+
+```js
+session.llm({
+  vendor: 'voicelive',
+  model: 'gpt-realtime',
+  auth: { apiKey: process.env.AZURE_VOICELIVE_API_KEY },
+  connectOptions: { host: 'my-resource.services.ai.azure.com' },
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  llmOptions: {
+    session_update: {
+      modalities: ['text', 'audio'],
+      instructions: 'You are a friendly, helpful voice assistant on a phone call.',
+      voice: { name: 'en-US-Ava:DragonHDLatestNeural', type: 'azure-standard' },
+      turn_detection: { type: 'azure_semantic_vad', silence_duration_ms: 500, remove_filler_words: true },
+      input_audio_noise_reduction: { type: 'azure_deep_noise_suppression' }
+    },
+    response_create: {
+      instructions: 'Greet the caller warmly and ask how you can help today.'
+    }
+  }
+});
+```
+
+### Connection options
+
+<ParamField path="connectOptions.host" type="string" required={true}>
+  Your resource hostname, e.g. `my-resource.services.ai.azure.com` (or `my-resource.cognitiveservices.azure.com` for older resources).
+</ParamField>
+
+<ParamField path="connectOptions.apiVersion" type="string" required={false}>
+  Voice Live `api-version`. Defaults to `2026-04-10`.
+</ParamField>
+
+<ParamField path="connectOptions.agentId" type="string" required={false}>
+  Foundry Agent Service agent id. When set, the session is addressed by agent (`agent_id`, plus `projectId` as `project_id`) instead of by `model`.
+</ParamField>
+
+### Authentication
+
+Supply **either** `auth.apiKey`, which jambonz sends as the `api-key` query parameter, **or** `auth.accessToken`, a Microsoft Entra ID token sent as an `Authorization: Bearer` header. Entra tokens are short-lived, so mint one per call in your webhook; the token must be issued for the `https://ai.azure.com/.default` scope.
+
+### Required session_update
+
+`llmOptions.session_update` is **required** — caller audio does not flow until the first `session.updated` server event arrives.
+
+It is sent **verbatim**, in Voice Live's flat shape: `voice`, `turn_detection`, `modalities` and `input_audio_transcription` sit at the top level of `session`, not nested under `audio.input` / `audio.output` the way OpenAI's GA Realtime format has them. Do not port an `openai_s2s` `session_update` across unchanged.
+
+### Voices
+
+Set `voice` as an object, not a string: `{ name, type }`, where `type` is `azure-standard` (Azure Neural, HD and MAI voices), `azure-custom`, or `azure-realtime-native` (the curated voice set for the `azure-realtime` model). HD voices accept an optional `temperature`, and any Azure voice accepts `rate` between `0.5` and `1.5`.
+
+### Turn detection
+
+Beyond `server_vad`, Voice Live offers `azure_semantic_vad` and `azure_semantic_vad_multilingual`, which decide end-of-turn from meaning rather than volume and can drop filler words (`remove_filler_words: true`) so an "umm" does not trigger barge-in. These work with every model, unlike OpenAI's `semantic_vad`.
+
+### Audio format
+
+Audio on the wire is pcm16 at 24 kHz, which matches Voice Live's default `input_audio_sampling_rate`. jambonz forces this rate; do not set `input_audio_sampling_rate: 16000`.
+
+### Input transcription
+
+Azure speech to text is active automatically **only** with a non-multimodal model (e.g. `gpt-4.1`). A native-audio model such as `gpt-realtime-2.1` emits no `conversation.item.input_audio_transcription.completed` events at all unless you ask for transcription explicitly:
+
+```js
+session_update: {
+  input_audio_transcription: { model: 'azure-speech' }
+}
+```
+
+With a non-multimodal model, Azure speech to text is active automatically. Set `input_audio_transcription.model` to choose another: `azure-speech`, `mai-transcribe`, or — with `gpt-realtime` / `gpt-realtime-mini` — `whisper-1`, `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`, `gpt-4o-transcribe-diarize`.
+
+### Voice Live-only events
+
+`response.audio_timestamp.delta` / `.done` (word timestamps, enabled with `output_audio_timestamp_types: ['word']`) and `response.animation_viseme.delta` / `.done` (enabled with `animation: {outputs: ['viseme_id']}`) are forwarded to your `eventHook` alongside the standard Realtime events.
+
+<Note title="Avatar output is not supported">
+Voice Live's text to speech avatar requires a separate WebRTC SDP exchange with the service, which has no place in a SIP call. Setting `avatar` in `session_update` will not produce video.
+</Note>
+
 ## Google Gemini Live
 
 Set `vendor: 'google'` to use Gemini's [Live API](https://ai.google.dev/api/live). The same `vendor: 'google'` integration reaches the Live API through **two access paths**:
@@ -796,7 +883,7 @@ than silently leaving the caller with no way to reach a human — see [OpenAI GP
 
 ## Built-in Hangup Tool
 
-Set `hangup` to let the model end the call on its own. The runtime injects a `hangup` tool into the model's toolset; you do not define it in `llmOptions` and you do not handle it in your `toolHook` — the runtime intercepts the call, hangs up, and ends the llm verb. This works the same way across every supported s2s vendor (OpenAI, Deepgram Voice Agent, Ultravox, ElevenLabs, Google Gemini Live, AssemblyAI, xAI Voice Agent, OpenAI GPT Live — the last requires `delegation.type: 'responses'`).
+Set `hangup` to let the model end the call on its own. The runtime injects a `hangup` tool into the model's toolset; you do not define it in `llmOptions` and you do not handle it in your `toolHook` — the runtime intercepts the call, hangs up, and ends the llm verb. This works the same way across every supported s2s vendor (OpenAI, Deepgram Voice Agent, Ultravox, ElevenLabs, Google Gemini Live, AssemblyAI, xAI Voice Agent, Azure Voice Live, OpenAI GPT Live — the last requires `delegation.type: 'responses'`).
 
 ```js
 session.llm({
