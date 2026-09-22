@@ -403,6 +403,11 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       xAI API key to authenticate with (overrides the credential configured in jambonz).
     </ParamField>
 
+    <ParamField path="model" type="string" required={false}>
+      Transcription model to use, e.g. `grok-voice-transcribe-2.0` or `grok-voice-transcribe-1.0`.  
+      If not supplied, xAI selects its own current default model.
+    </ParamField>
+
     <ParamField path="endpointing" type="integer" required={false}>
       Number of milliseconds of silence before an utterance is considered final.  
       Valid values are between 0 and 5000.
