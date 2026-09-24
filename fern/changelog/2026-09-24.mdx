@@ -1,0 +1,109 @@
+<Card title="11.1.5" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.5
+</Card>
+
+**11.1.5** adds new speech vendors (Modulate Velma STT, Google Gemini
+transcription, Speechmatics for the agent verb, Azure Voice Live speech-to-speech),
+a per-call codec preference on [dial](/verbs/verbs/dial), and a round of
+security hardening in the API server. It also makes AWS autoscale scale-in
+reliable on SIP and feature servers, and fixes a set of call-handling bugs in
+the feature server.
+
+#### New Features & Improvements
+
+1. **Modulate (Velma) streaming STT** — `modulate` is available as a
+   speech-to-text vendor, with speech credentials in the portal and API.
+1. **Google Gemini transcription** — Gemini can be selected as a
+   speech-to-text vendor, including from the portal.
+1. **Speechmatics STT in the agent verb** — Speechmatics can be used as the
+   recognizer for the [agent](/verbs/verbs/agent) verb.
+1. **Azure Voice Live speech-to-speech** — Azure Voice Live is available as a
+   speech-to-speech vendor.
+1. **xAI recognizer model option** — `xaiOptions.model` pins the xAI
+   transcription model instead of following xAI's default.
+1. **Inworld TTS 2 Flash** — `inworld-tts-2-flash` is available alongside
+   `inworld-tts-2`, a lower-latency, lower-cost variant with word timestamps.
+1. **Per-call codec preference on dial** — the [dial](/verbs/verbs/dial) verb
+   accepts `codecs`, a list of codec names in preference order for the outbound
+   leg (for example `["G722","PCMU"]`). With no list set, the outbound offer
+   leads with the codec negotiated on the A leg. An invalid or unsupported name
+   drops the list, raises an `invalid-app-payload` alert, and falls back to
+   default negotiation. `codecs` is also documented on the createCall REST API.
+1. **Noise isolation on REST-created calls** — noise isolation can be enabled
+   when creating a call through the REST API, so it can be combined with
+   answering machine detection without a separate
+   [config](/verbs/verbs/config) verb.
+1. **Dialogflow CES session resume** — a [dialogflow](/verbs/verbs/dialogflow)
+   CES session can be resumed.
+1. **License details in the portal** — self-hosted installs show the key
+   details of the installed license in the portal.
+1. **Nested transcribe data in the portal** — transcripts from a background
+   [transcribe](/verbs/verbs/transcribe) are displayed in the call view.
+1. **Security hardening in the API server** — this release includes fixes for
+   issues found in a security review:
+   - privilege-escalation fixes in user management;
+   - an account can no longer write operator-only fields or limits;
+   - password-reset links are single-use;
+   - sign-in and password reset no longer reveal whether an account exists, and
+     failed attempts are rate-limited;
+   - customer-supplied destinations and speech-vendor addresses may no longer
+     point inside the platform network;
+   - the call-logs route can no longer read arbitrary CloudWatch log groups.
+
+#### Bug Fixes
+
+- **AWS autoscale scale-in** — SIP servers now complete scale-in once every
+  inbound and outbound process is idle, and reject new INVITEs while draining.
+  Feature servers coordinate the lifecycle action across all pm2 workers
+  instead of completing it when the first worker goes idle.
+- **Call sessions after a lost app connection** — a WebSocket app connection
+  that dies can no longer leak a call session, and connect failures stop
+  retrying after their budget.
+- **Calls transferred between feature servers** — pre-answer call statuses are
+  no longer re-sent, and SIPREC recording continues across the transfer.
+- **Dial with no actionHook** — the call ends when dial finishes with no
+  actionHook, or with a failed one.
+- **Max call duration** — the timer is cleared when jambonz ends the call.
+- **Dialogflow CES** — the verb completes when the stream errors, and cleans
+  up on `end_session`.
+- **Google speech-to-speech** — toolHook replies no longer end the Gemini
+  session.
+- **Webhooks** — non-2xx webhook responses now write a webhook-status-failure
+  alert, and late webhooks are sent after the shared client has closed.
+- **Media server connection errors** — handled instead of crashing the feature
+  server.
+- **DTMF privacy** — DTMF digit values are no longer logged.
+- **`tag` data in LLM tool calls** — the [tag](/verbs/verbs/tag) verb's
+  `customerData` is included in the `llm:tool-call` hook.
+- **IMDSv2** — EC2 instance metadata is read with IMDSv2 tokens in the SNS
+  lifecycle notifiers.
+- **SIP realm validation** — account `sip_realm` values are trimmed and
+  validated, and self-hosted installs no longer call a DNS provider for them.
+- **Portal** — Home's live counters refresh, and paid customers are no longer
+  asked to re-enter a card to change plan.
+
+#### Component Versions
+
+| Component | 11.1.4 | 11.1.5 |
+|---|---|---|
+| jambonz | 11.1.4 | **11.1.5** |
+| mediajam | 0.5.4 | **0.5.8** |
+| drachtio | 10.1.4 | **10.1.5** |
+| rtpengine | 14.1.1.8-jambonz11 | **14.1.1.8-jambonz14** |
+| jambonz OSS (sbc-*) | 0.9.9 | **0.9.12** |
+| upload-recordings | 1.9.0 | **1.9.1** |
+| monitoring-agent | 10.2.1 | **10.2.2** |
+| pcap-server | 1.0.4 | 1.0.4 |
+| heplify-server | 1.0.4 | 1.0.4 |
+
+#### Availability
+
+**AWS** — AMIs are published for all nine deployment variants (`mini`, `fs`,
+`sip-rtp`, `sip`, `rtp`, `web`, `monitoring`, `web-monitoring`, `recording`)
+on both **amd64 and arm64**, in all **30** supported regions. The AMIs and
+their EBS snapshots are public, so `generate-cf.sh` can copy them from any
+account. Mini (amd64 and arm64), medium and large deployments were verified end
+to end on this release.
+
+**GCP, Azure, Exoscale and Debian packages** — not yet published at 11.1.5;
+they remain on 11.1.4 and will pick this up at their next release.
