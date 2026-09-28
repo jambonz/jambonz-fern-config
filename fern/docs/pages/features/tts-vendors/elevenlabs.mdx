@@ -64,3 +64,37 @@ ElevenLabs tuning is passed in `synthesizer.options`. Most of it lives under a n
 ## Streaming
 
 ElevenLabs supports [TTS streaming](/guides/features/tts-streaming) with word-level alignment. It has no cancel message, so barge-in is handled by dropping and re-establishing the connection.
+
+## Eleven v3 and audio tags
+
+The Eleven v3 models, `eleven_v3` and `eleven_v3_conversational`, support inline audio tags such as `[laughs]`, `[whispers]`, `[excited]` and `[sighs]`. Write them in square brackets in the text, and the voice performs them instead of reading them out.
+
+Select the model with `model_id` in `synthesizer.options`, or set it as the default model on the ElevenLabs speech credential. Nothing else changes: you use the same vendor, credential and voices as for the other ElevenLabs models.
+
+```json
+{
+  "verb": "say",
+  "text": "[laughs] Oh, that is the funniest thing I have heard all day.",
+  "stream": true,
+  "synthesizer": {
+    "vendor": "elevenlabs",
+    "voice": "JBFqnCBsd6RMkjVDRZzb",
+    "options": {
+      "model_id": "eleven_v3_conversational"
+    }
+  }
+}
+```
+
+The same tags work in the text the `agent` verb streams to TTS, so you can prompt its LLM to use them.
+
+The v3 models work on both paths:
+
+- **Streaming** (`say` with `stream: true`, the `agent` verb, and other token-streaming TTS). ElevenLabs serves the v3 models only on its Text to Dialogue websocket, and jambonz switches to it automatically when `model_id` starts with `eleven_v3`. The session keeps conversational context across the agent's turns and starts a new turn for each reply. Barge-in reconnects the socket, as for the other models, so context starts again after an interruption.
+- **Non-streaming** (`say` without `stream`) uses the HTTP API, as for the other models.
+
+<Warning>
+Audio tags depend on the voice. Some older voices, such as Rachel (`21m00Tcm4TlvDq8ikWAM`), are rejected by the ElevenLabs streaming API when the text contains any audio tag. The stream then fails and the call falls back to your fallback TTS vendor, if you configured one. Test your voice with a tagged sentence before you rely on it. A voice with a wide emotional range, such as George (`JBFqnCBsd6RMkjVDRZzb`), works.
+</Warning>
+
+On the streaming path the v3 models accept only `voice_settings.stability` and `pronunciation_dictionary_locators`. The other `voice_settings` fields and `optimize_streaming_latency` are ignored. A lower `stability` makes the voice follow audio tags more closely.
