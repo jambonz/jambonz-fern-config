@@ -438,6 +438,7 @@ navbar-links:
 layout: 
   tabs-placement: header
   searchbar-placement: header
+  changelog-layout: classic
 
 colors:
   background:
