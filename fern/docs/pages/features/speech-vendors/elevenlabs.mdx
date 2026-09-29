@@ -101,6 +101,10 @@ The portal fetches the model list from your ElevenLabs account. If that fails, i
 
 | Model | Notes |
 |---|---|
+| `eleven_v4_turbo` | Supports audio tags. The low-latency v4 model; see [Eleven v3 and v4](#eleven-v3-and-v4). |
+| `eleven_v4` | Supports audio tags. |
+| `eleven_v3_conversational` | Supports audio tags. |
+| `eleven_v3` | Supports audio tags. |
 | `eleven_flash_v2_5` | Default for new speech credentials. |
 | `eleven_flash_v2` | |
 | `eleven_multilingual_v2` | |
@@ -111,7 +115,7 @@ The portal fetches the model list from your ElevenLabs account. If that fails, i
 | `eleven_multilingual_sts_v2` | |
 | `eleven_english_sts_v2` | |
 
-There is no fallback model: a request with no model fails. `eleven_v3` is HTTP-only at ElevenLabs, so it works with `say` but not with TTS streaming.
+There is no fallback model: a request with no model fails.
 
 ### Options
 
@@ -157,10 +161,42 @@ Pass these in `synthesizer.options`, or save them on the speech credential under
 `stability` and `style` pull against each other. If you raise `style` for expressiveness and the voice starts to wander or produce artifacts, raise `stability` rather than lowering `style` back down.
 </Note>
 
+### Eleven v3 and v4
+
+The v3 and v4 models (`eleven_v3`, `eleven_v3_conversational`, `eleven_v4` and `eleven_v4_turbo`) support inline audio tags such as `[laughs]`, `[whispers]`, `[excited]` and `[sighs]`. Write them in square brackets in the text, and the voice performs them instead of reading them out. The same tags work in the text the `agent` verb streams to TTS, so you can prompt its LLM to use them.
+
+Select one with `model_id` in `synthesizer.options`, or make it the credential's default model. The vendor, credential and voices are the same as for the other models.
+
+```json
+{
+  "verb": "say",
+  "text": "[laughs] Oh, that is the funniest thing I have heard all day.",
+  "stream": true,
+  "synthesizer": {
+    "vendor": "elevenlabs",
+    "voice": "JBFqnCBsd6RMkjVDRZzb",
+    "options": {
+      "model_id": "eleven_v3_conversational"
+    }
+  }
+}
+```
+
+For voice agents, `eleven_v4_turbo` is the low-latency choice: first audio arrives about 150 ms after the text is flushed, compared with about 800 ms for `eleven_v4`.
+
+- **Streaming** (`say` with `stream: true`, the `agent` verb and other token-streaming TTS): ElevenLabs serves these models only on its Text to Dialogue websocket, and jambonz switches to it automatically when `model_id` starts with `eleven_v3` or `eleven_v4`. The session keeps conversational context across the agent's turns. Barge-in reconnects the socket, so context starts again after an interruption.
+- **`say` without `stream`** uses the HTTP API, as for the other models.
+- **Settings on the streaming path.** Only `voice_settings.stability` and `pronunciation_dictionary_locators` are sent; the other `voice_settings` fields are ignored. A lower `stability` makes the voice follow audio tags more closely.
+- **Language on the streaming path.** The language is sent without its region, so `en-US` is sent as `en`. It is sent only when ElevenLabs accepts that language for the model, because the Text to Dialogue websocket ends the session on any other value. Otherwise no language is sent and ElevenLabs detects it from the text, which is least reliable on short replies such as "Ja." or "OK". The v4 models accept more languages than v3, including Maltese, Mongolian, Cantonese and Yoruba.
+
+<Warning>
+Audio tags depend on the voice. Some older voices, such as Rachel (`21m00Tcm4TlvDq8ikWAM`), are rejected by the ElevenLabs streaming API when the text contains any audio tag. The stream then fails and the call falls back to your fallback TTS vendor, if you configured one. Test your voice with a tagged sentence first. A voice with a wide emotional range, such as George (`JBFqnCBsd6RMkjVDRZzb`), works.
+</Warning>
+
 ### Notes
 
 - **Verb options replace credential options on `say`.** If `synthesizer.options` has any fields, the credential's Extra Options are not used for that `say`. With TTS streaming the two are merged, and the verb wins where both set a field.
-- **`language` is mostly ignored.** jambonz sends it only for TTS streaming with `eleven_turbo_v2_5`. The voice and model determine the language otherwise.
+- **`language` is mostly ignored.** jambonz sends it only for TTS streaming, and only with `eleven_turbo_v2_5` or the v3 and v4 models (see [Eleven v3 and v4](#eleven-v3-and-v4)). Otherwise the voice and model determine the language.
 - **`previous_text` and `next_text` have no effect.** jambonz does not send them to ElevenLabs.
 - **Audio is requested at 16 kHz** and resampled to the call's rate.
 - **Streaming and barge-in.** ElevenLabs supports [TTS streaming](/guides/features/tts-streaming) with character-level alignment. Its protocol has no cancel message, so on barge-in jambonz drops the buffered audio and reconnects.

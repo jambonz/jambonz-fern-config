@@ -159,6 +159,9 @@ navigation:
               - page: Inworld
                 path: ./docs/pages/features/speech-vendors/inworld.mdx
                 slug: inworld
+              - page: KugelAudio
+                path: ./docs/pages/features/speech-vendors/kugelaudio.mdx
+                slug: kugelaudio
               - page: Microsoft Azure
                 path: ./docs/pages/features/speech-vendors/microsoft.mdx
                 slug: microsoft
@@ -195,6 +198,9 @@ navigation:
               - page: xAI
                 path: ./docs/pages/features/speech-vendors/xai.mdx
                 slug: xai
+              - page: Zoom
+                path: ./docs/pages/features/speech-vendors/zoom.mdx
+                slug: zoom
           - page: Answering machine detection
             path: ./docs/pages/features/answering-machine-detection.mdx
           - page: Conferencing "coach" mode
