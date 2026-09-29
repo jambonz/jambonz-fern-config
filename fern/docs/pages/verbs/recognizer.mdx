@@ -174,7 +174,7 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       The version of the streaming API to use, `v2` or `v3`.
     </ParamField>
     <ParamField path="speechModel" type="string" required={false}>
-      AssemblyAI speech model to use for recognition: `universal-3-6-pro`, `universal-3-5-pro`, `u3-rt-pro`, `whisper-rt`, `universal-streaming-english` or `universal-streaming-multilingual`. Default: `universal-3-6-pro`, unless the speech credential names a model.
+      AssemblyAI speech model to use for recognition: `universal-3-6-pro`, `universal-3-5-pro`, `u3-rt-pro`, `whisper-rt`, `universal-streaming-english` or `universal-streaming-multilingual`. If not set, the model saved on the speech credential is used; a credential with no saved model uses `u3-rt-pro`. New credentials created in the portal default to `universal-3-6-pro`.
     </ParamField>
     <ParamField path="formatTurns" type="boolean" required={false}>
       Format each speaker turn. Default: `true`.
