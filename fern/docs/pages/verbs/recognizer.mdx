@@ -1284,6 +1284,24 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
   </Accordion>
 
+  <Accordion title="zoomOptions">
+    Zoom (`zoom`) uses [Zoom Scribe Live mode](https://developers.zoom.us/docs/ai-services/scribe/live-mode/). Zoom detects turns server-side and returns one final transcript per speech turn; there are no interim results and no confidence scores (transcripts are reported with a confidence of 1.0).
+
+    Set `language` to one of: `en-US`, `zh-CN`, `ja-JP`, `es-ES`, `it-IT`, `fr-FR`, `de-DE`, `ar-SA`, `ar-AE`, `pt-BR`, `pt-PT`.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Zoom Build platform API key (or JWT) to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="zoomSttUri" type="string" required={false}>
+      Custom host to connect to instead of `api.zoom.us` (e.g. a proxy).
+    </ParamField>
+
+    <ParamField path="zoomSttUseTls" type="boolean" required={false}>
+      Use TLS when connecting to a custom host. Default `true`.
+    </ParamField>
+  </Accordion>
+
 </AccordionGroup>
 
 
