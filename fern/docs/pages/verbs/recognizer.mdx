@@ -1284,6 +1284,36 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
   </Accordion>
 
+  <Accordion title="zoomOptions">
+    Zoom (`zoom`) uses [Zoom Scribe Live mode](https://developers.zoom.us/docs/ai-services/scribe/live-mode/). Zoom detects turns server-side and returns one final transcript per speech turn; there are no interim results and no confidence scores (transcripts are reported with a confidence of 1.0). Turn detection is silence-based: a turn ends after a fixed stretch of silence, whether or not the sentence is complete. In the [`agent`](/verbs/verbs/agent) verb each Zoom final ends the user's turn, unless `turnDetection` is set to `krisp`.
+
+    Set `language` to one of: `en-US`, `zh-CN`, `ja-JP`, `es-ES`, `it-IT`, `fr-FR`, `de-DE`, `ar-SA`, `ar-AE`, `pt-BR`, `pt-PT`.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Zoom Build platform API key (or JWT) to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="turn_detection.silence_duration_ms" type="integer" required={false}>
+      Milliseconds of silence that end a turn. Zoom's default is about 350; raise it (e.g. 800) so a mid-sentence pause does not split the turn. Must be greater than 200.
+    </ParamField>
+
+    <ParamField path="turn_detection.threshold" type="number" required={false}>
+      Speech detection threshold, between `0.2` and `0.9`. Higher values need louder or clearer speech to start a turn.
+    </ParamField>
+
+    <ParamField path="turn_detection.prefix_padding_ms" type="integer" required={false}>
+      Milliseconds of audio before detected speech to include in the turn.
+    </ParamField>
+
+    <ParamField path="zoomSttUri" type="string" required={false}>
+      Custom host to connect to instead of `api.zoom.us` (e.g. a proxy).
+    </ParamField>
+
+    <ParamField path="zoomSttUseTls" type="boolean" required={false}>
+      Use TLS when connecting to a custom host. Default `true`.
+    </ParamField>
+  </Accordion>
+
 </AccordionGroup>
 
 
