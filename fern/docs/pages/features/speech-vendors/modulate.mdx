@@ -1,0 +1,85 @@
+---
+title: Modulate
+subtitle: Speech-to-text models, options and notes for Modulate.
+---
+
+jambonz supports Modulate for **speech-to-text** (vendor `modulate`), using Modulate's Velma streaming API. Modulate has no text-to-speech in jambonz.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "modulate",
+    "language": "en-US",
+    "model": "velma-2-stt-streaming",
+    "hints": ["jambonz", "drachtio"],
+    "modulateOptions": {
+      "emotionSignal": true
+    }
+  }
+}
+```
+
+### Models
+
+Set the model in the recognizer's top-level `model` property, or on the speech credential in the portal.
+
+| Model | Languages | Notes |
+|---|---|---|
+| `velma-2-stt-streaming` | Multilingual | Default. Supports language hints, custom terms, diarization and the enrichment signals below. |
+| `velma-2-stt-streaming-english-v2` | English | Low latency. Accepts only the `endpointing` option; everything else is not sent. |
+
+If neither the verb nor the credential names a model, jambonz uses `velma-2-stt-streaming`.
+
+### Options
+
+Pass these in `recognizer.modulateOptions`.
+
+<ParamField path="endpointing" type="boolean" required={false}>
+  (`velma-2-stt-streaming-english-v2` only) Return a final transcript for each pause in speech. Default: `true` in jambonz, because `gather` and `agent` need a final per pause. Set `false` to get a single final transcript when the stream ends.
+</ParamField>
+
+<ParamField path="emotionSignal" type="boolean" required={false}>
+  (`velma-2-stt-streaming` only) Detect the speaker's emotional tone for each utterance.
+</ParamField>
+
+<ParamField path="accentSignal" type="boolean" required={false}>
+  (`velma-2-stt-streaming` only) Identify the speaker's accent for each utterance.
+</ParamField>
+
+<ParamField path="deepfakeSignal" type="boolean" required={false}>
+  (`velma-2-stt-streaming` only) Score each utterance for the likelihood of a synthetic voice.
+</ParamField>
+
+<ParamField path="piiPhiTagging" type="boolean" required={false}>
+  (`velma-2-stt-streaming` only) Wrap detected PII and PHI in tags within the transcript text.
+</ParamField>
+
+<ParamField path="modulateSttUri" type="string" required={false}>
+  Host to connect to instead of `platform.modulate.ai`, e.g. `modulate.example.com:8443`.
+</ParamField>
+
+<ParamField path="modulateSttUseTls" type="boolean" required={false}>
+  Use TLS when connecting to `modulateSttUri`. Default: `true`. Ignored unless `modulateSttUri` is set.
+</ParamField>
+
+<ParamField path="apiKey" type="string" required={false}>
+  API key to use instead of the speech credential's.
+</ParamField>
+
+These generic recognizer properties also apply:
+
+- `language`: sent as a hint to `velma-2-stt-streaming`, reduced to its base code (`en-US` becomes `en`). `any` sends no language. The English model ignores it.
+- `hints`: sent as Modulate custom terms to `velma-2-stt-streaming`. Only a list of strings works; hints given as objects are not sent. Up to 1,000 terms.
+- `diarization`: turns Modulate speaker diarization on or off for `velma-2-stt-streaming`.
+- `interim`: controls whether `velma-2-stt-streaming` returns partial results.
+
+### Notes
+
+- **No confidence scores.** Modulate doesn't return them, so every transcript is reported with confidence `1.0`.
+- **The English model takes almost no options.** With `velma-2-stt-streaming-english-v2`, only `endpointing` reaches Modulate. `language`, `hints`, `diarization` and the signal options have no effect.
+- **Enrichment results are in the vendor payload.** Emotion, accent and deepfake results are not mapped to jambonz fields. Read them from the raw Modulate event in the `vendor.evt` property of the speech result.

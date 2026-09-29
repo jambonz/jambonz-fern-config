@@ -1,0 +1,20 @@
+---
+title: Houndify
+subtitle: Current status of Houndify speech-to-text in jambonz.
+---
+
+jambonz lists Houndify as a **speech-to-text** vendor (vendor `houndify`), and the portal accepts Houndify speech credentials. Houndify has no text-to-speech in jambonz.
+
+<Warning>
+Houndify speech-to-text does not currently work. The jambonz media server has no Houndify integration, so a `gather`, `transcribe` or `agent` that uses `houndify` fails to start recognition. Choose another speech-to-text vendor until support is added.
+</Warning>
+
+## Speech-to-text
+
+### Credentials
+
+A Houndify speech credential holds a **Client ID**, **Client Key** and **User ID**, plus an optional **Audio Endpoint**. These are stored and sent to the media server, but nothing currently connects to Houndify with them.
+
+### Options
+
+The recognizer schema still accepts `recognizer.houndifyOptions`, so existing applications validate. None of these options reach Houndify today, and they are not documented here until the integration is available.

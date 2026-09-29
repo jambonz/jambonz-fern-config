@@ -1,0 +1,74 @@
+---
+title: Murf
+subtitle: Text-to-speech models, options and notes for Murf.
+---
+
+jambonz supports Murf for **text-to-speech** (vendor `murf`), including [TTS streaming](/guides/features/tts-streaming). Murf has no speech-to-text in jambonz.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "murf",
+    "language": "en-US",
+    "voice": "en-US-natalie",
+    "options": {
+      "style": "Conversational",
+      "rate": 0
+    }
+  }
+}
+```
+
+### Models
+
+Set the model on the speech credential in the portal, or override it with `synthesizer.options.model_id`.
+
+| Model | Notes |
+|---|---|
+| `falcon-2` | Used when neither the verb nor the credential names a model. |
+| `GEN2` | |
+
+### Voices
+
+Set `synthesizer.voice` to a Murf voice ID, such as `en-US-natalie`. See Murf's [voice library](https://murf.ai/api/docs/voices-styles/voice-library) for IDs and the styles each voice supports.
+
+### Options
+
+Pass these in `synthesizer.options`, or save them as **Extra Options** on the speech credential.
+
+<ParamField path="style" type="string" required={false}>
+  Speaking style, e.g. `Conversational`. Styles differ per voice, so check the voice in Murf's library.
+</ParamField>
+
+<ParamField path="rate" type="number" required={false}>
+  Speaking rate. `0` is the voice's natural pace; positive is faster, negative slower.
+</ParamField>
+
+<ParamField path="pitch" type="number" required={false}>
+  Pitch adjustment.
+</ParamField>
+
+<ParamField path="variation" type="number" required={false}>
+  How much pace, pitch and emphasis vary. Higher values sound less uniform.
+</ParamField>
+
+<ParamField path="model_id" type="string" required={false}>
+  The model; see the table above. Overrides the credential's model.
+</ParamField>
+
+The portal fills in `style: "Conversational"` and `rate: 0` when you create a Murf credential. jambonz itself sends none of these unless they are set.
+
+These generic synthesizer properties apply:
+
+- `voice`: required. Sent as the Murf voice ID.
+- `language`: sent as the Murf `locale`, e.g. `en-US`.
+
+### Notes
+
+- **Verb options replace credential options for `say`.** If `synthesizer.options` contains anything, a `say` uses only those options and ignores the credential's **Extra Options**. With TTS streaming, the two are merged and the verb's values win.
+- **API base URL.** A Murf credential accepts an optional **API base URL** in the portal, e.g. `https://us-east.api.murf.ai`. Leave it blank to use `global.api.murf.ai`.
+- **Barge-in costs a reconnect.** Murf's streaming API has no cancel message, so jambonz drops and reopens the connection when the caller interrupts.

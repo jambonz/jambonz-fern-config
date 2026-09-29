@@ -126,26 +126,78 @@ navigation:
             path: ./docs/pages/features/custom-speech-stt.mdx
           - page: Custom TTS providers
             path: ./docs/pages/features/custom-speech-tts.mdx
-          - section: TTS Vendor Settings
+          - section: Speech Vendors
+            slug: speech-vendors
             contents:
               - page: Overview
-                path: ./docs/pages/features/tts-vendors/overview.mdx
+                path: ./docs/pages/features/speech-vendors/overview.mdx
+                slug: overview
+              - page: Amazon Web Services
+                path: ./docs/pages/features/speech-vendors/aws.mdx
+                slug: aws
+              - page: AssemblyAI
+                path: ./docs/pages/features/speech-vendors/assemblyai.mdx
+                slug: assemblyai
               - page: Cartesia
-                path: ./docs/pages/features/tts-vendors/cartesia.mdx
+                path: ./docs/pages/features/speech-vendors/cartesia.mdx
+                slug: cartesia
+              - page: Deepgram
+                path: ./docs/pages/features/speech-vendors/deepgram.mdx
+                slug: deepgram
               - page: ElevenLabs
-                path: ./docs/pages/features/tts-vendors/elevenlabs.mdx
+                path: ./docs/pages/features/speech-vendors/elevenlabs.mdx
+                slug: elevenlabs
+              - page: Gladia
+                path: ./docs/pages/features/speech-vendors/gladia.mdx
+                slug: gladia
+              - page: Google
+                path: ./docs/pages/features/speech-vendors/google.mdx
+                slug: google
               - page: Gradium
-                path: ./docs/pages/features/tts-vendors/gradium.mdx
+                path: ./docs/pages/features/speech-vendors/gradium.mdx
+                slug: gradium
+              - page: Houndify
+                path: ./docs/pages/features/speech-vendors/houndify.mdx
+                slug: houndify
               - page: Inworld
-                path: ./docs/pages/features/tts-vendors/inworld.mdx
+                path: ./docs/pages/features/speech-vendors/inworld.mdx
+                slug: inworld
+              - page: Microsoft Azure
+                path: ./docs/pages/features/speech-vendors/microsoft.mdx
+                slug: microsoft
+              - page: Modulate
+                path: ./docs/pages/features/speech-vendors/modulate.mdx
+                slug: modulate
               - page: Murf
-                path: ./docs/pages/features/tts-vendors/murf.mdx
+                path: ./docs/pages/features/speech-vendors/murf.mdx
+                slug: murf
+              - page: NineNineSix
+                path: ./docs/pages/features/speech-vendors/nineninesix.mdx
+                slug: nineninesix
+              - page: NVIDIA
+                path: ./docs/pages/features/speech-vendors/nvidia.mdx
+                slug: nvidia
+              - page: OpenAI
+                path: ./docs/pages/features/speech-vendors/openai.mdx
+                slug: openai
               - page: Resemble
-                path: ./docs/pages/features/tts-vendors/resemble.mdx
+                path: ./docs/pages/features/speech-vendors/resemble.mdx
+                slug: resemble
               - page: Rime Labs
-                path: ./docs/pages/features/tts-vendors/rimelabs.mdx
+                path: ./docs/pages/features/speech-vendors/rimelabs.mdx
+                slug: rimelabs
+              - page: Soniox
+                path: ./docs/pages/features/speech-vendors/soniox.mdx
+                slug: soniox
+              - page: Speechmatics
+                path: ./docs/pages/features/speech-vendors/speechmatics.mdx
+                slug: speechmatics
+              - page: WellSaid
+                path: ./docs/pages/features/speech-vendors/wellsaid.mdx
+                slug: wellsaid
               - page: xAI
-                path: ./docs/pages/features/tts-vendors/xai.mdx
+                path: ./docs/pages/features/speech-vendors/xai.mdx
+                slug: xai
           - page: Answering machine detection
             path: ./docs/pages/features/answering-machine-detection.mdx
           - page: Conferencing "coach" mode
@@ -480,6 +532,33 @@ experimental:
   openapi-parser-v3: true
 
 redirects:
+  - source: "/guides/features/tts-vendor-settings/overview"
+    destination: "/guides/features/speech-vendors/overview"
+    permanent: true
+  - source: "/guides/features/tts-vendor-settings/cartesia"
+    destination: "/guides/features/speech-vendors/cartesia"
+    permanent: true
+  - source: "/guides/features/tts-vendor-settings/eleven-labs"
+    destination: "/guides/features/speech-vendors/elevenlabs"
+    permanent: true
+  - source: "/guides/features/tts-vendor-settings/gradium"
+    destination: "/guides/features/speech-vendors/gradium"
+    permanent: true
+  - source: "/guides/features/tts-vendor-settings/inworld"
+    destination: "/guides/features/speech-vendors/inworld"
+    permanent: true
+  - source: "/guides/features/tts-vendor-settings/murf"
+    destination: "/guides/features/speech-vendors/murf"
+    permanent: true
+  - source: "/guides/features/tts-vendor-settings/resemble"
+    destination: "/guides/features/speech-vendors/resemble"
+    permanent: true
+  - source: "/guides/features/tts-vendor-settings/rime-labs"
+    destination: "/guides/features/speech-vendors/rimelabs"
+    permanent: true
+  - source: "/guides/features/tts-vendor-settings/x-ai"
+    destination: "/guides/features/speech-vendors/xai"
+    permanent: true
   - source: "/guides/features/bring-your-own-llm/xai"
     destination: "/guides/features/bring-your-own-llm/x-ai-grok"
     permanent: true
