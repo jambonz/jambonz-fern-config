@@ -92,7 +92,7 @@ For voice agents, `eleven_v4_turbo` is the low-latency choice: first audio arriv
 
 These models work on both paths:
 
-- **Streaming** (`say` with `stream: true`, the `agent` verb, and other token-streaming TTS). ElevenLabs serves these models only on its Text to Dialogue websocket, and jambonz switches to it automatically when `model_id` starts with `eleven_v3` or `eleven_v4`. The session keeps conversational context across the agent's turns and starts a new turn for each reply. Barge-in reconnects the socket, as for the other models, so context starts again after an interruption.
+- **Streaming** (`say` with `stream: true`, the `agent` verb, and other token-streaming TTS). ElevenLabs serves these models only on its Text to Dialogue websocket, and jambonz switches to it automatically when `model_id` starts with `eleven_v3` or `eleven_v4`. This needs the mediajam media server; on a FreeSWITCH-based deployment, streaming with these models fails, so use them with non-streaming `say` only. The session keeps conversational context across the agent's turns and starts a new turn for each reply. Barge-in reconnects the socket, as for the other models, so context starts again after an interruption.
 - **Non-streaming** (`say` without `stream`) uses the HTTP API, as for the other models.
 
 <Warning>
