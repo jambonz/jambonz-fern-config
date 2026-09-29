@@ -156,9 +156,6 @@ navigation:
               - page: Gradium
                 path: ./docs/pages/features/speech-vendors/gradium.mdx
                 slug: gradium
-              - page: Houndify
-                path: ./docs/pages/features/speech-vendors/houndify.mdx
-                slug: houndify
               - page: Inworld
                 path: ./docs/pages/features/speech-vendors/inworld.mdx
                 slug: inworld
