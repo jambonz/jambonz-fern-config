@@ -1,0 +1,76 @@
+---
+title: Inworld
+subtitle: Text-to-speech models, options and notes for Inworld.
+---
+
+jambonz supports Inworld for **text-to-speech** (vendor `inworld`), both for `say` and for [TTS streaming](/guides/features/tts-streaming), including the `agent` verb. Inworld has no speech-to-text in jambonz.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "inworld",
+    "language": "en",
+    "voice": "Ashley",
+    "options": {
+      "temperature": 0.8,
+      "audioConfig": {
+        "speakingRate": 1.1
+      }
+    }
+  }
+}
+```
+
+### Models
+
+Pick the model on the speech credential in the portal, or override it for one verb with `synthesizer.options.model_id`.
+
+| Model | Notes |
+|---|---|
+| `inworld-tts-2` | Current generation. First in the portal list, so it is preselected for new credentials. |
+| `inworld-tts-2-flash` | Current generation. |
+| `inworld-tts-1.5-max` | Previous generation. |
+| `inworld-tts-1.5-mini` | Previous generation. |
+| `inworld-tts-1` | Deprecated. No word timestamps. |
+| `inworld-tts-1-max` | Deprecated. No word timestamps. |
+
+A model is required. jambonz has no fallback, and a request without one fails.
+
+The portal fetches the voice list from Inworld. For the catalog, see [Inworld's documentation](https://docs.inworld.ai).
+
+### Options
+
+Pass these in `synthesizer.options`, or set them on the speech credential under **Extra Options**. See [Speech Vendors](/guides/features/speech-vendors/overview) for how the two combine.
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature. Lower values give a more consistent read; higher values give more variation between renders of the same text.
+</ParamField>
+
+<ParamField path="audioConfig.speakingRate" type="number" required={false}>
+  Speaking rate multiplier. Values above `1.0` are faster and values below are slower. When streaming, jambonz also accepts a flat `speakingRate`.
+</ParamField>
+
+<ParamField path="audioConfig.pitch" type="number" required={false}>
+  (`say` only) Pitch adjustment. `0.0` is the voice's natural pitch. jambonz does not send it when streaming.
+</ParamField>
+
+<ParamField path="deliveryMode" type="string" required={false}>
+  (Streaming only) Passed to Inworld as `deliveryMode`. See Inworld's documentation for the values it accepts.
+</ParamField>
+
+<ParamField path="model_id" type="string" required={false}>
+  Model to use for this verb instead of the credential's.
+</ParamField>
+
+### Notes
+
+- **Other `audioConfig` fields have no effect.** jambonz sets the audio encoding and sample rate itself, and does not send `audioConfig.sampleRateHertz` or `audioConfig.bitRate`.
+- **Credential and verb options don't merge for `say`.** If the verb sets any `options`, jambonz uses those alone and ignores the credential's Extra Options. When streaming, the two are merged by top-level key and the verb wins, so a verb's `audioConfig` replaces the credential's.
+- **Portal defaults.** When you turn on Extra Options, the portal fills in `temperature: 0.8`, `audioConfig.pitch: 0.0` and `audioConfig.speakingRate: 1.0`. These are starting values, not defaults jambonz applies.
+- **Sample rates.** `say` receives 8 kHz audio, which jambonz resamples to the call's rate. Streaming asks for the call's own rate (Inworld accepts 8 to 48 kHz), so no resampling is needed.
+- **Barge-in.** Inworld has no true cancel: closing a context still synthesizes any text already sent. jambonz closes the interrupted context, opens a new one, and discards the old context's audio.
+- **Word timestamps.** On the 2 and 1.5 models, Inworld returns word timing while streaming. jambonz requests it itself and uses it to track how much of a response the caller heard, so a barge-in can trim the conversation history to the words actually spoken. See [TTS streaming](/guides/features/tts-streaming). `inworld-tts-1` and `inworld-tts-1-max` return no timing, so playout tracking does not work on them.

@@ -1,0 +1,93 @@
+---
+title: Soniox
+subtitle: Speech-to-text models, options and notes for Soniox.
+---
+
+jambonz supports Soniox for **speech-to-text** (vendor `soniox`), using Soniox's v5 real-time WebSocket API. jambonz does not support Soniox for text-to-speech.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "soniox",
+    "language": "en-US",
+    "sonioxOptions": {
+      "languageHints": ["en", "es"],
+      "endpointSensitivity": 0.3,
+      "context": {
+        "terms": ["jambonz", "drachtio"]
+      }
+    }
+  }
+}
+```
+
+### Models
+
+| Model | Notes |
+|---|---|
+| `stt-rt-v5` | Soniox's v5 real-time model. Used when the verb doesn't name a model. |
+
+Set the model in `sonioxOptions.model`. The speech credential has no model setting. See the [Soniox documentation](https://soniox.com/docs) for other real-time models and their languages.
+
+### Options
+
+Pass these in `recognizer.sonioxOptions`.
+
+<ParamField path="model" type="string" required={false}>
+  The model. Default: `stt-rt-v5`.
+</ParamField>
+
+<ParamField path="languageHints" type="array" required={false}>
+  Languages to expect, as language codes, e.g. `["en", "es"]`. Replaces the recognizer's `language`.
+</ParamField>
+
+<ParamField path="enableLanguageIdentification" type="boolean" required={false}>
+  Tag each recognized token with its detected language.
+</ParamField>
+
+<ParamField path="enableSpeakerDiarization" type="boolean" required={false}>
+  Tag each recognized token with a speaker.
+</ParamField>
+
+<ParamField path="endpointDetection" type="boolean" required={false}>
+  Let Soniox detect when the caller has finished speaking. Default: `true`. jambonz reports a final transcript only at an endpoint, so leave this on for `gather`.
+</ParamField>
+
+<ParamField path="endpointSensitivity" type="number" required={false}>
+  -1.0 to 1.0. Higher values end turns sooner; lower values wait longer.
+</ParamField>
+
+<ParamField path="maxEndpointDelayMs" type="integer" required={false}>
+  The longest Soniox may wait, 500–3000 milliseconds, before it forces an endpoint.
+</ParamField>
+
+<ParamField path="maxNonFinalTokensDurationMs" type="integer" required={false}>
+  The longest a token may stay non-final, in milliseconds, before Soniox finalizes it.
+</ParamField>
+
+<ParamField path="context" type="object" required={false}>
+  Soniox [context](https://soniox.com/docs/stt/concepts/context), sent as given. It can hold `general` (key/value pairs describing the domain), `text` (background text), `terms` (vocabulary) and `translation_terms`. When set, `speechContext` and `hints` are ignored.
+</ParamField>
+
+<ParamField path="speechContext" type="string" required={false}>
+  Shortcut for `context.text`. Ignored when `context` is set.
+</ParamField>
+
+<ParamField path="clientRequestReference" type="string" required={false}>
+  Your own reference for the session, sent as `client_reference_id`.
+</ParamField>
+
+<ParamField path="apiKey" type="string" required={false}>
+  API key to use instead of the speech credential's.
+</ParamField>
+
+### Notes
+
+- **`language` becomes a language hint.** Without `languageHints`, jambonz sends the recognizer's `language` shortened to its language code (`en-US` becomes `en`).
+- **`hints` become `context.terms`**, unless `context` is set. Use plain strings: hints written as `{"phrase": ...}` objects are not converted correctly.
+- **No effect:** `hintsBoost`, `profanityFilter` (in `sonioxOptions` or on the recognizer), and all of `storage` are accepted but not sent to Soniox.

@@ -1,0 +1,127 @@
+---
+title: Amazon Web Services
+subtitle: Speech-to-text and text-to-speech models, options and notes for Amazon Transcribe and Amazon Polly.
+---
+
+jambonz supports AWS for both **speech-to-text** (Amazon Transcribe streaming) and **text-to-speech** (Amazon Polly), with vendor `aws`. The speech credential holds either an access key ID and secret access key, or an IAM role ARN that jambonz assumes to get temporary keys.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "aws",
+    "language": "en-US",
+    "awsOptions": {
+      "vocabularyName": "my-product-names"
+    }
+  }
+}
+```
+
+### Models
+
+Transcribe streaming has no model names to choose from; it uses the model for the `language` you set. See Amazon's [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html).
+
+To use a [custom language model](https://docs.aws.amazon.com/transcribe/latest/dg/custom-language-models.html) you trained in Transcribe, set `awsOptions.languageModelName`.
+
+### Options
+
+Put these in `recognizer.awsOptions`.
+
+<ParamField path="vocabularyName" type="string" required={false}>
+  Name of a [custom vocabulary](https://docs.aws.amazon.com/transcribe/latest/dg/custom-vocabulary.html) in your AWS account.
+</ParamField>
+
+<ParamField path="vocabularyFilterName" type="string" required={false}>
+  Name of a [vocabulary filter](https://docs.aws.amazon.com/transcribe/latest/dg/vocabulary-filtering.html) in your AWS account.
+</ParamField>
+
+<ParamField path="vocabularyFilterMethod" type="string" required={false}>
+  What to do with filtered words: `remove`, `mask` or `tag`.
+</ParamField>
+
+<ParamField path="languageModelName" type="string" required={false}>
+  Name of a custom language model.
+</ParamField>
+
+<ParamField path="piiIdentifyEntities" type="boolean" required={false}>
+  Redact personally identifiable information from transcripts. Despite the name, this turns on Transcribe's PII redaction, not identification only.
+</ParamField>
+
+<ParamField path="piiEntityTypes" type="array" required={false}>
+  PII types to redact, e.g. `["CREDIT_DEBIT_NUMBER", "PHONE"]`. Use with `piiIdentifyEntities`. See Amazon's [PII entity types](https://docs.aws.amazon.com/transcribe/latest/dg/pii-redaction.html).
+</ParamField>
+
+<ParamField path="accessKey" type="string" required={false}>
+  Access key ID to use instead of the credential's.
+</ParamField>
+
+<ParamField path="secretKey" type="string" required={false}>
+  Secret access key to use instead of the credential's.
+</ParamField>
+
+<ParamField path="securityToken" type="string" required={false}>
+  Session token, when `accessKey` and `secretKey` are temporary keys.
+</ParamField>
+
+<ParamField path="region" type="string" required={false}>
+  AWS region to use instead of the credential's, e.g. `us-east-1`.
+</ParamField>
+
+These generic `recognizer` properties apply:
+
+- `language`: the Transcribe language code, e.g. `en-US`.
+- `vocabularyName`, `vocabularyFilterName` and `filterMethod`: older spellings of the `awsOptions` fields above. The `awsOptions` value wins.
+
+### Notes
+
+- **No hints.** Transcribe streaming takes no inline phrase list, so `hints` and `hintsBoost` have no effect. Use a custom vocabulary instead.
+- **One language per session.** `altLanguages` is ignored; jambonz doesn't turn on Transcribe's language identification.
+- **Ignored generic properties.** `identifyChannels`, `model`, `punctuation`, `profanityFilter`, `diarization` and `words` have no effect with AWS.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "aws",
+    "language": "en-US",
+    "voice": "Joanna",
+    "engine": "neural"
+  }
+}
+```
+
+### Engines and voices
+
+Polly's engine takes the place of a model. Set it in `synthesizer.engine`:
+
+| Engine | Notes |
+|---|---|
+| `neural` | Used when the verb and the application don't set an engine. |
+| `standard` | |
+| `generative` | |
+| `long-form` | |
+
+Not every voice supports every engine. See Amazon's [voice list](https://docs.aws.amazon.com/polly/latest/dg/available-voices.html).
+
+### Options
+
+Polly takes no `synthesizer.options`. These generic synthesizer properties apply:
+
+- `voice`: required. The Polly voice ID, e.g. `Joanna`.
+- `language`: sent as Polly's `LanguageCode`. This matters for bilingual voices.
+- `engine`: see above.
+
+### Notes
+
+- **SSML.** Text that starts with `<speak` is sent to Polly as SSML.
+- **8 kHz audio.** Polly returns 8 kHz audio, which jambonz resamples to the call's rate.
+- **Use keys or a role ARN for Polly.** A credential that relies on the server's instance profile, with neither keys nor a role ARN, can't be used for Polly playback: the media server needs explicit keys.
+- **No TTS streaming.** Polly works with `say`, but not with [TTS streaming](/guides/features/tts-streaming) or the `agent` verb.

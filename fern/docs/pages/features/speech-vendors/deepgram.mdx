@@ -1,0 +1,309 @@
+---
+title: Deepgram
+subtitle: Speech-to-text and text-to-speech models, options and notes for Deepgram, including Flux.
+---
+
+jambonz supports Deepgram for **speech-to-text** and **text-to-speech** under two vendor strings. Vendor `deepgram` uses Deepgram's Nova (and older) recognition models and Aura voices. Vendor `deepgramflux` uses Deepgram Flux: the turn-based Flux recognizer and the Flux voices. Each vendor has its own speech credential in the portal. Both are covered on this page; Flux has its own sections below.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "deepgram",
+    "language": "en-US",
+    "deepgramOptions": {
+      "model": "nova-3-general",
+      "smartFormatting": true,
+      "keyterms": ["jambonz", "drachtio"]
+    }
+  }
+}
+```
+
+### Models
+
+Set the model in `deepgramOptions.model`, in the recognizer's `model` property, or on the speech credential in the portal. jambonz passes the model ID to Deepgram unchanged. When the credential can reach Deepgram's cloud, the portal lists the models Deepgram reports for your key. Otherwise it offers this list:
+
+| Family | Model IDs |
+|---|---|
+| Nova-3 | `nova-3-general`, `nova-3-medical` |
+| Nova-2 | `nova-2-general`, `nova-2-meeting`, `nova-2-phonecall`, `nova-2-finance`, `nova-2-conversationalai`, `nova-2-voicemail`, `nova-2-video`, `nova-2-medical`, `nova-2-drivethru`, `nova-2-automotive`, `nova-2-atc`, `nova-2-ea` |
+| Nova (legacy) | `nova-general`, `nova-phonecall`, `nova-medical`, `nova-drivethru`, `nova-voicemail` |
+| Enhanced (legacy) | `enhanced-general`, `enhanced-meeting`, `enhanced-phonecall`, `enhanced-finance`, `enhanced-automotive`, `enhanced-drivethru` |
+| Whisper | `whisper-tiny`, `whisper-base`, `whisper-small`, `whisper-medium`, `whisper-large` |
+
+See Deepgram's [model list](https://developers.deepgram.com/docs/models-languages-overview) for which languages each model supports.
+
+If neither the verb nor the credential names a model, jambonz picks one from the recognizer's `language`:
+
+| Language | `gather` | `transcribe` |
+|---|---|---|
+| `en`, `en-US` | `nova-2-phonecall` | `nova-2` |
+| `en-AU`, `en-GB`, `en-IN`, `en-NZ`, `nl`, `fr`, `fr-CA`, `de`, `hi`, `hi-Latn`, `it`, `ko`, `no`, `pl`, `pt`, `pt-BR`, `pt-PT`, `ru`, `es`, `es-419`, `sv`, `tr`, `uk` | `nova-2` | `nova-2` |
+| `da`, `ja`, `es-LATAM`, `ta`, `taq` | `enhanced` | `enhanced` |
+| `zh`, `zh-CN`, `zh-TW`, `id`, and any other language | `base` | `base` |
+
+Name a model explicitly for anything new. The fallback exists so older applications keep their behavior.
+
+### Options
+
+Pass these in `recognizer.deepgramOptions`.
+
+<ParamField path="model" type="string" required={false}>
+  The model; see the table above.
+</ParamField>
+
+<ParamField path="version" type="string" required={false}>
+  Model [version](https://developers.deepgram.com/docs/version).
+</ParamField>
+
+<ParamField path="tier" type="string" required={false}>
+  Deepgram model tier, for legacy models that use one.
+</ParamField>
+
+<ParamField path="keyterms" type="array" required={false}>
+  Terms to boost with Deepgram's [keyterm prompting](https://developers.deepgram.com/docs/keyterm). Nova-3 models only: jambonz drops `keyterms` for any model whose ID does not start with `nova-3`. At most 100 are sent.
+</ParamField>
+
+<ParamField path="keywords" type="array" required={false}>
+  Words to boost or suppress with Deepgram's [keywords](https://developers.deepgram.com/docs/keywords) feature. Replaces the recognizer's `hints` when set. At most 100 are sent.
+</ParamField>
+
+<ParamField path="punctuate" type="boolean" required={false}>
+  Add punctuation and capitalization.
+</ParamField>
+
+<ParamField path="smartFormatting" type="boolean" required={false}>
+  Apply Deepgram's [smart formatting](https://developers.deepgram.com/docs/smart-format) to dates, numbers and similar.
+</ParamField>
+
+<ParamField path="noDelay" type="boolean" required={false}>
+  Return smart-formatted results without Deepgram's formatting delay.
+</ParamField>
+
+<ParamField path="numerals" type="boolean" required={false}>
+  Convert spoken numbers to digits.
+</ParamField>
+
+<ParamField path="fillerWords" type="boolean" required={false}>
+  Include filler words such as "um" and "uh".
+</ParamField>
+
+<ParamField path="profanityFilter" type="boolean" required={false}>
+  Remove profanity from transcripts.
+</ParamField>
+
+<ParamField path="redact" type="string" required={false}>
+  Redact sensitive information. One of `pci`, `numbers`, `true`, `ssn`.
+</ParamField>
+
+<ParamField path="diarize" type="boolean" required={false}>
+  Assign a speaker to each word.
+</ParamField>
+
+<ParamField path="diarizeVersion" type="string" required={false}>
+  Diarization model version.
+</ParamField>
+
+<ParamField path="ner" type="boolean" required={false}>
+  Enable named entity recognition.
+</ParamField>
+
+<ParamField path="entityPrompt" type="string" required={false}>
+  Text sent to Deepgram as `entity_prompt`. jambonz truncates it to the first 100 words.
+</ParamField>
+
+<ParamField path="alternatives" type="number" required={false}>
+  Number of alternative transcripts to request. jambonz reports only the first.
+</ParamField>
+
+<ParamField path="search" type="array" required={false}>
+  Terms to search for in the audio.
+</ParamField>
+
+<ParamField path="replace" type="array" required={false}>
+  Terms to [find and replace](https://developers.deepgram.com/docs/find-and-replace) in the transcript.
+</ParamField>
+
+<ParamField path="endpointing" type="boolean | number" required={false}>
+  Milliseconds of silence Deepgram uses to decide an utterance has ended, or `false` to turn [endpointing](https://developers.deepgram.com/docs/endpointing) off. Setting it also sets `utteranceEndMs` to `1000` unless you set that yourself.
+</ParamField>
+
+<ParamField path="utteranceEndMs" type="number" required={false}>
+  Milliseconds of silence after the last word before Deepgram sends an `UtteranceEnd` event. jambonz turns on interim results whenever this is set, because Deepgram requires them.
+</ParamField>
+
+<ParamField path="vadTurnoff" type="number" required={false}>
+  Sent to Deepgram as `vad_turnoff`.
+</ParamField>
+
+<ParamField path="shortUtterance" type="boolean" required={false}>
+  (`gather` only) End the gather as soon as Deepgram marks a segment `is_final`, instead of waiting for `speech_final`. Use it for short answers like "yes" or a digit, where latency matters most.
+</ParamField>
+
+<ParamField path="tag" type="string" required={false}>
+  A [tag](https://developers.deepgram.com/docs/tagging) that appears in Deepgram usage reports.
+</ParamField>
+
+<ParamField path="mipOptOut" type="boolean" required={false}>
+  Opt out of Deepgram's Model Improvement Program.
+</ParamField>
+
+<ParamField path="deepgramSttUri" type="string" required={false}>
+  Host name of a different Deepgram endpoint, such as `api.eu.deepgram.com` or a self-hosted server. Give the host only, without `wss://`. Overrides the credential's STT endpoint.
+</ParamField>
+
+<ParamField path="deepgramSttUseTls" type="boolean" required={false}>
+  Use TLS (`wss`) for `deepgramSttUri`. See the note below.
+</ParamField>
+
+<ParamField path="apiKey" type="string" required={false}>
+  API key to use instead of the speech credential's.
+</ParamField>
+
+### Notes
+
+- **`hints` become `keywords`.** String hints and `{"phrase": ...}` hints are both sent as Deepgram keywords. A hint's boost value is not sent. For Nova-3, use `keyterms` instead.
+- **`language` is sent as given**, for example `en-US` or `multi`.
+- **Custom endpoints need `deepgramSttUseTls`.** When `deepgramSttUri` (or the credential's STT endpoint) is set, jambonz connects with plain `ws` unless TLS is turned on. Turn it on for any hosted endpoint, including Deepgram's EU endpoint. Without a custom endpoint jambonz always uses `wss://api.deepgram.com`.
+- **Only the first alternative is reported**, even when `alternatives` is greater than 1.
+- **No effect:** `customModel` and `multichannel` are accepted by the schema but are not sent to Deepgram. Use `model` to select a custom model.
+- **Flux options don't apply here.** `eotThreshold`, `eagerEotThreshold`, `eotTimeoutMs` and `languageHints` are used only by vendor `deepgramflux`.
+
+### Flux speech-to-text
+
+Deepgram Flux is a recognizer built for voice agents: it decides when the caller has finished their turn. Use vendor `deepgramflux`. Options still go in `deepgramOptions`.
+
+```json
+{
+  "recognizer": {
+    "vendor": "deepgramflux",
+    "deepgramOptions": {
+      "model": "flux-general-en",
+      "eotThreshold": 0.7,
+      "eagerEotThreshold": 0.5,
+      "keyterms": ["jambonz"]
+    }
+  }
+}
+```
+
+#### Models
+
+| Model | Notes |
+|---|---|
+| `flux-general-en` | English. Used when the verb doesn't name a model. |
+| `flux-general-multi` | Multilingual. Use `languageHints` to steer it. |
+
+The Flux model is chosen on the verb only. The `deepgramflux` credential's model setting is a Flux voice for text-to-speech, not a recognizer model, and is never used for recognition.
+
+#### Options
+
+Flux reads only these fields from `recognizer.deepgramOptions`.
+
+<ParamField path="model" type="string" required={false}>
+  The Flux model. Default: `flux-general-en`.
+</ParamField>
+
+<ParamField path="eotThreshold" type="number" required={false}>
+  [End-of-turn confidence](https://developers.deepgram.com/docs/flux/configuration) (0.0–1.0) needed before Flux ends a turn.
+</ParamField>
+
+<ParamField path="eagerEotThreshold" type="number" required={false}>
+  Confidence at which Flux sends an early `EagerEndOfTurn` event, before the turn is final. Required for the `agent` verb's `earlyGeneration`; without it Flux never sends eager events.
+</ParamField>
+
+<ParamField path="eotTimeoutMs" type="number" required={false}>
+  Milliseconds of silence after which Flux ends the turn regardless of confidence.
+</ParamField>
+
+<ParamField path="keyterms" type="array" required={false}>
+  Terms to boost. At most 100 are sent.
+</ParamField>
+
+<ParamField path="languageHints" type="array" required={false}>
+  (`flux-general-multi`) Languages to bias toward, e.g. `["en", "es"]`.
+</ParamField>
+
+<ParamField path="mipOptOut" type="boolean" required={false}>
+  Opt out of Deepgram's Model Improvement Program.
+</ParamField>
+
+<ParamField path="deepgramSttUri" type="string" required={false}>
+  Host name of a different Flux endpoint. Overrides the credential's STT endpoint.
+</ParamField>
+
+<ParamField path="deepgramSttUseTls" type="boolean" required={false}>
+  Use TLS (`wss`) for `deepgramSttUri`. As with `deepgram`, a custom endpoint uses plain `ws` unless this is on.
+</ParamField>
+
+<ParamField path="apiKey" type="string" required={false}>
+  API key to use instead of the speech credential's.
+</ParamField>
+
+#### Notes
+
+- **Turn-taking.** Flux reports `StartOfTurn`, `EagerEndOfTurn`, `TurnResumed` and `EndOfTurn`. jambonz treats `EndOfTurn` as the final transcript, and the `agent` verb uses these events directly. See [Voice Agents](/guides/features/voice-agents).
+- **`language` and `hints` are not sent to Flux.** Use `languageHints` and `keyterms`.
+- **Audio is sent at 8 kHz**, whatever the call's sample rate.
+- **Other `deepgramOptions` are ignored**, for example `smartFormatting`, `endpointing` or `utteranceEndMs`.
+- **Mid-call language changes don't take effect.** Changing Flux language hints during a call (the `sttReconfigure` command, or the `agent` verb's `autoLockLanguage`) is not applied by the current media server.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling. How can I help?",
+  "synthesizer": {
+    "vendor": "deepgram",
+    "voice": "aura-2-asteria-en"
+  }
+}
+```
+
+### Models
+
+For Deepgram, the voice *is* the model. Set `synthesizer.voice` to an Aura model ID such as `aura-2-asteria-en` or `aura-2-draco-en`. jambonz sends it to Deepgram as `model`. There is no default: a voice is required. See Deepgram's [voice list](https://developers.deepgram.com/docs/tts-models) for all voices and languages.
+
+### Options
+
+Deepgram text-to-speech takes no `synthesizer.options`. `language` is not sent; the voice determines the language.
+
+The credential's TTS endpoint lets you point synthesis at a self-hosted Deepgram server. A `ws://` or `http://` prefix selects an unencrypted connection; anything else uses TLS.
+
+### Notes
+
+- **Streaming.** Deepgram supports [TTS streaming](/guides/features/tts-streaming), so an LLM can drive it token by token.
+
+### Flux text-to-speech
+
+Use vendor `deepgramflux` for Deepgram's Flux voices. It uses the same API key as Deepgram, on Deepgram's `/v2/speak` endpoint.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling. How can I help?",
+  "synthesizer": {
+    "vendor": "deepgramflux",
+    "voice": "flux-haley-en"
+  }
+}
+```
+
+#### Models
+
+As with Aura, the voice is the model. The portal offers these English voices: `flux-haley-en`, `flux-heather-en`, `flux-cole-en`, `flux-alexis-en`, `flux-priya-en`, `flux-jack-en`, `flux-bruce-en`, `flux-rufus-en`, `flux-drew-en`, `flux-renee-en`, `flux-marcus-en`, `flux-sharon-en`. See Deepgram's [Flux voices](https://developers.deepgram.com/docs/flux-tts/voices) for current voices.
+
+#### Options
+
+Flux text-to-speech takes no `synthesizer.options`. The credential's TTS endpoint works as it does for Aura.
+
+#### Notes
+
+- **Streaming** is supported.
+- **Barge-in reconnects.** Flux has no message to cancel speech in progress, so on barge-in jambonz closes the connection and opens a new one.
