@@ -1,0 +1,54 @@
+---
+title: Bitcall SIP
+hidden: false
+---
+
+This guide explains how to connect [Bitcall](https://bitcall.io) to jambonz as an outbound SIP provider. Bitcall authenticates with a SIP username, password and domain, so the jambonz side is a single carrier with outbound authentication.
+
+<Note>Bitcall is outbound-only. It does not provide phone numbers (DIDs), so there are no inbound gateways or phone numbers to configure. Use it for applications that place calls.</Note>
+
+## Bitcall configuration
+
+In your Bitcall dashboard, create a SIP account (or use an existing one) and note these values:
+
+| Setting | Value |
+| --- | --- |
+| SIP domain | `gateway.bitcall.io` |
+| Port | `5060` (UDP) |
+| Authentication | Your SIP username and password |
+
+Use username and password authentication on this SIP account. Don't also set a Trusted IP on it: Bitcall then expects both, and authentication fails. Top up your Bitcall balance before testing.
+
+## jambonz configuration
+
+### Add a carrier to represent your Bitcall SIP trunk
+In your jambonz account, navigate to the "Carriers" page and click the "Add carrier" button or the "+" sign.
+
+1. Give it a name under "Carrier name", for example "Bitcall".
+
+2. Check "E.164 syntax" so numbers are sent with a leading `+`, then check "Outbound authentication" and fill in your Bitcall SIP username and password.
+
+3. Add an outbound SIP gateway with the address `gateway.bitcall.io`, port `5060` and protocol UDP. Leave the inbound gateways empty, because Bitcall does not send calls to jambonz.
+
+Click "Save".
+
+### Place an outbound call
+Because Bitcall doesn't issue phone numbers, there is nothing to add on the "Phone Numbers" page. Set the caller ID (`from`) of your outbound calls to a number you are allowed to present; caller ID handling depends on the destination country and operator.
+
+If your account has more than one carrier, send the call through Bitcall by naming it in the `trunk` property of a phone target in the [dial](/verbs/verbs/dial) verb:
+
+```json
+{
+  "verb": "dial",
+  "callerId": "+15085551212",
+  "target": [
+    {
+      "type": "phone",
+      "number": "+447418319851",
+      "trunk": "Bitcall"
+    }
+  ]
+}
+```
+
+Place a test call to a phone you can answer and check that it connects with the expected caller ID. If the call is rejected with a 401 or 403, check the SIP username and password, and make sure the Bitcall SIP account doesn't also have a Trusted IP set.

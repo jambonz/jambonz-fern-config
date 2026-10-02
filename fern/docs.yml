@@ -418,6 +418,8 @@ navigation:
         contents:
           - page: 3CX
             path: ./docs/pages/telephony/3cx.mdx
+          - page: Bitcall
+            path: ./docs/pages/telephony/bitcall.mdx
           - page: Vonage
             path: ./docs/pages/telephony/vonage.mdx
           - page: WhatsApp
