@@ -1655,6 +1655,234 @@ paths:
                         - message
         '404':
           description: account not found
+  /Accounts/{AccountSid}/AlertHooks:
+    post:
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      tags:
+        - Alerts
+      summary: create an alert hook
+      description: >-
+        Adds an external destination that every new alert for the account is pushed to
+        as it happens. An account may have at most 5 alert hooks.
+      operationId: createAlertHook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  $ref: '#/components/schemas/AlertHookType'
+                address:
+                  type: string
+                  description: >-
+                    json and slack - an https URL (a Slack incoming webhook URL for slack);
+                    pagerduty - an Events API v2 routing key; email - an email address
+              required:
+                - type
+                - address
+      responses:
+        '201':
+          description: alert hook successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulAdd'
+        '400':
+          description: invalid type or address, email is not available on this platform, or the account already has 5 alert hooks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+    get:
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      tags:
+        - Alerts
+      summary: list alert hooks
+      operationId: listAlertHooks
+      responses:
+        '200':
+          description: list of alert hooks for the account
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertHook'
+  /Accounts/{AccountSid}/AlertHooks/test:
+    post:
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      tags:
+        - Alerts
+      summary: send a test alert
+      description: >-
+        Sends a test alert to a single alert hook when alert_hook_sid is provided,
+        otherwise to every alert hook on the account, and reports the delivery result per hook.
+      operationId: testAlertHooks
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                alert_hook_sid:
+                  type: string
+                  format: uuid
+                  description: test only this alert hook; omit to test all of the account's alert hooks
+      responses:
+        '200':
+          description: per-hook delivery results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AlertHookTestResult'
+        '400':
+          description: alert hook delivery is not available on this server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+        '404':
+          description: alert_hook_sid not found for this account
+  /Accounts/{AccountSid}/AlertHooks/capabilities:
+    get:
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      tags:
+        - Alerts
+      summary: get alert hook capabilities
+      description: Reports which alert hook types this platform can deliver.
+      operationId: getAlertHookCapabilities
+      responses:
+        '200':
+          description: alert hook capabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: boolean
+                    description: true when email delivery is configured on the platform
+  /Accounts/{AccountSid}/AlertHooks/{AlertHookSid}:
+    get:
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: AlertHookSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      tags:
+        - Alerts
+      summary: retrieve an alert hook
+      operationId: getAlertHook
+      responses:
+        '200':
+          description: alert hook found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertHook'
+        '404':
+          description: alert hook not found
+    put:
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: AlertHookSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      tags:
+        - Alerts
+      summary: update an alert hook
+      operationId: updateAlertHook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  $ref: '#/components/schemas/AlertHookType'
+                address:
+                  type: string
+      responses:
+        '204':
+          description: alert hook updated
+        '400':
+          description: invalid type or address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+        '404':
+          description: alert hook not found
+    delete:
+      parameters:
+        - name: AccountSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: AlertHookSid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      tags:
+        - Alerts
+      summary: delete an alert hook
+      operationId: deleteAlertHook
+      responses:
+        '204':
+          description: alert hook deleted
+        '404':
+          description: alert hook not found
   /Applications:
     post:
       tags:
@@ -4941,6 +5169,57 @@ components:
         - account_sid
         - occurred_at
         - alert_type
+    AlertHookType:
+      type: string
+      enum:
+        - json
+        - slack
+        - pagerduty
+        - email
+      description: >-
+        json - signed JSON POST to a URL; slack - Slack incoming webhook;
+        pagerduty - PagerDuty Events API v2; email - only when the platform has email configured
+    AlertHook:
+      type: object
+      properties:
+        alert_hook_sid:
+          type: string
+          format: uuid
+        account_sid:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/AlertHookType'
+        address:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - alert_hook_sid
+        - account_sid
+        - type
+        - address
+    AlertHookTestResult:
+      type: object
+      properties:
+        alert_hook_sid:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/AlertHookType'
+        ok:
+          type: boolean
+          description: true if the destination accepted the test alert
+        status:
+          type: integer
+          description: HTTP status returned by the destination, when there was one
+        error:
+          type: string
+          description: error detail when ok is false
+      required:
+        - type
+        - ok
     Product:
       type: object
       properties:
