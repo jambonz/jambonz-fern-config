@@ -1,0 +1,151 @@
+<Card title="11.1.6" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.6
+</Card>
+
+**11.1.6** adds alert notifications, so alerts reach you as they happen, and lets
+customers opt out of support audio capture. It adds Speechify and KugelAudio
+text-to-speech, Zoom speech-to-text, ElevenLabs `eleven_v3`/`eleven_v4` streaming
+and AssemblyAI Universal-3.6 Pro. The API server now rate-limits per account and
+per caller. On AWS, scale-in drains SIP, RTP and feature servers by reading the
+instance metadata service instead of subscribing to SNS. The release also fixes
+a set of [agent](/verbs/verbs/agent), answering machine detection and
+[gather](/verbs/verbs/gather) issues.
+
+#### New Features & Improvements
+
+1. **Alert notifications** — every alert on an account's Alerts page can also be
+   pushed, as it happens, to up to five destinations: a JSON webhook, Slack,
+   PagerDuty or email. Add them in the account's Settings → Notifications, and
+   send a test to any one destination. An account is notified about the same
+   type of alert at most once an hour. The same destinations can be managed
+   through the API (`/Accounts/{AccountSid}/AlertHooks`).
+1. **Support audio capture opt-out** — jambonz support keeps SIP and RTP from
+   calls for a few days to troubleshoot call quality. An account can now turn
+   this off in Settings → Privacy, and an organization can allow it for all
+   accounts, disable it for all accounts, or leave it to each account. Recent
+   Calls SIP traces are not affected.
+1. **Speechify text-to-speech** — `speechify` is available as a TTS vendor, with
+   speech credentials in the portal and API.
+1. **KugelAudio text-to-speech** — `kugelaudio` is available as a TTS vendor,
+   including streaming TTS.
+1. **Zoom Scribe speech-to-text** — Zoom is available as an STT vendor.
+1. **ElevenLabs `eleven_v3` and `eleven_v4`** — streaming TTS with these models,
+   including `eleven_v3_conversational` and its audio tags (such as `[laughs]`),
+   uses ElevenLabs' Text to Dialogue stream. The synthesizer language is now sent
+   to ElevenLabs instead of being detected on each turn, and the models are
+   listed in the portal.
+1. **AssemblyAI Universal-3.6 Pro** — new AssemblyAI credentials default to
+   `universal-3-6-pro`, and `assemblyAiOptions` accepts `languageCodes` and
+   `voiceFocus`. Newer models are now sent 16 kHz audio instead of 8 kHz.
+1. **OpenAI GPT-Live** — the GPT-Live speech-to-speech integration uses OpenAI's
+   GA protocol.
+1. **Per-account API rate limits** — the API server counts requests per account
+   for call creation (4000/min) and call status reads (600/min), per caller
+   address for everything else, and per address for sign-in and sign-up. Counts
+   are shared by all API server workers, and a client over a limit receives
+   `429`. Every limit can be changed with an environment variable.
+1. **SRTP for TLS-registered devices** — calls to a SIP client that registered
+   over TLS are offered SDES-SRTP, so encrypted signaling gets encrypted media.
+   Set `JAMBONES_DISABLE_SRTP_FOR_TLS` to keep plain RTP. (jambonz.cloud keeps
+   plain RTP for now.)
+1. **AWS scale-in without SNS** — SIP servers, RTP servers and feature servers
+   drain on scale-in by polling the instance metadata service for their target
+   lifecycle state. They no longer subscribe to an SNS topic or open a port for
+   it. When a SIP server holding the carrier registrations scales in, it hands
+   them to another SIP server before it stops. Registrations now use a Call-ID
+   per SIP server, so a carrier sees a move between servers as a new
+   registration.
+1. **Enterprise user limits** — an organization's user limit can be raised per
+   organization, and the portal's Users view follows the limit the API reports.
+1. **SIPREC application in the new portal** — the account setting for the
+   application that handles SIPREC calls is back in the new portal.
+1. **Self-hosted updater** — the update client upgrades itself when a release
+   requires it and can apply several releases in one run.
+1. **Security hardening** — service-provider users can no longer write
+   operator-only organization or account fields; carrier changes by non-admin
+   users stay within their own organization or account; and calls from a
+   registration trunk's address now match only carriers that belong to the
+   called SIP realm's account.
+1. **Fewer caller details in logs** — caller transcripts and DTMF digits are
+   logged at `debug`, not `info`.
+
+#### Bug Fixes
+
+- **Agent verb** — the caller's turn ends normally when Krisp is used only to
+  predict interruptions; speech that arrives while the assistant is talking is
+  held for the next turn instead of being dropped; interrupt prediction only
+  interrupts the assistant while it is speaking; and VAD is used only for turn
+  timing when the STT vendor reports the start of speech itself.
+- **Answering machine detection** — empty final transcripts no longer count as a
+  human, Deepgram endpointing defaults to 150 ms during detection, and built-in
+  voicemail hints are used when none are configured.
+- **Gather with Deepgram** — an interim word that Deepgram later drops no longer
+  delays every following `UtteranceEnd`, and a deferred `UtteranceEnd` returns
+  the transcript as soon as it is satisfied.
+- **Soniox** — v5 sub-word tokens are joined correctly ("I have Optum.", not
+  "I  have  O pt um.").
+- **Google Gemini transcription** — `SMART` mode no longer fails with
+  `languageCodes` set.
+- **Deepgram warm connections** — options that change between transcriptions
+  (for example new Flux keyterms) are applied when a parked connection is
+  reused.
+- **TTS** — a [say](/verbs/verbs/say) no longer hangs when the TTS vendor rejects
+  the request, and streaming TTS starts cleanly after a barge-in.
+- **Conference** — `distributeDtmf` and `speakOnlyTo` work without another join
+  option set.
+- **Media timeout** — `JAMBONES_MEDIA_TIMEOUT_MS` now ends calls on mediajam
+  feature servers.
+- **Dialogflow** — a [dialogflow](/verbs/verbs/dialogflow) verb with no TTS vendor
+  no longer looks up TTS credentials.
+- **Debug logging** — every leg of a call follows the account's debug log
+  setting.
+- **SIP** — a re-INVITE rejected with `422` no longer leaks resources in
+  drachtio; licensed SBCs issue a fresh session token with each provisional and
+  final response, so calls that ring longer than 40 seconds keep their audio; TLS registrations record
+  their transport; and calls forwarded to a `sips:` Request-URI use a `sips:`
+  Contact and From.
+- **Billing** — after a failed renewal the portal shows the suspended
+  subscription and asks for a new card, instead of offering an upgrade that
+  created a second subscription.
+- **Portal** — the call logs panel tells a failed request apart from a call with
+  no logs.
+- **License keys** — whitespace pasted with a license key is trimmed.
+
+#### Upgrade Notes (self-hosted)
+
+- **Database** — 11.1.6 adds the `alert_hooks` table and three columns; run the
+  database upgrade before starting the new API server.
+- **AWS scale-in** — set `AWS_LIFECYCLE_DRAIN=1` on `inbound`, `sbc-sip-sidecar` and
+  `feature-server`, and on `sbc-rtpengine-sidecar` on dedicated RTP servers. Allow the instance roles
+  `autoscaling:DescribeAutoScalingInstances` and
+  `autoscaling:DescribeLifecycleHooks` (in addition to
+  `autoscaling:CompleteLifecycleAction`). `AWS_SNS_TOPIC_ARN` no longer turns on
+  draining, and the SNS topics and their open ports can be removed.
+- **API server behind a reverse proxy** — set `JAMBONES_TRUST_PROXY=1` and have
+  the proxy send `X-Forwarded-For`. Without both, all callers share one
+  rate-limit counter.
+- **Recordings** — the API server's built-in recording websocket is removed;
+  recordings are handled by `upload_recordings`.
+- **Audio capture opt-out** — the Privacy settings appear in hosted portal
+  builds with `JAMBONES_OPT_OUT_VOIPMONITOR=true`. The opt-out only takes effect
+  if voipmonitor is configured with `norecord-header = yes`.
+
+#### Component Versions
+
+| Component | 11.1.5 | 11.1.6 |
+|---|---|---|
+| jambonz | 11.1.5 | **11.1.6** |
+| mediajam | 0.5.8 | **0.5.10** |
+| drachtio | 10.1.5 | **10.1.6** |
+| rtpengine | 14.1.1.8-jambonz14 | 14.1.1.8-jambonz14 |
+| jambonz OSS (sbc-*) | 0.9.12 | **0.9.14** |
+| upload-recordings | 1.9.1 | 1.9.1 |
+| monitoring-agent | 10.2.2 | 10.2.2 |
+| pcap-server | 1.0.4 | 1.0.4 |
+| heplify-server | 1.0.4 | 1.0.4 |
+
+#### Availability
+
+**jambonz.cloud** - available now
+
+**self-hosted** - coming soon
