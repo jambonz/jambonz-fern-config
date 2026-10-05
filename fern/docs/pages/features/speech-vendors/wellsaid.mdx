@@ -1,0 +1,42 @@
+---
+title: WellSaid
+subtitle: Text-to-speech voices and notes for WellSaid Labs.
+---
+
+jambonz supports WellSaid Labs for **text-to-speech** (vendor `wellsaid`). WellSaid has no speech-to-text in jambonz.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "wellsaid",
+    "voice": "3"
+  }
+}
+```
+
+### Models
+
+There is no model choice. jambonz sends only the text and the voice.
+
+### Voices
+
+Set `synthesizer.voice` to a WellSaid speaker ID, such as `3`. The portal lists the English (US) speakers jambonz knows about. For the full list, see your [WellSaid](https://wellsaidlabs.com) account.
+
+### Options
+
+WellSaid takes no options. `synthesizer.options` is ignored.
+
+These generic synthesizer properties apply:
+
+- `voice`: required. Sent as the WellSaid `speaker_id`.
+- `language`: ignored. jambonz always treats WellSaid as `en-US`.
+
+### Notes
+
+- **No SSML.** Text that starts with `<speak>` is rejected.
+- **No TTS streaming.** WellSaid can't be used with [TTS streaming](/guides/features/tts-streaming). Each `say` is synthesized in full, then played.
+- **Audio is MP3.** jambonz requests MP3 from WellSaid and plays the result as a file.

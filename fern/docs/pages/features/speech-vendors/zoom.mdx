@@ -1,0 +1,70 @@
+---
+title: Zoom
+subtitle: Speech-to-text options and notes for Zoom Scribe.
+---
+
+jambonz supports Zoom for **speech-to-text** (vendor `zoom`), using [Zoom Scribe Live mode](https://developers.zoom.us/docs/ai-services/scribe/live-mode/) over a WebSocket connection. Zoom has no text-to-speech in jambonz. The speech credential needs a Zoom Build platform API key.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "zoom",
+    "language": "en-US",
+    "zoomOptions": {
+      "turn_detection": {
+        "silence_duration_ms": 800
+      }
+    }
+  }
+}
+```
+
+### Models
+
+Zoom Scribe Live mode has no model choice. The speech credential has no model setting.
+
+### Options
+
+Pass these in `recognizer.zoomOptions`.
+
+<ParamField path="turn_detection.silence_duration_ms" type="integer" required={false}>
+  Milliseconds of silence that end a turn. Must be greater than 200. Raise it (for example to 800) so a pause in the middle of a sentence does not split the turn.
+</ParamField>
+
+<ParamField path="turn_detection.threshold" type="number" required={false}>
+  Speech detection threshold, from `0.2` to `0.9`. Higher values need louder or clearer speech to start a turn.
+</ParamField>
+
+<ParamField path="turn_detection.prefix_padding_ms" type="integer" required={false}>
+  Milliseconds of audio before detected speech to include in the turn. `0` or more.
+</ParamField>
+
+<ParamField path="zoomSttUri" type="string" required={false}>
+  Host to connect to instead of `api.zoom.us`, for example a proxy.
+</ParamField>
+
+<ParamField path="zoomSttUseTls" type="boolean" required={false}>
+  Use TLS (`wss`) when connecting to `zoomSttUri`. Default: `true`. Ignored unless `zoomSttUri` is set.
+</ParamField>
+
+<ParamField path="apiKey" type="string" required={false}>
+  API key to use instead of the speech credential's.
+</ParamField>
+
+Of the generic recognizer properties, only `language` is sent to Zoom. `hints`, `hintsBoost`, `altLanguages`, `punctuation` and `profanityFilter` have no effect.
+
+### Notes
+
+- **`language` is sent as given**, for example `en-US` or `ja-JP`. See [Zoom's documentation](https://developers.zoom.us/docs/ai-services/scribe/live-mode/) for supported locales; the portal lists the ones jambonz offers. If `language` is empty or `any`, jambonz sends `en-US`.
+- **Audio is sent at 16 kHz**, as 16-bit PCM.
+- **One final transcript per turn.** Zoom decides when a turn ends, based on silence alone: a turn ends after `silence_duration_ms` of silence, whether or not the sentence is complete.
+- **No interim results.** Setting `interim` on the verb has no effect.
+- **No confidence scores.** Every transcript is reported with a confidence of `1.0`.
+- **Barge-in.** Zoom reports when the caller starts speaking. With `bargein` on in `gather`, that stops the prompt.
+- **Turn-taking.** In the `agent` verb, each Zoom final transcript ends the caller's turn, and Zoom's speech start and stop events take the place of jambonz's own voice activity detection. Setting `turnDetection` to `krisp` (or turning on `turnGate`, which enables Krisp) makes Krisp decide when the turn ends instead. See [Voice Agents](/guides/features/voice-agents).
+- **Out-of-range `turn_detection` values are dropped.** Zoom ends the session when it receives them, so jambonz does not send them.

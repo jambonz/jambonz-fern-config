@@ -1,0 +1,170 @@
+---
+title: OpenAI
+subtitle: Speech-to-text and text-to-speech models, options and notes for OpenAI.
+---
+
+jambonz supports OpenAI for **speech-to-text** and **text-to-speech**, under two different vendor strings:
+
+- Speech-to-text uses vendor **`openai`**, through OpenAI's Realtime transcription API.
+- Text-to-speech uses vendor **`whisper`**, through OpenAI's speech endpoint. The name is historical: it has nothing to do with the Whisper recognition model.
+
+Each vendor has its own speech credential in the portal. For OpenAI's speech-to-speech Realtime models, see the [`llm`](/verbs/verbs/llm) verb instead.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "openai",
+    "language": "en-US",
+    "openaiOptions": {
+      "model": "gpt-4o-transcribe",
+      "prompt": "The caller is reading out an order number.",
+      "turn_detection": {
+        "type": "server_vad",
+        "silence_duration_ms": 600
+      }
+    }
+  }
+}
+```
+
+### Models
+
+Set the model in `openaiOptions.model`, in the recognizer's `model` property, or on the speech credential in the portal (the credential requires one).
+
+| Model | Who ends the turn | Notes |
+|---|---|---|
+| `gpt-4o-transcribe` | OpenAI (server VAD) | |
+| `gpt-4o-mini-transcribe` | OpenAI (server VAD) | |
+| `whisper-1` | OpenAI (server VAD) | Used when neither the verb nor the credential names a model. |
+| `gpt-realtime-whisper` | jambonz (local VAD) | |
+| `gpt-live-transcribe` | jambonz (local VAD) | Not in the portal's list; set it on the verb. The only model that accepts `languages`, `keywords` and `delay`. |
+
+All models receive audio at 24 kHz.
+
+`gpt-realtime-whisper` and `gpt-live-transcribe` reject OpenAI's server-side turn detection, and on their own would never finish a transcript. For these two, jambonz runs a voice activity detector on the media server and tells OpenAI to finalize when the caller stops speaking. Any `turn_detection` settings are ignored for them; the `vad*` options apply instead.
+
+### Options
+
+Pass these in `recognizer.openaiOptions`.
+
+<ParamField path="model" type="string" required={false}>
+  The model; see the table above.
+</ParamField>
+
+<ParamField path="prompt" type="string" required={false}>
+  Text to guide transcription, such as expected vocabulary or what you just asked the caller.
+</ParamField>
+
+<ParamField path="turn_detection" type="object" required={false}>
+  How OpenAI detects the end of a turn, for the server-VAD models. Without it, jambonz uses `server_vad` with OpenAI's defaults.
+</ParamField>
+
+<ParamField path="turn_detection.type" type="string" required={true}>
+  `server_vad`, `semantic_vad`, or `none`. With `none`, no turn detection is sent.
+</ParamField>
+
+<ParamField path="turn_detection.eagerness" type="string" required={false}>
+  (`semantic_vad` only) `low`, `medium`, `high` or `auto`. Lower waits longer for the caller to continue.
+</ParamField>
+
+<ParamField path="turn_detection.threshold" type="number" required={false}>
+  (`server_vad`) Activation threshold, 0.0–1.0. Higher needs louder audio.
+</ParamField>
+
+<ParamField path="turn_detection.prefix_padding_ms" type="number" required={false}>
+  (`server_vad`) Milliseconds of audio to include before detected speech.
+</ParamField>
+
+<ParamField path="turn_detection.silence_duration_ms" type="number" required={false}>
+  (`server_vad`) Milliseconds of silence that end a turn.
+</ParamField>
+
+<ParamField path="vadMode" type="integer" required={false}>
+  (`gpt-realtime-whisper`, `gpt-live-transcribe`) Local VAD aggressiveness, 0–3. Higher opens a turn on quieter speech. Default: `2`.
+</ParamField>
+
+<ParamField path="vadSilenceMs" type="integer" required={false}>
+  (`gpt-realtime-whisper`, `gpt-live-transcribe`) Milliseconds of silence that end a turn. Default: `500`.
+</ParamField>
+
+<ParamField path="vadVoiceMs" type="integer" required={false}>
+  (`gpt-realtime-whisper`, `gpt-live-transcribe`) Milliseconds of voice that start a turn. Default: `250`.
+</ParamField>
+
+<ParamField path="languages" type="array" required={false}>
+  (`gpt-live-transcribe` only) Language hints as a list, e.g. `["en", "fr"]`. Replaces the recognizer's `language`.
+</ParamField>
+
+<ParamField path="keywords" type="array" required={false}>
+  (`gpt-live-transcribe` only) Terms the model should expect, such as product names or acronyms. When unset, the recognizer's `hints` are sent instead. At most 100 are sent.
+</ParamField>
+
+<ParamField path="delay" type="string" required={false}>
+  (`gpt-live-transcribe` only) Latency against accuracy: `minimal`, `low`, `medium`, `high` or `xhigh`. Lower returns text sooner.
+</ParamField>
+
+<ParamField path="apiKey" type="string" required={false}>
+  API key to use instead of the speech credential's.
+</ParamField>
+
+### Notes
+
+- **`language` is shortened** to its language code (`en-US` becomes `en`). `auto` sends no language, so OpenAI detects it. `gpt-live-transcribe` receives it as a one-item `languages` list.
+- **Final transcripts only.** jambonz reports one final transcript per turn. OpenAI's partial text is used only for `gather`'s `minBargeinWordCount`.
+- **`hints` only reach `gpt-live-transcribe`**, as `keywords`. For other models, put vocabulary in `prompt`.
+- **No effect on the current media server:** `promptTemplates`, and turning `hints` into a prompt automatically. Both build a prompt that the media server does not pass to OpenAI; only `openaiOptions.prompt` is sent. The [Using OpenAI STT](/guides/features/using-open-ai-stt) guide describes the intended behavior.
+- **No effect:** `input_audio_noise_reduction` is accepted but not sent to OpenAI. `openaiOptions.language` is not read; use the recognizer's `language`, or `languages` for `gpt-live-transcribe`.
+- **Endpoint.** jambonz always connects to `api.openai.com`.
+
+## Text-to-speech
+
+Use vendor **`whisper`**.
+
+```json
+{
+  "verb": "say",
+  "text": "Your order has shipped.",
+  "instructions": "Speak in a warm, upbeat tone.",
+  "synthesizer": {
+    "vendor": "whisper",
+    "voice": "nova",
+    "options": {
+      "model_id": "gpt-4o-mini-tts"
+    }
+  }
+}
+```
+
+### Models
+
+| Model | Notes |
+|---|---|
+| `tts-1` | Default for new speech credentials. |
+| `tts-1-hd` | |
+| `gpt-4o-mini-tts` | Supports `instructions`. |
+
+The credential requires a model. `synthesizer.options.model_id` overrides it for one verb.
+
+Set `synthesizer.voice` to an OpenAI voice. The portal lists `alloy`, `echo`, `fable`, `onyx`, `nova` and `shimmer`; any voice name is passed through. See OpenAI's [voice list](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
+
+### Options
+
+<ParamField path="model_id" type="string" required={false}>
+  In `synthesizer.options`. The model for this verb; see the table above.
+</ParamField>
+
+<ParamField path="instructions" type="string" required={false}>
+  How the voice should sound, such as tone or pace. Set it on the `say` verb, or in `synthesizer.options.instructions`. OpenAI applies it only with `gpt-4o-mini-tts`.
+</ParamField>
+
+### Notes
+
+- **Commas in `instructions` become semicolons**, and line breaks become spaces, before they are sent.
+- **`language` is not sent.** OpenAI speaks the language of the text.
+- **No TTS streaming.** `whisper` synthesizes each `say` in one request and cannot be driven token by token from an LLM.
+- **Endpoint.** jambonz always uses `api.openai.com`.

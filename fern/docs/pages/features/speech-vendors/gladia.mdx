@@ -1,0 +1,55 @@
+---
+title: Gladia
+subtitle: Speech-to-text models, options and notes for Gladia.
+---
+
+jambonz supports Gladia for **speech-to-text** (vendor `gladia`), using Gladia's v2 live API. jambonz does not support Gladia text-to-speech.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "gladia",
+    "model": "solaria-1"
+  }
+}
+```
+
+For each recognition, jambonz first creates a Gladia live session over HTTPS, then streams audio to the websocket URL Gladia returns.
+
+### Models
+
+Set the model with the recognizer's generic `model` property.
+
+| Model | Notes |
+|---|---|
+| `solaria-1` | Used when the verb names no model. |
+
+See Gladia's documentation for other models. jambonz passes the value through unchanged.
+
+The region is set on the speech credential: `us-west` or `eu-west`. A credential with no region uses `us-west`.
+
+### Options
+
+<ParamField path="model" type="string" required={false}>
+  (Recognizer property, not inside `gladiaOptions`.) The Gladia model. Default: `solaria-1`.
+</ParamField>
+
+<ParamField path="gladiaOptions" type="object" required={false}>
+  Fields to add to the body of Gladia's [live session request](https://docs.gladia.io/api-reference/v2/live/init), such as `language_config` or `pre_processing`. jambonz copies them into the request unchanged, after its own audio settings, so they can override those.
+</ParamField>
+
+<Warning>
+In the current release the verb schema rejects every field inside `gladiaOptions`, so a verb that sets any of them fails validation. Until that is fixed, only `model` and the credential's region can be configured.
+</Warning>
+
+### Notes
+
+- **`language` is not sent to Gladia.** Gladia detects the language itself. To restrict it, Gladia expects `language_config` in the session request (see the warning above).
+- **`hints` has no effect.** Gladia's custom vocabulary would also have to go in `gladiaOptions`.
+- **Audio settings are fixed.** jambonz opens the session as 16-bit PCM, mono, 8 kHz.
+- **jambonz always asks for final transcripts, speech events and errors**, overriding any `messages_config` settings that would turn them off.
