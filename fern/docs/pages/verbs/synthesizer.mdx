@@ -87,34 +87,6 @@ subtitle: A **property** that can be used in a `say` verb to override the applic
     </ParamField>
   </Accordion>
 
-  <Accordion title="playht">
-    <ParamField path="voice_engine" type="string" required={false}>
-      The voice engine used to synthesize the voice. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
-    </ParamField>
-    <ParamField path="quality" type="string" required={false}>
-      draft, low, medium, high, premium (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
-    </ParamField>
-    <ParamField path="seed" type="number" required={false}>
-      An integer number greater than or equal to 0. If equal to null or not provided, a random seed will be used. Useful to control the reproducibility of the generated audio. 
-      Assuming all other properties didn't change, a fixed seed should always generate the exact same audio file (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
-    </ParamField>
-    <ParamField path="temperature" type="number" required={false}>
-      A floating point number between 0, inclusive, and 2, inclusive. If equal to null or not provided, the model's default temperature will be used. The temperature parameter controls variance. Lower temperatures result in more predictable results, higher temperatures allow each run to vary more, so the voice may sound less like the baseline voice. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
-    </ParamField>
-    <ParamField path="emotion" type="string" required={false}>
-      An emotion to be applied to the speech. Only supported when voice_engine is set to Play3.0-mini, PlayHT2.0 or PlayHT2.0-turbo, and voice uses that engine. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
-    </ParamField>
-    <ParamField path="voice_guidance" type="number" required={false}>
-      A number between 1 and 6. Use lower numbers to reduce how unique your chosen voice will be compared to other voices. Higher numbers will maximize its individuality. Only supported when voice_engine is set to Play3.0-mini, PlayHT2.0 or PlayHT2.0-turbo, and voice uses that engine. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
-    </ParamField>
-    <ParamField path="style_guidance" type="number" required={false}>
-      A number between 1 and 30. Use lower numbers to to reduce how strong your chosen emotion will be. Higher numbers will create a very emotional performance. Only supported when voice_engine is set to Play3.0-mini, PlayHT2.0 or PlayHT2.0-turbo, and voice uses that engine. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
-    </ParamField>
-    <ParamField path="text_guidance" type="number" required={false}>
-      A number between 1 and 2. This number influences how closely the generated speech adheres to the input text. Use lower values to create more fluid speech, but with a higher chance of deviating from the input text. Higher numbers will make the generated speech more accurate to the input text, ensuring that the words spoken align closely with the provided text. Only supported when voice_engine is set to Play3.0-mini or PlayHT2.0, and voice uses that engine. (see [Playht docs](https://docs.play.ht/reference/api-generate-tts-audio-stream))
-    </ParamField>
-  </Accordion>
-
   <Accordion title="rimelabs">
     <ParamField path="pauseBetweenBrackets" type="boolean" required={false}>
       When set to true, adds pauses between words enclosed in angle brackets. The number inside the brackets specifies the pause duration in milliseconds.
@@ -173,15 +145,45 @@ Example: "Hi. \<200> I'd love to have a conversation with you." adds a 200ms pau
     Note: xAI TTS supports both one-shot synthesis (via the `say` verb) and low-latency streaming TTS. It uses the same xAI API key credential that is used for xAI STT.
   </Accordion>
 
-  <Accordion title="verbio">
-    <ParamField path="engine_version" type="string" required={false}>
-      The engine version to use. (see [Verbio docs](https://doc.speechcenter.verbio.com/#tag/Speech-To-Text/Available-languages-and-features))
-    </ParamField>
-  </Accordion>
-
   <Accordion title="whisper">
     <ParamField path="model_id" type="string" required={false}>
       TTS model to use. (see [Whisper docs](https://platform.openai.com/docs/api-reference/audio/createSpeech))
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="kugelaudio">
+    <ParamField path="speed" type="number" required={false}>
+      Speaking rate. Defaults to `1.0`. (see [KugelAudio](/guides/features/tts-vendor-settings/kugel-audio))
+    </ParamField>
+    <ParamField path="cfg_scale" type="number" required={false}>
+      Guidance scale. Defaults to `2.0`.
+    </ParamField>
+    <ParamField path="temperature" type="number" required={false}>
+      Sampling temperature.
+    </ParamField>
+    <ParamField path="normalize" type="boolean" required={false}>
+      Expand numbers, dates and abbreviations before synthesis. Defaults to `true`.
+    </ParamField>
+    <ParamField path="project_id" type="number" required={false}>
+      KugelAudio project id.
+    </ParamField>
+    <ParamField path="dictionary_ids" type="array" required={false}>
+      Pronunciation dictionary ids, as an array of numbers.
+    </ParamField>
+    <ParamField path="api_uri" type="string" required={false}>
+      KugelAudio host, e.g. `api.eu.kugelaudio.com`. Defaults to `api.kugelaudio.com`.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="speechify">
+    <ParamField path="loudness_normalization" type="boolean" required={false}>
+      Normalize output loudness. Defaults to `false`. (see [Speechify](/guides/features/tts-vendor-settings/speechify))
+    </ParamField>
+    <ParamField path="text_normalization" type="boolean" required={false}>
+      Expand numbers, dates and abbreviations before synthesis. Defaults to `false`.
+    </ParamField>
+    <ParamField path="api_uri" type="string" required={false}>
+      Speechify host. Defaults to `api.speechify.ai`.
     </ParamField>
   </Accordion>
 

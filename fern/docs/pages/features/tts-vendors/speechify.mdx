@@ -1,0 +1,46 @@
+---
+title: Speechify
+subtitle: Loudness and text normalization for Speechify TTS.
+---
+
+Speechify tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "speechify",
+    "language": "en-US",
+    "voice": "geffen_32",
+    "options": {
+      "loudness_normalization": true,
+      "text_normalization": true
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Options
+
+<ParamField path="loudness_normalization" type="boolean" required={false}>
+  Normalize the output to a consistent loudness. Defaults to `false`.
+</ParamField>
+
+<ParamField path="text_normalization" type="boolean" required={false}>
+  Expand numbers, dates and abbreviations before synthesis. Defaults to `false`.
+</ParamField>
+
+## Models
+
+If no model is set on the credential or verb, jambonz picks `simba-3.2` (lowest latency, English only) when the language is English or unset, and `simba-3.0` (multilingual) otherwise. Setting `simba-3.2` for a non-English language is rejected by Speechify.
+
+## Endpoint override
+
+Set `api_uri` in `options` (or in the credential's **Extra Options**) to use a different Speechify host. Leave it out to use `api.speechify.ai`.
+
+## Streaming
+
+Speechify supports [TTS streaming](/guides/features/tts-streaming). Speechify has no input-streaming connection, so jambonz sends each sentence as its own request as soon as it is complete. Speechify returns word timestamps, so when a caller barges in on an [agent](/verbs/verbs/agent), the assistant turn is trimmed to what the caller actually heard.
