@@ -1,6 +1,6 @@
 ---
 title: Google
-subtitle: Speaking rate, pitch, volume, and Gemini TTS controls for Google TTS.
+subtitle: Gemini TTS controls for Google TTS.
 ---
 
 Google tuning is passed in `synthesizer.options`.
@@ -12,36 +12,16 @@ Google tuning is passed in `synthesizer.options`.
   "synthesizer": {
     "vendor": "google",
     "language": "en-US",
-    "voice": "en-US-Neural2-F",
+    "voice": "your-gemini-voice-name",
     "options": {
-      "audioConfig": {
-        "speakingRate": 1.1,
-        "pitch": -2.0
-      }
+      "model": "gemini-2.5-flash-preview-tts",
+      "prompt": "Say this in a warm, friendly tone."
     }
   }
 }
 ```
 
 ## Options
-
-### audioConfig
-
-These mirror Google's [AudioConfig](https://cloud.google.com/text-to-speech/docs/reference/rest/v1/text/synthesize#AudioConfig). They can be nested under `audioConfig` or given at the top level of `options`, and either Google's camelCase or snake_case names (`speaking_rate`, `volume_gain_db`) are accepted. Non-numeric values are ignored.
-
-Google honours them only in some API modes: standard voices (`tts`) apply all three, HD voices (`live`) apply `speakingRate` only, and Gemini TTS ignores them — use `prompt` for style there.
-
-<ParamField path="audioConfig.speakingRate" type="number" required={false}>
-  Speaking rate. `1.0` is the voice's normal speed; Google accepts `0.25` to `4.0`.
-</ParamField>
-
-<ParamField path="audioConfig.pitch" type="number" required={false}>
-  Pitch in semitones, `-20.0` to `20.0`. `0` is the voice's normal pitch.
-</ParamField>
-
-<ParamField path="audioConfig.volumeGainDb" type="number" required={false}>
-  Volume gain in dB, `-96.0` to `16.0`. `0` is the voice's normal volume.
-</ParamField>
 
 ### Gemini TTS
 

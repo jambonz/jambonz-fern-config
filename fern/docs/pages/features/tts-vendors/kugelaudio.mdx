@@ -22,7 +22,7 @@ KugelAudio tuning is passed in `synthesizer.options`.
 }
 ```
 
-You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+You can also set these in the portal under **Extra Options** on the speech credential. Credential settings apply to streamed TTS, such as an [agent](/verbs/verbs/agent)'s replies, with settings on the verb taking precedence; a `say` verb uses only the options on the verb.
 
 The `voice` value is a KugelAudio voice id, which is numeric (for example `1071`). The model defaults to `kugel-3`.
 
@@ -58,7 +58,7 @@ jambonz sends only the primary subtag of `language` (`de-DE` is sent as `de`), a
 
 ## Endpoint override
 
-Set `api_uri` in `options` (or in the credential's **Extra Options**) to use a different KugelAudio host, for example `api.eu.kugelaudio.com` to pin the EU region. Leave it out to use `api.kugelaudio.com`.
+Set `api_uri` in `options` (on the credential's **Extra Options** it applies to streamed TTS only) to use a different KugelAudio host, for example `api.eu.kugelaudio.com` to pin the EU region. Leave it out to use `api.kugelaudio.com`.
 
 ## Streaming
 

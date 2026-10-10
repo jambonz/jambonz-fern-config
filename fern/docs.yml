@@ -142,12 +142,8 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/inworld.mdx
               - page: KugelAudio
                 path: ./docs/pages/features/tts-vendors/kugelaudio.mdx
-              - page: Microsoft
-                path: ./docs/pages/features/tts-vendors/microsoft.mdx
               - page: Murf
                 path: ./docs/pages/features/tts-vendors/murf.mdx
-              - page: NVIDIA
-                path: ./docs/pages/features/tts-vendors/nvidia.mdx
               - page: Resemble
                 path: ./docs/pages/features/tts-vendors/resemble.mdx
               - page: Rime Labs

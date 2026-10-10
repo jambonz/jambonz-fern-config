@@ -279,7 +279,7 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
   </Accordion>
 
   <Accordion title="customOptions">
-    Applies to a custom vendor (`custom:<name>`). See [custom STT providers](/guides/features/custom-speech-stt).
+    Applies to a custom vendor (`custom:<name>`). See [custom STT providers](/guides/features/custom-stt-providers).
 
     <ParamField path="sampleRate" type="number" required={false}>
       Audio sample rate in Hz sent to the custom service.
@@ -425,7 +425,7 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="deepgramSttUseTls" type="boolean" required={false}>
-      Use TLS when connecting to `deepgramSttUri`. Overrides the credential setting. Also used by `deepgramflux`.
+      Use TLS when connecting to `deepgramSttUri`. TLS is used when either this or the credential's TLS setting is on, so `false` does not turn off TLS enabled on the credential. Also used by `deepgramflux`.
     </ParamField>
 
     <ParamField path="entityPrompt" type="string" required={false}>
