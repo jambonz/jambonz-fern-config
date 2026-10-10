@@ -134,16 +134,26 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/cartesia.mdx
               - page: ElevenLabs
                 path: ./docs/pages/features/tts-vendors/elevenlabs.mdx
+              - page: Google
+                path: ./docs/pages/features/tts-vendors/google.mdx
               - page: Gradium
                 path: ./docs/pages/features/tts-vendors/gradium.mdx
               - page: Inworld
                 path: ./docs/pages/features/tts-vendors/inworld.mdx
+              - page: KugelAudio
+                path: ./docs/pages/features/tts-vendors/kugelaudio.mdx
+              - page: Microsoft
+                path: ./docs/pages/features/tts-vendors/microsoft.mdx
               - page: Murf
                 path: ./docs/pages/features/tts-vendors/murf.mdx
+              - page: NVIDIA
+                path: ./docs/pages/features/tts-vendors/nvidia.mdx
               - page: Resemble
                 path: ./docs/pages/features/tts-vendors/resemble.mdx
               - page: Rime Labs
                 path: ./docs/pages/features/tts-vendors/rimelabs.mdx
+              - page: Speechify
+                path: ./docs/pages/features/tts-vendors/speechify.mdx
               - page: xAI
                 path: ./docs/pages/features/tts-vendors/xai.mdx
           - page: Answering machine detection

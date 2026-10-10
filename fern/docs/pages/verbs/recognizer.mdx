@@ -10,6 +10,8 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
   Speech vendor to use (see list below, along with any others you add via the  
   [custom speech API](/guides/features/adding-speech-providers)).
   Note: this field is case sensitve, all the built-in vendors are lower case eg `aws` not `AWS`
+
+  Built-in vendors: `assemblyai`, `aws`, `cartesia`, `deepgram`, `deepgramflux`, `elevenlabs`, `gladia`, `google`, `gradium`, `houndify`, `microsoft`, `modulate`, `nvidia`, `openai`, `soniox`, `speechmatics`, `speechmaticsagent`, `xai`, `zoom`. A custom vendor is referenced as `custom:<name>`. `deepgramflux` takes `deepgramOptions` and `speechmaticsagent` takes `speechmaticsOptions`.
 </ParamField>
 
 <ParamField path="altLanguages" type="array" required={false}>
@@ -206,6 +208,54 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     <ParamField path="inactivityTimeout" type="number" required={false}>
       Timeout (seconds) for inactivity before closing the stream.
     </ParamField>
+    <ParamField path="languageCodes" type="array" required={false}>
+      Languages to bias transcription toward, e.g. `["en", "es"]`; code-switching among them is still allowed. Universal-3.5 Pro and Universal-3.6 Pro only. Default: all supported languages.
+    </ParamField>
+    <ParamField path="voiceFocus" type="string" required={false}>
+      Isolate the primary voice and suppress background noise before transcription: `near-field` for phones and headsets, `far-field` for distant microphones. Default: off.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="awsOptions">
+    <ParamField path="accessKey" type="string" required={false}>
+      AWS access key ID (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="secretKey" type="string" required={false}>
+      AWS secret access key.
+    </ParamField>
+
+    <ParamField path="securityToken" type="string" required={false}>
+      AWS temporary security token (for STS/assumed roles).
+    </ParamField>
+
+    <ParamField path="region" type="string" required={false}>
+      AWS region for the Transcribe service.
+    </ParamField>
+
+    <ParamField path="vocabularyName" type="string" required={false}>
+      Name of a custom vocabulary to use. Takes precedence over the top-level `vocabularyName`.
+    </ParamField>
+
+    <ParamField path="vocabularyFilterName" type="string" required={false}>
+      Name of a vocabulary filter to apply. Takes precedence over the top-level `vocabularyFilterName`.
+    </ParamField>
+
+    <ParamField path="vocabularyFilterMethod" type="string" required={false}>
+      How filtered vocabulary words are handled: `remove`, `mask` or `tag`. Takes precedence over the top-level `filterMethod`.
+    </ParamField>
+
+    <ParamField path="languageModelName" type="string" required={false}>
+      Name of a custom language model.
+    </ParamField>
+
+    <ParamField path="piiEntityTypes" type="array" required={false}>
+      PII entity types to identify, e.g. `BANK_ACCOUNT_NUMBER`, `CREDIT_DEBIT_NUMBER`.
+    </ParamField>
+
+    <ParamField path="piiIdentifyEntities" type="boolean" required={false}>
+      Enable PII entity identification.
+    </ParamField>
   </Accordion>
 
   <Accordion title="azureOptions">
@@ -216,6 +266,27 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     <ParamField path="audioLogging" type="boolean" required={false}>
       Enable audio logging.
       See [here](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/logging-audio-transcription?pivots=programming-language-cpp) for details
+    </ParamField>
+    <ParamField path="languageIdMode" type="string" required={false}>
+      Language identification mode when `altLanguages` are used: `AtStart` or `Continuous`.
+    </ParamField>
+    <ParamField path="postProcessing" type="string" required={false}>
+      Post-processing mode for transcription results.
+    </ParamField>
+    <ParamField path="speechRecognitionMode" type="string" required={false}>
+      Recognition mode optimized for the interaction type: `CONVERSATION`, `DICTATION` or `INTERACTIVE`.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="customOptions">
+    Applies to a custom vendor (`custom:<name>`). See [custom STT providers](/guides/features/custom-speech-stt).
+
+    <ParamField path="sampleRate" type="number" required={false}>
+      Audio sample rate in Hz sent to the custom service.
+    </ParamField>
+
+    <ParamField path="options" type="object" required={false}>
+      Additional options passed through to the custom service as-is.
     </ParamField>
   </Accordion>
 
@@ -349,6 +420,64 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Default: `'latest'`.
     </ParamField>
 
+    <ParamField path="deepgramSttUri" type="string" required={false}>
+      Custom Deepgram STT endpoint (e.g. a self-hosted Deepgram). Overrides the URI on the credential. Also used by `deepgramflux`.
+    </ParamField>
+
+    <ParamField path="deepgramSttUseTls" type="boolean" required={false}>
+      Use TLS when connecting to `deepgramSttUri`. Overrides the credential setting. Also used by `deepgramflux`.
+    </ParamField>
+
+    <ParamField path="entityPrompt" type="string" required={false}>
+      Prompt to guide entity detection. Only the first 100 words are sent.
+    </ParamField>
+
+    <ParamField path="fillerWords" type="boolean" required={false}>
+      Include filler words ("um", "uh") in the transcript.
+    </ParamField>
+
+    <ParamField path="languageHints" type="array" required={false}>
+      (`deepgramflux` only) Language hints for Deepgram Flux Multilingual, as BCP-47 codes (e.g. `en`, `es`, `fr`). Biases transcription toward the specified languages.
+    </ParamField>
+
+    <ParamField path="ner" type="boolean" required={false}>
+      Enable named entity recognition.
+    </ParamField>
+
+    <ParamField path="vadTurnoff" type="number" required={false}>
+      Milliseconds of silence before VAD turns off.
+    </ParamField>
+
+  </Accordion>
+
+  <Accordion title="elevenlabsOptions">
+    <ParamField path="includeTimestamps" type="boolean" required={false}>
+      Include word-level timestamps in results. Defaults to `false`.
+    </ParamField>
+
+    <ParamField path="commitStrategy" type="string" required={false}>
+      How audio is committed for transcription: `manual` for explicit commits, `vad` for voice activity detection.
+    </ParamField>
+
+    <ParamField path="vadSilenceThresholdSecs" type="number" required={false}>
+      Silence duration in seconds that triggers a VAD commit.
+    </ParamField>
+
+    <ParamField path="vadThreshold" type="number" required={false}>
+      VAD activation threshold.
+    </ParamField>
+
+    <ParamField path="minSpeechDurationMs" type="number" required={false}>
+      Minimum speech duration in milliseconds to accept.
+    </ParamField>
+
+    <ParamField path="minSilenceDurationMs" type="number" required={false}>
+      Minimum silence duration in milliseconds to trigger end of speech.
+    </ParamField>
+
+    <ParamField path="enableLogging" type="boolean" required={false}>
+      Enable server-side logging at ElevenLabs.
+    </ParamField>
   </Accordion>
 
   <Accordion title="googleOptions">
@@ -396,6 +525,60 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
   </Accordion>
 
+  <Accordion title="gradiumOptions">
+    Gradium (`gradium`) streams words as they are recognized (sent as interim results when interim is enabled); a final transcript is produced when Gradium's semantic VAD predicts the speaker has finished, and in the [`agent`](/verbs/verbs/agent) verb each final ends the user's turn. Transcripts are reported with a confidence of 1.0.
+
+    Supported languages: `en`, `fr`, `es`, `pt`, `de`; any other language uses Gradium's automatic language detection.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Gradium API key to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="model" type="string" required={false}>
+      STT model name. Defaults to `default`, Gradium's current production model.
+    </ParamField>
+
+    <ParamField path="delayInFrames" type="integer" required={false}>
+      How far the model looks ahead before emitting a word, in 80 ms frames, between 7 and 56. Lower is faster, higher is more accurate. Gradium's default is 10.
+    </ParamField>
+
+    <ParamField path="temp" type="number" required={false}>
+      Sampling temperature for the transcript text, between `0` and `1.5`. `0` is greedy (most deterministic).
+    </ParamField>
+
+    <ParamField path="paddingBonus" type="number" required={false}>
+      Biases the model toward emitting words sooner (negative) or later (positive), between `-4` and `4`. Default `0`.
+    </ParamField>
+
+    <ParamField path="keywords" type="array" required={false}>
+      Words to boost (brand names, jargon), up to 500. Each entry must be a single word; multi-word entries are split. When omitted, `hints` are used.
+    </ParamField>
+
+    <ParamField path="keywordBoost" type="number" required={false}>
+      How strongly to favor the keywords. Gradium recommends `3`; `4` is the practical ceiling, negative values suppress words. When omitted with hints, `hintsBoost` is used.
+    </ParamField>
+
+    <ParamField path="keywordBoostId" type="string" required={false}>
+      Id of a keyword dictionary saved in Gradium Studio. Replaces `keywords` and `hints`. Gradium accepts an unknown id silently and transcripts then lose casing, punctuation and number formatting, so check the id.
+    </ParamField>
+
+    <ParamField path="turn_detection.threshold" type="number" required={false}>
+      Inactivity probability that ends a turn, between `0` and `1` (exclusive). Default `0.5`; lower ends turns sooner.
+    </ParamField>
+
+    <ParamField path="turn_detection.horizon" type="number" required={false}>
+      Prediction horizon in seconds to read the probability from (Gradium reports `0.5`, `1`, `2` and `3`). Defaults to the longest; a shorter horizon ends turns sooner.
+    </ParamField>
+
+    <ParamField path="gradiumSttUri" type="string" required={false}>
+      Custom host to connect to instead of `api.gradium.ai`, e.g. `eu.api.gradium.ai` or `us.api.gradium.ai` to pin data residency, or a proxy. Defaults to the host of the credential's API URL.
+    </ParamField>
+
+    <ParamField path="gradiumSttUseTls" type="boolean" required={false}>
+      Use TLS when connecting to a custom host. Default `true`.
+    </ParamField>
+  </Accordion>
+
   <Accordion title="xaiOptions">
     xAI (`xai`) is a live streaming recognizer: both interim and final transcripts are supported.
 
@@ -433,106 +616,6 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Maximum number of milliseconds of silence before forcing an end-of-turn final result.  
       Valid values are between 1 and 5000.
     </ParamField>
-  </Accordion>
-
-  <Accordion title="houndifyOptions">
-    <ParamField path="houndifyOptions" type="number" required={false}>
-      Latitude of caller.
-    </ParamField>
-    <ParamField path="longitude" type="number" required={false}>
-      Longitude of caller.
-    </ParamField>
-    <ParamField path="city" type="string" required={false}>
-      City of caller.
-    </ParamField>
-    <ParamField path="state" type="string" required={false}>
-      State of caller.
-    </ParamField>
-    <ParamField path="country" type="string" required={false}>
-      Country of caller.
-    </ParamField>
-    <ParamField path="timezone" type="string" required={false}>
-      Timezone of caller.
-    </ParamField>
-
-    <ParamField path="domain" type="string" required={false}>
-    </ParamField>
- 
-    <ParamField path="audioEndpoint" type="string" required={false}>
-    </ParamField>
- 
-    <ParamField path="maxSilenceSeconds" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="maxSilenceAfterFullQuerySeconds" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="maxSilenceAfterPartialQuerySeconds" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="vadSensitivity" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="vadTimeout" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="vadMode" type="string" required={false}>
-    </ParamField>
- 
-    <ParamField path="vadVoiceMs" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="vadSilenceMs" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="vadDebug" type="debug" required={false}>
-    </ParamField>
- 
-    <ParamField path="audioFormat" type="string" required={false}>
-    </ParamField>
- 
-    <ParamField path="enableNoiseReduction" type="boolean" required={false}>
-    </ParamField>
- 
-    <ParamField path="enableProfanityFilter" type="boolean" required={false}>
-    </ParamField>
- 
-    <ParamField path="enablePunctuation" type="boolean" required={false}>
-    </ParamField>
-
-    <ParamField path="enableCapitalization" type="boolean" required={false}>
-    </ParamField>
- 
-    <ParamField path="confidenceThreshold" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="enableDisfluencyFilter" type="boolean" required={false}>
-    </ParamField>
- 
-    <ParamField path="maxResults" type="number" required={false}>
-    </ParamField>
-
-    <ParamField path="enableWordTimestamps" type="boolean" required={false}>
-    </ParamField>
-
-    <ParamField path="maxAlternatives" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="partialTranscriptInterval" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="sessionTimeout" type="number" required={false}>
-    </ParamField>
-
-    <ParamField path="connectionTimeout" type="number" required={false}>
-    </ParamField>
- 
-    <ParamField path="customVocabulary" type="string" required={false}>
-    </ParamField>
-
-    <ParamField path="languageModel" type="string" required={false}>
-    </ParamField>
- 
   </Accordion>
 
   <Accordion title="ibmOptions">
@@ -746,6 +829,42 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Identifies a specific user within the application.
     </ParamField>
 
+  </Accordion>
+
+  <Accordion title="modulateOptions">
+    Modulate (`modulate`) does not return confidence scores; transcripts are reported with a confidence of 1.0. The model is selected with the top-level `model` property: `velma-2-stt-streaming` (multilingual, the default) or `velma-2-stt-streaming-english-v2` (low-latency English).
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Modulate API key to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="endpointing" type="boolean" required={false}>
+      Only applies to model `velma-2-stt-streaming-english-v2`: emit a final transcript for each pause-delimited speech segment. Defaults to `true` in jambonz; set `false` to receive a single final transcript when the stream ends.
+    </ParamField>
+
+    <ParamField path="emotionSignal" type="boolean" required={false}>
+      Only applies to model `velma-2-stt-streaming`: detect the speaker's emotional tone for each utterance.
+    </ParamField>
+
+    <ParamField path="accentSignal" type="boolean" required={false}>
+      Only applies to model `velma-2-stt-streaming`: identify the speaker's accent for each utterance.
+    </ParamField>
+
+    <ParamField path="deepfakeSignal" type="boolean" required={false}>
+      Only applies to model `velma-2-stt-streaming`: score each utterance for synthetic (deepfake) voice likelihood.
+    </ParamField>
+
+    <ParamField path="piiPhiTagging" type="boolean" required={false}>
+      Only applies to model `velma-2-stt-streaming`: wrap detected PII/PHI in tags within the transcript text.
+    </ParamField>
+
+    <ParamField path="modulateSttUri" type="string" required={false}>
+      Custom host to connect to instead of `platform.modulate.ai`.
+    </ParamField>
+
+    <ParamField path="modulateSttUseTls" type="boolean" required={false}>
+      Use TLS when connecting to a custom host. Default `true`.
+    </ParamField>
   </Accordion>
 
   <Accordion title="nvidiaOptions">
@@ -1013,11 +1132,31 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Custom language model identifier to use for recognition.
     </ParamField>
 
+    <ParamField path="requestInfo" type="object" required={false}>
+      Houndify RequestInfo object with context data, passed to Houndify as-is.
+    </ParamField>
+
+    <ParamField path="sampleRate" type="number" required={false}>
+      Audio sample rate in Hz.
+    </ParamField>
+
+    <ParamField path="audioQueryAbsoluteTimeout" type="number" required={false}>
+      Absolute timeout for audio queries.
+    </ParamField>
+
+    <ParamField path="eoqThreshold" type="number" required={false}>
+      End-of-query likelihood threshold (`0.0`–`1.0`) that ends speech when segmentation is disabled. Default `0.8`; set `0` to disable.
+    </ParamField>
+
+    <ParamField path="vadStopThreshold" type="number" required={false}>
+      VAD probability threshold (`0.0`–`1.0`) that ends speech when segmentation is disabled: once speech has been detected, streaming stops when VAD drops below this value. Default `0.05`; set `0` to disable.
+    </ParamField>
+
   </Accordion>
 
   <Accordion title="sonioxOptions">
-    <ParamField path="api_key" type="string" required={false}>
-      Soniox API key.
+    <ParamField path="apiKey" type="string" required={false}>
+      Soniox API key (overrides the credential configured in jambonz).
     </ParamField>
 
     <ParamField path="model" type="string" required={false}>
@@ -1052,6 +1191,62 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
     <ParamField path="storage.title" type="string" required={false}>
       Storage title.
+    </ParamField>
+
+    <ParamField path="languageHints" type="array" required={false}>
+      Language hints for the v5 multilingual model, as ISO language codes (e.g. `["en", "es"]`). Improves accuracy and speeds up language detection.
+    </ParamField>
+
+    <ParamField path="enableLanguageIdentification" type="boolean" required={false}>
+      Enable language identification (v5); each recognized token is tagged with its detected language.
+    </ParamField>
+
+    <ParamField path="enableSpeakerDiarization" type="boolean" required={false}>
+      Enable speaker diarization (v5); each recognized token is tagged with a speaker.
+    </ParamField>
+
+    <ParamField path="endpointDetection" type="boolean" required={false}>
+      Enable endpoint detection.
+    </ParamField>
+
+    <ParamField path="endpointSensitivity" type="number" required={false}>
+      Endpoint detection sensitivity (v5), `-1.0` to `1.0` (default `0.0`). Higher values finalize endpoints faster; lower values are more conservative.
+    </ParamField>
+
+    <ParamField path="maxEndpointDelayMs" type="integer" required={false}>
+      Maximum delay in milliseconds before an endpoint is forced (v5), `500`–`3000` (default `2000`).
+    </ParamField>
+
+    <ParamField path="maxNonFinalTokensDurationMs" type="integer" required={false}>
+      Maximum duration in milliseconds that tokens may remain non-final before forced finalization (v5).
+    </ParamField>
+
+    <ParamField path="context" type="object" required={false}>
+      Soniox v5 [recognition context](https://soniox.com/docs/stt/concepts/context) to improve accuracy (max ~8000 tokens). When supplied it takes precedence over `speechContext` and `hints`.
+    </ParamField>
+
+    <ParamField path="context.general" type="array" required={false}>
+      Structured `{key, value}` metadata describing the domain, topic, participants, setting, etc.
+    </ParamField>
+
+    <ParamField path="context.text" type="string" required={false}>
+      Free-form background text (history of prior interactions, reference documents, meeting notes, summaries).
+    </ParamField>
+
+    <ParamField path="context.terms" type="array" required={false}>
+      Domain-specific vocabulary to boost recognition.
+    </ParamField>
+
+    <ParamField path="context.translation_terms" type="array" required={false}>
+      Source/target term mappings (`{source, target}`); only used when translation is enabled.
+    </ParamField>
+
+    <ParamField path="speechContext" type="string" required={false}>
+      Shortcut for `context.text`. Ignored when the full `context` object is supplied. The generic recognizer `hints` are likewise sent as `context.terms` unless `context` is supplied.
+    </ParamField>
+
+    <ParamField path="clientRequestReference" type="string" required={false}>
+      Client request reference for tracking.
     </ParamField>
 
   </Accordion>
@@ -1280,6 +1475,26 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
 
     <ParamField path="sm_audioFilteringConfig.volume_threshold" type="number" required={true}>
       Volume threshold to filter.
+    </ParamField>
+
+    <ParamField path="translation_config" type="object" required={false}>
+      Speechmatics translation configuration.
+    </ParamField>
+
+    <ParamField path="translation_config.target_languages" type="array" required={false}>
+      Target languages for translation (required when `translation_config` is set).
+    </ParamField>
+
+    <ParamField path="translation_config.enable_partials" type="boolean" required={false}>
+      Enable partial translations.
+    </ParamField>
+
+    <ParamField path="host" type="string" required={false}>
+      (`speechmaticsagent` only) Speechmatics host to connect to. Overrides the URI on the credential.
+    </ParamField>
+
+    <ParamField path="profile" type="string" required={false}>
+      (`speechmaticsagent` only) Speechmatics profile: `adaptive`, `agile`, `smart` or `external`. Defaults to `smart`.
     </ParamField>
 
   </Accordion>

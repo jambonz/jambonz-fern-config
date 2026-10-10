@@ -1,0 +1,65 @@
+---
+title: KugelAudio
+subtitle: Speed, guidance, temperature, normalization and pronunciation dictionaries for KugelAudio TTS.
+---
+
+KugelAudio tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "kugelaudio",
+    "language": "en-US",
+    "voice": "1071",
+    "options": {
+      "speed": 1.0,
+      "cfg_scale": 2.0,
+      "normalize": true
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+The `voice` value is a KugelAudio voice id, which is numeric (for example `1071`). The model defaults to `kugel-3`.
+
+## Options
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate. Defaults to `1.0`. Values above `1.0` are faster, below are slower.
+</ParamField>
+
+<ParamField path="cfg_scale" type="number" required={false}>
+  Guidance scale — how closely the read follows the voice. Defaults to `2.0`.
+</ParamField>
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature. Lower values give a more consistent read; higher values more variation between renders of the same text.
+</ParamField>
+
+<ParamField path="normalize" type="boolean" required={false}>
+  Expand numbers, dates and abbreviations before synthesis. Defaults to `true`. Normalization follows the request language.
+</ParamField>
+
+<ParamField path="project_id" type="number" required={false}>
+  KugelAudio project the request is billed and filed under.
+</ParamField>
+
+<ParamField path="dictionary_ids" type="array" required={false}>
+  Ids of the pronunciation dictionaries to apply, as an array of numbers. An empty array `[]` means "no dictionaries", which is different from leaving the field out.
+</ParamField>
+
+## Language
+
+jambonz sends only the primary subtag of `language` (`de-DE` is sent as `de`), and only when KugelAudio supports it. An unsupported or empty language is left out, so the voice's own language applies.
+
+## Endpoint override
+
+Set `api_uri` in `options` (or in the credential's **Extra Options**) to use a different KugelAudio host, for example `api.eu.kugelaudio.com` to pin the EU region. Leave it out to use `api.kugelaudio.com`.
+
+## Streaming
+
+KugelAudio supports [TTS streaming](/guides/features/tts-streaming). It returns word timestamps, so when a caller barges in on an [agent](/verbs/verbs/agent), the assistant turn is trimmed to what the caller actually heard.

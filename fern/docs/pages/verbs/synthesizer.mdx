@@ -49,6 +49,9 @@ subtitle: A **property** that can be used in a `say` verb to override the applic
 
       The mode is automatically selected based on configuration: if `options.model` is specified or a `model_id` is configured in the speech credentials, Gemini TTS is used. If an HD voice is selected, `live` mode is used. Otherwise, standard `tts` mode is used.
     </ParamField>
+    <ParamField path="audioConfig" type="object" required={false}>
+      Google [AudioConfig](https://cloud.google.com/text-to-speech/docs/reference/rest/v1/text/synthesize#AudioConfig) settings: `speakingRate`, `pitch` and `volumeGainDb` (also accepted at the top level of `options`, or as `speaking_rate`, `volume_gain_db`). Standard voices apply all three, HD voices only `speakingRate`, Gemini TTS none. See [Google](/guides/features/tts-vendors/google).
+    </ParamField>
     <ParamField path="prompt" type="string" required={false}>
       A prompt sent to the TTS model to guide how the audio should be generated. Use this to specify the desired tone, emotion, speaking style, or context for the synthesized speech. This parameter is only applicable when using Gemini TTS (`apiMode: "gemini"` or when `model` is specified).
     </ParamField>
@@ -182,6 +185,63 @@ Example: "Hi. \<200> I'd love to have a conversation with you." adds a 200ms pau
   <Accordion title="whisper">
     <ParamField path="model_id" type="string" required={false}>
       TTS model to use. (see [Whisper docs](https://platform.openai.com/docs/api-reference/audio/createSpeech))
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="kugelaudio">
+    <ParamField path="speed" type="number" required={false}>
+      Speaking rate. Defaults to `1.0`. (see [KugelAudio](/guides/features/tts-vendors/kugelaudio))
+    </ParamField>
+    <ParamField path="cfg_scale" type="number" required={false}>
+      Guidance scale. Defaults to `2.0`.
+    </ParamField>
+    <ParamField path="temperature" type="number" required={false}>
+      Sampling temperature.
+    </ParamField>
+    <ParamField path="normalize" type="boolean" required={false}>
+      Expand numbers, dates and abbreviations before synthesis. Defaults to `true`.
+    </ParamField>
+    <ParamField path="project_id" type="number" required={false}>
+      KugelAudio project id.
+    </ParamField>
+    <ParamField path="dictionary_ids" type="array" required={false}>
+      Pronunciation dictionary ids, as an array of numbers.
+    </ParamField>
+    <ParamField path="api_uri" type="string" required={false}>
+      KugelAudio host, e.g. `api.eu.kugelaudio.com`. Defaults to `api.kugelaudio.com`.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="microsoft">
+    <ParamField path="deploymentId" type="string" required={false}>
+      Deployment id of an Azure custom neural voice; switches this request to that voice. (see [Microsoft](/guides/features/tts-vendors/microsoft))
+    </ParamField>
+    <ParamField path="apiKey" type="string" required={false}>
+      Key of the Speech resource hosting the custom voice. Supply it with `deploymentId`.
+    </ParamField>
+    <ParamField path="region" type="string" required={false}>
+      Region of that Speech resource. Defaults to the credential's region.
+    </ParamField>
+    <ParamField path="voice" type="string" required={false}>
+      Custom voice name. Defaults to `synthesizer.voice`.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="nvidia">
+    <ParamField path="functionId" type="string" required={false}>
+      NVIDIA cloud function id of the TTS model, for streamed TTS. Defaults to the public Magpie multilingual model. (see [NVIDIA](/guides/features/tts-vendors/nvidia))
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="speechify">
+    <ParamField path="loudness_normalization" type="boolean" required={false}>
+      Normalize output loudness. Defaults to `false`. (see [Speechify](/guides/features/tts-vendors/speechify))
+    </ParamField>
+    <ParamField path="text_normalization" type="boolean" required={false}>
+      Expand numbers, dates and abbreviations before synthesis. Defaults to `false`.
+    </ParamField>
+    <ParamField path="api_uri" type="string" required={false}>
+      Speechify host. Defaults to `api.speechify.ai`.
     </ParamField>
   </Accordion>
 

@@ -1,0 +1,35 @@
+---
+title: NVIDIA
+subtitle: Selecting the NVIDIA cloud function for Riva TTS.
+---
+
+NVIDIA Riva tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "nvidia",
+    "language": "en-US",
+    "voice": "Magpie-Multilingual.EN-US.Mia",
+    "options": {
+      "functionId": "877104f7-e885-42b9-8de8-f6e4c6303969"
+    }
+  }
+}
+```
+
+## Options
+
+<ParamField path="functionId" type="string" required={false}>
+  NVIDIA cloud (NVCF) function id of the TTS model to call. Defaults to the public Magpie multilingual model (`877104f7-e885-42b9-8de8-f6e4c6303969`). Only used with an NVIDIA API key; a self-hosted Riva server ignores it.
+</ParamField>
+
+<Note>
+`functionId` applies to streamed TTS, such as an [agent](/verbs/verbs/agent)'s replies. A `say` verb uses the default model.
+</Note>
+
+## Cloud or self-hosted
+
+An NVIDIA credential with an **API key** uses NVIDIA's cloud. A credential with a **Riva server URI** uses your own Riva server instead.
