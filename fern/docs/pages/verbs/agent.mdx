@@ -167,6 +167,10 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   Seconds to wait after the assistant finishes speaking before prompting the user to respond. When triggered, the LLM is prompted with a system cue to check if the user is still there. Set to `0` to disable.
 </ParamField>
 
+<ParamField path="noResponseMaxPrompts" type="number" required={false} default="0">
+  End the agent after this many no-response prompts in a row get no reply. The `actionHook` then fires with `completion_reason: "no_response"`, so your application decides what happens next, for example saying goodbye and hanging up. The count resets whenever the user speaks. `0` or unset: no limit. Added in 11.1.6.
+</ParamField>
+
 <ParamField path="stt" type="object" required={false}>
   Speech-to-text configuration. See [recognizer](/verbs/verbs/recognizer) for available properties. Key properties: `vendor`, `language`, `hints`, and vendor-specific options like `deepgramOptions`.
 </ParamField>
