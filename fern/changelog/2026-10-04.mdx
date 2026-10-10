@@ -39,6 +39,11 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
    `voiceFocus`. Newer models are now sent 16 kHz audio instead of 8 kHz.
 1. **OpenAI GPT-Live** — the GPT-Live speech-to-speech integration uses OpenAI's
    GA protocol.
+1. **Agent no-response limit** — the [agent](/verbs/verbs/agent) verb's new
+   `noResponseMaxPrompts` ends the agent after that many no-response prompts in a
+   row get no reply, and its `actionHook` receives
+   `completion_reason: "no_response"`. Unset, the agent keeps prompting as
+   before.
 1. **Per-account API rate limits** — the API server counts requests per account
    for call creation (4000/min) and call status reads (600/min), per caller
    address for everything else, and per address for sign-in and sign-up. Counts
