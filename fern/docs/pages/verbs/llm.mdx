@@ -636,6 +636,79 @@ With a non-multimodal model, Azure speech to text is active automatically. Set `
 Voice Live's text to speech avatar requires a separate WebRTC SDP exchange with the service, which has no place in a SIP call. Setting `avatar` in `session_update` will not produce video.
 </Note>
 
+## ElevenLabs Agents
+
+Set `vendor: 'elevenlabs'` to connect the caller to an [ElevenLabs agent](https://elevenlabs.io/docs/eleven-agents). The agent's prompt, voice and tools are configured in ElevenLabs, so `model` is not used. Identify the agent with `auth.agent_id`; add `auth.api_key` to connect with a signed URL, which ElevenLabs requires when the agent has authentication enabled.
+
+```js
+session.llm({
+  vendor: 'elevenlabs',
+  auth: {
+    agent_id: 'agent_01abc...',
+    api_key: process.env.ELEVENLABS_API_KEY
+  },
+  actionHook: '/final',
+  eventHook: '/event',
+  llmOptions: {
+    dtmf: { enable: true, finishOnKey: '#', interDigitTimeout: 2 }
+  }
+});
+```
+
+### Caller keypad input (DTMF)
+
+Set `llmOptions.dtmf.enable` to pass the caller's key presses to the agent. jambonz collects the digits into one entry and sends it as a single user message, so the agent receives `12345`, not five separate turns. The digits are the whole message; tell the agent in its prompt what keypad entries mean (a ZIP code, a menu choice).
+
+An entry ends the same way digit collection ends in [`gather`](/verbs/verbs/gather), with the same option names:
+
+<ParamField path="dtmf.enable" type="boolean" required={true}>
+  Turns keypad input on. Off by default.
+</ParamField>
+
+<ParamField path="dtmf.finishOnKey" type="string" required={false}>
+  A key that ends the entry, such as `#`. The key itself is not sent. No default: without it, `#` and `*` are sent as ordinary digits.
+</ParamField>
+
+<ParamField path="dtmf.numDigits" type="number" required={false}>
+  Send the entry as soon as this many digits have been pressed.
+</ParamField>
+
+<ParamField path="dtmf.maxDigits" type="number" required={false}>
+  Maximum digits in one entry; the entry is sent when it is reached.
+</ParamField>
+
+<ParamField path="dtmf.minDigits" type="number" required={false}>
+  Minimum digits before `interDigitTimeout` or `timeout` can end the entry. Defaults to 1. An entry shorter than this when `timeout` expires is discarded.
+</ParamField>
+
+<ParamField path="dtmf.interDigitTimeout" type="number" required={false}>
+  Seconds of silence after the last key that end the entry. No default.
+</ParamField>
+
+<ParamField path="dtmf.timeout" type="number" required={false}>
+  Seconds from the first key until the entry is sent, if nothing else has ended it. Defaults to 15; `0` turns it off. Once `interDigitTimeout` is running it takes over, so a caller who keeps typing is not cut off.
+</ParamField>
+
+<Note title="Set interDigitTimeout or finishOnKey">
+With only `enable: true`, an entry ends after `timeout`, 15 seconds after the first key, so a one-key menu choice reaches the agent 15 seconds late. Set `interDigitTimeout` (2 seconds works well), `finishOnKey`, or `numDigits` to match what the caller is entering.
+</Note>
+
+Each key press also tells the agent the caller is active, so its turn timeout does not fire while the caller is typing. If the agent is still speaking when the entry is sent, it stops, as it would if the caller spoke.
+
+The agent's own **DTMF input** settings in ElevenLabs (digit timeout and `#` terminator) apply only to ElevenLabs' telephony integrations; on a jambonz call, use the options above instead. You do not need to enable DTMF input on the agent.
+
+### Updating the conversation mid-call
+
+An `llm:update` command (`session.updateLlm()` in the Node SDK) accepts these ElevenLabs client events:
+
+- `user_message` — send text as a user turn, for example `{type: 'user_message', text: 'My order number is 4471'}`
+- `contextual_update` — give the agent background information without interrupting it, for example `{type: 'contextual_update', text: 'The caller is a premium customer'}`
+- `user_activity` — tell the agent the caller is still there, which resets its turn timeout
+
+`user_message` and `contextual_update` need a `text` string. Anything else is discarded, and you will not get an error back.
+
+`llm:update` needs **WebSocket** transport. The REST `updateCall` API does not accept it.
+
 ## Google Gemini Live
 
 Set `vendor: 'google'` to use Gemini's [Live API](https://ai.google.dev/api/live). The same `vendor: 'google'` integration reaches the Live API through **two access paths**:
