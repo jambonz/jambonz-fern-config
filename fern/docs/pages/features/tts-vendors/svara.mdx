@@ -1,0 +1,58 @@
+---
+title: Svara
+subtitle: Speed and pronunciation dictionaries for Svara TTS.
+---
+
+Svara is a text-to-speech service from Kenpath Labs, covering Hindi and other Indic languages along with English and many more. Svara tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "नमस्ते, आपकी booking confirm हो गई है।",
+  "synthesizer": {
+    "vendor": "svara",
+    "language": "hi",
+    "voice": "sv_fhn6tfve",
+    "options": {
+      "speed": 1.0
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Voices and languages
+
+Voice ids start with `sv_`. The portal lists each voice under its native language, using Svara's language codes (`en`, `hi`, `ta`, …). `language` is passed to Svara as-is; if you leave it out, Svara detects the language from the script of the text. Svara handles mixed Hindi-English text without any markup.
+
+Svara serves a single model, `svara-tts-turbo`, which is the default.
+
+## Options
+
+<ParamField path="speed" type="number" required={false}>
+  Speech speed, `0.7` – `1.5`. Defaults to `1.0`. Pitch is preserved.
+</ParamField>
+
+<ParamField path="pronunciation_dictionary_id" type="string" required={false}>
+  The id of a pronunciation dictionary created in your Svara account, applied to every utterance. An unknown id is not an error — the text is spoken without the dictionary.
+</ParamField>
+
+## Endpoint override
+
+Svara credentials have no API base URL field in the portal. If you need to point at a non-default endpoint — a proxy, for example — set `api_uri` in **Extra Options** alongside the tuning fields:
+
+```json
+{
+  "api_uri": "my-proxy.example.com",
+  "speed": 1.0
+}
+```
+
+Leave it out to use Svara's standard endpoint (`api.kenpathlabs.com`).
+
+## Streaming
+
+Svara supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token-by-token from an LLM using `tts:tokens`. Svara does not return word-level timestamps, so on barge-in jambonz cannot trim the assistant's turn to the words the caller actually heard.
+
+Each call that streams to Svara holds one of your Svara account's concurrent streams for the length of the call. Check your Svara plan's concurrency limit against the number of simultaneous calls you expect.
