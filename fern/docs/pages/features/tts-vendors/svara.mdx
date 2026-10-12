@@ -1,6 +1,6 @@
 ---
 title: Svara
-subtitle: Speed and pronunciation dictionaries for Svara TTS.
+subtitle: Speed, pronunciation dictionaries, eager streaming and sampling controls for Svara TTS.
 ---
 
 Svara is a text-to-speech service from Kenpath Labs, covering Hindi and other Indic languages along with English and many more. Svara tuning is passed in `synthesizer.options`.
@@ -37,6 +37,84 @@ Svara serves a single model, `svara-tts-turbo`, which is the default.
 <ParamField path="pronunciation_dictionary_id" type="string" required={false}>
   The id of a pronunciation dictionary created in your Svara account, applied to every utterance. An unknown id is not an error — the text is spoken without the dictionary.
 </ParamField>
+
+Every option is optional. An option you don't set is not sent, so Svara's own default applies.
+
+### Streaming
+
+These apply when Svara is driven by [TTS streaming](/guides/features/tts-streaming), for example from the `agent` verb.
+
+<ParamField path="mode" type="string" required={false}>
+  `sentence` (Svara's default) waits for a sentence boundary before speaking. `eager` starts speaking a few words into the text, for the lowest latency.
+</ParamField>
+
+<ParamField path="chunk_words" type="number" required={false}>
+  `eager` only. Words per synthesis chunk. Defaults to `4`, which is also the minimum.
+</ParamField>
+
+<ParamField path="peek_words" type="number" required={false}>
+  `eager` only. Lookahead words held back so each chunk knows what comes next, `1` – `5`. Defaults to `2`.
+</ParamField>
+
+<ParamField path="max_chunk_words" type="number" required={false}>
+  `eager` only. Upper bound on a chunk once text has queued up. Defaults to `20`.
+</ParamField>
+
+### Sampling
+
+Svara's defaults are tuned by Svara, and it recommends leaving these unset unless you have measured a reason to change them. They apply to both `say` and streaming.
+
+<ParamField path="temperature" type="number" required={false}>
+  `0` – `2`.
+</ParamField>
+
+<ParamField path="top_p" type="number" required={false}>
+  `0` – `1`.
+</ParamField>
+
+<ParamField path="top_k" type="number" required={false}>
+  `-1` or more.
+</ParamField>
+
+<ParamField path="min_p" type="number" required={false}>
+  `0` – `1`.
+</ParamField>
+
+<ParamField path="repetition_penalty" type="number" required={false}>
+  `1` – `2`.
+</ParamField>
+
+<ParamField path="presence_penalty" type="number" required={false}>
+  `0` – `2`.
+</ParamField>
+
+### Non-streaming `say`
+
+These apply to a `say` that is not streamed.
+
+<ParamField path="normalize" type="boolean" required={false}>
+  Speak numbers, dates, currency and units in words for the request's language. On by default, and only takes effect when `language` is set.
+</ParamField>
+
+<ParamField path="max_tokens" type="number" required={false}>
+  Audio token budget, `1` – `8192` (50 tokens is one second). Sized from the text when unset.
+</ParamField>
+
+<ParamField path="chunk_size" type="number" required={false}>
+  Maximum characters per synthesis chunk, `50` – `2000`.
+</ParamField>
+
+<ParamField path="buffer_ms" type="number" required={false}>
+  Audio Svara buffers before it starts sending, `0` – `5000` ms.
+</ParamField>
+
+<ParamField path="chunk_codes" type="number" required={false}>
+  Send audio after every N generated codes, `1` – `200` (50 codes is one second).
+</ParamField>
+
+<Note>
+On the streaming connection Svara does not validate option values: an out-of-range value is ignored rather than rejected. A non-streaming `say` with an out-of-range value fails.
+</Note>
 
 ## Endpoint override
 
