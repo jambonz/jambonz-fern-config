@@ -697,7 +697,7 @@ session.llm({
 </ParamField>
 
 <ParamField path="llmOptions.promptStart" type="object" required={false}>
-  Merged into Nova's `promptStart` event. Use `audioOutputConfiguration.voiceId` to pick a voice (default `matthew`), `toolConfiguration.tools` for tools in Nova's `toolSpec` shape (`inputSchema.json` is a JSON string), and `toolConfiguration.toolChoice` to steer tool use: `{auto: {}}` (default), `{any: {}}` or `{tool: {name: 'get_weather'}}`. jambonz sets the `promptName` and the audio format.
+  Merged into Nova's `promptStart` event. Use `audioOutputConfiguration.voiceId` to pick a voice (default `matthew`), `toolConfiguration.tools` for tools in Nova's `toolSpec` shape (`inputSchema.json` is a JSON string), and `toolConfiguration.toolChoice` to steer tool use: `{auto: {}}` (default), `{any: {}}` or `{tool: {name: 'get_weather'}}`. In our testing `amazon.nova-2-sonic-v1:0` honors a forced tool, while `amazon.nova-2-5-sonic` accepts `toolChoice` but does not force the call. jambonz sets the `promptName` and the audio format.
 </ParamField>
 
 <ParamField path="llmOptions.dtmf" type="object" required={false}>
@@ -732,7 +732,7 @@ MCP tools and the handoff and hangup tools are added to `toolConfiguration.tools
 
 ### Events
 
-The `eventHook` receives Nova's own events, `{event: {<name>: {...}}}`: `completionStart`, `contentStart`, `textOutput` (the caller's transcript and the agent's text), `toolUse`, `contentEnd`, `completionEnd`, `usageEvent` and `error`, plus jambonz's `output_audio.playback_started` / `output_audio.playback_stopped`. Filter with `events` using these names. As with every jambonz hook payload, keys arrive snake_cased: `{event: {text_output: {content_id, role, content}}}`, `content_start`, `additional_model_fields` and so on.
+The `eventHook` receives Nova's own events, `{event: {<name>: {...}}}`: `completionStart`, `contentStart`, `textOutput` (the caller's transcript and the agent's text), `toolUse`, `contentEnd`, `completionEnd`, `usageEvent`, `userSpeechStart` / `userSpeechEnd` (sent by Nova 2.5 when the caller starts and stops speaking) and `error`, plus jambonz's `output_audio.playback_started` / `output_audio.playback_stopped`. Filter with `events` using these names. As with every jambonz hook payload, keys arrive snake_cased: `{event: {text_output: {content_id, role, content}}}`, `content_start`, `additional_model_fields` and so on.
 
 ### Updating the session mid-call
 
