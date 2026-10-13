@@ -162,6 +162,83 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
   no logs.
 - **License keys** — whitespace pasted with a license key is trimmed.
 
+#### Self-hosted on AWS (CloudFormation)
+
+The 11.1.6 CloudFormation templates are designed to enable SOC 2 compliance for
+self-hosted deployments on AWS. They close SSH by default, take every secret out
+of files and user data, give each server only the AWS permissions it needs,
+encrypt and protect the database, keep logs for a set period, and keep the SBCs'
+published addresses stable. They also add a load-balanced web tier for large
+deployments.
+
+**Key changes**
+
+1. **SSH closed by default** — `AllowedSshCidr` has no default; supply your IP as a
+   `/32` or your VPN range.
+1. **Secrets in SSM Parameter Store (medium, large)** — every secret is kept in SSM
+   SecureString parameters under `/jambonz/<stack>/`; none is written into an
+   ecosystem file, a systemd unit or user data. The database password is generated
+   into Secrets Manager.
+1. **Least-privilege instance roles (medium, large)** — each tier's role grants only
+   the AWS calls its software makes; `AmazonEC2FullAccess` and
+   `AutoScalingReadOnlyAccess` are no longer attached.
+1. **Database protection** — Aurora is encrypted on both sizes (large was
+   unencrypted), backups are kept for 30 days, deletion protection is on, and a
+   final snapshot is taken when the stack is deleted. Large logs database
+   connections (logins, logouts, failed logins) to CloudWatch.
+1. **Log retention enforced** — `CloudwatchLogRetention` now takes effect (the
+   instance roles lacked the permission to apply it). The default is 90 days, and
+   180 and 365 are allowed.
+1. **Multi-AZ Redis (large)** — Redis runs as two nodes in separate availability
+   zones with automatic failover.
+1. **SBCs keep their published address (medium, large)** — a SIP or RTP server waits
+   for its Elastic IP and marks itself unhealthy if it cannot take it, instead of
+   serving from a temporary public IP that carriers have not allow-listed.
+1. **No shared credentials in the templates** — the templates no longer obtain an
+   apiban.org key with a jambonz account; set the optional `ApibanKey` parameter to
+   use the apiban blocklist. `KrispApiKey` is now hidden in the console.
+1. **SIP over TLS and WSS** — store a certificate in SSM Parameter Store
+   (`TLS_PRIVKEY`, `TLS_CERT`, `TLS_CHAIN` under `/jambonz/<stack>/sbc`) and every
+   SBC configures drachtio for TLS (5061) and WSS (8443) when it boots. Without a
+   certificate, SIP stays UDP and TCP.
+1. **Web tier behind a load balancer (large)** — set `WebServerDeployment` to
+   `autoscaling-alb` to run one to four web servers in an Auto Scaling group behind
+   an Application Load Balancer that terminates TLS. Set `HostedZoneId` and the
+   stack issues the certificate and creates the portal, `api.`, `grafana.` and
+   `public-apps.` DNS records in Route 53, or supply your own certificate with
+   `WebCertificateArn`. The default, `single-instance`, is unchanged.
+1. **Recording servers always deployed (medium, large)** — feature servers always
+   send recordings to the recording servers; the fallback that ran
+   `upload_recordings` on the web server is removed.
+1. **Initial admin password in the stack outputs** — in every size, the portal's
+   initial password is the stack's unique ID, shown in the `Password`,
+   `PortalPassword` or `WebPortalPassword` output. You are asked to change it at
+   first sign-in.
+1. **Grouped parameters (medium, large)** — the console lists the required
+   parameters first, then optional settings, then groups whose defaults suit most
+   deployments, as mini already did.
+1. **Fixes** — the `api_base_url` sent to applications in webhook payloads now
+   points at the API (`<portal>/api/v1`, `https` behind the large load balancer)
+   instead of the portal, and turning `EnableOpenTelemetry` off now stops the
+   feature servers' tracing.
+
+**Before you deploy or update a stack**
+
+- `AllowedSshCidr` is required on every create and update.
+- Medium and large need `--capabilities CAPABILITY_NAMED_IAM` (it works for mini
+  too). The command `generate-cf.sh` prints now uses it.
+- The `MySQLPassword` parameter is removed from medium and large; the password is
+  generated. `AicApiKey` is removed from every size.
+- Medium and large always deploy the recording servers, and large's Redis runs two
+  nodes. Both add cost. `cache.t2.small` and `cache.t2.medium` are no longer
+  accepted for large's Redis because they do not support Multi-AZ failover.
+- On an existing stack, `CloudwatchLogRetention` is now applied, so log events
+  older than the chosen period are deleted.
+- Aurora deletion protection is on: turn it off before deleting a stack. The
+  Elastic IPs, the final database snapshot and large's database audit log group are
+  kept after the stack is deleted; remove them yourself when you no longer need
+  them.
+
 #### Upgrade Notes (self-hosted)
 
 - **Database** — 11.1.6 adds the `alert_hooks` table and three columns; run the
@@ -199,4 +276,7 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
 
 **jambonz.cloud** - available now
 
-**self-hosted** - coming soon
+**self-hosted on AWS** - available now: CloudFormation templates and public AMIs for
+all nine server types in 30 regions, amd64 and arm64.
+
+**self-hosted Debian packages** - coming soon
