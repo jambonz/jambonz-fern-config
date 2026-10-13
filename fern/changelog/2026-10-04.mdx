@@ -4,9 +4,10 @@ jambonz Commercial 11.1.6
 
 **11.1.6** adds alert notifications, so alerts reach you as they happen, and lets
 customers opt out of support audio capture. It adds Speechify and KugelAudio
-text-to-speech, Zoom speech-to-text, ElevenLabs `eleven_v3`/`eleven_v4` streaming
+text-to-speech, Zoom and Gradium speech-to-text, ElevenLabs `eleven_v3`/`eleven_v4` streaming
 and AssemblyAI Universal-3.6 Pro. The API server now rate-limits per account and
-per caller. On AWS, scale-in drains SIP, RTP and feature servers by reading the
+per caller. Calls through a carrier that requires registration now leave from the SBC
+that holds the registration. On AWS, scale-in drains SIP, RTP and feature servers by reading the
 instance metadata service instead of subscribing to SNS. The release also fixes
 a set of [agent](/verbs/verbs/agent), answering machine detection and
 [gather](/verbs/verbs/gather) issues.
@@ -29,6 +30,8 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
 1. **KugelAudio text-to-speech** — `kugelaudio` is available as a TTS vendor,
    including streaming TTS.
 1. **Zoom Scribe speech-to-text** — Zoom is available as an STT vendor.
+1. **Gradium speech-to-text** — `gradium` is available as an STT vendor, with
+   speech credentials in the portal and API.
 1. **ElevenLabs `eleven_v3` and `eleven_v4`** — streaming TTS with these models,
    including `eleven_v3_conversational` and its audio tags (such as `[laughs]`),
    uses ElevenLabs' Text to Dialogue stream. The synthesizer language is now sent
@@ -37,6 +40,16 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
 1. **AssemblyAI Universal-3.6 Pro** — new AssemblyAI credentials default to
    `universal-3-6-pro`, and `assemblyAiOptions` accepts `languageCodes` and
    `voiceFocus`. Newer models are now sent 16 kHz audio instead of 8 kHz.
+1. **ElevenLabs agent keypad input** — the ElevenLabs [llm](/verbs/verbs/llm) verb
+   accepts `llmOptions.dtmf`. With `enable: true`, the caller's key presses are
+   collected into one entry, using the [gather](/verbs/verbs/gather) digit options
+   (`finishOnKey`, `numDigits`, `maxDigits`, `interDigitTimeout`, `timeout`), and
+   sent to the agent as a single user message. Mid-call `llm:update` messages are
+   now passed to ElevenLabs.
+1. **Dialogflow CES session variables** — for `model: "ces"`, the
+   [dialogflow](/verbs/verbs/dialogflow) verb sends `welcomeEventParams` to the agent
+   as session variables when the session starts, and no longer requires a
+   `welcomeEvent`.
 1. **OpenAI GPT-Live** — the GPT-Live speech-to-speech integration uses OpenAI's
    GA protocol.
 1. **Per-account API rate limits** — the API server counts requests per account
@@ -55,6 +68,16 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
    them to another SIP server before it stops. Registrations now use a Call-ID
    per SIP server, so a carrier sees a move between servers as a new
    registration.
+1. **Registration trunks use the registering SBC** — when a call goes out through a
+   carrier that requires registration, jambonz now sends the INVITE from the SBC
+   that holds the registration, so carriers that accept calls only from the
+   registered address (BroadWorks, for example) no longer reject it. This applies
+   to [dial](/verbs/verbs/dial), calls created through the API, and the SBC's own
+   carrier selection.
+1. **Agent end-of-turn fallback (opt-in)** — set `JAMBONES_AGENT_EOT_FALLBACK_MS`
+   (for example `3000`) to take the caller's turn on the final transcript when a
+   turn detector such as Krisp never reports the end of the turn. Each fallback is
+   logged and counted as `eot_fallbacks` in the session summary.
 1. **Enterprise user limits** — an organization's user limit can be raised per
    organization, and the portal's Users view follows the limit the API reports.
 1. **SIPREC application in the new portal** — the account setting for the
@@ -65,9 +88,11 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
    operator-only organization or account fields; carrier changes by non-admin
    users stay within their own organization or account; and calls from a
    registration trunk's address now match only carriers that belong to the
-   called SIP realm's account.
+   called SIP realm's account. New installs generate a random admin API token
+   instead of seeding a fixed one.
 1. **Fewer caller details in logs** — caller transcripts and DTMF digits are
-   logged at `debug`, not `info`.
+   logged at `debug`, not `info`, and the credentials for a
+   [listen](/verbs/verbs/listen) websocket are no longer written to debug logs.
 
 #### Bug Fixes
 
@@ -75,7 +100,11 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
   predict interruptions; speech that arrives while the assistant is talking is
   held for the next turn instead of being dropped; interrupt prediction only
   interrupts the assistant while it is speaking; and VAD is used only for turn
-  timing when the STT vendor reports the start of speech itself.
+  timing when the STT vendor reports the start of speech itself. With parallel tool
+  calls, the LLM is prompted once when every result is in, instead of once per
+  result. What the caller said before a pause for more speech is kept, speech held
+  over the assistant is kept once, and a turn that was already answered is not
+  sent to the LLM again.
 - **Answering machine detection** — empty final transcripts no longer count as a
   human, Deepgram endpointing defaults to 150 ms during detection, and built-in
   voicemail hints are used when none are configured.
@@ -90,9 +119,25 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
   (for example new Flux keyterms) are applied when a parked connection is
   reused.
 - **TTS** — a [say](/verbs/verbs/say) no longer hangs when the TTS vendor rejects
-  the request, and streaming TTS starts cleanly after a barge-in.
+  the request, and streaming TTS starts cleanly after a barge-in. Streaming TTS events and
+  `TTS_STREAMING_CONNECTION_FAILURE` alerts name the vendor actually in use.
 - **Conference** — `distributeDtmf` and `speakOnlyTo` work without another join
   option set.
+- **Dial** — when two forked calls answer at the same time, the second is released
+  instead of leaking or replacing the first. A dial with `exitMediaPath: true`
+  falls back to a partial media release when `JAMBONES_ENABLE_FULL_MEDIA_RELEASE`
+  is not set.
+- **Feature server shutdown** — on `SIGTERM` or `SIGINT`, a feature server drains
+  calls in progress instead of exiting at once.
+- **SBC resource leaks** — a DTMF socket leak in the SBC (`@jambonz/rtpengine-utils`
+  0.4.5) that could exhaust file descriptors and cause `500` responses is fixed.
+  An outbound call to a carrier with no outbound gateways no longer leaves an
+  rtpengine session behind, and rtpengine commands time out after 5 seconds, so a
+  lost reply cannot hang a call or hold its place in the account's call limit.
+- **Session tokens** — on deployments with separate SBC and feature servers, a
+  small clock difference between the hosts could leave an outbound call answered
+  with no audio. Session tokens now allow up to two seconds of clock skew
+  (drachtio 10.1.8, mediajam 0.5.14).
 - **Media timeout** — `JAMBONES_MEDIA_TIMEOUT_MS` now ends calls on mediajam
   feature servers.
 - **Dialogflow** — a [dialogflow](/verbs/verbs/dialogflow) verb with no TTS vendor
@@ -107,6 +152,12 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
 - **Billing** — after a failed renewal the portal shows the suspended
   subscription and asks for a new card, instead of offering an upgrade that
   created a second subscription.
+- **Recent Calls pcap download** — a download the client abandons no longer leaves
+  connections to HOMER open, and requests to HOMER time out after 30 seconds.
+- **Forced password change** — on jambonz.cloud, a user created with a temporary
+  password is now asked to set a new one at first sign-in. The Create password
+  page asks for the temporary password again instead of keeping it in browser
+  storage.
 - **Portal** — the call logs panel tells a failed request apart from a call with
   no logs.
 - **License keys** — whitespace pasted with a license key is trimmed.
@@ -135,11 +186,11 @@ a set of [agent](/verbs/verbs/agent), answering machine detection and
 | Component | 11.1.5 | 11.1.6 |
 |---|---|---|
 | jambonz | 11.1.5 | **11.1.6** |
-| mediajam | 0.5.8 | **0.5.10** |
-| drachtio | 10.1.5 | **10.1.6** |
+| mediajam | 0.5.8 | **0.5.14** |
+| drachtio | 10.1.5 | **10.1.8** |
 | rtpengine | 14.1.1.8-jambonz14 | 14.1.1.8-jambonz14 |
 | jambonz OSS (sbc-*) | 0.9.12 | **0.9.14** |
-| upload-recordings | 1.9.1 | 1.9.1 |
+| upload-recordings | 1.9.1 | **1.9.2** |
 | monitoring-agent | 10.2.2 | 10.2.2 |
 | pcap-server | 1.0.4 | 1.0.4 |
 | heplify-server | 1.0.4 | 1.0.4 |
