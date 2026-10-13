@@ -140,6 +140,7 @@ The following LLMs are currently supported:
 - AssemblyAI Voice Agent
 - xAI Voice Agent
 - Azure Voice Live
+- Amazon Nova Sonic (Amazon Bedrock)
 
 ## OpenAI Realtime
 
@@ -635,6 +636,111 @@ With a non-multimodal model, Azure speech to text is active automatically. Set `
 <Note title="Avatar output is not supported">
 Voice Live's text to speech avatar requires a separate WebRTC SDP exchange with the service, which has no place in a SIP call. Setting `avatar` in `session_update` will not produce video.
 </Note>
+
+## Amazon Nova Sonic
+
+Set `vendor: 'nova'` to use [Amazon Nova Sonic](https://docs.aws.amazon.com/nova/latest/nova2-userguide/using-conversational-speech.html) (Nova 2 Sonic and Nova 2.5 Sonic) on Amazon Bedrock. Nova Sonic is not reached over a websocket: the media server opens a Bedrock bidirectional stream (`InvokeModelWithBidirectionalStream`) signed with the AWS credentials you supply. This vendor requires the mediajam media server.
+
+```js
+session.llm({
+  vendor: 'nova',
+  model: 'amazon.nova-2-5-sonic',
+  auth: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: 'us-east-1'
+  },
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  llmOptions: {
+    systemPrompt: 'You are a friendly, helpful voice assistant on a phone call. Keep answers short.',
+    greeting: 'Greet the caller warmly and ask how you can help today.',
+    sessionStart: {
+      turnDetectionConfiguration: { endpointingSensitivity: 'MEDIUM' }
+    },
+    promptStart: {
+      audioOutputConfiguration: { voiceId: 'tiffany' }
+    }
+  }
+});
+```
+
+### Model selection
+
+`model` is the Bedrock model id and defaults to `amazon.nova-2-5-sonic`. `amazon.nova-2-sonic-v1:0` also works. Nova Sonic is available in `us-east-1`, `us-west-2`, `eu-north-1` and `ap-northeast-1`.
+
+### Authentication
+
+`auth.accessKeyId` and `auth.secretAccessKey` are required; add `auth.sessionToken` for temporary STS credentials. `auth.region` defaults to `us-east-1`. The IAM principal needs `bedrock:InvokeModelWithBidirectionalStream` on the model. jambonz never falls back to the server's own AWS identity.
+
+### llmOptions
+
+<ParamField path="llmOptions.systemPrompt" type="string" required={false}>
+  System instructions, sent as Nova's SYSTEM text content.
+</ParamField>
+
+<ParamField path="llmOptions.speechPrompt" type="string" required={false}>
+  Sent right after the system prompt with role `SYSTEM_SPEECH`. It controls the script Nova uses for Hindi transcription and responses, and accepts only one of the three fixed sentences in the [Nova system prompt guide](https://docs.aws.amazon.com/nova/latest/nova2-userguide/sonic-system-prompts.html) (Latin, Devanagari or mixed script).
+</ParamField>
+
+<ParamField path="llmOptions.history" type="array" required={false}>
+  Prior turns as `{role: 'user' | 'assistant', content}`, sent before the audio starts. jambonz applies Nova's rules: consecutive turns with the same role are merged, leading assistant turns are dropped (history must start with the user), and the total is capped at 200KB by dropping the oldest turns.
+</ParamField>
+
+<ParamField path="llmOptions.greeting" type="string" required={false}>
+  Nova waits for the caller to speak first. Set a greeting to send a user text turn as soon as the audio starts, so the agent opens the conversation.
+</ParamField>
+
+<ParamField path="llmOptions.sessionStart" type="object" required={false}>
+  Merged into Nova's `sessionStart` event: `inferenceConfiguration` (`maxTokens`, `topP`, `temperature`) and `turnDetectionConfiguration.endpointingSensitivity` (`HIGH`, `MEDIUM` or `LOW`).
+</ParamField>
+
+<ParamField path="llmOptions.promptStart" type="object" required={false}>
+  Merged into Nova's `promptStart` event. Use `audioOutputConfiguration.voiceId` to pick a voice (default `matthew`), `toolConfiguration.tools` for tools in Nova's `toolSpec` shape (`inputSchema.json` is a JSON string), and `toolConfiguration.toolChoice` to steer tool use: `{auto: {}}` (default), `{any: {}}` or `{tool: {name: 'get_weather'}}`. In our testing `amazon.nova-2-sonic-v1:0` honors a forced tool, while `amazon.nova-2-5-sonic` accepts `toolChoice` but does not force the call. jambonz sets the `promptName` and the audio format.
+</ParamField>
+
+<ParamField path="llmOptions.dtmf" type="object" required={false}>
+  Nova has no keypad input. Set `dtmf: {enable: true, ...}` and jambonz collects the caller's digits using the gather verb's options (`finishOnKey`, `numDigits`, `minDigits`, `maxDigits`, `interDigitTimeout`, `timeout`) and sends each completed entry to Nova as a user text turn.
+</ParamField>
+
+A system prompt or any other text over Nova's 50KB per-event limit is split across several `textInput` events for you.
+
+### Voices
+
+| Locale | Feminine | Masculine |
+|---|---|---|
+| English (US) | `tiffany` | `matthew` |
+| English (UK) | `amy` | |
+| English (Australia) | `olivia` | |
+| English (India) / Hindi | `kiara` | `arjun` |
+| French | `ambre` | `florian` |
+| Italian | `beatrice` | `lorenzo` |
+| German | `tina` | `lennart` |
+| Spanish (US) | `lupe` | `carlos` |
+| Portuguese (Brazil) | `carolina` | `leo` |
+
+`tiffany` and `matthew` are polyglot: they speak all of Nova's languages, so the voice stays the same if the caller switches language.
+
+### Audio format
+
+Caller audio is sent to Nova as 16 kHz pcm16 and Nova's speech is received as 24 kHz pcm16. jambonz sets both rates, so a `sampleRateHertz` in `promptStart` is overridden.
+
+### Tool calls
+
+MCP tools and the handoff and hangup tools are added to `toolConfiguration.tools` for you. When Nova emits a `toolUse` event, jambonz calls your `toolHook` with `tool_call_id` (Nova's `toolUseId`), `name` and `args`. Reply with any JSON object; it is returned to Nova as the tool result. To report a failure, return something like `{error: 'order not found'}`. Nova waits until every tool call has a result, so if no `toolHook` is configured jambonz answers the call with an error result rather than leaving it open. Tool calls are asynchronous: Nova can keep talking while your hook runs.
+
+### Events
+
+The `eventHook` receives Nova's own events, `{event: {<name>: {...}}}`: `completionStart`, `contentStart`, `textOutput` (the caller's transcript and the agent's text), `toolUse`, `contentEnd`, `completionEnd`, `usageEvent`, `userSpeechStart` / `userSpeechEnd` (sent by Nova 2.5 when the caller starts and stops speaking) and `error`, plus jambonz's `output_audio.playback_started` / `output_audio.playback_stopped`. Filter with `events` using these names. As with every jambonz hook payload, keys arrive snake_cased: `{event: {text_output: {content_id, role, content}}}`, `content_start`, `additional_model_fields` and so on.
+
+### Updating the session mid-call
+
+Send `llm:update` with `{text: '...'}` to inject a user turn as text (Nova answers it in speech), or with a raw `{event: {...}}`, which is forwarded with the session's `promptName` filled in.
+
+### Long calls
+
+Bedrock ends each bidirectional stream after 8 minutes. jambonz renews the stream before then, at a moment when the agent is not speaking. It replays the setup and the conversation so far as text history, so the call continues without a break. A caller speaking at the exact moment of renewal may need to repeat themselves.
 
 ## ElevenLabs Agents
 
