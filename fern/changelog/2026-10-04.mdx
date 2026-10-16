@@ -239,6 +239,63 @@ deployments.
   kept after the stack is deleted; remove them yourself when you no longer need
   them.
 
+#### Self-hosted on Azure (Terraform)
+
+The 11.1.6 Azure Terraform modules bring the same SOC 2 controls to Azure. The
+medium and large modules also spread every tier across availability zones, so a
+deployment survives the loss of one zone.
+
+**Key changes**
+
+1. **SSH closed by default** — `allowed_ssh_cidr` has no default; supply your IP as
+   a `/32` or your VPN range.
+1. **Only the ports each server needs** — on medium and large, each server role has
+   its own network security group that lists its ports and denies all other traffic
+   from inside the virtual network (Azure otherwise allows all traffic within a
+   virtual network). Internal ports, including the API on 3000, are no longer
+   reachable from the internet. On mini, Homer (9080) and port 3000 are no longer
+   open.
+1. **No secrets in custom data** — on medium and large every secret is kept in Key
+   Vault and each VM reads the ones it needs at boot with its managed identity. On
+   mini the JWT secret and MySQL password are generated on the VM at first boot, and
+   the optional apiban and Krisp keys go in a Key Vault created only when one is set.
+   Setup scripts no longer echo their commands, so no secret appears in the setup log.
+1. **Least-privilege identity (medium, large)** — the managed identity no longer
+   holds Network Contributor or Virtual Machine Contributor; it can only read secrets.
+1. **Availability zones (medium, large)** — `zones` (default `["1","2","3"]`) spreads
+   SIP and RTP servers (large) or SBCs (medium) across zones, balances the feature
+   server and recording scale sets, makes public IPs and the recording load balancer
+   zone-redundant, and keeps a zone-redundant MySQL standby with automatic failover.
+   Set `zones = []` in a region without availability zones.
+1. **Database protection (medium, large)** — MySQL logs connections (logins, logouts,
+   failed logins) to Log Analytics and has a `CanNotDelete` lock
+   (`mysql_delete_lock`). Backups are kept for 30 days and storage is always
+   encrypted.
+1. **Private Redis (medium, large)** — public network access is disabled; the
+   virtual network reaches Redis through a private endpoint.
+1. **Centralized logs with retention** — a Log Analytics workspace keeps syslog
+   (including SSH logins) and the jambonz application logs for `log_retention_days`
+   (90 by default; 180 and 365 are allowed), collected by the Azure Monitor Agent on
+   every VM and scale set.
+1. **Fixes (large)** — recording servers now have outbound internet access, so
+   recordings can be uploaded to your storage; and with more than one RTP server the
+   SBCs no longer fail every call, because they now find RTP servers through Redis.
+
+**Before you deploy or update**
+
+- `allowed_ssh_cidr` is required.
+- Medium and large default to two SIP and two RTP servers (large) or two SBCs
+  (medium), two feature servers, and a General Purpose MySQL SKU
+  (`GP_Standard_D2ds_v4`), because zone-redundant MySQL does not support Burstable
+  SKUs. These add cost; to keep a Burstable SKU set `mysql_high_availability = false`.
+- On an existing deployment, adding zones replaces the public IPs, VMs and scale
+  sets, so **the SBC addresses your carriers allow-list change**. Set `zones = []`
+  to keep the current layout.
+- `terraform destroy` removes the MySQL delete lock first; deleting the resource
+  group any other way fails until you remove it. If a destroy fails with
+  `InUseSubnetCannotBeDeleted`, wait a few minutes and run it again.
+- The modules need the `azurerm` provider 4.55 or later; run `terraform init -upgrade`.
+
 #### Upgrade Notes (self-hosted)
 
 - **Database** — 11.1.6 adds the `alert_hooks` table and three columns; run the
@@ -278,6 +335,10 @@ deployments.
 
 **self-hosted on AWS** - available now: CloudFormation templates and public AMIs for
 all nine server types in 30 regions, amd64 and arm64.
+
+**self-hosted on Azure** - available now: Terraform modules for mini, medium and
+large, with community gallery images for all nine server types in 30 regions (amd64)
+and 29 regions (arm64).
 
 **self-hosted Debian packages** - available now: install `jambonz-mini` 11.1.6 from the
 jambonz apt repository (Debian 12 bookworm), amd64 and arm64.
