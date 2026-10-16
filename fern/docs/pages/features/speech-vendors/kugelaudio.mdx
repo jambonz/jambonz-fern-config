@@ -1,0 +1,87 @@
+---
+title: KugelAudio
+subtitle: Text-to-speech models, options and notes for KugelAudio.
+---
+
+jambonz supports [KugelAudio](https://kugelaudio.com) for **text-to-speech** (vendor `kugelaudio`), both for `say` and for [TTS streaming](/guides/features/tts-streaming), including the `agent` verb. `say` uses KugelAudio's `/v1/tts/generate` endpoint, and streaming uses its `/ws/tts/stream` websocket. KugelAudio has no speech-to-text in jambonz.
+
+To create a credential, add your KugelAudio API key in the portal under **Account → Speech → Add speech service → KugelAudio**. The portal's **Test** button checks the key by listing your voices and synthesizing a short phrase.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "kugelaudio",
+    "language": "de-DE",
+    "voice": "1071",
+    "options": {
+      "speed": 1.1,
+      "normalize": true
+    }
+  }
+}
+```
+
+### Models
+
+Pick the model on the speech credential in the portal, or override it for one verb with `synthesizer.options.model_id`.
+
+| Model | Notes |
+|---|---|
+| `kugel-3` | The only model in the portal list. Used when no model is set. |
+
+`voice` is a KugelAudio voice ID. The portal fetches the voice list from your account and lists each voice under every language it supports. For the catalog and supported languages, see [KugelAudio's documentation](https://docs.kugelaudio.com).
+
+### Options
+
+Pass these in `synthesizer.options`, or set them on the speech credential under **Extra Options**. Unless noted, each option is sent on both the `say` and the streaming path. See the notes below and [Speech Vendors](/guides/features/speech-vendors/overview) for how verb and credential options combine.
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate. Sent to KugelAudio as `speed`.
+</ParamField>
+
+<ParamField path="cfg_scale" type="number" required={false}>
+  Expressiveness. Higher values are more expressive. Sent to KugelAudio as `cfg_scale`.
+</ParamField>
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature. When unset, KugelAudio uses its own default.
+</ParamField>
+
+<ParamField path="normalize" type="boolean" required={false}>
+  Spell out numbers, dates and currencies before synthesis.
+</ParamField>
+
+<ParamField path="project_id" type="number" required={false}>
+  The KugelAudio project whose pronunciation dictionaries apply.
+</ParamField>
+
+<ParamField path="dictionary_ids" type="array" required={false}>
+  IDs of the pronunciation dictionaries to apply, e.g. `[7, 9]`. An empty array means no dictionaries, which is different from leaving the option out. See KugelAudio's documentation for how this relates to `project_id`.
+</ParamField>
+
+<ParamField path="api_uri" type="string" required={false}>
+  The KugelAudio host to use instead of `api.kugelaudio.com`, e.g. `api.eu.kugelaudio.com` to pin a region. On the credential, it also sets where the portal fetches the voice list.
+</ParamField>
+
+<ParamField path="model_id" type="string" required={false}>
+  Model to use for this verb instead of the credential's.
+</ParamField>
+
+<ParamField path="api_key" type="string" required={false}>
+  (Streaming only) API key to use instead of the credential's. `say` always uses the credential's key.
+</ParamField>
+
+### Notes
+
+- **Extra Options on the credential apply to streaming only.** For `say`, jambonz reads options from the verb alone and never uses the credential's Extra Options, even when the verb sets none. When streaming, the two are merged by top-level key and the verb wins.
+- **Set `api_uri` on the verb for `say`.** Because `say` ignores Extra Options, a region pinned only on the credential applies to streaming and the voice list, but `say` still goes to `api.kugelaudio.com`.
+- **Portal defaults.** When you turn on Extra Options, the portal fills in `speed: 1.0`, `cfg_scale: 2.0` and `normalize: true`. These are starting values, not defaults jambonz applies.
+- **`language` is trimmed and filtered.** jambonz sends only the part before any hyphen, lowercased, so `de-DE` is sent as `de`. If that code is not one KugelAudio accepts, or no language is set, jambonz leaves `language` out and the voice's own language applies. KugelAudio uses the language for text normalization.
+- **Sample rates.** `say` receives 16 kHz audio, which jambonz resamples to the call's rate. Streaming asks for the call's own rate when KugelAudio offers it (8, 16, 22.05, 24 or 44.1 kHz), so a G.711 call needs no resampling. Other rates get 16 kHz audio.
+- **Streaming.** One websocket connection serves every turn of the call, so there is no connection setup in front of each turn's first audio.
+- **Barge-in.** KugelAudio has a native cancel. jambonz sends it on barge-in and discards any audio from the cancelled turn that arrives before KugelAudio confirms it. Text for the next turn is not lost.
+- **Word timestamps.** KugelAudio returns word timing while streaming, so jambonz can track how much of a response the caller heard. See [TTS streaming](/guides/features/tts-streaming).

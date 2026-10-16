@@ -1,0 +1,177 @@
+---
+title: Speechmatics
+subtitle: Speech-to-text models, options and notes for Speechmatics realtime and the Speechmatics Voice Agent API.
+---
+
+jambonz supports Speechmatics for **speech-to-text** through two vendors. `speechmatics` uses Speechmatics' classic realtime API, where jambonz ends each turn on a silence trigger. `speechmaticsagent` uses the Speechmatics Voice Agent API, where Speechmatics decides when the caller has finished speaking. Each needs its own speech credential. jambonz does not support Speechmatics text-to-speech.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "speechmatics",
+    "language": "en-US",
+    "hints": ["jambonz", "drachtio"],
+    "speechmaticsOptions": {
+      "transcription_config": {
+        "model": "enhanced",
+        "conversation_config": {
+          "end_of_utterance_silence_trigger": 0.7
+        }
+      }
+    }
+  }
+}
+```
+
+### Models
+
+Set the model in `speechmaticsOptions.transcription_config.model`, for example `standard` or `enhanced`. See Speechmatics' [model documentation](https://docs.speechmatics.com/speech-to-text/models) for the current list. If you set neither `model` nor `operating_point`, jambonz sends no model and Speechmatics uses its own default.
+
+The endpoint is chosen on the speech credential: EU2 (`eu2.rt.speechmatics.com`, on-demand), EU1 (`neu.rt.speechmatics.com`, enterprise), US1 (`wus.rt.speechmatics.com`, enterprise), or the host of an on-prem Speechmatics container. A credential with no endpoint uses `eu2.rt.speechmatics.com`.
+
+### Options
+
+Pass these in `recognizer.speechmaticsOptions`. All except `translation_config` sit inside `transcription_config`.
+
+<ParamField path="transcription_config.model" type="string" required={false}>
+  The model. Takes precedence over `operating_point` if both are set.
+</ParamField>
+
+<ParamField path="transcription_config.operating_point" type="string" required={false}>
+  Deprecated by Speechmatics in favour of `model`. `standard` or `enhanced`.
+</ParamField>
+
+<ParamField path="transcription_config.conversation_config.end_of_utterance_silence_trigger" type="number" required={false}>
+  Seconds of silence after which Speechmatics reports the end of an utterance, which ends the turn. Default: `0.5`. Set `0` to turn end-of-utterance detection off. If you also set `max_delay`, jambonz lowers this to just under `max_delay`, following Speechmatics' guidance.
+</ParamField>
+
+<ParamField path="transcription_config.max_delay" type="number" required={false}>
+  The longest Speechmatics may wait, in seconds, before returning a final transcript.
+</ParamField>
+
+<ParamField path="transcription_config.max_delay_mode" type="string" required={false}>
+  `fixed` or `flexible`.
+</ParamField>
+
+<ParamField path="transcription_config.domain" type="string" required={false}>
+  A domain-specific language pack, where Speechmatics offers one.
+</ParamField>
+
+<ParamField path="transcription_config.output_locale" type="string" required={false}>
+  Locale for spelling and formatting, such as `en-GB`.
+</ParamField>
+
+<ParamField path="transcription_config.diarization" type="string" required={false}>
+  Diarization mode, such as `speaker`.
+</ParamField>
+
+<ParamField path="transcription_config.speaker_diarization_config.speaker_sensitivity" type="number" required={false}>
+  (With `diarization`) How readily Speechmatics detects a new speaker.
+</ParamField>
+
+<ParamField path="transcription_config.speaker_diarization_config.max_speakers" type="number" required={false}>
+  (With `diarization`) The most speakers to detect.
+</ParamField>
+
+<ParamField path="transcription_config.enable_entities" type="boolean" required={false}>
+  Include entity details, such as numbers and dates, in the results.
+</ParamField>
+
+<ParamField path="transcription_config.punctuation_overrides.permitted_marks" type="array" required={false}>
+  The punctuation marks Speechmatics may insert, e.g. `[".", ",", "?"]`.
+</ParamField>
+
+<ParamField path="transcription_config.punctuation_overrides.sensitivity" type="number" required={false}>
+  `0` to `1`. Higher values add more punctuation.
+</ParamField>
+
+<ParamField path="transcription_config.audio_filtering_config.volume_threshold" type="number" required={false}>
+  Ignore audio quieter than this, such as background speech.
+</ParamField>
+
+<ParamField path="transcription_config.transcript_filtering_config.remove_disfluencies" type="boolean" required={false}>
+  Remove hesitations such as "um" and "uh". English only.
+</ParamField>
+
+<ParamField path="transcription_config.transcript_filtering_config.replacements" type="array" required={false}>
+  Replacement rules applied to the transcript. Each entry has `from` (a word or a `/regex/`) and `to`, e.g. `[{"from": "jam bonds", "to": "jambonz"}]`.
+</ParamField>
+
+<ParamField path="translation_config.target_languages" type="array" required={false}>
+  Languages to translate the transcript into. See the Notes below before relying on this.
+</ParamField>
+
+<ParamField path="translation_config.enable_partials" type="boolean" required={false}>
+  Request partial translations.
+</ParamField>
+
+These are accepted by the verb but have no effect with `speechmatics`:
+
+- `host`: set the endpoint on the speech credential instead.
+- `profile`: applies to `speechmaticsagent` only.
+- `transcription_config.language`: use the recognizer's `language`.
+- `transcription_config.additional_vocab`: use the recognizer's `hints`.
+- `transcription_config.enable_partials`: use the recognizer's `interim`.
+- `audio_events_config`.
+
+### Notes
+
+- **`language` is trimmed.** jambonz sends only the part before any hyphen, so `en-US` is sent as `en`. With no language it sends `en`. See Speechmatics' [language list](https://docs.speechmatics.com/speech-to-text/languages).
+- **Use `hints` for custom vocabulary.** Each hint is sent to Speechmatics as an `additional_vocab` entry. Pass plain strings; `hintsBoost` has no effect.
+- **Turn-taking.** Speechmatics returns final transcripts a few words at a time. In `gather` and `transcribe`, jambonz collects them and ends the turn when Speechmatics reports the end of an utterance. If that report never arrives, the turn ends after 1.2 seconds with no new transcript, or after `max_delay` if that is shorter.
+- **Translation results are not delivered.** jambonz sends `translation_config` to Speechmatics, but the translations it returns are not currently passed back to your application.
+- **Audio is sent at the call's sample rate.**
+
+## Speechmatics Voice Agent API (`speechmaticsagent`)
+
+The `speechmaticsagent` vendor uses the Speechmatics Voice Agent API. Speechmatics runs its own turn detection and tells jambonz when the caller starts and finishes a turn, so the [`agent`](/verbs/verbs/agent) verb uses those events directly instead of a silence timer. See [Voice Agents](/guides/features/voice-agents).
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "speechmaticsagent",
+    "language": "en",
+    "speechmaticsOptions": {
+      "profile": "smart"
+    }
+  }
+}
+```
+
+It takes the same `speechmaticsOptions` object as `speechmatics`.
+
+### Models
+
+| Model | Notes |
+|---|---|
+| `linden-1` | Used when `transcription_config.model` is not set. The agent endpoint rejects a session with no model, so jambonz always sends one. |
+
+The endpoint is chosen on the speech credential: Global (`global.rt.speechmatics.com`, routes to the nearest region), EU (`eu.rt.speechmatics.com`), US (`us.rt.speechmatics.com`), or an on-prem host. A credential with no endpoint uses Global.
+
+### Options
+
+<ParamField path="profile" type="string" required={false}>
+  The turn detection profile: `adaptive`, `agile`, `smart` or `external`. Default: `smart`. With `smart`, jambonz treats Speechmatics' smart-turn prediction as an early end-of-turn signal. With `adaptive`, it uses Speechmatics' end-of-turn prediction when the predicted wait is 0.5 seconds or less.
+</ParamField>
+
+<ParamField path="host" type="string" required={false}>
+  An endpoint host that overrides the credential's, e.g. `eu.rt.speechmatics.com`. A host name only, with no scheme or path.
+</ParamField>
+
+These `transcription_config` options work as described for `speechmatics` above: `model`, `domain`, `output_locale`, `diarization`, `speaker_diarization_config`, `enable_entities`, `punctuation_overrides`, `audio_filtering_config` and `transcript_filtering_config`. The recognizer's `hints` are sent as `additional_vocab`.
+
+### Notes
+
+- **Silence-based options do not apply.** `conversation_config`, `max_delay` and `max_delay_mode` have no effect; Speechmatics decides when the turn ends.
+- **`operating_point` has no effect.** Use `model`.
+- **`translation_config` and `audio_events_config` have no effect.**
+- **`language` is trimmed** to the part before any hyphen, and defaults to `en`.
+- **Audio is sent at 16 kHz**, because `linden-1` rejects 8 kHz audio. jambonz resamples 8 kHz calls.

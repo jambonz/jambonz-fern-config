@@ -1,0 +1,108 @@
+---
+title: AssemblyAI
+subtitle: Speech-to-text models, options and notes for AssemblyAI.
+---
+
+jambonz supports AssemblyAI for **speech-to-text** (vendor `assemblyai`), using AssemblyAI's streaming API. AssemblyAI has no text-to-speech. For AssemblyAI's speech-to-speech Voice Agent, see the [AssemblyAI Voice Agent tutorial](/tutorials/voice-ai-examples/assembly-ai-voice-agent).
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "assemblyai",
+    "assemblyAiOptions": {
+      "speechModel": "universal-3-6-pro",
+      "languageCodes": ["en", "es"],
+      "voiceFocus": "near-field"
+    }
+  }
+}
+```
+
+### Models
+
+Set the model in `assemblyAiOptions.speechModel`, or on the speech credential in the portal.
+
+| Model | Languages | Notes |
+|---|---|---|
+| `universal-3-6-pro` | 32, detected automatically | Recommended. Default for new speech credentials. |
+| `universal-3-5-pro` | 19, detected automatically | |
+| `u3-rt-pro` | English, Spanish, French, German, Italian, Portuguese | Used when neither the verb nor the credential names a model. |
+| `whisper-rt` | See AssemblyAI | In our testing it returned only a final transcript for each turn, with no interim results. |
+| `universal-streaming-english` | English | Legacy. Audio is sent at 8 kHz. In our testing, its end-of-turn decisions are noticeably less confident than the Pro models. |
+| `universal-streaming-multilingual` | See AssemblyAI | Legacy. Audio is sent at 8 kHz. |
+
+All models except the two `universal-streaming` ones receive audio at 16 kHz.
+
+If the verb doesn't set a model, jambonz uses the model saved on the speech credential. A credential with no saved model uses `u3-rt-pro`. That fallback is deliberate: credentials created before `universal-3-6-pro` existed keep running on the model they were tested with.
+
+### Options
+
+Pass these in `recognizer.assemblyAiOptions`.
+
+<ParamField path="speechModel" type="string" required={false}>
+  The model; see the table above.
+</ParamField>
+
+<ParamField path="languageCodes" type="array" required={false}>
+  (Universal-3.5 Pro and Universal-3.6 Pro) Languages to bias transcription toward, e.g. `["en", "es"]`. The model can still switch between the listed languages mid-utterance. Without this, Universal-3.6 Pro considers all of its 32 languages.
+</ParamField>
+
+<ParamField path="voiceFocus" type="string" required={false}>
+  Isolate the primary speaker and suppress background voices and noise before transcription. `near-field` suits phones and headsets; `far-field` suits distant microphones. Off by default.
+</ParamField>
+
+<ParamField path="keyterms" type="array" required={false}>
+  Names, brands or terms to boost, e.g. `["jambonz", "drachtio"]`.
+</ParamField>
+
+<ParamField path="prompt" type="string" required={false}>
+  Text describing what the caller is likely to say, such as the question you just asked. See also the recognizer's `autogeneratePrompt` property, which fills this in from the `say` nested in a `gather`. AssemblyAI's [prompting guide](https://www.assemblyai.com/docs/streaming/universal-3-pro/prompting) recommends extending the default prompt rather than replacing it.
+</ParamField>
+
+<ParamField path="formatTurns" type="boolean" required={false}>
+  Return punctuated, formatted transcripts. Default: `true`.
+</ParamField>
+
+<ParamField path="endOfTurnConfidenceThreshold" type="number" required={false}>
+  Confidence (0.0–1.0) the model needs before it ends a turn.
+</ParamField>
+
+<ParamField path="minEndOfTurnSilenceWhenConfident" type="number" required={false}>
+  Silence (milliseconds) after the last word before a confident end of turn. AssemblyAI default: `400`.
+</ParamField>
+
+<ParamField path="minTurnSilence" type="number" required={false}>
+  Minimum silence (milliseconds) before a turn can end.
+</ParamField>
+
+<ParamField path="maxTurnSilence" type="number" required={false}>
+  Silence (milliseconds) after which a turn always ends. AssemblyAI default: `1280`.
+</ParamField>
+
+<ParamField path="vadThreshold" type="number" required={false}>
+  Voice activity detection threshold.
+</ParamField>
+
+<ParamField path="languageDetection" type="boolean" required={false}>
+  Include `language_code` and `language_confidence` in each transcript. This only affects reporting, not which languages are recognized.
+</ParamField>
+
+<ParamField path="inactivityTimeout" type="number" required={false}>
+  Seconds without audio before AssemblyAI closes the session.
+</ParamField>
+
+<ParamField path="apiKey" type="string" required={false}>
+  API key to use instead of the speech credential's.
+</ParamField>
+
+### Notes
+
+- **`language` is not sent to AssemblyAI.** The Pro models detect the language themselves. To steer them, use `languageCodes`.
+- **Use `keyterms`, not `hints`.** The recognizer's generic `hints` property has no effect with AssemblyAI.
+- **`serviceVersion` is ignored.** jambonz always uses AssemblyAI's v3 streaming API.
+- **Turn-taking.** AssemblyAI decides when the caller has finished speaking, so the `agent` verb can use its end-of-turn events directly. See [Voice Agents](/guides/features/voice-agents).

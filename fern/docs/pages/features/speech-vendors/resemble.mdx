@@ -1,0 +1,54 @@
+---
+title: Resemble
+subtitle: Text-to-speech voices, options and notes for Resemble AI.
+---
+
+jambonz supports Resemble AI for **text-to-speech** (vendor `resemble`). Resemble has no speech-to-text in jambonz, so the portal does not offer **Use for STT** for it.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "resemble",
+    "voice": "your-voice-uuid",
+    "options": {
+      "project_uuid": "your-project-uuid",
+      "use_hd": true
+    }
+  }
+}
+```
+
+### Models
+
+There is no model choice. The voice determines what Resemble synthesizes.
+
+### Voices
+
+Set `synthesizer.voice` to a Resemble voice UUID. The portal lists voices by name; you can also find UUIDs in your [Resemble](https://app.resemble.ai) account.
+
+### Options
+
+Pass these in `synthesizer.options`.
+
+<ParamField path="project_uuid" type="string" required={false}>
+  UUID of the Resemble project to store the generated clip in. Omit it unless you want clips filed under a particular project.
+</ParamField>
+
+<ParamField path="use_hd" type="boolean" required={false}>
+  Higher-definition synthesis, at some cost in latency. Off unless set.
+</ParamField>
+
+These generic synthesizer properties apply:
+
+- `voice`: required. Sent as the Resemble `voice_uuid`.
+- `language`: not sent. The voice determines the language.
+
+### Notes
+
+- **Set options on the verb.** The portal lets you save **Extra Options** on a Resemble credential, but jambonz does not read them. Put `project_uuid` and `use_hd` in `synthesizer.options` instead.
+- **No TTS streaming.** Resemble can't be used with [TTS streaming](/guides/features/tts-streaming). Each `say` is synthesized in full by Resemble's synchronous API, then played.
+- **Audio is 8 kHz MP3.** jambonz requests MP3 at 8 kHz from Resemble.

@@ -1,0 +1,129 @@
+---
+title: xAI
+subtitle: Speech-to-text and text-to-speech models, options and notes for xAI.
+---
+
+jambonz supports xAI for **speech-to-text** and **text-to-speech** (vendor `xai`). One xAI speech credential can be enabled for both. For xAI's speech-to-speech Voice Agent, see the [`llm`](/verbs/verbs/llm) verb.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "xai",
+    "language": "en-US",
+    "xaiOptions": {
+      "model": "grok-voice-transcribe-2.0",
+      "endpointing": 500,
+      "keyterms": ["jambonz", "drachtio"]
+    }
+  }
+}
+```
+
+### Models
+
+Set the model in `xaiOptions.model` or in the recognizer's `model` property, for example `grok-voice-transcribe-2.0` or `grok-voice-transcribe-1.0`. The speech credential has no model setting. If the verb doesn't name a model, jambonz sends none and xAI uses its current default.
+
+For supported languages, see the [xAI documentation](https://docs.x.ai/).
+
+### Options
+
+Pass these in `recognizer.xaiOptions`.
+
+<ParamField path="model" type="string" required={false}>
+  The transcription model; see above.
+</ParamField>
+
+<ParamField path="endpointing" type="integer" required={false}>
+  Milliseconds of silence (0–5000) before an utterance is final.
+</ParamField>
+
+<ParamField path="smartTurn" type="number" required={false}>
+  End-of-turn confidence threshold, 0.0–1.0.
+</ParamField>
+
+<ParamField path="smartTurnTimeout" type="integer" required={false}>
+  Milliseconds of silence (1–5000) after which xAI forces an end of turn.
+</ParamField>
+
+<ParamField path="keyterms" type="array" required={false}>
+  Terms to boost, e.g. `["jambonz", "drachtio"]`. At most 100 are sent.
+</ParamField>
+
+<ParamField path="diarize" type="boolean" required={false}>
+  Label each word with a speaker.
+</ParamField>
+
+<ParamField path="fillerWords" type="boolean" required={false}>
+  Include filler words such as "um" and "uh".
+</ParamField>
+
+<ParamField path="apiKey" type="string" required={false}>
+  API key to use instead of the speech credential's.
+</ParamField>
+
+### Notes
+
+- **`language` is shortened** to its language code (`en-US` becomes `en`). An empty language, or `any`, sends none.
+- **`hints` become `keyterms`** when `keyterms` isn't set. Only string hints are used.
+- **Interim results** are sent when the verb asks for them.
+- **Audio waits for xAI to be ready.** jambonz buffers up to about 10 seconds of audio until xAI signals the session is ready, then sends it, so the start of speech is not lost.
+- **Endpoint.** jambonz always connects to `wss://api.x.ai/v1/stt`.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Your balance is $42.50.",
+  "synthesizer": {
+    "vendor": "xai",
+    "language": "en",
+    "voice": "eve",
+    "options": {
+      "speed": 1.1,
+      "text_normalization": true
+    }
+  }
+}
+```
+
+### Models
+
+xAI text-to-speech has no model setting. Set `synthesizer.voice` to one of `eve`, `ara`, `leo`, `rex` or `sal`. If no voice is set, jambonz sends none and xAI uses its default.
+
+Set `synthesizer.language` to a language code such as `en`, `fr`, `pt-BR` or `es-MX`, or `auto`. If none is set, jambonz sends `auto`. See xAI's [voice documentation](https://docs.x.ai/developers/rest-api-reference/inference/voice) for supported languages.
+
+### Options
+
+Pass these in `synthesizer.options`.
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking-rate multiplier. `1.0` is normal speed; see xAI for the allowed range.
+</ParamField>
+
+<ParamField path="optimize_streaming_latency" type="number" required={false}>
+  Trades a little quality for a faster first audio chunk. `0` is off; see xAI for other values.
+</ParamField>
+
+<ParamField path="text_normalization" type="boolean" required={false}>
+  Convert written forms into spoken ones before synthesis, so `$42.50` is read as "forty-two dollars and fifty cents". See the warning below.
+</ParamField>
+
+<ParamField path="api_uri" type="string" required={false}>
+  Host of a different xAI endpoint, such as a proxy. Used only for streaming; `say` always uses `api.x.ai`.
+</ParamField>
+
+<Warning>
+**`text_normalization` is dropped when jambonz tracks what was spoken.** In the `agent` verb, or after the `config` verb's `trackTtsPlayout`, jambonz asks xAI for word-level timestamps so it can tell how much of a reply the caller heard before barging in. Normalization changes the words that are spoken, so the timestamps no longer match the text jambonz sent. In those cases jambonz leaves `text_normalization` off. If an agent needs numbers or currency read a particular way, write them out in the text.
+</Warning>
+
+### Notes
+
+- **Set options on the verb.** The portal shows **Extra Options** on an xAI credential, but those values are not saved with the credential and have no effect.
+- **Streaming.** xAI supports [TTS streaming](/guides/features/tts-streaming), so an LLM can drive it token by token. Barge-in cancels speech in progress without reconnecting.
+- **`with_timestamps` has no effect** when set in `synthesizer.options`. jambonz turns timestamps on itself, as described above.

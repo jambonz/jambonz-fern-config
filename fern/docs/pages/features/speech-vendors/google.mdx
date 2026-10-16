@@ -1,0 +1,223 @@
+---
+title: Google
+subtitle: Speech-to-text and text-to-speech models, options and notes for Google.
+---
+
+jambonz supports Google for both **speech-to-text** and **text-to-speech** (vendor `google`). Both use the service account key saved on the speech credential. For speech-to-text, jambonz can use Cloud Speech-to-Text v1, Cloud Speech-to-Text v2, or the Gemini live transcription models on Vertex AI. For text-to-speech, it can use standard Cloud Text-to-Speech voices, Chirp 3 HD voices, or Gemini TTS.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "google",
+    "language": "en-US",
+    "model": "telephony_short",
+    "hints": ["jambonz", "drachtio"],
+    "googleOptions": {
+      "serviceVersion": "v2"
+    }
+  }
+}
+```
+
+### Models
+
+Set the model in `recognizer.model`, or save a default in the credential's **Recognizer model** field in the portal. A model on the verb wins over the credential's.
+
+The model name picks the API:
+
+- A name starting with `gemini-` (for example `gemini-3.5-transcribe-live-preview`) goes to the Gemini live transcription API on Vertex AI. Name the model exactly as Vertex AI publishes it.
+- Any other name goes to Cloud Speech-to-Text. `googleOptions.serviceVersion` picks v1 (the default) or v2. jambonz passes the name through, so any model Google offers for that version works. See Google's model lists for [v1](https://cloud.google.com/speech-to-text/docs/transcription-model) and [v2](https://cloud.google.com/speech-to-text/v2/docs/transcription-model).
+
+If neither the verb nor the credential names a model, jambonz picks a Cloud Speech model. It never picks a Gemini model.
+
+| API | Verb | Default model |
+|---|---|---|
+| v1 | `gather` | `command_and_search` |
+| v1 | `transcribe` | `latest_long` |
+| v2 | `gather` | `telephony_short` |
+| v2 | `transcribe` | `long` |
+
+Some languages have their own default:
+
+- v1: `telephony` for `en-AU`, `en-GB`, `en-IN` and `en-NZ`; `default` for `es-DO` and `es-MX`.
+- v2: for `en-IN`, `telephony` in `gather` and `long` in `transcribe`.
+
+### Options
+
+Most Google settings are generic `recognizer` properties. These apply:
+
+<ParamField path="language" type="string" required={false}>
+  The BCP-47 language code, e.g. `en-US`. With a Gemini model, `auto` lets the model detect the language.
+</ParamField>
+
+<ParamField path="altLanguages" type="array" required={false}>
+  Other languages the caller may speak, e.g. `["es-US", "fr-CA"]`. With a Gemini model, they are added to the language list.
+</ParamField>
+
+<ParamField path="model" type="string" required={false}>
+  The model; see above.
+</ParamField>
+
+<ParamField path="hints" type="array" required={false}>
+  Phrases to boost. Either strings, or objects with a per-phrase boost: `[{"phrase": "jambonz", "boost": 20}]`. With a Gemini model and no `customVocabulary`, the phrases are sent as the custom vocabulary.
+</ParamField>
+
+<ParamField path="hintsBoost" type="number" required={false}>
+  Boost applied to the whole hint list.
+</ParamField>
+
+<ParamField path="punctuation" type="boolean" required={false}>
+  Turn on automatic punctuation.
+</ParamField>
+
+<ParamField path="profanityFilter" type="boolean" required={false}>
+  Mask profanity in transcripts.
+</ParamField>
+
+<ParamField path="words" type="boolean" required={false}>
+  Include word-level timestamps.
+</ParamField>
+
+<ParamField path="singleUtterance" type="boolean" required={false}>
+  Stop after the first utterance. Off unless set.
+</ParamField>
+
+<ParamField path="diarization" type="boolean" required={false}>
+  Turn on speaker diarization. Use `diarizationMinSpeakers` and `diarizationMaxSpeakers` to bound the speaker count.
+</ParamField>
+
+<ParamField path="separateRecognitionPerChannel" type="boolean" required={false}>
+  Recognize each channel separately when the audio has more than one channel.
+</ParamField>
+
+<ParamField path="enhancedModel" type="boolean" required={false}>
+  (v1) Use Google's enhanced model. jambonz turns this on unless you set it to `false`.
+</ParamField>
+
+<ParamField path="interactionType" type="string" required={false}>
+  (v1) Recognition metadata, e.g. `phone_call` or `voicemail`.
+</ParamField>
+
+<ParamField path="naicsCode" type="number" required={false}>
+  (v1) Recognition metadata: the industry [NAICS code](https://www.census.gov/naics/) of the audio.
+</ParamField>
+
+Put these in `recognizer.googleOptions`:
+
+<ParamField path="serviceVersion" type="string" required={false}>
+  Cloud Speech-to-Text version: `v1` (default) or `v2`. Ignored by Gemini models.
+</ParamField>
+
+<ParamField path="parentPath" type="string" required={false}>
+  (v2) Parent of the recognizer resource, e.g. `projects/my-project/locations/us-central1`. Defaults to `projects/<project_id>/locations/global`, using the project in the service account key. A location other than `global` also sends the request to that region's endpoint.
+</ParamField>
+
+<ParamField path="recognizerId" type="string" required={false}>
+  (v2) ID of a recognizer resource you created in Google Cloud. Without it, jambonz sends the full recognition config with each request.
+</ParamField>
+
+<ParamField path="speechStartTimeoutMs" type="number" required={false}>
+  (v2) Milliseconds to wait for speech to start.
+</ParamField>
+
+<ParamField path="speechEndTimeoutMs" type="number" required={false}>
+  (v2) Milliseconds of silence that end the speech.
+</ParamField>
+
+<ParamField path="enableVoiceActivityEvents" type="boolean" required={false}>
+  (v2) Ask Google for start-of-speech and end-of-speech events.
+</ParamField>
+
+<ParamField path="transcriptNormalization" type="array" required={false}>
+  (v2) Find-and-replace rules applied to transcripts, e.g. `[{"search": "jam bonds", "replace": "jambonz", "case_sensitive": false}]`.
+</ParamField>
+
+<ParamField path="mode" type="string" required={false}>
+  (Gemini) `VERBATIM` transcribes speech as spoken. `SMART` removes disfluencies and applies formatting. When you set languages and no mode, jambonz sends `VERBATIM`.
+</ParamField>
+
+<ParamField path="customVocabulary" type="array" required={false}>
+  (Gemini) Up to 1000 terms to bias recognition toward, e.g. `["jambonz", "drachtio"]`. Replaces `hints`.
+</ParamField>
+
+### Notes
+
+- **Gemini runs on Vertex AI.** jambonz signs in with the credential's service account, so you need no extra key. The Google Cloud project must have billing enabled, and the service account needs the `roles/aiplatform.user` role. jambonz always uses the `global` location. `parentPath` does not apply to Gemini models.
+- **Gemini limits.** Audio is sent at 16 kHz. Diarization and word timestamps are not available, so `diarization` and `words` are ignored.
+- **`SMART` mode ignores languages.** In `SMART` mode jambonz sends no language codes and the model detects the language.
+- **A v2 recognizer resource carries its own config.** With `recognizerId` set, jambonz sends only the streaming settings (`speechStartTimeoutMs`, `speechEndTimeoutMs`, `enableVoiceActivityEvents`, interim results). Language, model, hints and the other recognition settings come from the resource.
+- **v1-only settings.** `enhancedModel`, `interactionType` and `naicsCode` have no v2 equivalent and are ignored with v2. On v1, jambonz also tells Google the audio comes from a phone line.
+- **Use `case_sensitive` in `transcriptNormalization`.** A rule written with `caseSensitive` is treated as case-insensitive.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "google",
+    "language": "en-US",
+    "voice": "en-US-Chirp3-HD-Charon"
+  }
+}
+```
+
+### Models
+
+jambonz picks the Google API from the voice and model:
+
+| Mode | Used when | Notes |
+|---|---|---|
+| `tts` | Default | Standard Cloud Text-to-Speech voices, such as `en-US-Wavenet-D`. |
+| `live` | The voice name contains `-HD-`, e.g. `en-US-Chirp3-HD-Charon` | Chirp 3 HD voices, streamed from Google as they are synthesized. |
+| `gemini` | A model is set | Gemini TTS. Set the model in `synthesizer.options.model`, or in the credential's **Synthesizer model** field in the portal. The verb's model wins. |
+
+For Gemini, use any Gemini TTS model name, such as `gemini-2.5-flash-preview-tts`, and a Gemini voice name. See Google's [Gemini TTS docs](https://cloud.google.com/text-to-speech/docs/gemini-tts). For other voices, see Google's [voice list](https://cloud.google.com/text-to-speech/docs/list-voices-and-types).
+
+### Options
+
+Pass these in `synthesizer.options`.
+
+<ParamField path="model" type="string" required={false}>
+  A Gemini TTS model. Setting it switches to Gemini TTS.
+</ParamField>
+
+<ParamField path="apiMode" type="string" required={false}>
+  Force the mode: `tts`, `live` or `gemini`. By default jambonz picks it as described above. `gemini` needs a model.
+</ParamField>
+
+<ParamField path="prompt" type="string" required={false}>
+  Style instructions for Gemini TTS and Chirp 3 HD voices, e.g. `"Speak warmly and slowly."` The `say` verb's `instructions` property does the same; `prompt` wins if both are set. jambonz replaces commas in the prompt with semicolons.
+</ParamField>
+
+<ParamField path="speakingRate" type="number" required={false}>
+  Speaking rate, e.g. `1.2`. Also accepted as `speaking_rate`, or inside an `audioConfig` object. See the note below.
+</ParamField>
+
+<ParamField path="pitch" type="number" required={false}>
+  Pitch in semitones. See the note below.
+</ParamField>
+
+<ParamField path="volumeGainDb" type="number" required={false}>
+  Volume gain in dB. Also accepted as `volume_gain_db`. See the note below.
+</ParamField>
+
+These generic synthesizer properties apply:
+
+- `language`: required.
+- `voice`: the Google voice name. For Gemini, the Gemini voice name.
+
+### Notes
+
+- **`speakingRate`, `pitch` and `volumeGainDb` usually have no effect.** jambonz applies them only when it renders audio itself: when it pre-caches a prompt, or when the voice uses a voice cloning key. For normal playback the media server doesn't send them to Google.
+- **Gemini doesn't take SSML.** jambonz strips the tags and sends the text.
+- **`gender` has no effect.** jambonz doesn't pass `synthesizer.gender` to Google. Choose a voice by name instead.
+- **`engine` does not apply to Google.**
+- **TTS streaming uses standard mode only.** With [TTS streaming](/guides/features/tts-streaming), including the `agent` verb, jambonz sends only the voice and language. Gemini models, `apiMode` and `prompt` are not applied.
+- **Custom voices.** A Google custom voice saved in the portal with a voice cloning key is synthesized at 24 kHz and is not streamed.

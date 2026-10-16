@@ -1,0 +1,94 @@
+---
+title: Rime Labs
+subtitle: Text-to-speech models, options and notes for Rime Labs.
+---
+
+jambonz supports Rime Labs for **text-to-speech** (vendor `rimelabs`), both for `say` and for [TTS streaming](/guides/features/tts-streaming). jambonz does not support Rime Labs for speech-to-text.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "rimelabs",
+    "language": "eng",
+    "voice": "luna",
+    "options": {
+      "speedAlpha": 0.9
+    }
+  }
+}
+```
+
+### Models
+
+Pick the model on the speech credential in the portal, or override it for one verb with `synthesizer.options.model_id`.
+
+| Model | Notes |
+|---|---|
+| `arcana` | Takes the sampling options `temperature`, `top_p`, `repetition_penalty` and `max_tokens`. First in the portal list, so it is preselected for new credentials. |
+| `coda` | Takes `timeScaleFactor`. |
+| `mist` | Takes `speedAlpha` and `reduceLatency`. |
+| `mistv2` | Takes `speedAlpha` and `reduceLatency`. |
+| `v1` | Takes `speedAlpha` and `reduceLatency`. |
+
+A model is required. jambonz has no fallback, and a request without one fails.
+
+The portal loads the voice list for the credential's model from Rime. For the full catalog, see [Rime's documentation](https://docs.rime.ai).
+
+### Options
+
+Pass these in `synthesizer.options`, or set them on the speech credential under **Extra Options**. See [Speech Vendors](/guides/features/speech-vendors/overview) for how the two combine.
+
+The first group applies to `say` only. jambonz does not send them when you stream text with `tts:tokens`.
+
+<ParamField path="speedAlpha" type="number" required={false}>
+  (mist, mistv2, v1) Speaking rate. Values above `1.0` are slower and values below are faster, so `0.9` speeds the voice up.
+</ParamField>
+
+<ParamField path="reduceLatency" type="boolean" required={false}>
+  (mist, mistv2, v1) Reduce time to first audio, at the cost of some mispronounced digits and abbreviations.
+</ParamField>
+
+<ParamField path="temperature" type="number" required={false}>
+  (arcana) Sampling temperature. Higher values give more varied delivery.
+</ParamField>
+
+<ParamField path="top_p" type="number" required={false}>
+  (arcana) Nucleus sampling cutoff.
+</ParamField>
+
+<ParamField path="repetition_penalty" type="number" required={false}>
+  (arcana) Discourages repeated audio patterns.
+</ParamField>
+
+<ParamField path="max_tokens" type="number" required={false}>
+  (arcana) Caps the audio generated for one request.
+</ParamField>
+
+<ParamField path="timeScaleFactor" type="number" required={false}>
+  (coda) Playback speed. Values above `1.0` are slower and values below are faster.
+</ParamField>
+
+This option applies to streaming only:
+
+<ParamField path="segment" type="string" required={false}>
+  How Rime splits streamed text before synthesis: `immediate`, `never` or `bySentence`. `bySentence` usually gives the best prosody; `immediate` gives the lowest latency.
+</ParamField>
+
+<ParamField path="model_id" type="string" required={false}>
+  Model to use for this verb instead of the credential's.
+</ParamField>
+
+### Notes
+
+- **Options are model-specific.** Each option works only with the models named next to it. Check the credential's model before concluding a value is wrong.
+- **Credential and verb options don't merge for `say`.** If the verb sets any `options`, jambonz uses those alone and ignores the credential's Extra Options. When streaming, the two are merged and the verb wins on each key.
+- **`pauseBetweenBrackets`, `phonemizeBetweenBrackets` and `inlineSpeedAlpha` have no effect.** jambonz accepts them but sends none of them to Rime, in `say` or in streaming.
+- **Portal defaults.** When you turn on Extra Options, the portal fills in `speedAlpha: 1.0` and `reduceLatency: true`. These are starting values, not defaults jambonz applies.
+- **Streaming.** Streaming sends text over Rime's websocket API. jambonz asks for audio at the call's sample rate, so no resampling is needed. `say` asks for 16 kHz audio.
+- **Language.** When streaming without a `language`, jambonz sends `en`.
+- **Barge-in.** jambonz sends Rime a clear message to stop synthesis. Rime closes the connection at the end of each turn, so jambonz reconnects for the next one.
+- **Word timestamps.** Rime returns word timing while streaming, so jambonz can track how much of a response the caller heard. See [TTS streaming](/guides/features/tts-streaming).

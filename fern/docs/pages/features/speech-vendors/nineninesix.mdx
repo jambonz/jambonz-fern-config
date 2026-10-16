@@ -1,0 +1,45 @@
+---
+title: NineNineSix
+subtitle: Text-to-speech models, options and notes for NineNineSix.
+---
+
+jambonz supports [NineNineSix](https://nineninesix.ai) for **text-to-speech** (vendor `nineninesix`), both for `say` and for [TTS streaming](/guides/features/tts-streaming). NineNineSix has no speech-to-text in jambonz.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "nineninesix",
+    "language": "en-US",
+    "voice": "775e4dfd-819c-4325-92ec-250f487ef7e3"
+  }
+}
+```
+
+### Models
+
+Pick the model on the speech credential in the portal, or override it for one verb with `synthesizer.options.model_id`.
+
+| Model | Languages | Notes |
+|---|---|---|
+| `gepard-1.0` | `en-US`, `en-GB`, `es-MX`, `nl-NL`, `pt-BR` | The only model offered. Used when streaming without a model. |
+
+`voice` is a NineNineSix voice ID. The portal fetches the voice list from your account, grouped by language. For the catalog, see [NineNineSix](https://nineninesix.ai).
+
+### Options
+
+<ParamField path="model_id" type="string" required={false}>
+  Model to use for this verb instead of the credential's.
+</ParamField>
+
+jambonz sends NineNineSix only the model, voice, language and text. There are no other vendor options, and the portal offers no Extra Options for this vendor.
+
+### Notes
+
+- **Language.** When streaming without a `language`, jambonz sends `en`.
+- **Sample rates.** jambonz asks for raw audio at the call's sample rate, so no resampling is needed.
+- **Barge-in.** jambonz sends NineNineSix a cancel message and discards buffered audio. The cancel stops queued work but not generation already under way. NineNineSix generates much faster than real time, so a turn is usually complete by the time the cancel arrives.
+- **No word timestamps.** NineNineSix returns no word timing, so jambonz cannot track how much of a streamed response the caller heard.
