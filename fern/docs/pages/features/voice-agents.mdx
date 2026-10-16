@@ -248,6 +248,14 @@ When the timeout fires, the LLM is prompted with a system cue: *"The user has no
 
 Defaults to `12` seconds. Set to `0` to disable. The timer is cancelled if the user starts speaking.
 
+By default the agent keeps prompting for as long as the call lasts. To stop after a few unanswered prompts (a dead line, or a user who has walked away), set `noResponseMaxPrompts` (added in 11.1.6):
+
+```json
+{ "noResponseTimeout": 12, "noResponseMaxPrompts": 3 }
+```
+
+After that many prompts in a row with no reply, the agent ends and its `actionHook` receives `completion_reason: "no_response"`. The count resets whenever the user speaks.
+
 This also covers the "missed speech" case: when VAD detects speech but STT returns no transcript, the no-response timer handles the re-prompt.
 
 ## Greeting
