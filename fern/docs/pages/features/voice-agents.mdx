@@ -688,9 +688,10 @@ A `history_summarized` event is sent to the `eventHook`:
 
 The `noiseIsolation` property enables server-side noise cancellation on call audio, improving STT accuracy in noisy environments.
 
-Two vendors are available:
+Three vendors are available:
 - **`"krisp"`** — Krisp's proprietary noise cancellation. [Listen to audio samples](https://lab.krisp.ai/products/voice-isolation/audio-samples) to hear the model in action.
 - **`"rnnoise"`** — Open-source RNNoise-based noise cancellation. No API key required.
+- **`"kugelaudio"`** — KugelAudio Clarity, a cloud noise-removal service. Requires a KugelAudio API key; see [KugelAudio Clarity](#kugelaudio-clarity) below.
 
 <Note>
 Krisp noise isolation has the same licensing requirement as Krisp turn detection — see the [warning above](#krisp-turn-detection) for self-hosted licensing details.
@@ -716,6 +717,46 @@ Detailed configuration:
 
 - `level` — Suppression level 0–100. Higher values are more aggressive. Default: 100.
 - `direction` — `"read"` filters caller audio (default), `"write"` filters outbound audio.
+
+### KugelAudio Clarity
+
+KugelAudio Clarity removes background noise in KugelAudio's cloud: jambonz streams the call audio to KugelAudio and plays back the cleaned audio it returns.
+
+```json
+{ "noiseIsolation": "kugelaudio" }
+```
+
+**Credentials.** In the portal, add a KugelAudio speech credential (**Account → Speech**) and tick **Use for noise isolation**. jambonz uses the credential with no label unless you name one with `label`. To keep a separate key for noise isolation, give that credential a label and pass it:
+
+```json
+{
+  "noiseIsolation": {
+    "mode": "kugelaudio",
+    "label": "clarity"
+  }
+}
+```
+
+You can also pass the key on the verb with `auth`, in which case no credential is looked up:
+
+```json
+{
+  "noiseIsolation": {
+    "mode": "kugelaudio",
+    "auth": { "apiKey": "<your KugelAudio API key>" }
+  }
+}
+```
+
+If there is no key on the verb and no matching credential with **Use for noise isolation** ticked, noise isolation does not start, the call continues without it, and jambonz raises an alert.
+
+**Options.**
+- `model` — the Clarity model. Defaults to `clarity-1`.
+- `direction` — `"read"` (caller audio, default) or `"write"`, as for the other vendors.
+- `level` has no effect with KugelAudio.
+- To use a regional KugelAudio endpoint, set `apiUri` in `auth` (for example `api.eu.kugelaudio.com`), or `api_uri` in the credential's **Extra Options**.
+
+**Delay.** Because the audio makes a round trip to KugelAudio, the filtered audio runs a fixed delay behind the original, roughly the round-trip time. Until the first cleaned audio arrives, that direction is silent, so turn noise isolation on before the conversation starts rather than mid-sentence. If KugelAudio stops returning audio for more than a second, jambonz passes the unfiltered audio through and reconnects, so a stall does not leave the line silent.
 
 ## Error Recovery
 

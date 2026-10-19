@@ -160,7 +160,7 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 </ParamField>
 
 <ParamField path="noiseIsolation" type="string or object" required={false}>
-  Enable server-side noise isolation to reduce background noise. As a string, pass `"krisp"` or `"rnnoise"` for default settings. As an object: `{ mode: "krisp", level: 80, direction: "read" }`. `direction` can be `"read"` (filter caller audio, default) or `"write"` (filter outbound audio). Krisp requires an API key on self-hosted systems.
+  Enable server-side noise isolation to reduce background noise. As a string, pass `"krisp"`, `"rnnoise"` or `"kugelaudio"` for default settings. As an object: `{ mode: "krisp", level: 80, direction: "read" }`. `direction` can be `"read"` (filter caller audio, default) or `"write"` (filter outbound audio). Krisp requires an API key on self-hosted systems. For `"kugelaudio"`, the object also takes `label` (which KugelAudio speech credential to use) and `auth` (`{apiKey, apiUri}` on the verb instead of a credential); see [KugelAudio Clarity](/guides/features/voice-agents#kugelaudio-clarity).
 </ParamField>
 
 <ParamField path="noResponseTimeout" type="number" required={false} default="12">
