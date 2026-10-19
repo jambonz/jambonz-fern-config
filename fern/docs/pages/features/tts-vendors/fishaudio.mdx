@@ -30,17 +30,9 @@ To use a voice from Fish Audio's public library, which the portal does not list,
 
 The voice decides the language. jambonz does not send `synthesizer.language` to Fish Audio.
 
-## Models
+## Model
 
-`model_id` is set on the credential and can be overridden per verb with `synthesizer.options.model_id`.
-
-| Model | Notes |
-|---|---|
-| `s2.1-pro` | Default. |
-| `s2-pro` | |
-| `s1` | Fish Audio retires `s1` on December 31, 2026; after that, `s1` requests are served by `s2.1-pro`. |
-
-Fish Audio does not reject a model id it doesn't recognize; it falls back to its default model. A typo in `model_id` therefore shows up as an unexpected voice quality, not as an error.
+jambonz uses Fish Audio's `s2.1-pro` model, which is also Fish Audio's default. It is the only model the portal offers. (Fish Audio retires its older `s1` model on December 31, 2026.)
 
 ## Options
 
@@ -85,7 +77,7 @@ Fish Audio supports [TTS streaming](/guides/features/tts-streaming), so it can b
 
 Fish Audio's streaming connection serves one response and has no way to cancel it. jambonz works around this:
 
-- **Each turn opens a new connection.** The connection setup, typically around half a second, is added to the time before the first audio of every turn.
+- **Each turn opens a new connection.** The connection setup, about 0.3 seconds in our testing, is added to the time before the first audio of every turn.
 - **Barge-in closes the connection.** When the caller interrupts, jambonz drops the connection so the interrupted response stops at once, and the next turn opens a fresh one.
 
 Fish Audio does not return word-level timestamps, so on barge-in jambonz cannot trim the assistant's turn to the words the caller actually heard.
