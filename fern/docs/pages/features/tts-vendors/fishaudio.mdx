@@ -1,0 +1,87 @@
+---
+title: Fish Audio
+subtitle: Cloned voices, latency, speed and volume for Fish Audio TTS.
+---
+
+[Fish Audio](https://fish.audio) is a text-to-speech service built around voice cloning: you create a voice in your Fish Audio account from a short recording, and jambonz speaks with it. Fish Audio tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "fishaudio",
+    "voice": "802e3bc2b27e49c2995d23ef70e6ac89",
+    "options": {
+      "latency": "balanced",
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Voices
+
+A Fish Audio voice is a model id, which Fish Audio calls a `reference_id`. The portal lists the voices you have created in your Fish Audio account, grouped by language, plus **Fish Audio default voice**. Choosing the default voice (voice `default`) sends no `reference_id`, and Fish Audio speaks with its own default voice.
+
+To use a voice from Fish Audio's public library, which the portal does not list, put its id in `voice`, or in the `reference_id` option. `reference_id` takes precedence over `voice`.
+
+The voice decides the language. jambonz does not send `synthesizer.language` to Fish Audio.
+
+## Model
+
+jambonz uses Fish Audio's `s2.1-pro` model, which is also Fish Audio's default. It is the only model the portal offers. (Fish Audio retires its older `s1` model on December 31, 2026.)
+
+## Options
+
+<ParamField path="reference_id" type="string" required={false}>
+  The id of the voice to speak with. Takes precedence over `voice`.
+</ParamField>
+
+<ParamField path="latency" type="string" required={false}>
+  Fish Audio's latency mode: `normal`, `balanced` or `low`. The portal fills in `balanced` for new credentials.
+</ParamField>
+
+<ParamField path="chunk_length" type="number" required={false}>
+  How much text Fish Audio buffers before it starts synthesizing, `100` – `300`.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, `0.5` – `2.0`. `1.0` is normal speed.
+</ParamField>
+
+<ParamField path="volume" type="number" required={false}>
+  Volume adjustment in dB, `-20` – `20`. `0` leaves the volume unchanged.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Fish Audio's own default applies.
+
+## Endpoint override
+
+Fish Audio credentials have no API base URL field in the portal. If you need to point at a non-default endpoint, such as a proxy, set `api_uri` in **Extra Options** alongside the tuning fields:
+
+```json
+{
+  "api_uri": "my-proxy.example.com",
+  "latency": "balanced"
+}
+```
+
+Leave it out to use Fish Audio's standard endpoint (`api.fish.audio`).
+
+## Streaming
+
+Fish Audio supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb.
+
+Fish Audio's streaming connection serves one response and has no way to cancel it. jambonz works around this:
+
+- **Each turn opens a new connection.** The connection setup, about 0.3 seconds in our testing, is added to the time before the first audio of every turn.
+- **Barge-in closes the connection.** When the caller interrupts, jambonz drops the connection so the interrupted response stops at once, and the next turn opens a fresh one.
+
+Fish Audio does not return word-level timestamps, so on barge-in jambonz cannot trim the assistant's turn to the words the caller actually heard.
+
+## Concurrency
+
+Fish Audio limits how many requests an account can run at once, based on how much it has prepaid: 5 for accounts under $100, more at higher tiers. Each call that is speaking with Fish Audio uses one. Check your Fish Audio limit against the number of simultaneous calls you expect.
