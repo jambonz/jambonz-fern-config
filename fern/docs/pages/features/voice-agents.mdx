@@ -193,20 +193,34 @@ This requirement does not apply to jambonz.cloud customers — Krisp features ar
 
 Early generation speculatively sends the transcript to the LLM *before* end-of-turn is confirmed. If the transcript matches when the turn does end, buffered tokens are released immediately — shaving off the LLM prompt time. If the user keeps talking and the transcript changes, the speculative response is discarded.
 
-There are two ways early generation is triggered:
+Early generation is off by default. Set `earlyGeneration: true` to turn it on. What starts the speculative prompt depends on how the end of turn is detected:
 
-- **Krisp turn detection** — Set `earlyGeneration: true` to opt in. Krisp emits an early signal that triggers the speculative LLM prompt before final end-of-turn confirmation.
-- **Deepgram Flux** — Early generation happens automatically. Flux emits a native `EagerEndOfTurn` event that triggers preflight regardless of the `earlyGeneration` setting.
+- **Krisp turn detection** — the prompt starts when the STT delivers a final transcript, while the agent is still waiting for Krisp to confirm the end of turn.
+- **Deepgram Flux** — the prompt starts on Flux's `EagerEndOfTurn` event. Flux only sends that event when you also set `stt.deepgramOptions.eagerEotThreshold`. Without it, `earlyGeneration: true` has no effect and the agent logs a warning.
+- **Speechmatics agent mode** (`speechmaticsagent`) — the prompt starts on the `smart` profile's turn prediction, or on the `adaptive` profile's end-of-turn prediction.
 
-For other STT vendors with native turn-taking (assemblyai, speechmatics), early generation is not available.
+Other STT vendors, including AssemblyAI, send no early end-of-turn signal, so early generation does not apply to them.
 
 ```js
+// Krisp
 session.agent({
   turnDetection: 'krisp',
   earlyGeneration: true,
   // ...
 }).send();
+
+// Deepgram Flux
+session.agent({
+  stt: {
+    vendor: 'deepgramflux',
+    deepgramOptions: { eagerEotThreshold: 0.5 },
+  },
+  earlyGeneration: true,
+  // ...
+}).send();
 ```
+
+Early generation works with tools. The speculative reply can choose tool calls, but jambonz does not send them to your `toolHook` until the end of turn is confirmed and the transcript still matches. If the caller keeps talking, the speculative tool calls are dropped and never run. Each tool call runs at most once, for the turn the caller actually finished.
 
 The [turn_end event](#event-handling) includes `preflight` metrics so you can track hit rates:
 - `hit` — speculative transcript matched final, tokens released immediately
@@ -644,7 +658,7 @@ The `turn_end` latency breakdown helps you identify bottlenecks and optimize res
 | `llm_ms` | Pure LLM thinking time (tool RTT subtracted) | Use faster models (e.g., `gpt-4.1-mini`). Keep system prompts concise. Enable `earlyGeneration`. |
 | `tool_ms` | Total time in tool calls | Optimize tool endpoint latency. Use caching where appropriate. |
 | `tts_ms` | TTS engine latency (text → first audio) | Choose streaming-capable TTS (Cartesia, ElevenLabs, Deepgram). |
-| `preflight` | Speculative preflight result | Enable `earlyGeneration` with Krisp. Monitor hit rate — high miss rates may indicate the threshold is too aggressive. |
+| `preflight` | Speculative preflight result | Enable `earlyGeneration` (with Flux, also set `eagerEotThreshold`). Monitor hit rate — high miss rates may indicate the threshold is too aggressive. |
 
 ## Conversation History Summarization
 
