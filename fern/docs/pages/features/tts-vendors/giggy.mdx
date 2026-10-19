@@ -1,0 +1,61 @@
+---
+title: Giggy
+subtitle: Voices, speed and repeatable output for Giggy TTS.
+---
+
+[Giggy](https://giggy.ai) is a text-to-speech service with a large public voice catalog, covering more than 80 languages, plus any voices you create in your own Giggy account. Giggy tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "giggy",
+    "voice": "38607161-601a-517f-96c3-8708d1975b9c",
+    "options": {
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Voices and languages
+
+Voice ids are UUIDs. Each Giggy voice has its own language, and the voice decides the language it speaks in. jambonz does not send `synthesizer.language` to Giggy, because Giggy rejects a language that differs from the voice's own. Pick a voice for the language you want.
+
+The public catalog has about 24,500 voices, too many to list in full. The portal's voice list shows the top-rated public voices for each language and gender. It also includes the voices you have created in your Giggy account, marked "(custom)" and listed under every language, since Giggy does not record a language for them. Any other public voice works too: put its id in `voice`.
+
+Giggy serves a single model, `giggyspeech`, which is the default.
+
+## Options
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, `0.25` – `4`. `1` is normal speed.
+</ParamField>
+
+<ParamField path="seed" type="number" required={false}>
+  A whole number that fixes Giggy's random seed, so the same text and voice produce the same audio each time.
+</ParamField>
+
+Both options are optional. An option you don't set is not sent, so Giggy's own default applies.
+
+## Endpoint override
+
+Giggy credentials have no API base URL field in the portal. If you need to point at a non-default endpoint, such as a proxy, set `api_uri` in **Extra Options** alongside the tuning fields:
+
+```json
+{
+  "api_uri": "my-proxy.example.com",
+  "speed": 1.0
+}
+```
+
+Leave it out to use Giggy's standard endpoint (`giggy.ai`).
+
+## Streaming
+
+Giggy supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. Giggy has no connection that accepts text as it arrives, so jambonz collects the tokens into whole sentences and sends each sentence to Giggy as a separate request. The first audio therefore starts once the first sentence is complete. Splitting at sentence boundaries keeps the intonation natural.
+
+On barge-in, jambonz cancels the request in progress. Giggy does not return word-level timestamps, so jambonz cannot trim the assistant's turn to the words the caller actually heard.

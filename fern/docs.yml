@@ -134,6 +134,8 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/cartesia.mdx
               - page: ElevenLabs
                 path: ./docs/pages/features/tts-vendors/elevenlabs.mdx
+              - page: Giggy
+                path: ./docs/pages/features/tts-vendors/giggy.mdx
               - page: Gradium
                 path: ./docs/pages/features/tts-vendors/gradium.mdx
               - page: Inworld
