@@ -1,0 +1,122 @@
+<Card title="11.1.7" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.7
+</Card>
+
+**11.1.7** adds Amazon Nova Sonic as a speech-to-speech model, three text-to-speech
+vendors (Fish Audio, Giggy and Svara) and KugelAudio Clarity noise isolation.
+[Agents](/verbs/verbs/agent) can now use early generation together with tools, can end
+the conversation after a number of unanswered prompts, and can recover from a barge-in
+that turns out to be noise. Tool calls from agents and Dialogflow get a longer, single
+timeout. The release also masks more secrets in debug logs, closes a cross-account
+`app-{sid}` call path, and fixes a scale-in drain that could wait for the full lifecycle
+hook.
+
+#### New Features & Improvements
+
+1. **Amazon Nova Sonic** — the [llm](/verbs/verbs/llm) verb accepts `vendor: 'nova'` for
+   Amazon Nova 2 Sonic and Nova 2.5 Sonic on Amazon Bedrock, with your own AWS credentials
+   in `auth`. It supports tools (asynchronous, so the agent keeps talking while your
+   `toolHook` runs), polyglot voices, keypad input through `llmOptions.dtmf`, and calls
+   longer than Bedrock's 8-minute stream limit.
+1. **Fish Audio text-to-speech** — `fishaudio` is available as a TTS vendor, with
+   streaming TTS and speech credentials in the portal and API. A voice is a cloned-voice id
+   (`reference_id`); the portal lists your account's own voices. See
+   [Fish Audio](/guides/features/tts-vendors/fishaudio).
+1. **Giggy text-to-speech** — `giggy` is available as a TTS vendor, with streaming TTS and
+   a curated voice list covering more than 80 languages. See
+   [Giggy](/guides/features/tts-vendors/giggy).
+1. **Svara text-to-speech** — `svara` (Kenpath Labs) is available as a TTS vendor, with
+   streaming TTS for Hindi and other Indic languages. See
+   [Svara](/guides/features/tts-vendors/svara).
+1. **KugelAudio Clarity noise isolation** — `kugelaudio` is a third `noiseIsolation`
+   vendor, alongside `krisp` and `rnnoise`, in the [agent](/verbs/verbs/agent) and
+   [config](/verbs/verbs/config) verbs. It uses a KugelAudio speech credential with
+   **Use for noise isolation** ticked, or a key passed on the verb in `auth`. See
+   [KugelAudio Clarity](/guides/features/voice-agents#kugelaudio-clarity).
+1. **Early generation with tools** — agents that use tools now get early generation
+   (`earlyGeneration: true`). A speculative reply can choose tool calls, but they reach
+   your `toolHook` only once the caller's turn is confirmed, and each runs at most once.
+   See [Early Generation](/guides/features/voice-agents#early-generation-speculative-preflight).
+1. **Agent `noResponseMaxPrompts`** — ends the agent after a set number of no-response
+   reprompts that the caller never answers.
+1. **Agent barge-in recovery (opt-in)** — set `JAMBONES_AGENT_BARGEIN_RECOVERY_MS` (for
+   example `2000`) to recover when an interrupt-prediction barge-in fires on noise and the
+   caller then says nothing: the agent picks up where it left off or checks the caller is
+   still there, instead of leaving the line silent. Each recovery is counted as
+   `barge_in_recoveries` in the session summary.
+1. **One tool-call timeout** — `JAMBONES_TOOL_CALL_TIMEOUT_MS` (default 20000) bounds
+   every agent and Dialogflow (CES and CX) tool call, over websocket or HTTP. Dialogflow
+   tool calls previously timed out after 5 seconds over websocket and 10 seconds over
+   HTTP. The new timeout only ever lengthens the existing ones.
+1. **Hold and unhold events (opt-in)** — set `JAMBONES_HOLD_UNHOLD_EVENTS` to detect
+   in-dialog hold and unhold re-INVITEs. When `sipRequestWithinDialogHook` is configured,
+   the application receives a `hold` or `unhold` event.
+1. **Noise isolation alert types** — a missing KugelAudio credential is reported as a
+   `no-noise-isolation` alert, and a noise-isolation vendor that fails to start as
+   `noise-isolation-failure`, instead of as a Krisp alert. Krisp keeps `no-krisp`.
+1. **Model lists** — the KugelAudio TTS model list adds `kugel-3.5`, and Cartesia's retired
+   models are replaced with `sonic-3.6`.
+
+#### Bug Fixes
+
+- **Security** — a SIP client calling `app-{sid}` can now reach only applications in its
+  own account, or service-provider applications in its own service provider. Debug logs now
+  mask more secrets: Dialogflow service-account credentials in verb payloads, listen and
+  conference websocket passwords, and recorder passwords.
+- **Scale-in drain** — a call that hung up while an agent's barge-in gather was running
+  could stay counted as active, so the drain waited for the full lifecycle hook. The
+  session is now always released.
+- **Answering machine detection** — English voicemail fragments and read-out phone numbers
+  are recognized, and voicemail phrases in every language are matched when the recognizer
+  language is `multi`.
+- **Tracing** — `JAMBONES_OTEL_ENABLED=0` or `false` turned tracing on. Only `1` or `true`
+  now enables it.
+- **SBC inbound** — a call from a carrier that uses registration is matched to that
+  carrier even when another account's static inbound gateway range covers the same IP
+  address. On Five9 Voicestream calls, only the audio sent back to Five9 is blocked; the
+  whole call was being muted, so the listen websocket received no audio.
+- **drachtio** — fixes for crashes on `tel:` URIs, a 491 race when retrying with
+  authentication, a 500 during call setup, and DNS queries left orphaned on failover;
+  general SIP stack hardening; TLS certificates reload on `SIGHUP`; and a validated license
+  is kept through Redis or MySQL outages.
+- **Portal sign-in** — OAuth sign-in is more reliable and no longer counts against the
+  sign-up rate limit.
+- **Recordings** — failed uploads to S3-compatible storage now log the HTTP status, so a
+  `403` from a proxy or firewall in front of the bucket is easy to spot.
+
+#### Upgrade Notes (self-hosted)
+
+- **Database** — 11.1.7 adds two columns to `speech_credentials`
+  (`use_for_noise_isolation` and `noise_isolation_tested_ok`); run the database upgrade
+  before starting the new API server.
+- **FreeSWITCH** — the feature server no longer supports FreeSWITCH. `JAMBONES_FREESWITCH`
+  is ignored (a warning is logged), and the feature server connects to mediajam at
+  `JAMBONES_MEDIAJAM`, default `127.0.0.1:8021`.
+- **Tracing** — installs that set `JAMBONES_OTEL_ENABLED=0` had tracing on; after upgrading
+  it is off. Set it to `1` if you want tracing.
+- **Tool calls** — Dialogflow tool calls now wait up to 20 seconds by default
+  (`JAMBONES_TOOL_CALL_TIMEOUT_MS`).
+
+#### Component Versions
+
+| Component | 11.1.6 | 11.1.7 |
+|---|---|---|
+| jambonz | 11.1.6 | **11.1.7** |
+| mediajam | 0.5.14 | **0.5.15** |
+| drachtio | 10.1.8 | **10.1.10** |
+| rtpengine | 14.1.1.8-jambonz14 | 14.1.1.8-jambonz14 |
+| jambonz OSS (sbc-*) | 0.9.14 | 0.9.14 |
+| upload-recordings | 1.9.2 | **1.9.3** |
+| monitoring-agent | 10.2.2 | 10.2.2 |
+| pcap-server | 1.0.4 | 1.0.4 |
+| heplify-server | 1.0.4 | 1.0.4 |
+
+#### Availability
+
+**jambonz.cloud** - coming soon
+
+**self-hosted on AWS** - coming soon
+
+**self-hosted on Azure** - coming soon
+
+**self-hosted Debian packages** - coming soon
