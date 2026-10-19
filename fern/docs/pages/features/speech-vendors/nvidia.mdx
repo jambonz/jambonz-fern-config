@@ -1,0 +1,119 @@
+---
+title: NVIDIA
+subtitle: Speech-to-text and text-to-speech models, options and notes for NVIDIA Riva.
+---
+
+jambonz supports NVIDIA Riva for both **speech-to-text** and **text-to-speech** (vendor `nvidia`). jambonz talks to Riva over gRPC. It connects to a Riva server you run, at the **Riva Server URI** saved on the speech credential. NVIDIA's hosted cloud API (NVCF) is supported for [TTS streaming](/guides/features/tts-streaming) only; see the notes below.
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "nvidia",
+    "language": "en-US",
+    "hints": ["jambonz", "drachtio"],
+    "hintsBoost": 20,
+    "nvidiaOptions": {
+      "punctuation": true
+    }
+  }
+}
+```
+
+### Models
+
+Set the Riva model name in `recognizer.model`. jambonz passes it through unchanged. With no model set, jambonz sends none, and your Riva server picks the model for the language. Which models exist depends on what you deployed; see NVIDIA's [Riva ASR docs](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/asr/asr-overview.html).
+
+### Options
+
+Put these in `recognizer.nvidiaOptions`.
+
+<ParamField path="rivaUri" type="string" required={false}>
+  The Riva server's gRPC address (`host:port`), used instead of the credential's. jambonz connects without TLS.
+</ParamField>
+
+<ParamField path="punctuation" type="boolean" required={false}>
+  Turn on automatic punctuation. Off unless this or the recognizer's `punctuation` is `true`.
+</ParamField>
+
+<ParamField path="profanityFilter" type="boolean" required={false}>
+  Filter profanity. Off unless this or the recognizer's `profanityFilter` is `true`.
+</ParamField>
+
+<ParamField path="wordTimeOffsets" type="boolean" required={false}>
+  Include word-level timestamps. Off unless this or the recognizer's `words` is `true`.
+</ParamField>
+
+<ParamField path="verbatimTranscripts" type="boolean" required={false}>
+  Return transcripts without text normalization.
+</ParamField>
+
+<ParamField path="maxAlternatives" type="number" required={false}>
+  Number of alternative transcripts to request. Default: `1`.
+</ParamField>
+
+<ParamField path="customConfiguration" type="object" required={false}>
+  Key-value pairs passed to Riva's `custom_configuration`. Values must be strings; if any value is not a string, jambonz sends none of them.
+</ParamField>
+
+These generic `recognizer` properties apply:
+
+- `language`: the Riva language code, e.g. `en-US`.
+- `model`: see above.
+- `hints`: phrases to boost. Use plain strings; see the note below.
+- `hintsBoost`: boost applied to all hints.
+- `diarization`: turn on speaker diarization. `diarizationMaxSpeakers` sets the maximum speaker count.
+- `separateRecognitionPerChannel`: recognize each channel separately.
+
+### Notes
+
+- **Use string hints.** Hints written as `{"phrase": ..., "boost": ...}` objects are not parsed correctly for NVIDIA. Use a list of strings and a single `hintsBoost`.
+- **Ignored generic properties.** `altLanguages`, `diarizationMinSpeakers` and `singleUtterance` have no effect with NVIDIA.
+- **No hosted cloud for speech-to-text.** The media server can reach NVIDIA's cloud, but jambonz doesn't pass the credential's **API Key (NVCF cloud)** to recognition, and `nvidiaOptions` accepts no API key. Use a Riva server URI.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "nvidia",
+    "language": "en-US",
+    "voice": "Magpie-Multilingual.EN-US.Mia"
+  }
+}
+```
+
+### Models and voices
+
+Choose a voice in `synthesizer.voice`. The portal lists the voices of NVIDIA's Magpie multilingual model, named `Magpie-Multilingual.<LANG>.<Name>`, optionally followed by `.<Style>`, e.g. `Magpie-Multilingual.EN-US.Aria.Calm`. A self-hosted Riva server offers whichever voices you deployed on it; see NVIDIA's [Riva TTS docs](https://docs.nvidia.com/deeplearning/riva/user-guide/docs/tts/tts-overview.html).
+
+There is no model setting. On NVIDIA's cloud, the function ID picks the model.
+
+### Options
+
+These apply only to [TTS streaming](/guides/features/tts-streaming), including the `agent` verb. Pass them in `synthesizer.options`.
+
+<ParamField path="api_key" type="string" required={false}>
+  NVIDIA API key. Setting it connects to NVIDIA's cloud (`grpc.nvcf.nvidia.com`) instead of the Riva server URI.
+</ParamField>
+
+<ParamField path="functionId" type="string" required={false}>
+  NVCF function ID of the TTS model. Defaults to NVIDIA's public Magpie multilingual TTS function.
+</ParamField>
+
+These generic synthesizer properties apply:
+
+- `voice`: required for `say`. With TTS streaming, defaults to `Magpie-Multilingual.EN-US.Mia`.
+- `language`: required for `say`. With TTS streaming, defaults to `en-US`.
+
+### Notes
+
+- **`say` needs a Riva server.** A `say` without streaming synthesizes against the credential's Riva server URI at 8 kHz. It fails if the credential has only an NVCF API key.
+- **Cloud TTS streaming needs the key in the options.** jambonz doesn't pass the credential's **API Key (NVCF cloud)** to TTS streaming. Set `api_key` in `synthesizer.options`.
+- **Barge-in costs a reconnect.** When the caller interrupts, jambonz drops the in-flight synthesis and reconnects.

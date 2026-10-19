@@ -1,0 +1,110 @@
+---
+title: Cartesia
+subtitle: Speech-to-text and text-to-speech models, options and notes for Cartesia.
+---
+
+jambonz supports Cartesia for both **speech-to-text** and **text-to-speech** (vendor `cartesia`). Speech-to-text uses Cartesia's streaming STT websocket. Text-to-speech uses Cartesia's `/tts/bytes` endpoint for `say` and its websocket for [TTS streaming](/guides/features/tts-streaming).
+
+## Speech-to-text
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "actionHook": "/gather",
+  "recognizer": {
+    "vendor": "cartesia",
+    "language": "en-US"
+  }
+}
+```
+
+### Models
+
+The model is set on the speech credential in the portal. It cannot be changed on the verb.
+
+| Model | Notes |
+|---|---|
+| `ink-whisper` | The only model jambonz offers. |
+
+A credential with no speech-to-text model saved fails to connect; there is no fallback model.
+
+### Options
+
+Cartesia has no vendor-specific recognizer options. Set the language with the recognizer's `language` property.
+
+### Notes
+
+- **`language` is trimmed.** jambonz sends only the part before any hyphen, so `en-US` is sent as `en`.
+- **`hints` has no effect.** jambonz does not send hints to Cartesia.
+- **Audio is sent at 16 kHz**, whatever the call's codec.
+
+## Text-to-speech
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling, how can I help you today?",
+  "synthesizer": {
+    "vendor": "cartesia",
+    "language": "en",
+    "voice": "a0e99841-438c-4a64-b679-ae501e7d6091",
+    "options": {
+      "speed": -0.3,
+      "emotion": "positivity:high"
+    }
+  }
+}
+```
+
+Set `synthesizer.voice` to a Cartesia voice ID. The portal lists the voices available to your Cartesia account.
+
+### Models
+
+The model is set on the speech credential. To use a different model for one verb, set `synthesizer.options.model_id`. There is no fallback model: a request with no model fails.
+
+| Model | Notes |
+|---|---|
+| `sonic-3.5` | First in the portal's list, so it is preselected for new speech credentials. |
+| `sonic-3` | |
+| `sonic-2` | |
+| `sonic` | |
+| `sonic-turbo` | |
+| `sonic-preview` | English only. |
+| `sonic-2024-12-12` | |
+| `sonic-2024-10-19` | |
+| `sonic-english` | English only. |
+| `sonic-multilingual` | |
+
+For the languages each model supports, see Cartesia's [model documentation](https://docs.cartesia.ai/build-with-cartesia/tts-models).
+
+### Options
+
+Pass these in `synthesizer.options`, or save them on the speech credential under **Extra Options**. The portal fills new credentials with `speed` of `0.0` and `emotion` of `positivity:high`.
+
+<ParamField path="model_id" type="string" required={false}>
+  The model for this verb, overriding the credential's.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate. Negative values are slower, positive faster. Applies to `sonic-3` and later models, and to `sonic-2`.
+</ParamField>
+
+<ParamField path="emotion" type="string" required={false}>
+  An emotion tag in `name:level` form, for example `positivity:high`. Supported names are `anger`, `positivity`, `surprise`, `sadness` and `curiosity`; levels are `lowest`, `low`, `high` and `highest`. Applies to `sonic-3` and later models, and to `sonic-2`.
+</ParamField>
+
+<ParamField path="volume" type="number" required={false}>
+  Output volume. Applies to `sonic-3` and later models only.
+</ParamField>
+
+<ParamField path="max_buffer_delay_ms" type="number" required={false}>
+  Accepted, but currently has no effect: jambonz does not send it to Cartesia.
+</ParamField>
+
+### Notes
+
+- **Voice controls depend on the model.** Models whose ID starts with `sonic-3` receive `speed`, `emotion` and `volume` as a generation config. `sonic-2` (that exact ID) receives `speed` and `emotion` as experimental voice controls. Every other model ignores all three. If a speed or emotion setting seems to do nothing, check which model the credential uses.
+- **Verb options replace credential options on `say`.** If `synthesizer.options` has any fields, the credential's Extra Options are not used for that `say`. With TTS streaming the two are merged, and the verb wins where both set a field.
+- **`language` defaults to `en`** for TTS streaming when none is set.
+- **Streaming and barge-in.** Cartesia supports [TTS streaming](/guides/features/tts-streaming), with a native cancel for barge-in and word-level timestamps for alignment.
