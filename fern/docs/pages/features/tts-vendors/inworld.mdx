@@ -30,6 +30,10 @@ Inworld tuning is passed in `synthesizer.options`. Audio shaping lives under a n
   Sampling temperature. Defaults to `0.8`. Lower values give a more consistent, predictable read; higher values more variation between renders of the same text.
 </ParamField>
 
+<ParamField path="deliveryMode" type="string" required={false}>
+  Inworld delivery mode, passed to Inworld unchanged. Applies to streamed TTS only.
+</ParamField>
+
 ### audioConfig
 
 <ParamField path="audioConfig.speakingRate" type="number" required={false}>
