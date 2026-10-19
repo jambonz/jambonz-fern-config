@@ -639,6 +639,14 @@ Voice Live's text to speech avatar requires a separate WebRTC SDP exchange with 
 
 ## Amazon Nova Sonic
 
+Amazon Nova Sonic is Amazon's speech-to-speech model: it listens to the caller and answers in its own voice, with no separate speech recognition or text-to-speech step in between. Nova 2.5 Sonic, generally available since October 2026, is the newest version, with better reasoning, instruction following and tool-calling accuracy than Nova 2 Sonic at the same price. Several things make it a good fit for phone calls:
+
+- **Built for telephony audio.** Amazon tuned Nova 2 Sonic for 8 kHz phone audio, background noise, accents, short replies like "yes" or "no", and spelled-out letters and numbers such as account and order numbers.
+- **One voice, many languages.** It speaks English, French, Italian, German, Spanish, Portuguese and Hindi. The polyglot voices (`tiffany`, `matthew`) can switch language mid-conversation, or within a sentence, without changing voice.
+- **It keeps talking while your tools run.** Tool calls are asynchronous, so the agent can go on speaking with the caller while your `toolHook` looks up an order, then use the result when it arrives.
+- **Turn-taking you can tune.** Set end-of-turn sensitivity to `HIGH` for quick replies or `LOW` to give callers time to finish a thought.
+- **Voice and text in one session.** Text turns slot into the conversation with full context. jambonz uses this to start the call with a spoken greeting and to pass keypad input to the model (see `greeting` and `dtmf` below).
+
 Set `vendor: 'nova'` to use [Amazon Nova Sonic](https://docs.aws.amazon.com/nova/latest/nova2-userguide/using-conversational-speech.html) (Nova 2 Sonic and Nova 2.5 Sonic) on Amazon Bedrock. Nova Sonic is not reached over a websocket: the media server opens a Bedrock bidirectional stream (`InvokeModelWithBidirectionalStream`) signed with the AWS credentials you supply. This vendor requires the mediajam media server.
 
 ```js
