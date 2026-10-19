@@ -85,7 +85,7 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 </ParamField>
 
 <ParamField path="earlyGeneration" type="boolean" required={false} default="false">
-  Enable speculative LLM prompting before end-of-turn is confirmed. When using Krisp turn detection, set this to `true` to speculatively prompt the LLM before Krisp confirms the turn has ended. If the transcript matches when the turn ends, buffered tokens are released immediately — reducing response latency. Deepgram Flux performs early generation automatically regardless of this setting.
+  Enable speculative LLM prompting before end-of-turn is confirmed. If the transcript matches when the turn ends, buffered tokens are released immediately — reducing response latency. Works with Krisp turn detection, Deepgram Flux and Speechmatics agent mode. With Deepgram Flux you must also set `stt.deepgramOptions.eagerEotThreshold`, or early generation never starts. Tool calls chosen by a speculative reply run only after the end of turn is confirmed. See [Early Generation](/guides/features/voice-agents#early-generation-speculative-preflight).
 </ParamField>
 
 <ParamField path="eventHook" type="string" required={false}>
