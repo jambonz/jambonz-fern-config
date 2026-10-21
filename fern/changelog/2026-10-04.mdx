@@ -296,6 +296,67 @@ deployment survives the loss of one zone.
   `InUseSubnetCannotBeDeleted`, wait a few minutes and run it again.
 - The modules need the `azurerm` provider 4.55 or later; run `terraform init -upgrade`.
 
+#### Self-hosted on GCP (Terraform)
+
+The 11.1.6 GCP Terraform modules bring the same SOC 2 controls to Google Cloud. The
+medium and large modules also spread every tier across zones, so a deployment
+survives the loss of one zone.
+
+**Key changes**
+
+1. **SSH closed by default** — `allowed_ssh_cidr` has no default; supply your IP as
+   a `/32` or your VPN range.
+1. **Only the ports each server needs** — on medium and large, each server role has
+   its own firewall rule listing only the ports it serves inside the network,
+   replacing a rule that allowed all traffic within the network. On medium the API
+   port (3000) is no longer open to the internet. On mini, ports 3000, 3010
+   (Grafana), 9080 (Homer) and 16686 (Jaeger) are no longer open; the portal, API
+   and Grafana are reached through nginx on 80/443.
+1. **No secrets in instance metadata** — on medium and large every secret is kept in
+   Secret Manager and each VM reads the ones it needs at boot with its service
+   account. On mini the JWT secret and MySQL password are generated on the VM at
+   first boot, and the optional apiban and Krisp keys go in Secret Manager only when
+   one is set. Startup scripts no longer echo their commands, so no secret appears
+   in the serial console or the setup log.
+1. **Least-privilege service account** — on medium and large the service account no
+   longer holds `roles/compute.instanceAdmin.v1` on the project; it can delete only
+   the deployment's own feature servers (when they scale in), read its secrets, and
+   write logs and metrics. Mini gets a service account of its own with the same
+   limits.
+1. **Zones (medium, large)** — `zones` (default: the region's first three) spreads
+   SIP and RTP servers (large) or SBCs (medium) across zones, runs the feature server
+   and recording instance groups across all of them, keeps a Cloud SQL standby in a
+   second zone with automatic failover, and runs Memorystore Standard Tier with a
+   replica in another zone.
+1. **Database protection (medium, large)** — Cloud SQL logs connections (logins,
+   logouts, failed logins) to Cloud Logging, has deletion protection on
+   (`mysql_deletion_protection`), keeps 30 backups, and supports point-in-time
+   recovery.
+1. **Redis authentication (medium, large)** — Memorystore requires a password, kept
+   in Secret Manager.
+1. **Centralized logs with retention** — the Ops Agent on every VM sends the systemd
+   journal (including SSH logins) and the jambonz application logs to a Cloud
+   Logging bucket of the deployment's own, kept for `log_retention_days` (90 by
+   default; 180 and 365 are allowed).
+1. **Fix (large)** — with more than one RTP server the SIP servers no longer fail
+   every call, because they now find RTP servers through Redis.
+
+**Before you deploy or update**
+
+- `allowed_ssh_cidr` is required.
+- `zone` is replaced by `zones` on medium and large.
+- Medium and large default to two SIP and two RTP servers (large) or two SBCs
+  (medium), two feature servers, a regional (high-availability) Cloud SQL instance
+  and Standard Tier Memorystore. These add cost; set `mysql_high_availability =
+  false` or `redis_tier = "BASIC"` to keep a single zone for either.
+- On an existing deployment, spreading across zones replaces the VMs and instance
+  groups, and moving Redis to Standard Tier replaces the Redis instance. Review
+  `terraform plan` before you apply.
+- Cloud SQL deletion protection is on: set `mysql_deletion_protection = false` and
+  apply before `terraform destroy`.
+- Medium and large turn on Data Access audit logs for Cloud SQL in the project, so
+  the connection log reaches Cloud Logging.
+
 #### Upgrade Notes (self-hosted)
 
 - **Database** — 11.1.6 adds the `alert_hooks` table and three columns; run the
@@ -339,6 +400,10 @@ all nine server types in 30 regions, amd64 and arm64.
 **self-hosted on Azure** - available now: Terraform modules for mini, medium and
 large, with community gallery images for all nine server types in 30 regions (amd64)
 and 29 regions (arm64).
+
+**self-hosted on GCP** - available now: Terraform modules for mini, medium and
+large, with public images for all nine server types (GCP images are global), amd64
+and arm64.
 
 **self-hosted Debian packages** - available now: install `jambonz-mini` 11.1.6 from the
 jambonz apt repository (Debian 12 bookworm), amd64 and arm64.
