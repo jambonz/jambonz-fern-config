@@ -1336,7 +1336,7 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="diarize" type="boolean" required={false}>
-      Label each transcript with a speaker. Voxtral cannot diarize and detect turns at the same time, so diarization turns off turn detection: a final transcript closes at each sentence end or change of speaker, and there is no early end-of-turn signal. Setting the recognizer's `diarization` property has the same effect.
+      Label each transcript with a speaker. Voxtral cannot diarize and detect turns at the same time, so diarization turns off turn detection: a final transcript closes at each sentence end or change of speaker, and there is no early end-of-turn signal. Setting the recognizer's `diarization` property has the same effect. Ignored in the [`agent`](/verbs/verbs/agent) verb, which needs turn detection.
     </ParamField>
 
     <ParamField path="verbatim" type="boolean" required={false}>
@@ -1360,7 +1360,7 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="turnDetection.minSilenceMs" type="integer" required={false}>
-      Milliseconds of silence before a turn can end. Default `500`. When `streamingDelayMs` is longer, jambonz raises this to match, so the final transcript does not miss the last words of the turn.
+      Milliseconds of silence before a turn can end. Default `500`. When `streamingDelayMs` is longer, jambonz raises this to match, since Voxtral's text lags the audio by about that much. The final transcript is cut when Voxtral ends the turn, so a word or full stop that Voxtral sends later opens the next transcript.
     </ParamField>
 
     <ParamField path="turnDetection.endTimeoutMs" type="integer" required={false}>
