@@ -3,7 +3,7 @@ info:
   title: jambonz Websocket Specification
   version: 1.0.0
   description: >
-    jambonz is the open-source telephony platform for deploying Voice AI applications at scale.
+    jambonz is the bring your own everything telephony platform for deploying Voice AI applications at scale.
 
     You can use the jambonz Websocket API to control calls, speech and AI resources.
   tags:
