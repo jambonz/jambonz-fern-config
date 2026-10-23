@@ -1,0 +1,66 @@
+---
+title: Mistral
+subtitle: Voxtral voices, cloning, expressiveness and emotion tags for Mistral TTS.
+---
+
+[Mistral](https://docs.mistral.ai/studio/audio/text-to-speech/overview) Voxtral generates speech from preset voices in about 35 languages, from voices you have cloned in your Mistral workspace, or from a short recording sent with the request. The same Mistral API key also serves [speech recognition](/verbs/verbs/recognizer). Voxtral tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "[emotion=happy] Your order shipped this morning and should arrive on Thursday.",
+  "synthesizer": {
+    "vendor": "mistral",
+    "voice": "voice_478",
+    "options": {
+      "expressiveness": 3
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Voices and languages
+
+Each voice speaks its own language, and Voxtral has no separate language setting, so jambonz does not send `synthesizer.language` to Mistral. Pick a voice for the language you want. Voxtral 3 preset voices have ids such as `voice_478` (Sheila, US English) or `voice_592` (Marie, French). The Voxtral 2 presets (`en_paul_neutral`, `gb_jane_neutral`, ...) are still accepted. Voices you have created in your Mistral workspace are used by their id.
+
+The default model is `voxtral-mini-tts-3-0`. Set a different one with `synthesizer.options.model_id`, or with the model on the speech credential.
+
+## Emotion and pace tags
+
+Put tags inline in the text to change how a passage is spoken, such as `[emotion=happy]` or `[pace=slow]`, or both together: `[emotion=calm][pace=slow]`. Pace takes `very-slow`, `slow`, `moderate`, `fast` or `very-fast`. Voxtral does not speak a tag it does not recognize, so a misspelled tag is silently ignored. Text is synthesized a sentence at a time, and jambonz carries a reply's tags into each later sentence until one sets its own, so a tag at the start of a streamed reply shapes the whole reply.
+
+## Options
+
+<ParamField path="expressiveness" type="number" required={false}>
+  How much emotional range the voice uses, `1` – `5`.
+</ParamField>
+
+<ParamField path="ref_audio" type="string" required={false}>
+  A short recording, base64-encoded, to clone a voice for this request only. Used instead of `voice`.
+</ParamField>
+
+<ParamField path="phoneme_hints" type="array" required={false}>
+  Custom pronunciations, passed to Mistral unchanged as `phoneme_hints`.
+</ParamField>
+
+<ParamField path="conversation_history" type="array" required={false}>
+  Earlier turns of the conversation, oldest first, so the voice matches the tone of the exchange. Turns alternate `user` and `assistant` and end with a `user` turn. Requires a Voxtral 3 preset voice and cannot be combined with `ref_audio`.
+</ParamField>
+
+<ParamField path="prompt_cache_key" type="string" required={false}>
+  A key that lets Mistral reuse work across requests that share it.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Mistral's own default applies.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set `api_uri` in the credential's **Extra Options**; it applies to both TTS and STT. Leave it out to use `api.mistral.ai`.
+
+## Streaming
+
+Mistral supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. Voxtral has no connection that accepts text as it arrives, so jambonz collects the tokens into whole sentences and sends each sentence to Mistral as a separate streaming request. The first audio therefore starts once the first sentence is complete. Splitting at sentence boundaries keeps the intonation natural.
+
+On barge-in, jambonz cancels the request in progress. Voxtral does not return word-level timestamps, so jambonz cannot trim the assistant's turn to the words the caller actually heard.

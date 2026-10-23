@@ -142,6 +142,8 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/gradium.mdx
               - page: Inworld
                 path: ./docs/pages/features/tts-vendors/inworld.mdx
+              - page: Mistral
+                path: ./docs/pages/features/tts-vendors/mistral.mdx
               - page: Murf
                 path: ./docs/pages/features/tts-vendors/murf.mdx
               - page: Resemble

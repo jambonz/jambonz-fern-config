@@ -1314,6 +1314,54 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
   </Accordion>
 
+  <Accordion title="mistralOptions">
+    Mistral (`mistral`) uses [Voxtral realtime transcription](https://docs.mistral.ai/studio/audio/speech-to-text/transcribe-in-realtime). Text is streamed as it is recognized (sent as interim results when `interim` is enabled). With turn detection on, which is the default, Voxtral detects the end of the speaker's turn and jambonz returns one final transcript per turn. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb each final ends the user's turn, unless `turnDetection` is set to `krisp`. Voxtral's early end-of-turn signal drives `earlyGeneration`.
+
+    `language` is sent as a two-letter code (`en-US` becomes `en`). Leave it unset, or set it to `any`, for automatic language detection.
+
+    The recognizer's own properties carry the rest: `model` picks the realtime model (default `voxtral-mini-transcribe-realtime-3`), `hints` are sent as Voxtral's `context_bias` (up to 100 phrases), and `diarization` labels each transcript with a speaker. Voxtral cannot diarize and detect turns at the same time, so diarization turns off turn detection: a final transcript closes at each sentence end or change of speaker, and there is no early end-of-turn signal. Diarization is ignored in the [`agent`](/verbs/verbs/agent) verb, which needs turn detection.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Mistral API key to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="streamingDelayMs" type="integer" required={false}>
+      How far the model looks ahead before emitting text, in milliseconds. Lower is faster, higher is more accurate. Any value from `80` to `1200`, or `2400`. Voxtral's default is `480`.
+    </ParamField>
+
+    <ParamField path="verbatim" type="boolean" required={false}>
+      Ask Voxtral for a verbatim transcript (sent as `verbatim`). Not yet in Mistral's documentation; the realtime API accepts it.
+    </ParamField>
+
+    <ParamField path="speakerReferences" type="array" required={false}>
+      Up to 8 reference clips (3 to 15 seconds each) that let diarization name known speakers. Passed to Mistral unchanged as `speaker_references`. Requires the recognizer's `diarization`.
+    </ParamField>
+
+    <ParamField path="turnDetection.startThreshold" type="number" required={false}>
+      Speech probability that starts a turn, between `0` and `1`. Default `0.5`.
+    </ParamField>
+
+    <ParamField path="turnDetection.eagerEndThreshold" type="number" required={false}>
+      Probability at which Voxtral signals a likely end of turn early, between `0` and `1`. Default `0.5`. Must not be above `startThreshold` and must be above `endThreshold`.
+    </ParamField>
+
+    <ParamField path="turnDetection.endThreshold" type="number" required={false}>
+      Probability below which silence counts toward ending the turn, between `0` and `1`. Default `0.33`.
+    </ParamField>
+
+    <ParamField path="turnDetection.minSilenceMs" type="integer" required={false}>
+      Milliseconds of silence before a turn can end. Default `500`. When `streamingDelayMs` is longer, jambonz raises this to match, since Voxtral's text lags the audio by about that much. Voxtral can end the turn before its last words or full stop arrive, so jambonz holds the final until the sentence ends, the next turn starts, or the streaming delay has passed.
+    </ParamField>
+
+    <ParamField path="turnDetection.endTimeoutMs" type="integer" required={false}>
+      Milliseconds of silence after which the turn ends regardless of the model. Default `3000`. Must be at least `minSilenceMs`.
+    </ParamField>
+
+    <ParamField path="mistralSttUri" type="string" required={false}>
+      Custom host to connect to instead of `api.mistral.ai`, such as a proxy. A `ws://` or `http://` prefix turns off TLS.
+    </ParamField>
+  </Accordion>
+
 </AccordionGroup>
 
 
