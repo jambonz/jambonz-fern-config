@@ -1336,7 +1336,11 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="diarize" type="boolean" required={false}>
-      Label each transcript with a speaker. Voxtral cannot diarize and detect turns at the same time, so diarization turns off turn detection: each diarized segment is returned as a final transcript, with no interim results or early end-of-turn signal. Setting the recognizer's `diarization` property has the same effect.
+      Label each transcript with a speaker. Voxtral cannot diarize and detect turns at the same time, so diarization turns off turn detection: a final transcript closes at each sentence end or change of speaker, and there is no early end-of-turn signal. Setting the recognizer's `diarization` property has the same effect.
+    </ParamField>
+
+    <ParamField path="verbatim" type="boolean" required={false}>
+      Ask Voxtral for a verbatim transcript (sent as `verbatim`). Not yet in Mistral's documentation; the realtime API accepts it.
     </ParamField>
 
     <ParamField path="speakerReferences" type="array" required={false}>
