@@ -1350,7 +1350,7 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="turnDetection.minSilenceMs" type="integer" required={false}>
-      Milliseconds of silence before a turn can end. Default `500`. When `streamingDelayMs` is longer, jambonz raises this to match, since Voxtral's text lags the audio by about that much. The final transcript is cut when Voxtral ends the turn, so a word or full stop that Voxtral sends later opens the next transcript.
+      Milliseconds of silence before a turn can end. Default `500`. When `streamingDelayMs` is longer, jambonz raises this to match, since Voxtral's text lags the audio by about that much. Voxtral can end the turn before its last words or full stop arrive, so jambonz holds the final until the sentence ends, the next turn starts, or the streaming delay has passed.
     </ParamField>
 
     <ParamField path="turnDetection.endTimeoutMs" type="integer" required={false}>
