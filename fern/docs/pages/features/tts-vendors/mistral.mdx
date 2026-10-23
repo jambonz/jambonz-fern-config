@@ -29,7 +29,7 @@ The default model is `voxtral-mini-tts-3-0`. Set a different one with `synthesiz
 
 ## Emotion and pace tags
 
-Put tags inline in the text to change how a passage is spoken, such as `[emotion=happy]` or `[pace=slow]`, or both together: `[emotion=calm][pace=slow]`. Pace takes `very-slow`, `slow`, `moderate`, `fast` or `very-fast`. Voxtral does not speak a tag it does not recognize, so a misspelled tag is silently ignored.
+Put tags inline in the text to change how a passage is spoken, such as `[emotion=happy]` or `[pace=slow]`, or both together: `[emotion=calm][pace=slow]`. Pace takes `very-slow`, `slow`, `moderate`, `fast` or `very-fast`. Voxtral does not speak a tag it does not recognize, so a misspelled tag is silently ignored. Text is synthesized a sentence at a time, and jambonz carries a reply's tags into each later sentence until one sets its own, so a tag at the start of a streamed reply shapes the whole reply.
 
 ## Options
 
@@ -57,7 +57,7 @@ Every option is optional. An option you don't set is not sent, so Mistral's own 
 
 ## Endpoint override
 
-To point at a non-default endpoint, such as a proxy, set `api_uri` on the credential or in **Extra Options**. Leave it out to use `api.mistral.ai`.
+To point at a non-default endpoint, such as a proxy, set `api_uri` in the credential's **Extra Options**; it applies to both TTS and STT. Leave it out to use `api.mistral.ai`.
 
 ## Streaming
 
