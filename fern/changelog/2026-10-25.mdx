@@ -97,8 +97,12 @@ monitoring, web-monitoring, recording), amd64 and arm64, are public in `drachtio
 GCP images are global. The terraform examples in `terraform/gcp/provision-vm-{mini,medium,large}`
 pin the 11.1.9 images.
 
-**self-hosted on AWS** - coming soon
+**self-hosted on AWS** - AMIs for all nine variants, amd64 and arm64, are public in 30
+regions, with public snapshots so `generate-cf.sh` can copy them into your account. The
+CloudFormation AMI mappings point at the 11.1.9 AMIs.
 
-**self-hosted on Azure** - coming soon
+**self-hosted on Azure** - images for all nine variants are in the jambonz community gallery
+(`jambonz-8962e4f5-da0f-41ee-b094-8680ad38d302`): amd64 replicated to 30 regions, arm64 to
+29. The terraform in `terraform/azure/provision-vm-{mini,medium,large}` defaults to 11.1.9.
 
 **self-hosted Debian packages** - coming soon
