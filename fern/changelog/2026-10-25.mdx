@@ -2,8 +2,9 @@
 jambonz Commercial 11.1.9
 </Card>
 
-**11.1.9** runs every jambonz component on Node.js 24.22.1, which fixes the TLS vulnerabilities
-known as **eMadhra** (details below). It also adds
+**11.1.9** runs every jambonz component on Node.js 24.22.1, which stops trusting the
+compromised **eMudhra** certificate authority keys and fixes several TLS vulnerabilities
+(details below). It also adds
 Mistral Voxtral 3 as a speech-to-text and text-to-speech vendor and reports
 LLM token usage for [agent](/verbs/verbs/agent) calls, per turn and per call. Agents can now
 switch their text-to-speech language with any multilingual recognizer, recognizer hints
@@ -14,15 +15,21 @@ feature-server mute that silenced the whole call, and RTP port reuse that could 
 audio from a finished call into a new one. More secrets are masked in logs. This entry
 covers 11.1.8 as well, which was not released separately.
 
-#### Security: eMadhra (Node.js TLS)
+#### Security: eMudhra CA compromise and Node.js TLS fixes
 
 <Warning>
-Self-hosted deployments on 11.1.7 or earlier run a Node.js version affected by the eMadhra TLS
-vulnerabilities. Upgrade to 11.1.9.
+Self-hosted deployments on 11.1.7 or earlier run a Node.js version that still trusts the
+compromised eMudhra certificate authority keys. Upgrade to 11.1.9.
 </Warning>
 
+Keys belonging to eMudhra intermediate certificate authorities were compromised, so a TLS
+certificate chaining to them can no longer be trusted. Node.js's
+[October 21, 2026 security releases](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases)
+remove that trust from Node.js's bundled certificate store, and fix several other
+vulnerabilities, including TLS hostname verification bypasses.
+
 jambonz runs its applications on Node.js. 11.1.9 pins every place Node.js comes from to
-**24.22.1**, the Node.js 24 release that fixes eMadhra:
+**24.22.1**, the Node.js 24 release that contains these fixes:
 
 - **AWS, GCP and Azure images** install Node.js 24.22.1, which runs every jambonz application
   on the host.
@@ -87,7 +94,7 @@ jambonz runs its applications on Node.js. 11.1.9 pins every place Node.js comes 
 - **Security** — verb credentials, OAuth tokens and secrets in logged webhook and websocket
   URLs are masked in logs. Webhook passwords are write-only in REST responses. drachtio
   no longer logs credentials. For the Node.js TLS fix, see
-  *Security: eMadhra* above.
+  *Security: eMudhra CA compromise* above.
 - **Account management** — fixes for billing (half-deleted accounts, orphaned
   subscriptions and a legacy price item), for changing the authentication method, which
   could orphan enterprise users, and for email activation, which could delete other users.
