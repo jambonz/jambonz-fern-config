@@ -1,0 +1,104 @@
+<Card title="11.1.9" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.9
+</Card>
+
+**11.1.9** adds Mistral Voxtral 3 as a speech-to-text and text-to-speech vendor and reports
+LLM token usage for [agent](/verbs/verbs/agent) calls, per turn and per call. Agents can now
+switch their text-to-speech language with any multilingual recognizer, recognizer hints
+reach Deepgram Nova-3, Flux and AssemblyAI as keyterms, and carrier `X-` headers are passed
+to your application when an outdial fails or the far end hangs up. The release also fixes
+unanswered calls that could stay in `trying`, unanswered DTMF-relay INFO requests, a
+feature-server mute that silenced the whole call, and RTP port reuse that could leak late
+audio from a finished call into a new one. More secrets are masked in logs. This entry
+covers 11.1.8 as well, which was not released separately.
+
+#### New Features & Improvements
+
+1. **Mistral Voxtral 3** — `mistral` is available as a speech-to-text and text-to-speech
+   vendor, with speech credentials in the portal and API. Recognizer options include
+   verbatim transcription, and [gather](/verbs/verbs/gather) sends an early
+   `speechDetected` event. See [Mistral](/guides/features/tts-vendors/mistral).
+1. **LLM token usage** — [agent](/verbs/verbs/agent) calls report the tokens the LLM used,
+   including cache reads and writes. Each turn in the session data carries its own usage,
+   the call carries a total, and the agent `actionHook` receives the call's usage. The
+   portal's recent-calls view shows token usage per agent turn.
+1. **Text-to-speech follows the detected language** — `autoLockLanguage` now works with
+   every recognizer that reports the language a caller spoke: AssemblyAI, Soniox, Google
+   (Cloud Speech and Gemini), Azure, Gladia and Modulate, as well as Deepgram. For Azure,
+   mediajam now runs continuous language identification when `altLanguages` is set.
+1. **Hints as keyterms** — recognizer `hints` are sent as keyterms to Deepgram Nova-3 and
+   Flux and to AssemblyAI, which do not support word boosting. Previously the hints were
+   dropped or rejected.
+1. **Carrier `X-` headers** — when an outdial fails, the final call status callback
+   carries the response's `X-` headers as `sip_x_headers` (for example `X-Twilio-Error`),
+   and the `completed` event carries the `X-` headers from a BYE.
+1. **Dial music** — `dialMusic` on the [dial](/verbs/verbs/dial) verb now loops until the
+   call is answered on inbound calls too, where it previously played once. A source that
+   fails to play stops the music instead of being retried every second.
+1. **Credential testing with account API keys** — an account-level API key can now test
+   LLM and speech credentials.
+
+#### Bug Fixes
+
+- **Unanswered calls** — when an application ended an inbound call that was still in early
+  media, the call was rejected without a call status event, so the application only ever
+  saw `trying`. A `failed` status is now sent with the SIP status. A call whose media
+  endpoint could not be created is now ended instead of staying in `trying`, and verbs the
+  application queued are kept.
+- **DTMF relay** — without a `sipRequestWithinDialogHook`, in-dialog INFO requests carrying
+  DTMF were never answered, so the SBC retransmitted each one until the call ended. They
+  are now answered with `200 OK`.
+- **Mute** — a feature-server mute or unmute on rtpengine 14 blocked the whole call
+  instead of one direction. It is now directional again.
+- **RTP ports** — mediajam handed out the most recently released port first, so late RTP
+  from a finished call could arrive on the next call. Ports are now allocated round-robin.
+- **Dial** — a [dial](/verbs/verbs/dial) that ended on its ring timeout was reported as
+  `error` instead of `no-answer`.
+- **Agents** — the hangup tool waits for the goodbye prompt to finish playing; an aborted
+  LLM prompt is no longer treated as a failure; handoff tool calls are recorded in the
+  turn's `tool_calls`; and the LLM no longer continues during a handoff transfer.
+- **SBC registration** — the transport is stored on the registered proxy for TCP and TLS
+  clients.
+- **Security** — verb credentials, OAuth tokens and secrets in logged webhook and websocket
+  URLs are masked in logs. Webhook passwords are write-only in REST responses. drachtio
+  no longer logs credentials. Node.js is pinned to 24.22.1 for a TLS vulnerability.
+- **Account management** — fixes for billing (half-deleted accounts, orphaned
+  subscriptions and a legacy price item), for changing the authentication method, which
+  could orphan enterprise users, and for email activation, which could delete other users.
+- **Database upgrade** — tables created by an upgrade now inherit the database charset.
+
+#### Upgrade Notes (self-hosted)
+
+- **Database** — 11.1.8 and 11.1.9 make no schema changes; the upgrade only records the
+  new version.
+- **Webhook passwords** — the REST API no longer returns webhook passwords. Clients that
+  read a password back must keep their own copy.
+
+#### Component Versions
+
+| Component | 11.1.7 | 11.1.9 |
+|---|---|---|
+| jambonz | 11.1.7 | **11.1.9** |
+| mediajam | 0.5.15 | **0.5.16** |
+| drachtio | 10.1.10 | **10.1.11** |
+| rtpengine | 14.1.1.8-jambonz14 | 14.1.1.8-jambonz14 |
+| jambonz OSS (sbc-*) | 0.9.14 | **0.9.15** |
+| upload-recordings | 1.9.3 | 1.9.3 |
+| monitoring-agent | 10.2.2 | 10.2.2 |
+| pcap-server | 1.0.4 | 1.0.4 |
+| heplify-server | 1.0.4 | 1.0.4 |
+
+#### Availability
+
+**jambonz.cloud** - coming soon
+
+**self-hosted on GCP** - images for all nine variants (mini, fs, sip-rtp, sip, rtp, web,
+monitoring, web-monitoring, recording), amd64 and arm64, are public in `drachtio-cpaas`.
+GCP images are global. The terraform examples in `terraform/gcp/provision-vm-{mini,medium,large}`
+pin the 11.1.9 images.
+
+**self-hosted on AWS** - coming soon
+
+**self-hosted on Azure** - coming soon
+
+**self-hosted Debian packages** - coming soon
