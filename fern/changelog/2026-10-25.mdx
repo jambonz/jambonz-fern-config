@@ -40,9 +40,9 @@ jambonz runs its applications on Node.js. 11.1.9 pins every place Node.js comes 
 - Each application declares `engines.node >= 24.22.1`.
 
 **Upgrading:** an existing deployment keeps the Node.js it was built with. Redeploy from the
-11.1.9 images (AWS CloudFormation, GCP or Azure terraform), or upgrade the Debian packages once
-11.1.9 is available there. If you cannot redeploy right away, upgrade Node.js on each host to
-24.22.1 or later.
+11.1.9 images (AWS CloudFormation, GCP or Azure terraform), or upgrade the Debian packages
+(`apt-get update && apt-get upgrade jambonz-mini`). If you cannot redeploy right away, upgrade
+Node.js on each host to 24.22.1 or later.
 
 #### New Features & Improvements
 
@@ -138,4 +138,5 @@ CloudFormation AMI mappings point at the 11.1.9 AMIs.
 (`jambonz-8962e4f5-da0f-41ee-b094-8680ad38d302`): amd64 replicated to 30 regions, arm64 to
 29. The terraform in `terraform/azure/provision-vm-{mini,medium,large}` defaults to 11.1.9.
 
-**self-hosted Debian packages** - coming soon
+**self-hosted Debian packages** - `jambonz-mini` 11.1.9 installs from the jambonz `bookworm`
+apt distribution on amd64 and arm64, with Node.js 24.22.1.
