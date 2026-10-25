@@ -2,7 +2,9 @@
 jambonz Commercial 11.1.9
 </Card>
 
-**11.1.9** adds Mistral Voxtral 3 as a speech-to-text and text-to-speech vendor and reports
+**11.1.9** runs every jambonz component on Node.js 24.22.1, which fixes the TLS vulnerabilities
+known as **eMadhra** (details below). It also adds
+Mistral Voxtral 3 as a speech-to-text and text-to-speech vendor and reports
 LLM token usage for [agent](/verbs/verbs/agent) calls, per turn and per call. Agents can now
 switch their text-to-speech language with any multilingual recognizer, recognizer hints
 reach Deepgram Nova-3, Flux and AssemblyAI as keyterms, and carrier `X-` headers are passed
@@ -11,6 +13,29 @@ unanswered calls that could stay in `trying`, unanswered DTMF-relay INFO request
 feature-server mute that silenced the whole call, and RTP port reuse that could leak late
 audio from a finished call into a new one. More secrets are masked in logs. This entry
 covers 11.1.8 as well, which was not released separately.
+
+#### Security: eMadhra (Node.js TLS)
+
+<Warning>
+Self-hosted deployments on 11.1.7 or earlier run a Node.js version affected by the eMadhra TLS
+vulnerabilities. Upgrade to 11.1.9.
+</Warning>
+
+jambonz runs its applications on Node.js. 11.1.9 pins every place Node.js comes from to
+**24.22.1**, the Node.js 24 release that fixes eMadhra:
+
+- **AWS, GCP and Azure images** install Node.js 24.22.1, which runs every jambonz application
+  on the host.
+- **Debian packages** — `jambonz-mini` now installs Node.js 24.22.1. Earlier packages used
+  Node.js 22.
+- **Docker images** for Kubernetes deployments are built on `node:24.22.1-alpine` instead of
+  the floating `node:24-alpine` tag; every 11.1.9 application image runs Node.js v24.22.1.
+- Each application declares `engines.node >= 24.22.1`.
+
+**Upgrading:** an existing deployment keeps the Node.js it was built with. Redeploy from the
+11.1.9 images (AWS CloudFormation, GCP or Azure terraform), or upgrade the Debian packages once
+11.1.9 is available there. If you cannot redeploy right away, upgrade Node.js on each host to
+24.22.1 or later.
 
 #### New Features & Improvements
 
@@ -61,7 +86,8 @@ covers 11.1.8 as well, which was not released separately.
   clients.
 - **Security** — verb credentials, OAuth tokens and secrets in logged webhook and websocket
   URLs are masked in logs. Webhook passwords are write-only in REST responses. drachtio
-  no longer logs credentials. Node.js is pinned to 24.22.1 for a TLS vulnerability.
+  no longer logs credentials. For the Node.js TLS fix, see
+  *Security: eMadhra* above.
 - **Account management** — fixes for billing (half-deleted accounts, orphaned
   subscriptions and a legacy price item), for changing the authentication method, which
   could orphan enterprise users, and for email activation, which could delete other users.
