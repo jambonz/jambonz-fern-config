@@ -3,7 +3,7 @@ title: Giggy
 subtitle: Voices, speed and repeatable output for Giggy TTS.
 ---
 
-[Giggy](https://giggy.ai) is a text-to-speech service with a large public voice catalog, covering more than 80 languages, plus any voices you create in your own Giggy account. Giggy tuning is passed in `synthesizer.options`.
+[Giggy](https://giggy.ai) is a text-to-speech service with a large public voice catalog, covering more than 80 languages, plus any voices you create in your own Giggy account. The same Giggy API key also serves [speech recognition](/verbs/verbs/recognizer). Giggy tuning is passed in `synthesizer.options`.
 
 ```json
 {
@@ -43,7 +43,7 @@ Both options are optional. An option you don't set is not sent, so Giggy's own d
 
 ## Endpoint override
 
-Giggy credentials have no API base URL field in the portal. If you need to point at a non-default endpoint, such as a proxy, set `api_uri` in **Extra Options** alongside the tuning fields:
+Giggy credentials have no API base URL field in the portal. If you need to point text-to-speech at a non-default endpoint, such as a proxy, set `api_uri` in **Extra Options** alongside the tuning fields (for speech recognition, use `giggyOptions.giggySttUri` on the recognizer instead):
 
 ```json
 {

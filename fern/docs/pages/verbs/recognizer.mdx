@@ -1314,6 +1314,24 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
   </Accordion>
 
+  <Accordion title="giggyOptions">
+    Giggy (`giggy`) uses [Giggy live speech-to-text](https://giggy.ai/docs/speech-api). Giggy ends each utterance after 650 ms of silence (energy-based, not semantic) and returns interim results followed by one final transcript per utterance. There are no confidence scores (transcripts are reported with a confidence of 1.0). In the [`agent`](/verbs/verbs/agent) verb, jambonz's own voice activity and turn detection decide when the user's turn ends, as with `deepgram`.
+
+    Giggy rejects recognition hints, so `hints` and `hintsBoost` are not sent. Set `language` to a supported locale such as `en-US`, `es-ES`, `zh-CN` or `vi-VN` (Giggy matches the base language), or to `any` for automatic language detection.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Giggy API key to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="giggySttUri" type="string" required={false}>
+      Custom host to connect to instead of `api.giggy.ai` (e.g. a proxy).
+    </ParamField>
+
+    <ParamField path="giggySttUseTls" type="boolean" required={false}>
+      Use TLS when connecting to a custom host. Default `true`.
+    </ParamField>
+  </Accordion>
+
   <Accordion title="mistralOptions">
     Mistral (`mistral`) uses [Voxtral realtime transcription](https://docs.mistral.ai/studio/audio/speech-to-text/transcribe-in-realtime). Text is streamed as it is recognized (sent as interim results when `interim` is enabled). With turn detection on, which is the default, Voxtral detects the end of the speaker's turn and jambonz returns one final transcript per turn. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb each final ends the user's turn, unless `turnDetection` is set to `krisp`. Voxtral's early end-of-turn signal drives `earlyGeneration`.
 
