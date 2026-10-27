@@ -1,0 +1,130 @@
+---
+title: OpenRouter
+subtitle: Reach Claude, GPT, Gemini, Llama, DeepSeek, Qwen and hundreds of other models with one API key.
+---
+
+OpenRouter puts one API key and one OpenAI-compatible endpoint in front of models from Anthropic, OpenAI, Google, Meta, DeepSeek, Qwen, Mistral, xAI and others. You switch models by changing the model id, with no new credential, and OpenRouter handles billing in one place.
+
+Many models on OpenRouter are served by several upstream providers (Llama 3.3 70B, for example, by Groq, DeepInfra, Together and others). OpenRouter chooses one per request, and you can steer that choice for latency or data-handling requirements, as described in [Provider routing](#provider-routing).
+
+## Get credentials
+
+1. Sign in at [https://openrouter.ai](https://openrouter.ai).
+2. Open **Settings → API Keys** (direct link: [https://openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)).
+3. Click **Create Key**, name it, and copy the `sk-or-v1-...` string.
+4. Add credits under **Settings → Credits**. Requests fail with `402` when the balance runs out.
+
+## Configure in jambonz
+
+In the portal: **Account → LLM Services → + Add LLM Service → OpenRouter**.
+
+<ParamField path="API Key" type="string" required={true}>
+  The `sk-or-v1-...` key from OpenRouter.
+</ParamField>
+
+<ParamField path="Base URL" type="string" required={false}>
+  Defaults to `https://openrouter.ai/api/v1`. Override only for proxies.
+</ParamField>
+
+Click **Test** to verify. The test checks the key against OpenRouter's authenticated key endpoint, so a wrong or revoked key fails here, not on the first call.
+
+## Use in an agent verb
+
+Model ids are `<org>/<model>`:
+
+```js
+session.agent({
+  llm: {
+    vendor: 'openrouter',
+    model: 'anthropic/claude-haiku-5.5',
+    llmOptions: {
+      systemPrompt: 'You are a helpful voice assistant.',
+    },
+  },
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  turnDetection: 'krisp',
+  bargeIn: { enable: true },
+  actionHook: '/agent-complete',
+}).send();
+```
+
+## Available models
+
+The portal's model dropdown lists OpenRouter's live catalog of text models. Any model id from [openrouter.ai/models](https://openrouter.ai/models) works. Common picks for voice agents:
+
+| Model | Notes |
+|---|---|
+| `anthropic/claude-haiku-5.5` | Fast, strong instruction following and tool calls |
+| `anthropic/claude-sonnet-5.5` | Stronger reasoning, higher latency and cost |
+| `openai/gpt-5.4-mini` | Fast, reliable tool calls |
+| `openai/gpt-4.1-mini` | Low latency, no reasoning step |
+| `google/gemini-3.5-flash` | Fast, long context |
+| `meta-llama/llama-3.3-70b-instruct` | Open-weight; pair with latency routing (below) |
+
+## Provider routing
+
+By default OpenRouter routes each request mainly by price, skipping providers that have had a recent outage. For voice, latency usually matters more than price.
+
+**Quickest option: a model suffix.** Append `:nitro` to any model id to route by throughput, or `:floor` to route by price:
+
+```js
+llm: { vendor: 'openrouter', model: 'meta-llama/llama-3.3-70b-instruct:nitro' }
+```
+
+**Full control: `llmOptions.vendorParams`.** Anything in [`vendorParams`](/verbs/verbs/agent) is added to the request sent to OpenRouter, so you can use OpenRouter's [provider routing](https://openrouter.ai/docs/guides/routing/provider-selection) and [model fallbacks](https://openrouter.ai/docs/guides/routing/model-fallbacks) directly:
+
+```js
+llm: {
+  vendor: 'openrouter',
+  model: 'meta-llama/llama-3.3-70b-instruct',
+  llmOptions: {
+    systemPrompt: 'You are a helpful voice assistant.',
+    vendorParams: {
+      provider: {
+        sort: 'latency',          // fastest host first
+        data_collection: 'deny',  // skip hosts that store or train on prompts
+        require_parameters: true, // only hosts that support every parameter sent, such as tools
+      },
+      models: ['openai/gpt-4.1-mini', 'google/gemini-3.5-flash'], // fallbacks if the primary model fails
+    },
+  },
+}
+```
+
+Useful `provider` fields:
+
+| Field | Effect |
+|---|---|
+| `sort` | `"latency"`, `"throughput"` or `"price"` |
+| `order` / `only` / `ignore` | Prefer, restrict to, or exclude named providers (e.g. `["groq", "cerebras"]`) |
+| `data_collection: "deny"` | Only providers that don't store or train on your data |
+| `zdr: true` | Only zero-data-retention endpoints |
+| `require_parameters: true` | Only providers that support every parameter in the request |
+| `max_price` | Price ceiling per million tokens |
+
+<Note>
+**Fallback models change the model mid-call.** When `models` is set and the primary model fails, that turn is answered by a different model, with different behaviour and a cold prompt cache. Choose fallbacks that handle your prompt and tools well.
+</Note>
+
+## Prompt caching
+
+For `anthropic/...` models, jambonz turns on OpenRouter's automatic prompt caching, so long system prompts are cached after the first turn. OpenAI-family and Gemini models cache automatically on the provider side. Cached tokens are reported in the agent's per-turn LLM usage.
+
+## Quirks & errors
+
+<Note>
+**OpenRouter adds a network hop.** Expect slightly higher time to first token than calling the model's own vendor directly. For the lowest latency on a single model family, a direct credential (Anthropic, OpenAI, Groq, ...) is faster. OpenRouter's value is choice and routing.
+</Note>
+
+<Warning>
+**`401 User not found`**: the key is wrong or revoked. Create a new one at [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys).
+</Warning>
+
+<Warning>
+**`402`**: the account or key is out of credits, or has hit its spending limit.
+</Warning>
+
+<Warning>
+**`404` with `provider.only`**: no allowed provider serves that model. Widen the list or drop `only`.
+</Warning>

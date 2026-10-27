@@ -112,6 +112,8 @@ navigation:
                 path: ./docs/pages/features/llm-vendors/moonshot.mdx
               - page: OpenAI
                 path: ./docs/pages/features/llm-vendors/openai.mdx
+              - page: OpenRouter
+                path: ./docs/pages/features/llm-vendors/openrouter.mdx
               - page: Vertex AI — Gemini
                 path: ./docs/pages/features/llm-vendors/vertex-gemini.mdx
               - page: Vertex AI — Partner Models
@@ -511,6 +513,9 @@ redirects:
     permanent: true
   - source: "/guides/features/bring-your-own-llm/huggingface"
     destination: "/guides/features/bring-your-own-llm/hugging-face"
+    permanent: true
+  - source: "/guides/features/bring-your-own-llm/openrouter"
+    destination: "/guides/features/bring-your-own-llm/open-router"
     permanent: true
   - source: "/guides/features/bring-your-own-llm/moonshot"
     destination: "/guides/features/bring-your-own-llm/moonshot-kimi"

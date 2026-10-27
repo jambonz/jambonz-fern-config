@@ -155,6 +155,14 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   Maximum number of tokens in the LLM response.
 </ParamField>
 
+<ParamField path="llm.llmOptions.vendorParams" type="object" required={false}>
+  Vendor-specific request parameters that jambonz has no first-class option for, passed to the vendor as-is. For example, OpenRouter's provider routing: `{ provider: { sort: 'latency' }, models: ['openai/gpt-4.1-mini'] }` (see [OpenRouter](/guides/features/bring-your-own-llm/openrouter#provider-routing)).
+
+  - Fields are added to the request body for OpenAI-compatible vendors (`openai`, `openrouter`, `groq`, `deepseek`, `xai`, `azure-openai`, …) and to the generation config for `google` and `vertex-gemini`. `anthropic` and `bedrock` ignore it.
+  - Fields jambonz already sets (`model`, messages, tools, max tokens, temperature, …) are never overridden; use the first-class options for those.
+  - jambonz does not validate the contents. A misspelled field, or one the vendor rejects, surfaces as a vendor error on the first turn.
+</ParamField>
+
 <ParamField path="mcpServers" type="array" required={false}>
   External MCP servers that provide tools to the LLM. The agent verb connects to each server at startup, discovers available tools, and makes them callable by the LLM. Each entry requires a `url` property and optionally `auth` and `roots`.
 </ParamField>
