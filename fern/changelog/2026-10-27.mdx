@@ -1,0 +1,94 @@
+<Card title="11.1.10" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.10
+</Card>
+
+**11.1.10** adds OpenRouter as an LLM vendor, a `vendorParams` object for sending
+vendor-specific parameters to the LLM from the [agent](/verbs/verbs/agent) verb, and
+Giggy as a speech-to-text vendor. Agents can now run without speaking (for driving
+DTMF-only IVRs), and they no longer speak stage directions such as "(silence)" or
+`<think>` blocks. Applications can send events, text, DTMF and variables into a running
+Dialogflow CES session without restarting the [dialogflow](/verbs/verbs/dialogflow) verb.
+The release also stops a paused `listen` stream from leaking keypad digits, and fixes
+REST call updates that were refused before they reached the feature server.
+
+#### New Features & Improvements
+
+1. **OpenRouter** — `openrouter` is available as an LLM vendor, with credentials in the
+   portal and API and a model list taken from OpenRouter's live catalog. One OpenRouter
+   key reaches models from Anthropic, OpenAI, Google, Meta, DeepSeek, Qwen and others.
+   See [OpenRouter](/guides/features/bring-your-own-llm/open-router).
+1. **`llmOptions.vendorParams`** — the [agent](/verbs/verbs/agent) verb passes
+   `llm.llmOptions.vendorParams` through to the LLM request, so you can use a vendor's own
+   parameters without jambonz having to support each one: OpenRouter provider routing and
+   model fallbacks, OpenAI `reasoning_effort` and `service_tier`, Gemini `thinkingConfig`
+   and `safetySettings`, DeepSeek `thinking`, Groq `reasoning_effort`, and others. It
+   applies to OpenAI-compatible vendors and Google Gemini; Anthropic and Bedrock ignore it.
+   The OpenAI, Google, DeepSeek, Groq and OpenRouter vendor pages list the parameters most
+   useful for voice, including how to turn off reasoning to cut latency.
+1. **Giggy speech-to-text** — `giggy`, already a text-to-speech vendor, is now available
+   for speech-to-text too, with interim and final results. A Giggy credential can be used
+   for STT in the portal. See [Giggy](/guides/features/tts-vendors/giggy).
+1. **Agent `speak: false`** — an agent with `speak: false` never sends its text to
+   text-to-speech. Its text still goes to the history, `llm_response` events and the
+   transcript. Use it for an agent that navigates a DTMF-only IVR, where any spoken word
+   could be taken as a menu choice. Tool filler and early generation are off with it.
+1. **Agent `speechCleanup`** — models sometimes write "(silence)" or "[No response needed]"
+   when they mean to say nothing, and some emit `<think>` blocks; both used to be spoken.
+   The agent now drops a paragraph that is only a parenthesised, bracketed or starred
+   aside, and any `<think>`, `<thinking>` or `<reasoning>` block, before text-to-speech. A
+   reply with nothing left to say ends the turn silently. History and transcripts keep
+   the raw text. It is on by default; set `speechCleanup: false` to turn it off.
+1. **Dialogflow CES input mid-session** — the websocket command `dialogflow:update`, or
+   `dialogflow_update` in a REST call update, sends an `event`, `text` or `dtmf` and
+   optional `variables` into the running CES session. Previously the only way was to
+   redirect to a new dialogflow verb with a `welcomeEvent`, which restarted the session
+   and reported a false `caller hungup` to the `actionHook`. Variables and DTMF are sent
+   at once; an event or text is held until the agent finishes its current reply. The new
+   `input-sent` and `input-dropped` eventHook events report what happened to held input.
+
+#### Bug Fixes
+
+- **Keypad digits during a paused `listen`** — while a `listen` stream with `passDtmf`
+  was paused (for example with `pauseCallRecording` during a card payment), each digit
+  was still sent to the websocket, written to the debug log and named in a trace span.
+  While paused, digits are no longer sent, and neither the log nor the span contains them.
+- **REST call updates** — the REST API refused a call update whose only option was
+  `llm_update`, `agent_update`, `llm_status`, `llm_tool_output`, `conf_listen_status`,
+  `stt_reconfigure`, `room_say` or `room_play`, with "no valid options supplied to
+  updateCall", so the update never reached the feature server. All are now accepted.
+- **Licensing banner** — account users on a licensed system could see a false
+  "unlicensed" banner in the portal.
+
+#### Deprecations
+
+- **`llmOptions.reasoningEffort`** on the agent verb was never implemented and has no
+  effect. It is still accepted, so existing applications keep working, and the feature
+  server now logs a warning when it is set. Use the vendor's own parameter in
+  `vendorParams` instead, for example `{reasoning_effort: 'low'}` for OpenAI.
+
+#### Upgrade Notes (self-hosted)
+
+- **Database** — 11.1.10 makes no schema changes; the upgrade only records the new version.
+
+#### Component Versions
+
+| Component | 11.1.9 | 11.1.10 |
+|---|---|---|
+| jambonz | 11.1.9 | **11.1.10** |
+| mediajam | 0.5.16 | **0.5.18** |
+| drachtio | 10.1.11 | 10.1.11 |
+| rtpengine | 14.1.1.8-jambonz14 | 14.1.1.8-jambonz14 |
+| jambonz OSS (sbc-*) | 0.9.15 | 0.9.15 |
+| upload-recordings | 1.9.3 | 1.9.3 |
+| monitoring-agent | 10.2.2 | 10.2.2 |
+| pcap-server | 1.0.4 | **1.0.5** |
+| heplify-server | 1.0.4 | **1.0.5** |
+
+pcap-server and heplify-server 1.0.5 change only how they are built; they behave the same
+as 1.0.4.
+
+#### Availability
+
+**jambonz.cloud** - October 27, 2026
+
+**self-hosted** (AWS, GCP, Azure, Debian packages) - coming soon
