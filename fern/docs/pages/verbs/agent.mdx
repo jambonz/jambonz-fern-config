@@ -159,7 +159,8 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   Vendor-specific request parameters that jambonz has no first-class option for, passed to the vendor as-is. For example, OpenRouter's provider routing: `{ provider: { sort: 'latency' }, models: ['openai/gpt-4.1-mini'] }` (see [OpenRouter](/guides/features/bring-your-own-llm/openrouter#provider-routing)).
 
   - Fields are added to the request body for OpenAI-compatible vendors (`openai`, `openrouter`, `groq`, `deepseek`, `xai`, `azure-openai`, …) and to the generation config for `google` and `vertex-gemini`. `anthropic` and `bedrock` ignore it.
-  - Fields jambonz already sets (`model`, messages, tools, max tokens, temperature, …) are never overridden; use the first-class options for those.
+  - It can only add fields. Anything jambonz sets on the request wins: `model`, messages and tools always, and max tokens and temperature when you set `maxTokens` or `temperature`.
+  - Commonly used parameters, tested by us: [OpenAI](/guides/features/bring-your-own-llm/openai#vendor-specific-parameters), [Google](/guides/features/bring-your-own-llm/google#vendor-specific-parameters), [DeepSeek](/guides/features/bring-your-own-llm/deepseek#vendor-specific-parameters), [OpenRouter](/guides/features/bring-your-own-llm/openrouter#provider-routing).
   - jambonz does not validate the contents. A misspelled field, or one the vendor rejects, surfaces as a vendor error on the first turn.
 </ParamField>
 

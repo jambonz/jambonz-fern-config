@@ -104,8 +104,24 @@ Useful `provider` fields:
 | `max_price` | Price ceiling per million tokens |
 
 <Note>
+**Every id in `models` must exist.** Fallbacks cover a model that can't be served (outage, rate limit, routing filter), not a misspelled id: an unknown model id fails the whole request with a `400`.
+</Note>
+
+<Note>
 **Fallback models change the model mid-call.** When `models` is set and the primary model fails, that turn is answered by a different model, with different behaviour and a cold prompt cache. Choose fallbacks that handle your prompt and tools well.
 </Note>
+
+## Reasoning
+
+Some models think before answering by default, which adds latency to every turn. OpenRouter's `reasoning` parameter controls this across vendors:
+
+```js
+llmOptions: {
+  vendorParams: { reasoning: { effort: 'minimal' } },  // or 'none' for OpenAI GPT-5 models
+}
+```
+
+In our tests `google/gemini-3.5-flash` spent 381 tokens thinking by default, took ~2.5 s to its first token, and ran out of a 400-token budget before finishing its answer. With `effort: "minimal"` it used no thinking tokens and reached its first token in ~1.0 s. `openai/gpt-5.4-mini` with `effort: "none"` reached its first token in ~0.7 s versus ~2.2 s at `"high"`.
 
 ## Prompt caching
 

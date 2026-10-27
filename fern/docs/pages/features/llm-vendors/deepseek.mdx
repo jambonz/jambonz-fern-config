@@ -53,6 +53,26 @@ See DeepSeek's [models & pricing page](https://api-docs.deepseek.com/quick_start
 | `deepseek-v4-flash` | Default — fast, cheap, tool-capable |
 | `deepseek-v4-pro` | Higher quality at higher cost |
 
+## Vendor-specific parameters
+
+Set these in [`llmOptions.vendorParams`](/verbs/verbs/agent); they are added to the DeepSeek request as-is.
+
+| Parameter | Effect |
+|---|---|
+| `thinking: { type: "disabled" }` | Turns off thinking mode, which is on by default. **Recommended for voice:** in our tests `deepseek-v4-flash` reached its first token in ~0.9 s instead of ~1.3 s. |
+| `reasoning_effort` | `"none"` (same as disabling thinking), `"low"`, `"high"` or `"max"`. |
+
+```js
+llm: {
+  vendor: 'deepseek',
+  model: 'deepseek-flash',
+  llmOptions: {
+    systemPrompt: 'You are a helpful voice assistant.',
+    vendorParams: { thinking: { type: 'disabled' } },
+  },
+}
+```
+
 ## Quirks & errors
 
 <Note>
