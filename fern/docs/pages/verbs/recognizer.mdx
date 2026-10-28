@@ -1380,6 +1380,28 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
   </Accordion>
 
+  <Accordion title="paxaOptions">
+    Paxa Labs (`paxa`) uses [Paxa realtime transcription](https://paxalabs.com/docs/api/stt-live) with the model `paxa-stt-lite-realtime-v1-preview`, which Paxa publishes as a research preview: its transcript quality and options may change between Paxa releases. Paxa detects turns itself and has no turn-detection settings: it signals when the caller starts and stops speaking, may send an interim transcript at a natural pause (sent as an interim result when `interim` is enabled), and returns one final transcript per turn. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb each final ends the user's turn, unless `turnDetection` is set to `krisp`.
+
+    `language` is sent to Paxa as a language hint, such as `th-TH`, `en-US` or `zh-CN`. Leave it unset for automatic language detection; Thai speech that switches into English is transcribed as spoken.
+
+    The recognizer's own properties carry the rest: `model` picks the realtime model (default `paxa-stt-lite-realtime-v1-preview`), and `hints` are sent as Paxa's `vocabulary`, terms spelled the way they should appear in the transcript. Paxa accepts up to 50 terms of up to 50 characters each; jambonz does not send hints beyond those limits. `hintsBoost` is not used.
+
+    The Paxa credential is used for both TTS and STT. Its `api_uri` in **Extra Options** moves STT off `api.paxalabs.com` too.
+
+    <ParamField path="style" type="string" required={false}>
+      `verbatim` keeps fillers, false starts and self-corrections as they were said. `clean` drops fillers and merges broken phrases. Paxa's default is `verbatim`.
+    </ParamField>
+
+    <ParamField path="convention" type="string" required={false}>
+      `spoken` writes numbers, units and dates as they were pronounced. `written` uses digits and display conventions. Paxa's default is `spoken`.
+    </ParamField>
+
+    <ParamField path="timestamps" type="boolean" required={false}>
+      Ask Paxa for word-level timestamps (sent as `timestamps: "word"`).
+    </ParamField>
+  </Accordion>
+
 </AccordionGroup>
 
 

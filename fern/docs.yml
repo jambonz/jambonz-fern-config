@@ -148,6 +148,8 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/mistral.mdx
               - page: Murf
                 path: ./docs/pages/features/tts-vendors/murf.mdx
+              - page: Paxa Labs
+                path: ./docs/pages/features/tts-vendors/paxa.mdx
               - page: Resemble
                 path: ./docs/pages/features/tts-vendors/resemble.mdx
               - page: Rime Labs
