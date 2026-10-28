@@ -65,7 +65,7 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 ## Parameters
 
 <ParamField path="actionHook" type="string" required={false}>
-  A webhook invoked when the agent verb ends. The payload includes a `completion_reason` field indicating why it terminated.
+  A webhook invoked when the agent verb ends. The payload includes a `completion_reason` field indicating why it terminated, and `llm_fallback` when the agent switched LLMs during the call (see [LLM Fallback](#llm-fallback)).
 </ParamField>
 
 <ParamField path="bargeIn" type="object" required={false}>
@@ -164,6 +164,14 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   - jambonz does not validate the contents. A misspelled field, or one the vendor rejects, surfaces as a vendor error on the first turn.
 </ParamField>
 
+<ParamField path="llm.fallback" type="array" required={false}>
+  Up to three LLMs to switch to, in order, if the current one fails before it has said anything. Each entry takes `vendor` (required), `model`, `label`, `auth`, `connectOptions` and `llmOptions.vendorParams`. See [LLM Fallback](#llm-fallback).
+</ParamField>
+
+<ParamField path="llm.fallbackTimeoutMs" type="number" required={false} default="5000">
+  With `llm.fallback` set: switch to the next LLM when the current one has produced no token or tool call this long after a request. `0` disables the timeout. Reasoning models that think before answering may need a higher value or `0`.
+</ParamField>
+
 <ParamField path="mcpServers" type="array" required={false}>
   External MCP servers that provide tools to the LLM. The agent verb connects to each server at startup, discovers available tools, and makes them callable by the LLM. Each entry requires a `url` property and optionally `auth` and `roots`.
 </ParamField>
@@ -208,6 +216,61 @@ Contact [support@jambonz.org](mailto:support@jambonz.org) for information on obt
 
 This requirement does not apply to jambonz.cloud customers — Krisp features are included with all jambonz.cloud plans.
 </Warning>
+
+## LLM Fallback
+
+`llm.fallback` lists backup LLMs. When the current LLM fails, the agent switches to the next one and the caller does not notice.
+
+```javascript
+session.agent({
+  stt: { vendor: 'deepgram', language: 'en-US' },
+  tts: { vendor: 'cartesia', voice: 'sonic-english' },
+  llm: {
+    vendor: 'openai',
+    model: 'gpt-4o',
+    llmOptions: { systemPrompt: 'You are a helpful voice assistant.' },
+    fallback: [
+      { vendor: 'anthropic', model: 'claude-sonnet-4-5', label: 'backup' },
+      { vendor: 'google', model: 'gemini-2.5-flash' }
+    ],
+    fallbackTimeoutMs: 5000
+  },
+  actionHook: '/agent-complete'
+}).send();
+```
+
+**The agent falls back when the current LLM:**
+- rejects the API key (401/403)
+- is out of credit or quota (402, `insufficient_quota`)
+- does not know the model, or returns another 4xx error
+- returns a rate limit (429), a server error (5xx) or a network error that persists after one quick retry (about 300ms)
+- produces no token or tool call within `fallbackTimeoutMs`
+
+**An LLM is skipped when the call starts** if its vendor is unknown, it has no stored credentials, it is a fallback entry with no `model` (unless its credential is jambonz-hosted), or it is jambonz-hosted and the prepaid wallet is depleted. If the main LLM is skipped, the agent starts on the first usable fallback.
+
+**The agent does not fall back when:**
+- the LLM already produced text. The caller heard part of the reply, so the turn is not replayed.
+- the caller barged in.
+- every LLM in the chain failed. The verb then ends with `completion_reason: "llm_failure"`.
+
+**After a switch:**
+- The call stays on the new LLM for the rest of the call.
+- The conversation carries over to the new vendor, tool calls and results included.
+- The system prompt, tools, `maxTokens` and `temperature` come from the main `llm`. `vendorParams` do not, so set them per entry.
+- While a fallback remains, the SDK's own retries are off, so a failing vendor is not waited out (for example a long `Retry-After`). Setting `connectOptions.maxRetries` overrides this.
+- A `turnGate` that shares the main LLM's credentials follows the same chain.
+
+Each switch raises an LLM failure alert in the portal and is listed in the `actionHook` payload:
+
+```json
+"llm_fallback": [
+  {
+    "from": { "vendor": "openai", "model": "gpt-4o" },
+    "to": { "vendor": "anthropic", "model": "claude-sonnet-4-5", "label": "backup" },
+    "reason": "401 Incorrect API key provided"
+  }
+]
+```
 
 ## Tool Calling
 
