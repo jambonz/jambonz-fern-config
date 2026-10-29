@@ -132,6 +132,8 @@ navigation:
             contents:
               - page: Overview
                 path: ./docs/pages/features/tts-vendors/overview.mdx
+              - page: AssemblyAI
+                path: ./docs/pages/features/tts-vendors/assemblyai.mdx
               - page: Cartesia
                 path: ./docs/pages/features/tts-vendors/cartesia.mdx
               - page: ElevenLabs

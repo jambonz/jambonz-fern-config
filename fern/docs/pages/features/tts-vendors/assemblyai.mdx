@@ -1,0 +1,50 @@
+---
+title: AssemblyAI
+subtitle: AssemblyAI-TTS-1 voices, region, and session options.
+---
+
+AssemblyAI text-to-speech uses the same API key as AssemblyAI speech-to-text. In the portal, open the AssemblyAI speech credential and check **Use for text-to-speech**.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi, thanks for calling. How can I help you today?",
+  "synthesizer": {
+    "vendor": "assemblyai",
+    "language": "english",
+    "voice": "aai-jane"
+  }
+}
+```
+
+## Voices and languages
+
+The model is `assemblyai-tts-1`. Set `language` to AssemblyAI's own language name: `english`, `spanish`, `german`, `italian`, `portuguese` or `french`. jambonz passes it to AssemblyAI unchanged, so a code such as `en-US` is rejected. Leave `language` out and the voice speaks its own language.
+
+The portal lists the built-in library voices (`aai-jane`, `aai-alba`, `aai-anna`, `aai-charles`, `aai-eve`, `aai-george`, `aai-jean`, `aai-mary`, `aai-michael`, `aai-paul`, `aai-vera`). Each one speaks all six languages. You can also use any `voice_id` from the [AssemblyAI voice catalog](https://www.assemblyai.com/dashboard/text-to-speech/voices), or a voice you have cloned, as `voice`. This works with a slug or a UUID.
+
+## Options
+
+Pass these in `synthesizer.options`, or in the credential's **Extra Options**.
+
+<ParamField path="inactivity_timeout" type="number" required={false}>
+  Streaming only. Sets how many seconds a quiet session waits before AssemblyAI closes it, from 5 to 120. The default is 120. jambonz sends a keep-alive every 60 seconds, so the session stays open between turns.
+</ParamField>
+
+<ParamField path="extend_biometric_consent" type="boolean" required={false}>
+  Renews the biometric consent of a cloned voice. Only the voice's owner can set this.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Only `say` reads this, and AssemblyAI currently accepts only `1`. Streaming ignores it.
+</ParamField>
+
+AssemblyAI does not yet support SSML, pronunciation dictionaries or emotion tags.
+
+## Data residency
+
+The credential's **TTS data residency** setting picks the region: US (`tts.us.assemblyai.com`, the default) or EU (`tts.eu.assemblyai.com`). Over the API, set `api_uri` on the speech credential.
+
+## Streaming
+
+AssemblyAI supports [TTS streaming](/guides/features/tts-streaming). When the caller interrupts the agent, jambonz uses AssemblyAI's word timings to keep only the words the caller actually heard.
