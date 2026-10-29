@@ -92,8 +92,8 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   A webhook invoked for agent events. Receives event types: `user_transcript`, `agent_response`, `user_interruption`, `turn_end`, and `history_summarized`. See [eventHook Events](#eventhook-events) below.
 </ParamField>
 
-<ParamField path="greeting" type="boolean" required={false} default="true">
-  Whether the LLM should generate an initial greeting before the user speaks. Set to `false` if you want the agent to wait silently for the user to speak first.
+<ParamField path="greeting" type="boolean | string" required={false} default="true">
+  How the agent opens the call. `true`: the LLM generates a greeting before the user speaks. `false`: the agent waits silently for the user to speak first. A string: the agent speaks these exact words as its first turn, without calling the LLM; the user can interrupt it, and the conversation history records it as the agent's first reply.
 </ParamField>
 
 <ParamField path="handoff" type="object" required={false}>
@@ -340,7 +340,9 @@ The `eventHook` receives real-time events during the conversation. In WebSocket 
 
 <AccordionGroup>
   <Accordion title="turn_end">
-    Sent at the end of each conversational turn. The most useful event for observability.
+    Sent at the end of each conversational turn, including the agent's greeting. The most useful event for observability.
+
+    The greeting's `turn_end` has `"greeting": true` and an empty `transcript`.
 
     ```json
     {
