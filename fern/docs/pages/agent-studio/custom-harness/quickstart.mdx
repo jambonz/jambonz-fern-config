@@ -57,7 +57,8 @@ In the **Test** panel, choose **This browser** and **Start test call**. You hear
 help?", and your terminal logs the call. Try:
 
 - "When are you open?": the model calls the harness's own `get_business_hours` tool.
-- "Can I talk to a person?": answered without the model (set `OPERATOR_NUMBER` in `.env` to enable it).
+- "Can I talk to a person?": transferred without a model call, to `OPERATOR_NUMBER` in `.env`, or without it to the
+  destination in the agent's **Transfer & hangup** section.
 
 ## 6. Make it yours
 
