@@ -157,9 +157,10 @@ The **Greeting** card, under the prompt, sets how the call opens.
 - **Wait for the other party to speak first**: the agent stays silent until the other party speaks. Usual for
   outbound calls, so the agent answers the "hello" before greeting. It is on by default for new outbound agents.
 - **Greeting comes from**: **Model improvises** writes the greeting from the prompt, so it can vary from call to call
-  and use variables. **Text** gives the exact words the agent opens with; the model speaks them, so the caller can
-  interrupt. On a Cascaded voice pipeline agent, Studio adds the words to the end of the prompt as the agent's first
-  line.
+  and use variables. **Text** gives the words the agent opens with, and the caller can interrupt them. A Cascaded
+  voice pipeline agent, Ultravox and Deepgram Voice Agent speak them exactly; OpenAI Realtime, OpenAI GPT-Live and
+  Rime Prism are asked to say them, and their model may reword them. With **Wait for the other party to speak
+  first**, the words are the agent's first reply, which the model may also reword.
 
 On OpenAI Realtime, the agent always speaks first; Studio shows a note if the wait option is on.
 
