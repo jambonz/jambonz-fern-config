@@ -1,0 +1,95 @@
+---
+title: Custom harness quickstart
+subtitle: From an empty folder to a test call with your own harness, in about 15 minutes.
+---
+
+You will need Node.js 22 or later, an OpenAI API key (or any OpenAI-compatible endpoint), an Agent Studio account
+connected to jambonz with speech-to-text and text-to-speech credentials, and [ngrok](https://ngrok.com) or another
+tunnel so jambonz can reach your laptop.
+
+## 1. Create the project
+
+```bash
+npm create @jambonz/agent-harness@latest my-agent
+cd my-agent
+npm install
+cp .env.example .env
+```
+
+Put your key in `.env`:
+
+```bash
+OPENAI_API_KEY=sk-...
+```
+
+The project is TypeScript on [`@jambonz/sdk/harness`](/agent-studio/custom-harness/sdk). Your logic is in
+`src/agent.ts`; `src/index.ts` only starts the server.
+
+## 2. Run it
+
+```bash
+npm run dev
+```
+
+It listens on port 8080 and restarts when you edit `src/`. `npm test` runs it against a fake jambonz, without a model
+key.
+
+## 3. Let jambonz reach it
+
+In a second terminal:
+
+```bash
+ngrok http 8080
+```
+
+ngrok prints an `https://….ngrok.app` address. Your harness URL is the same address with `wss://`:
+`wss://….ngrok.app`.
+
+## 4. Create the agent in Agent Studio
+
+1. **New agent**, choose **Custom harness**, give it a name and create it.
+2. In the **Custom harness** section, enter the **Harness URL**.
+3. Check **Hear & speak**: the speech recognition and voice jambonz uses on the call.
+
+## 5. Call it
+
+In the **Test** panel, choose **This browser** and **Start test call**. You hear "Thanks for calling Acme. How can I
+help?", and your terminal logs the call. Try:
+
+- "When are you open?": the model calls the harness's own `get_business_hours` tool.
+- "Can I talk to a person?": answered without the model (set `OPERATOR_NUMBER` in `.env` to enable it).
+
+## 6. Make it yours
+
+Open `src/agent.ts`. Each part is optional:
+
+- `instructions` and `greeting`: the prompt and the first thing said
+- `beforeModel`: runs before each model call; route, retrieve, or answer directly with `{ reply }`
+- `tools`: tools of the harness's own; the agent's tools from Studio are offered to the model too
+- `checkSentence`: inspects each sentence before it is spoken
+- `onEvent`: reacts to `dtmf`, `silence`, `transfer` and other events
+
+See the [SDK reference](/agent-studio/custom-harness/sdk) for every option.
+
+## 7. Add a secret
+
+To make sure only jambonz can connect, set a secret in `.env` and restart:
+
+```bash
+HARNESS_SECRET=$(openssl rand -hex 24)
+```
+
+Then in the agent's Custom harness section, enter the same value as the **Secret** and press **Save**. It is stored
+in your jambonz account and sent as `Authorization: Bearer <secret>` when each call connects; a connection without it
+gets HTTP 401.
+
+## 8. Deploy
+
+```bash
+docker build -t my-agent .
+docker run -p 8080:8080 --env-file .env my-agent
+```
+
+Run it behind TLS (a load balancer, or nginx or Caddy passing WebSocket upgrades) so the URL is `wss://`. `GET /health`
+answers `{"ok":true,"calls":N}` for health checks. Put the production URL in the agent and **publish**: the URL is
+part of the agent, so calls use the new one once you publish.

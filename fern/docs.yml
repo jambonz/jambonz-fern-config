@@ -20,6 +20,10 @@ tabs:
     display-name: Guides
     icon: fa-regular fa-book
     slug: guides
+  agent-studio:
+    display-name: Agent Studio
+    icon: fa-regular fa-robot
+    slug: agent-studio
   verbs:
     display-name: Verbs
     icon: fa-regular fa-tasks
@@ -190,6 +194,26 @@ navigation:
             path: ./docs/pages/features/api-rate-limits.mdx
           - page: Application Environment Variables
             path: ./docs/pages/features/app-env-vars.mdx
+  - tab: agent-studio
+    layout:
+      - page: Overview
+        path: ./docs/pages/agent-studio/overview.mdx
+        slug: overview
+      - section: Custom harness
+        slug: custom-harness
+        contents:
+          - page: Overview
+            path: ./docs/pages/agent-studio/custom-harness/overview.mdx
+            slug: overview
+          - page: Quickstart
+            path: ./docs/pages/agent-studio/custom-harness/quickstart.mdx
+            slug: quickstart
+          - page: Protocol reference
+            path: ./docs/pages/agent-studio/custom-harness/protocol.mdx
+            slug: protocol
+          - page: SDK reference
+            path: ./docs/pages/agent-studio/custom-harness/sdk.mdx
+            slug: sdk
   - tab: verbs
     layout: 
       - section: Verbs

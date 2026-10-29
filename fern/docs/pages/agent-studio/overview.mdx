@@ -1,0 +1,34 @@
+---
+title: Agent Studio
+subtitle: Build, test and run voice agents on your jambonz account, without writing a jambonz application.
+---
+
+Agent Studio is where you build a voice agent, call it from your browser, publish it to a phone number, and see every
+call it takes. It connects to your jambonz account (jambonz.cloud or your own jambonz) with an API key, and uses the
+carriers, phone numbers and speech and LLM credentials you already have there.
+
+## Four kinds of agent
+
+You choose the kind when you create an agent. It decides where the agent's thinking happens; everything else (phone
+numbers, transfers, tools, recording, call history) works the same for all four.
+
+| Kind | What it is | Choose it when |
+|---|---|---|
+| **Cascaded voice pipeline** | jambonz runs speech recognition, a language model and a voice that you choose | you want control over each part: any LLM, the widest choice of voices, latency you can tune per stage |
+| **Realtime voice API** | one vendor runs the whole voice loop: OpenAI Realtime, OpenAI GPT-Live, Deepgram Voice Agent, Rime Prism or Ultravox | you want the lowest latency and the most natural turn-taking, with one vendor to configure |
+| **Connected agent** | an agent built on another platform, Dialogflow CES or ElevenLabs Agents, put on the phone by Studio | the agent already exists there, or your team builds agents there |
+| **Custom harness** | your own code decides what to say; jambonz listens, takes turns and speaks | the conversation logic is yours to own: your own models, retrieval, routing and checks. See [Custom harness](/agent-studio/custom-harness/overview) |
+
+## What every agent gets
+
+- **Phone numbers**: route your jambonz numbers to an agent, for inbound calls, or place outbound calls from it.
+- **Transfers and hangup**: hand the caller to a person or another system (blind or warm, with a spoken brief), take
+  them through a secure detour (for example, a payment) and back, and end calls cleanly.
+- **Tools**: HTTP tools and MCP servers the agent can call during a conversation.
+- **Testing**: call the agent from your browser or your phone and watch each turn as it happens.
+- **Versions**: publish a draft when it is ready; roll back to an earlier version at any time.
+- **Call history**: recordings, transcripts and each turn's timing and tool calls for every call.
+
+## Next
+
+- [Custom harness](/agent-studio/custom-harness/overview): build an agent whose thinking runs in your own code

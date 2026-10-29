@@ -1,0 +1,220 @@
+---
+title: Harness protocol reference
+subtitle: Every message between jambonz and a custom harness (protocol version 1).
+---
+
+Most harnesses use [`@jambonz/sdk/harness`](/agent-studio/custom-harness/sdk), which speaks this protocol for you. This
+page is for writing a harness without it, in any language.
+
+## Connection
+
+- jambonz opens a WebSocket to the harness URL for each call, with subprotocol **`harness.jambonz.org`**. Use `wss://`;
+  `ws://` is accepted only for a private address on the same network as jambonz.
+- When the agent has a secret, the upgrade request carries `Authorization: Bearer <secret>`. With none, there is no
+  `Authorization` header. A harness that requires one should refuse the upgrade with HTTP 401.
+- Every message is a JSON text frame with a `type`. Messages from jambonz carry `call_sid`. There are no binary frames:
+  audio never goes to the harness.
+- Ignore message types and fields you do not recognize. New ones are added without changing the protocol version.
+- `session:start` carries `protocol: 1`. A harness that cannot speak it closes the socket with code 4000 and a reason.
+
+## A whole call
+
+```
+jambonz → harness   session:start   {call_sid, protocol: 1, from, to, direction, language, metadata, tools}
+jambonz → harness   turn:start      {turn_id: 1, input: {type: "greeting"}}
+harness → jambonz   reply:chunk     {reply_id: "r1", turn_id: 1, chunk: {choices: [{delta: {content: "Thanks for calling Acme."}}]}}
+harness → jambonz   reply:done      {reply_id: "r1", turn_id: 1, turn_record: {route: "chat"}}
+jambonz → harness   speech:start    {turn_id: 2}
+jambonz → harness   transcript      {turn_id: 2, text: "When are you", final: false}
+jambonz → harness   transcript      {turn_id: 2, text: "When are you open", final: true}
+jambonz → harness   turn:start      {turn_id: 2, input: {type: "speech", text: "When are you open", language: "en-US"}}
+harness → jambonz   tool:call       {call_id: "t1", turn_id: 2, name: "get_hours", args: {}}
+jambonz → harness   tool:result     {call_id: "t1", result: {weekdays: "8am to 6pm"}}
+harness → jambonz   reply:chunk     {reply_id: "r2", turn_id: 2, chunk: {…"We're open eight to six on weekdays."}}
+jambonz → harness   event           {name: "user_interruption", turn_id: 2, reply_id: "r2", spoken: "We're open eight", unspoken: " to six on weekdays."}
+jambonz → harness   turn:cancel     {turn_id: 2, reason: "barge_in"}
+jambonz → harness   turn:start      {turn_id: 3, input: {type: "speech", text: "Thanks, bye"}}
+harness → jambonz   command         {command_id: "c1", name: "hangup", args: {reason: "resolved"}}
+jambonz → harness   command:result  {command_id: "c1", ok: true}
+jambonz → harness   session:end     {reason: "harness_hangup", duration_ms: 41250}
+```
+
+## jambonz → harness
+
+| type | fields | notes |
+|---|---|---|
+| `session:start` | `protocol`, `call_sid`, `account_sid`, `application_sid`, `direction`, `from`, `to`, `language`, `sip_headers`, `metadata`, `tools`, `resumed?`, `last_turn_id?` | `metadata` is the free-form JSON from the agent (Agent Studio adds the agent id, version and the call's variables). `tools` lists the agent's tools as OpenAI function definitions, ready to pass to a model. `sip_headers` holds the caller's `X-` headers. `resumed` and `last_turn_id` are set on a reconnect (below) |
+| `speech:start` | `turn_id` | the caller started speaking; `turn_id` is the turn this speech will become. It can arrive while a reply is playing |
+| `transcript` | `turn_id`, `text`, `final`, `confidence?` | recognition so far. `text` is the whole utterance so far, not a delta. `final: true` means the recognizer will not revise that text, not that the caller has finished: only `turn:start` says that |
+| `turn:start` | `turn_id`, `input` | the end of the caller's turn. `input` is `{type: "speech", text, confidence?, language}`, `{type: "greeting"}` when the call connects, or `{type: "no_input"}` when the caller interrupted and then said nothing. `turn_id` increases by one per turn |
+| `turn:cancel` | `turn_id`, `reason` | `barge_in` or `call_ended`. Anything you send for that turn afterwards is dropped |
+| `event` | `name`, … | see [Events](#events) |
+| `command:result` | `command_id`, `ok`, `error?` | one per `command` |
+| `tool:result` | `call_id`, `result` or `error` | one per `tool:call` |
+| `session:end` | `reason`, `duration_ms` | the socket closes after it. `reason` is `caller_hangup`, `harness_hangup`, `application_hangup`, `application_redirect` (the application moved the call to other verbs), `transferred` or `error` |
+
+## harness → jambonz
+
+| type | fields | notes |
+|---|---|---|
+| `reply:chunk` | `reply_id`, `turn_id?`, `interruptible?`, `interrupt?`, `chunk` | `chunk` is an OpenAI `ChatCompletionChunk`; only `choices[0].delta.content` is spoken, streamed to the voice as it arrives. `interruptible: false` on the **first** chunk holds barge-in until the whole reply has played. `interrupt: true` on the first chunk of an unprompted reply cuts off whatever is playing |
+| `reply:done` | `reply_id`, `turn_id?`, `turn_record?` | ends the reply. `turn_record` (up to 16 KB of JSON) is stored on the turn |
+| `tool:call` | `call_id`, `turn_id?`, `name`, `args` | runs one of the agent's tools (a name from `session:start.tools`) through jambonz, exactly as for a pipeline agent. The result comes back as `tool:result`. Calls may overlap |
+| `command` | `command_id`, `name`, `args` | see [Commands](#commands) |
+
+Ids (`reply_id`, `call_id`, `command_id`) are yours to choose and must be unique within the call.
+
+### Replies
+
+A reply with a `turn_id` answers that turn, and is accepted only after that turn's `turn:start`; one sent earlier is
+refused with an `error` event. A reply without a `turn_id` is the harness speaking on its own initiative, for example
+after a `silence` event. jambonz speaks one reply at a time; a reply that starts while another is playing is queued
+behind it.
+
+Replies the harness starts on its own:
+
+- **The floor is free** (nothing playing, no turn open, the caller not speaking): spoken at once.
+- **The floor is busy:** held, and spoken as soon as the floor is free, so it never plays over the caller or over the
+  turn's reply. One unprompted reply is held at a time; a newer one replaces it (`reply_dropped`, reason `replaced`).
+- **`interrupt: true`** on its first chunk: whatever is playing is cut off and this reply is spoken now. A caller in
+  mid-utterance is still never talked over.
+
+Tool calls inside chunks (`delta.tool_calls`) are ignored. To run one of the agent's tools, send `tool:call`. Tools of
+the harness's own stay between it and its model.
+
+## Events
+
+Sent as `{type: "event", name, …}`.
+
+| name | fields | when |
+|---|---|---|
+| `user_interruption` | `turn_id?`, `reply_id`, `spoken`, `unspoken` | the caller interrupted a reply. `spoken` is the text actually played: keep only that in your history. It is exact for voices that report word timing and estimated for others |
+| `reply_spoken` | `reply_id` | a reply finished playing |
+| `reply_dropped` | `reply_id`, `reason` | an unprompted reply was never spoken: `replaced` by a newer one, or `call_ended` |
+| `silence` | `seconds`, `streak` | the caller said nothing for the agent's no-response timeout; `streak` counts consecutive ones. jambonz takes no action of its own: reprompt, wait or hang up as you see fit |
+| `dtmf` | `digits`, `duration_ms?` | the caller pressed a key (one event per key). Not sent while a transfer or secure detour is in progress |
+| `transfer` | `command_id`, `outcome`, `reason?` | a `transfer` command finished: `bridged`, `failed` or `returned` |
+| `recording` | `command_id`, `state`, `by` | a `record` command took effect: `started`, `stopped`, `paused` or `resumed` |
+| `application_update` | `update_type`, `data` | the application sent `agent:update` (for example `inject_context` or `generate_reply`). jambonz runs no model for a harness, so it passes the update on for you to act on |
+| `error` | `code`, `message`, `ref?` | a message you sent was refused (an invalid or duplicate id, a reply sent before its turn's `turn:start`, an oversized turn record). `ref` names the id |
+
+## Commands
+
+Sent as `{type: "command", command_id, name, args}`; each gets a `command:result`.
+
+| name | args | result |
+|---|---|---|
+| `hangup` | `reason?` (sent as `X-Reason`) | `session:end` follows |
+| `transfer` | `to` (E.164 number, `sip:` URI or registered user), `trunk?`, `headers?`, `announce?` | `announce` is spoken first. The outcome arrives as a `transfer` event; on `failed` or `returned` the call stays with the harness. Transfers use the agent's transfer settings in Agent Studio |
+| `record` | `action`: `start`, `stop`, `pause`, `resume`; `type?` (`cloud`, the default, or `siprec`) | `recording` event |
+| `barge_in` | `enabled` | applies from the next reply until changed |
+| `listen` | `language` | changes the recognition language for the following turns, where the speech vendor can change mid-call |
+
+`play`, and `listen` with `hints`, are not supported yet: they get `command:result` with `ok: false`.
+
+## Timeouts and failures
+
+| Failure | What jambonz does |
+|---|---|
+| The socket cannot be opened | runs the agent's **On failure** (say a line, then hang up or transfer) |
+| No first chunk within the wait (default 4 s) | speaks the holding phrase once; after a second wait with no reply, runs **On failure**. While a `tool:call` of yours is outstanding, the second wait waits for it |
+| The socket drops mid-call | reconnects once within 2 seconds, sending `session:start` again with `resumed: true` and `last_turn_id`; otherwise runs **On failure** |
+| A message is invalid | sends an `error` event; the message is dropped |
+
+Each failure is in the feature-server log, the turn's record and the verb's actionHook (`completion_reason:
+"harness_failure"` with a `harness_error`).
+
+## Starting early (optional)
+
+`speech:start` and `transcript` let a harness start work before the turn ends: retrieval, routing, or a draft reply from
+a `final` segment. Send nothing for the turn until its `turn:start`, then compare the turn's text with what you started
+from: if it matches, stream the draft at once; if the caller said more, redo it. jambonz does no speculation of its own
+for a harness. A harness that does not want to start early ignores both messages.
+
+## The turn record
+
+`turn_record` on `reply:done` is your account of how the harness handled the turn. Every field is optional, and
+anything else you add is kept as given. Up to 16 KB; do not put caller secrets in it, since it is stored.
+
+```json
+{
+  "route": "procedure",
+  "procedures": ["outage_report"],
+  "steps": [
+    { "name": "retrieve", "ms": 120, "detail": { "documents": 4 } },
+    { "name": "router", "ms": 310 }
+  ],
+  "model_calls": [
+    { "model": "gpt-4.1-mini", "purpose": "router", "input_tokens": 812, "output_tokens": 14, "ms": 310 },
+    { "model": "gpt-4.1", "purpose": "reply", "input_tokens": 2240, "output_tokens": 61, "first_token_ms": 420, "ms": 900 }
+  ],
+  "own_tools": [{ "name": "lookup_account", "ok": true, "ms": 220 }],
+  "flags": ["identity_verified"],
+  "note": "free text"
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `route` | which path the turn took |
+| `procedures` | procedures in force |
+| `steps` | the stages of the turn, in order, with time spent |
+| `model_calls` | each model call: model, purpose, tokens, time |
+| `own_tools` | tools the harness ran itself (jambonz already records the ones run with `tool:call`) |
+| `flags` | facts established during the turn |
+| `note` | anything a reader should see |
+
+## A minimal harness without the SDK
+
+```js
+import { WebSocketServer } from 'ws';
+import OpenAI from 'openai';
+
+const model = new OpenAI();
+const wss = new WebSocketServer({ port: 8080, handleProtocols: () => 'harness.jambonz.org' });
+
+wss.on('connection', (ws) => {
+  const history = [];
+  const replies = new Map();                      // reply_id → its assistant message
+  const send = (type, data) => ws.send(JSON.stringify({ type, ...data }));
+  let current;                                    // the turn being worked on
+
+  ws.on('message', async (raw) => {
+    const msg = JSON.parse(raw);
+    switch (msg.type) {
+      case 'session:start':
+        history.push({ role: 'system', content: `You answer calls for Acme. Caller: ${msg.from}.` });
+        break;
+      case 'turn:start': {
+        current = msg.turn_id;
+        const text = msg.input.type === 'speech' ? msg.input.text : '(call connected)';
+        history.push({ role: 'user', content: text });
+        const reply_id = `r${msg.turn_id}`;
+        const said = { role: 'assistant', content: '' };
+        const stream = await model.chat.completions.create({ model: 'gpt-4.1-mini', messages: history, stream: true });
+        history.push(said);                       // filled in as it streams
+        replies.set(reply_id, said);
+        for await (const chunk of stream) {
+          if (current !== msg.turn_id) return;    // cancelled: stop
+          said.content += chunk.choices[0]?.delta?.content ?? '';
+          send('reply:chunk', { reply_id, turn_id: msg.turn_id, chunk });
+        }
+        send('reply:done', { reply_id, turn_id: msg.turn_id, turn_record: { model_calls: 1 } });
+        break;
+      }
+      case 'turn:cancel':
+        if (current === msg.turn_id) current = undefined;
+        break;
+      case 'event':
+        if (msg.name === 'user_interruption') {   // keep only what the caller heard
+          const said = replies.get(msg.reply_id);
+          if (said) said.content = msg.spoken;
+        }
+        break;
+    }
+  });
+});
+```
+
+Everything a real harness adds (retrieval, routing, checks, its own tools) happens inside the `turn:start` case; the
+protocol stays the same.
