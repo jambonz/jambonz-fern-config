@@ -128,9 +128,9 @@ agent's speech vendor can boost words.
 An agent can declare up to 20 variables, and names must be snake_case.
 
 <Note>
-Fixed values are written into the prompt when you publish, so they work for every agent kind. Values that change per
-call (the call fields, `{{now_local}}`, SIP headers and dialer values) are filled in for Cascaded voice pipeline
-agents and for Realtime voice API agents on OpenAI Realtime or Rime Prism.
+Fixed values are written into the prompt when you publish. Values that change per call (the call fields,
+`{{now_local}}`, SIP headers and dialer values) are filled in when each call starts. Both work for Cascaded voice
+pipeline and Realtime voice API agents.
 </Note>
 
 ## Guardrails
@@ -157,7 +157,9 @@ The **Greeting** card, under the prompt, sets how the call opens.
 - **Wait for the other party to speak first**: the agent stays silent until the other party speaks. Usual for
   outbound calls, so the agent answers the "hello" before greeting. It is on by default for new outbound agents.
 - **Greeting comes from**: **Model improvises** writes the greeting from the prompt, so it can vary from call to call
-  and use variables. On a Realtime voice API agent, **Text** gives the exact words the agent opens with.
+  and use variables. **Text** gives the exact words the agent opens with; the model speaks them, so the caller can
+  interrupt. On a Cascaded voice pipeline agent, Studio adds the words to the end of the prompt as the agent's first
+  line.
 
 On OpenAI Realtime, the agent always speaks first; Studio shows a note if the wait option is on.
 

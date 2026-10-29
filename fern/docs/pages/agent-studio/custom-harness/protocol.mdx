@@ -105,7 +105,7 @@ Sent as `{type: "command", command_id, name, args}`; each gets a `command:result
 | name | args | result |
 |---|---|---|
 | `hangup` | `reason?` (sent as `X-Reason`) | `session:end` follows |
-| `transfer` | `to` (E.164 number, `sip:` URI or registered user), `trunk?`, `headers?`, `announce?` | `announce` is spoken first. The outcome arrives as a `transfer` event; on `failed` or `returned` the call stays with the harness. Transfers use the agent's transfer settings in Agent Studio |
+| `transfer` | `to?` (E.164 number, `sip:` URI or registered user), `trunk?`, `headers?`, `announce?` | `announce` is spoken first. Without `to`, the call goes to the agent's own transfer destination; with neither, the command fails. The outcome arrives as a `transfer` event; on `failed` or `returned` the call stays with the harness. Transfers use the agent's transfer settings in Agent Studio |
 | `record` | `action`: `start`, `stop`, `pause`, `resume`; `type?` (`cloud`, the default, or `siprec`) | `recording` event |
 | `barge_in` | `enabled` | applies from the next reply until changed |
 | `listen` | `language` | changes the recognition language for the following turns, where the speech vendor can change mid-call |

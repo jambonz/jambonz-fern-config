@@ -97,8 +97,8 @@ The fold below holds the rest:
 | **How interruptions are detected** | **Voice activity**, or **Interrupt prediction** with a **Prediction sensitivity** | Voice activity |
 | **Respond** | with the Krisp turn model: how soon the agent answers, from sooner to later | 0.5 |
 
-A Custom harness decides for itself whether to prompt again after silence, so **Unanswered prompts before hang-up**
-does not apply to it.
+A Custom harness decides for itself what to do after silence: jambonz tells it when the caller has been quiet for
+**Check in after silence**, so **Unanswered prompts before hang-up** is not shown for it.
 
 **Restore all defaults** at the bottom of the section resets the turn-taking, interruption and tool-filler settings.
 It leaves answering, background sound, recording, the call goal and the advanced settings as they are.

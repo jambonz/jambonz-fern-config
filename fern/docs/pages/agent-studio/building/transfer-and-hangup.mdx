@@ -10,7 +10,7 @@ of agent use the same settings; what differs is how the agent asks for them.
 |---|---|
 | **Cascaded voice pipeline** | the model calls a tool Studio gives it (`transfer_to_human`, `secure_detour`) |
 | **Realtime voice API** | the same tools, sent to the vendor with the session |
-| **Custom harness** | your harness sends a [`transfer` command](/agent-studio/custom-harness/protocol#commands) with the destination in `to`; the handover mode and brief set here apply to it |
+| **Custom harness** | your harness sends a [`transfer` command](/agent-studio/custom-harness/protocol#commands). The destination is the command's `to` when it gives one, otherwise the one set here; the handover mode set here applies either way |
 | **Connected agent** | your agent calls a client-side tool on its own platform; Studio answers it and carries out the transfer |
 
 ## Transfer to a person
