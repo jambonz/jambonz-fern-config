@@ -1,0 +1,167 @@
+---
+title: Testing
+subtitle: Call your agent from the browser or your phone and watch each turn as it happens.
+---
+
+Every agent has a **Test** panel in the builder. Open it with the **Test** button in the header (⌘.). A test call goes
+through your jambonz account like a real call, so what you hear is what callers hear.
+
+There are three ways to test:
+
+| | Who answers | What it costs | Where it shows |
+|---|---|---|---|
+| **This browser** | the draft, or a published version you pick | no carrier minutes | Calls, marked **Test** |
+| **My phone**, outbound agent | the draft, or a published version you pick | a real call through your carrier | Calls, marked **Test** |
+| **My phone**, inbound agent | the published version | a real call through your carrier | Calls and Usage, as a normal call |
+
+## Before you call
+
+The panel shows what the call will use. Which options appear depends on the agent's direction.
+
+- **Call from** (inbound agents) or **Ring me on** (outbound agents): **This browser** or **My phone**.
+- **Version to call**: **Draft (unsaved changes included)**, or any published version. Unsaved edits are saved before
+  the call starts, so the call always uses what you see in the builder.
+- **Per-call values** (outbound agents): a value for each `env.*` variable the prompt expects. In production your
+  system sends these with each call in `env_vars`.
+- **SIP headers**: add `X-` headers to the test call as if a carrier or upstream application had sent them, so the
+  agent's `sip.*` variables resolve. Each row shows the variable name the header becomes.
+- **Record and keep the transcript**: on by default. Turn it off and the call is still listed in Calls, but its
+  transcript and turns are not kept.
+- **Audio settings**: the microphone and speaker for a browser call. You can switch either during the call.
+
+The start button names what will happen: **Start test call**, **Have the agent call this browser**, **Have the agent
+call** followed by your number, or **Watch for my call from** followed by your number.
+
+### When the call can't start
+
+The start button stays disabled, with the reason under it, when:
+
+- jambonz is not connected: **Connect jambonz to make test calls.**
+- the agent's speech or LLM credentials are missing: **Add speech and LLM credentials to test.**
+- the draft has errors: **Fix N errors to test**, followed by the first one.
+
+If a call fails after you start it, the panel says why in one line: for example a microphone blocked by the browser,
+a registration jambonz rejected, too many test calls running for the account, or a carrier refusing the call with its
+SIP status and reason.
+
+## Test from your browser
+
+The call runs over WebRTC from this browser. Your browser asks for the microphone the first time.
+
+- **Inbound agent**: the panel calls the agent.
+- **Outbound agent**: the agent calls you. The panel rings; click **Answer** to pick up.
+
+During the call you can **Mute** and **End call**.
+
+<Note>
+An inbound test from the browser reaches jambonz from a SIP user, not a phone number. If the agent transfers to a
+phone number and keeps the caller's number as the caller ID, carriers such as Twilio refuse it. To test that kind of
+transfer, have the transfer show the agent's number; the panel warns you when this applies.
+</Note>
+
+## Test from your phone
+
+### Outbound agents: the agent calls your phone
+
+Choose **My phone** under **Ring me on** and enter your number (or an extension, for a trunk to a PBX). The call goes
+out through a carrier on your jambonz account that has an outbound gateway; if you have more than one, pick it in the
+panel. It needs a caller ID: set **Caller ID to present** in the agent's **Placing calls** section first.
+
+These calls are real calls, and the account's **Outbound calls** settings apply to them: allowed country codes, the
+always-blocked premium prefixes, **Calls per day**, **Calls at the same time** and, for Members, **Members can place
+calls**. Emergency and service numbers are never dialed.
+
+### Inbound agents: watch a real call
+
+Choose **My phone** under **Call from**, enter the number you will call from, and click **Watch for my call from**
+that number. Then call one of the agent's numbers from that phone. When the agent answers, the call appears in the
+panel.
+
+- The agent must be published and have at least one phone number routed to it.
+- The published version answers, as it would for any caller. Draft changes are not on this call.
+- It is a real call: it counts in Calls and Usage like any other.
+- The panel waits 10 minutes for your call. One watched call per start; to watch another, start again.
+- **Stop watching** closes the panel's view only. It never hangs up your call.
+
+The call is matched by the number it comes from, so call from the number you entered.
+
+## The live turn view
+
+While the call runs, the panel shows each event as it happens, with the time since the call started:
+
+- what the caller said, and what the agent said
+- each tool call, with its name, whether it succeeded and how long it took (for example `lookup_order · ok · 412 ms`)
+- **caller interrupted** when the caller talks over the agent
+- **No response from caller · reprompted** when the caller is silent
+- answering machine detection results, on outbound calls
+- each step of a transfer or secure detour, including why a transfer did not connect
+- call status changes and errors, with their codes
+
+If you edit the draft during a call, the panel says **Draft changed. Hang up and call again to test the new version.**
+The call in progress keeps the version it started with.
+
+Test calls end after 10 minutes, and the panel warns you in the last minute. A watched call from your phone is a real
+call, so this limit does not apply to it.
+
+## Call quality
+
+On a browser call, a strip at the top of the panel measures the audio arriving from jambonz:
+
+- a verdict: **Good**, **Fair**, **Poor** or **No audio**, judged on the last minute
+- the share of audio lost
+- one bar per second for the last 60 seconds: green is clean, amber is under 5% lost, red is more, grey is no audio
+
+Click the strip for details:
+
+| Row | What it shows |
+|---|---|
+| **Path** | this browser's address and the media address on the jambonz side |
+| **Codec** | the audio codec and its sample rate |
+| **Loss** | total loss, the worst 5 seconds, and seconds with no audio |
+| **Jitter / RTT** | jitter and round-trip time, in milliseconds |
+| **Network** | the network type, whether a VPN was detected, and loss in transit when jambonz reports it |
+| **Mic** | the microphone in use, its peak level, and seconds it sent silence |
+
+Loss is measured at the browser. When something is wrong the panel says so in one sentence, for example that your mic
+is sending silence, that no audio has reached the browser for a few seconds, or what share of audio was lost in the
+last 5 seconds.
+
+## After the call
+
+The panel says how the call ended and links to **Call details**, the call's page in
+[Calls](/agent-studio/calls). There you have the transcript, each turn's timing and tool calls, and the recording if
+the agent records calls.
+
+### What the test report records
+
+When a browser test call ends, the browser sends Studio a report of what it saw. It is stored with the test call and
+holds:
+
+- the outcome, the call id and the SIP Call-ID
+- a timeline of each step, with milliseconds since the start: registering the test line, ringing, answering, and any
+  failure with its cause and SIP status
+- the media statistics shown under **Call quality**
+- one row per connected second: packets received, lost and sent, jitter, bitrate, and the levels of your mic and the
+  audio received
+
+The same steps are printed to the browser console as they happen, as lines starting with `[test call]`, with the
+test session and call ids.
+
+On the call's page, test calls have a **Diagnostics** card built from this report, the recording and the jambonz
+session. It checks each link of the audio round trip and names the first one that failed:
+
+| Link | Checked from |
+|---|---|
+| **Your mic** | the mic's level during the call |
+| **Browser → jambonz** | packets the browser sent |
+| **jambonz hears you** | transcribed caller turns, or your side of the recording |
+| **Agent responds** | agent turns, or the agent's side of the recording |
+| **jambonz → browser** | loss on the audio received |
+| **You hear it** | the level of the audio received |
+
+When the call was recorded, the card also shows the level of each side of the recording, one bar per second.
+
+## Next
+
+- [Publishing](/agent-studio/publishing): make a version live and route phone numbers to it
+- [Calls](/agent-studio/calls): every call's transcript, timings and recording

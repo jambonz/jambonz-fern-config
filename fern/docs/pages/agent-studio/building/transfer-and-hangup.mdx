@@ -1,0 +1,172 @@
+---
+title: Transfer & hangup
+subtitle: Hand the caller to a person, take them through a secure detour and back, and end calls cleanly.
+---
+
+The **Transfer & hangup** section sets where a call can go when the agent decides, and how it ends. All four kinds
+of agent use the same settings; what differs is how the agent asks for them.
+
+| Kind | How a transfer or detour starts |
+|---|---|
+| **Cascaded voice pipeline** | the model calls a tool Studio gives it (`transfer_to_human`, `secure_detour`) |
+| **Realtime voice API** | the same tools, sent to the vendor with the session |
+| **Custom harness** | your harness sends a [`transfer` command](/agent-studio/custom-harness/protocol#commands) with the destination in `to`; the handover mode and brief set here apply to it |
+| **Connected agent** | your agent calls a client-side tool on its own platform; Studio answers it and carries out the transfer |
+
+## Transfer to a person
+
+Turn on **Transfer to a person**, then choose a **Destination**:
+
+| Destination | Enter |
+|---|---|
+| **Phone number** | a number in E.164 form, for example `+14155550142` |
+| **SIP URI** | a `sip:` or `sips:` URI, for example your PBX or contact centre |
+| **Registered user** | a SIP user registered to this jambonz account |
+| **Chosen by the agent** | a template the agent fills in when it transfers (see below) |
+
+For a phone number, **Carrier** chooses which of your jambonz carriers dials it. **Default (jambonz routing)** lets
+jambonz pick using the account's routing; when the account has more than one carrier that can dial out, choose one
+so every transfer goes the same way.
+
+**When the agent should transfer the call** tells the model, in plain language, when to use the transfer. For a
+Connected agent it becomes the description of the client-side tool.
+
+An agent has one transfer destination. For more than one place to go, use **Chosen by the agent**, or send the call to
+another jambonz application with **Send the call to another jambonz application**, further down the section.
+
+### Destination chosen by the agent
+
+With **Chosen by the agent**, the agent supplies the destination when it transfers:
+
+- **Arguments the agent must supply**: names such as `queue` or `department` (snake_case, up to 8). The agent's
+  transfer tool asks for each one.
+- **Destination template**: a phone number, SIP URI or user, with arguments in braces, for example
+  `sip:{queue}@pbx.acme.example`. `{call.sid}` inserts the jambonz call id.
+- **SIP headers** (optional): one `Name: value` per line, with the same placeholders, for example `X-Queue: {queue}`.
+- **Through carrier**: the carrier used when the template gives a phone number.
+
+A placeholder that is not one of the arguments (or `{call.sid}`) blocks publishing.
+
+## Blind or warm transfer
+
+The fold under the destination sets **How the call is handed over**:
+
+| Mode | What happens |
+|---|---|
+| **Hand off right away (SIP REFER)** | tells your carrier or PBX to redirect the call; jambonz drops out |
+| **Hand off right away (bridged call)** | jambonz dials the destination and joins the two calls. Use it when the carrier will not REFER to this number. This is the default |
+| **Brief the person first, caller on hold** | the agent speaks a summary to whoever answers while the caller hears hold audio, then the caller is joined |
+| **Brief the person first, caller listening** | a three-way call: the caller hears the brief and stays on the line |
+
+The first two are blind transfers; the last two are warm.
+
+The other settings in the fold:
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Caller hears first** | a line the agent says to the caller before transferring | empty |
+| **Ring for** | how long the destination rings, 10 to 90 seconds | 30 s |
+| **Caller ID shown** | **Original caller's number**, **Agent's number** (the agent's outbound caller ID) or **A number I choose** | Original caller's number |
+| **Caller hears on hold** | caller on hold only: **Hold music (default)**, **Custom audio URL…** (a public `https://` audio file) or **Silence** | Hold music |
+| **Detect machines there** | warm modes only: when on, a machine answering at the destination counts as declined | Off |
+
+Carriers can refuse a caller ID they do not own. If transfers fail with the original caller's number, use a number
+your carrier knows.
+
+## The spoken brief
+
+In the two warm modes, **Brief for the person** sets what the person answering hears before the caller is joined:
+
+- **Model writes a summary of the call** (the default)
+- **Summary guided by a template…**: the model writes the summary following your **Template for the brief**, for
+  example "Name, why they called, what they need."
+- **No spoken brief**
+
+### The voice of the brief
+
+A Cascaded voice pipeline or Custom harness agent speaks the brief in its own voice.
+
+A Realtime voice API or Connected agent speaks with its vendor's voice, so Studio speaks the brief (and the secure
+detour's message) itself, with a text-to-speech credential in your account. Choose that voice on the agent's
+**Model & voice** or **Connected agent** section, under **Voice for Studio's own lines**. Where the vendor also sells
+the agent's voice as text-to-speech (some Deepgram, Rime Prism and ElevenLabs voices), **Speak them in the agent's
+voice** uses that voice.
+
+## When a transfer does not go through
+
+**If the transfer does not go through** sets what happens for each outcome: **No answer**, **Busy**, **Declined**
+and **Error**. For each, choose:
+
+| Choice | What happens |
+|---|---|
+| **Back to the agent** | the caller returns to the agent, which is told the transfer did not go through and asked to apologise and keep helping. This is the default for every outcome |
+| **Hang up** | the call ends |
+| **Send to another jambonz application** | the call leaves this agent for good. Pick the application under **Send failed transfers to**; call variables and a short summary of the failed transfer are passed along |
+
+Every failed transfer is recorded in the call history with its reason and what was done.
+
+## Secure detour and return
+
+**Secure detour and return** sends the caller to another system, such as a card-payment line or an identity check,
+with recording paused, then brings them back to the agent where they left off. The other system talks to the
+caller; the agent is not on the call.
+
+| Setting | What it does |
+|---|---|
+| **Send the caller to** | a **Phone number**, **SIP URI** or **Registered user** |
+| **Caller hears first** | a line Studio says before the detour |
+| **When the agent should use it** | plain language, for example "When the caller is ready to pay by card." |
+| **Media during the detour** | how audio flows once the other side answers (see below) |
+
+The agent gets a `secure_detour` tool. A Connected agent calls a client-side tool instead, named in **Detour tool
+name in your … agent**; it takes no parameters.
+
+**Media during the detour**:
+
+| Option | Audio path | Recording |
+|---|---|---|
+| **Partial media** (default) | through the jambonz SBCs only; the media server is out of the path | ends when the other side answers |
+| **No media** | directly between the caller and the other side; jambonz is out of the path | ends when the other side answers |
+| **Full media** | stays on the jambonz media server | paused (silence) for the whole detour, resumed on return |
+
+With **Partial media** or **No media**, nothing after the detour is recorded, including the rest of the conversation
+with the agent. **No media** also needs the far-end SBC or carrier to accept the media change, and full media release
+enabled on the jambonz SBCs; test it with your provider first.
+
+Keypad digits are never written to any log during the detour.
+
+The fold sets what happens next:
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Event sent to the agent on return** | the name of the event that tells the agent the caller is back | `secure_flow_ended` |
+| **Give up after** | the longest the detour can last, 1 to 15 minutes | 10 minutes |
+| **If the other side fails or hangs up** | **Back to the agent with the outcome**, or **Hang up** | Back to the agent |
+
+How the agent learns the caller is back depends on its kind: a pipeline agent gets it as context and carries on; a
+Realtime voice API agent gets it in its session, which depends on the vendor keeping the session across the detour;
+a Dialogflow CES agent gets the event in the same session; an ElevenLabs agent starts a new conversation, given the
+conversation so far; a Custom harness gets a transfer event with the outcome.
+
+## Hanging up
+
+Turn on **Let the agent hang up** to give the agent a `hangup` tool, so it can end the call when the conversation is
+over. It is on for new agents.
+
+| Setting | What it does |
+|---|---|
+| **When the agent should hang up** | plain language. The hangup tool has no description of its own, so this line is added to the prompt |
+| **Default reason** | used when the agent gives no reason of its own; sent in the `X-Reason` header, so it shows in your SIP logs |
+| **Before hanging up** | **Say goodbye, then hang up on the next turn** (the default), or **Hang up immediately** |
+
+A Custom harness ends the call with a hangup command. A Dialogflow CES agent ends the call by ending its session;
+Studio hangs up and records the reason CES gives.
+
+## What blocks publishing
+
+- transfer is on with no destination, or the destination is not valid (a phone number not in E.164 form, a SIP URI
+  that does not start with `sip:` or `sips:`)
+- **Chosen by the agent** with an empty template, or a template or header that uses an argument the agent does not
+  supply
+- the secure detour is on with no destination
+- **Send to another jambonz application** with no application chosen

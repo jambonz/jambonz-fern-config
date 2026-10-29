@@ -1,0 +1,178 @@
+---
+title: Result webhook
+subtitle: Have each call's result posted to your own system when the call ends, signed so you can trust it.
+---
+
+Every call's result appears in [Calls](/agent-studio/calls). If your campaign system needs it too, Studio can post it
+to a URL of yours: who answered, whether the goal was reached, how a transfer went, the call's length and its ids.
+
+## Turn it on
+
+The result webhook is set on an outbound agent, in its **Placing calls** section. At the bottom of the **Placing
+outbound calls** card, open the fold that reads **Results shown in Calls here**, then:
+
+1. Turn on **Also send each call's result to your own webhook**.
+2. Enter the **Result webhook URL**. It must be a public `https` address, without a user name or password in it.
+
+The URL belongs to the agent, not to a version: it takes effect for the next call that ends, without publishing.
+Turning the switch off stops deliveries.
+
+## When it fires
+
+Studio posts once per call, shortly after the call ends and Studio has its complete record. It fires for every call
+the agent handles while the URL is set, including test calls; `is_test` tells them apart.
+
+## The request
+
+```http
+POST /your/path HTTP/1.1
+content-type: application/json
+user-agent: studio-webhook/1
+x-studio-event: call.completed
+x-studio-delivery: <the call id>
+x-studio-signature: t=1761742800,v1=5f0c…
+```
+
+`x-studio-delivery` is the call id. It is the same on every retry of a delivery, so you can use it to ignore
+duplicates.
+
+## The payload
+
+```json
+{
+  "event": "call.completed",
+  "call_id": "b4d1c3e2-…",
+  "agent": "0193f5a2-…",
+  "version": 4,
+  "direction": "outbound",
+  "answered_by": "person",
+  "amd_ms": 1850,
+  "goal_reached": true,
+  "goal_reason": "tool:book_appointment",
+  "transfer": { "result": "none", "mode": "", "ring_ms": null },
+  "tools": [{ "name": "book_appointment", "ok": true, "ms": 412 }],
+  "interruptions": 1,
+  "turns": 7,
+  "latency_ms": { "p50": 980, "max": 2140 },
+  "completion_reason": "normal",
+  "call_termination_by": "caller",
+  "duration_s": 94,
+  "call_status": "completed",
+  "started_at": "2026-10-29T14:02:11.204Z",
+  "ended_at": "2026-10-29T14:03:47.950Z",
+  "is_test": false,
+  "sip_callid": "8a7e…@10.0.1.5",
+  "experiment": null,
+  "transcript": [
+    { "role": "assistant", "text": "Hi, this is Sam from Acme Dental." },
+    { "role": "user", "text": "Hi Sam." }
+  ]
+}
+```
+
+| Field | What it is |
+|---|---|
+| `event` | always `call.completed` |
+| `call_id` | the jambonz call id |
+| `agent` | the agent's id |
+| `version` | the version number that handled the call |
+| `direction` | `inbound` or `outbound` |
+| `answered_by` | `person`, `machine`, `no_answer`, `undetermined` or `unknown` |
+| `amd_ms` | how long answering machine detection took, or `null` |
+| `goal_reached` | `true` or `false`, or `null` when the agent has no goal |
+| `goal_reason` | what reached the goal: `transfer_bridged`, `tool:` and the tool's name, or `model_marked`; empty when not reached |
+| `transfer` | `result` is `none`, `bridged`, `returned` or `failed`; `mode` is how the transfer was made; `ring_ms` is how long it rang |
+| `tools` | each tool call: its name, whether it succeeded, and its round-trip time in milliseconds |
+| `interruptions` | how many times the caller cut the agent off |
+| `turns` | the number of turns |
+| `latency_ms` | the caller's wait per turn: the median (`p50`) and the slowest (`max`) |
+| `completion_reason` | why the agent's session ended, as jambonz reports it |
+| `call_termination_by` | who ended the call, as jambonz reports it |
+| `duration_s` | seconds from answer to end; `0` when the call was not answered |
+| `call_status` | the call's final status from jambonz, such as `completed`, `no-answer`, `busy` or `failed` |
+| `started_at`, `ended_at` | ISO 8601 times; `ended_at` can be `null` |
+| `is_test` | `true` for a test call |
+| `sip_callid` | the SIP Call-ID |
+| `experiment` | `{ "id", "group" }` when the call was in an [experiment](/agent-studio/experiments), with `group` `A` or `B`; otherwise `null` |
+| `transcript` | the conversation, as `role` (`user` or `assistant`) and `text`; present only when the transcript was kept |
+
+A payload larger than 256 KB is not sent; the delivery history shows it as failed with `too_large`.
+
+## Verify the signature
+
+Each delivery is signed with the agent's **signing secret**. The `x-studio-signature` header has two parts:
+
+- `t`: the time of signing, in Unix seconds
+- `v1`: the HMAC-SHA256, in hex, of the string `<t>.<raw body>`, keyed with the signing secret
+
+To verify a delivery, compute the same HMAC over the raw request body exactly as received, before parsing it, and
+compare. Rejecting deliveries whose `t` is too old protects you from replays.
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+// rawBody: the request body as a string, exactly as received
+export function verifyStudioSignature(rawBody, header, secret, toleranceS = 300) {
+  const parts = Object.fromEntries(
+    header.split(',').map((p) => {
+      const i = p.indexOf('=');
+      return [p.slice(0, i), p.slice(i + 1)];
+    }),
+  );
+  const t = Number(parts.t);
+  if (!Number.isFinite(t) || !parts.v1) return false;
+  if (Math.abs(Date.now() / 1000 - t) > toleranceS) return false;
+
+  const expected = createHmac('sha256', secret).update(`${parts.t}.${rawBody}`).digest('hex');
+  const a = Buffer.from(expected, 'hex');
+  const b = Buffer.from(parts.v1, 'hex');
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+```
+
+### The signing secret
+
+Under **Signing secret**, below the URL:
+
+- **Reveal** shows the secret, for one minute. It starts with `whsec_`. Use the whole string as the HMAC key.
+- **Rotate** replaces it. Deliveries from then on are signed with the new secret and the old one stops working at
+  once, so update your receiver first.
+
+Revealing and rotating the secret are limited to Owners and Admins, and both are recorded in the account's audit log.
+
+## Delivery and retries
+
+A delivery succeeds when your endpoint answers with a `2xx` status within 10 seconds.
+
+| Your endpoint | What Studio does |
+|---|---|
+| answers `2xx` | delivered |
+| answers `5xx`, `408` or `429`, times out, or can't be reached | tries again, up to 3 more times: after 5 seconds, 30 seconds and 5 minutes |
+| answers another `4xx` | gives up; no retry |
+| answers with a redirect | gives up; redirects are not followed |
+| resolves to a private address | gives up; the delivery is blocked |
+
+If 25 calls in a row fail to deliver, Studio pauses the agent's webhook for an hour. Calls that end during the pause
+are not delivered; each one is recorded in the delivery history with the error `paused`. Deliveries resume by
+themselves after the hour.
+
+Studio sends at most 3 deliveries at a time for each account; others wait their turn.
+
+## Delivery history
+
+**Recent deliveries**, below the signing secret, lists the latest 20 delivery attempts for the agent, newest first:
+
+| Column | What it shows |
+|---|---|
+| **When** | when the attempt was made |
+| **Call** | the start of the call id |
+| **Attempt** | 1 for the first try, then each retry; 0 for a call skipped while paused |
+| **Status** | **Delivered**, the HTTP status your endpoint returned, or **Failed** |
+| **Error** | why it failed, for example `http 500`, `timeout`, `redirect not followed`, `blocked: private address` or `paused` |
+
+While deliveries are paused, the list says so at the top. Recent deliveries is shown to Owners and Admins.
+
+## Next
+
+- [Publishing](/agent-studio/publishing): place calls from an outbound agent
+- [Calls](/agent-studio/calls): every call's result, in Studio

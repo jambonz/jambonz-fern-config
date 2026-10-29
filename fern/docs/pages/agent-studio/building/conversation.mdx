@@ -1,0 +1,124 @@
+---
+title: Conversation
+subtitle: How the agent answers, takes turns, handles interruptions and silence, and what is kept from each call.
+---
+
+The **Conversation** section sets how a call runs once it connects. Some settings apply to every agent; the
+turn-taking settings apply only where jambonz runs the turns.
+
+| Setting | Cascaded voice pipeline | Realtime voice API | Connected agent | Custom harness |
+|---|---|---|---|---|
+| Answering machine detection | yes | yes | yes | yes |
+| Noise isolation | yes | no | no | yes |
+| Background sound | yes | yes | yes | yes |
+| Recording and session data | yes | yes | yes | yes |
+| Call goal | yes | yes | yes, except **The model decides** | yes |
+| Turn-taking, interruptions and silence | yes | no: the vendor takes turns | no: the platform takes turns | yes |
+| Tool filler | yes | no | no | no |
+| Call settings (advanced) | yes | no | no | yes |
+
+The greeting, and whether the agent waits for the other party to speak first, are set on the
+[Prompt](/agent-studio/building/prompt#greeting) section.
+
+## Answering the call
+
+New outbound agents start with answering machine detection on, Krisp noise isolation and a call goal. New inbound
+agents start with all three off. Change any of them at any time.
+
+### Answering machine detection
+
+**Answering machine detection** tells a person from voicemail before the agent speaks. It is also useful when a
+dialer places the call and sends it to jambonz as inbound. Its fold sets:
+
+| Setting | Options | Default |
+|---|---|---|
+| **When a machine answers** | **Leave a message after the beep** (with the **Message to leave**), **Hang up**, **Connect the agent anyway** | Leave a message after the beep |
+| **When a person answers** | **Connect the agent**, **Transfer to a person** | Connect the agent |
+| **Give up deciding after** | 3 to 20 seconds | 8 seconds |
+
+**Transfer to a person** uses the destination set in
+[Transfer & hangup](/agent-studio/building/transfer-and-hangup). It cannot dial a destination chosen by the agent,
+because there is no agent to choose one yet.
+
+### Noise isolation
+
+**Noise isolation** cleans up the caller's audio before it reaches speech recognition, which helps when people
+answer in noisy places. Choose **Off**, **Krisp**, **RNNoise (open source)** or **ai|coustics**.
+
+## Background sound
+
+**Background sound** plays a quiet audio loop under the call, such as office ambience, from your own file. Give a
+public `https://` **Audio URL**; nothing plays until it is set. The fold sets **Loop the sound** (on by default) and
+the **Volume**, from -60 dB to +6 dB relative to the file's own level (-12 dB by default).
+
+## Recording and session data
+
+**Recording and session data** keeps the audio and the full session file for this agent's calls, for playback,
+downloadable transcripts and call analysis. The switch controls recording; whether session files are kept follows
+the account's observability setting.
+
+The switch needs observability set up on the jambonz account. When it is off, calls are still listed and
+transcribed live, but nothing is kept. Members cannot change it.
+
+## Call goal
+
+**Call goal** says what counts as this agent succeeding. Every call is then marked reached or not reached, alongside
+who answered (person, machine, no answer). The goal is reached when any of the rules you tick happens:
+
+- **A successful transfer to a person**: the person answered and the call was bridged.
+- **One of these tools ran successfully**: pick the tools that mean the job was done.
+- **The model decides**: gives the model a `mark_goal_reached` tool. Describe when to call it; the description is
+  added to the prompt.
+
+## Turn-taking
+
+For Cascaded voice pipeline and Custom harness agents, a sentence at the top of the section sums up the current
+settings: how much speech interrupts the agent, when it checks in after silence, and when it gives up. Click a value
+in it to go to that setting.
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Speech needed to interrupt the agent** | how long the caller must speak before the agent stops talking, 0.2 to 2 seconds. Shorter feels responsive; longer ignores coughs and noise | 0.5 s |
+| **End-of-turn detection** | who decides the caller has finished: the speech-to-text vendor, or the **Krisp turn model** | the speech-to-text vendor |
+| **Check in after silence** | after this many seconds of silence the agent says something, 0 to 30. Off at 0 | 10 s |
+
+Deepgram Flux, AssemblyAI and Speechmatics detect the end of a turn themselves. With another speech vendor and no
+Krisp, Studio notes that replies will be slower. With Deepgram Flux, three more sliders appear: **End-of-turn
+threshold**, **Eager end-of-turn threshold** and **Silence that ends the turn anyway**. Left unset, Deepgram's own
+defaults apply.
+
+The fold below holds the rest:
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Unanswered prompts before hang-up** | after this many check-ins with no answer, the agent ends the call. 0 means never | 2 |
+| **Let callers interrupt the agent** | the agent stops talking when the caller speaks | on |
+| **Stay quiet after an interruption** | when off, the agent may resume if the caller only made a noise | off |
+| **How interruptions are detected** | **Voice activity**, or **Interrupt prediction** with a **Prediction sensitivity** | Voice activity |
+| **Respond** | with the Krisp turn model: how soon the agent answers, from sooner to later | 0.5 |
+
+A Custom harness decides for itself whether to prompt again after silence, so **Unanswered prompts before hang-up**
+does not apply to it.
+
+**Restore all defaults** at the bottom of the section resets the turn-taking, interruption and tool-filler settings.
+It leaves answering, background sound, recording, the call goal and the advanced settings as they are.
+
+## Tool filler
+
+**While tools run**, in the same fold, fills the silence while a tool is working, on Cascaded voice pipeline agents:
+
+- **Off**
+- **Short phrases** (the default): the agent says brief phrases in the **Phrase style** you describe ("friendly and
+  brief" by default)
+- **Audio loop**: plays the audio at a public `https://` **Audio URL**
+
+**Start filler after** sets how long a tool must run before the filler starts, 0 to 5 seconds (2 by default). An
+audio loop with no valid URL blocks publishing.
+
+Each HTTP tool can also have a line the agent says before calling it. See [Tools](/agent-studio/building/tools).
+
+## Call settings (advanced)
+
+**Call settings (advanced)** takes any other call setting jambonz accepts, as a JSON object of up to 8 KB, for example
+`{"boostAudioSignal": 3}`. Keys jambonz does not accept are listed under the box and left out. Answering machine
+detection, recording and noise isolation are set by the cards above, so those keys are left out here too.

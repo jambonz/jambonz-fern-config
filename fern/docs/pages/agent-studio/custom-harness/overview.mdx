@@ -84,6 +84,10 @@ Each turn in the call history has what the caller said and what the agent said. 
 - the **turn record** your harness sent with `reply:done`: which route the turn took, the steps with their timings,
   the model calls with tokens, flags and a note. See [the turn record](/agent-studio/custom-harness/protocol#the-turn-record).
 
+In Agent Studio, open a call from **Calls**: each turn shows the first-chunk time as `harness`, and selecting a turn
+shows its turn record. The turn record is kept with the transcript, so a call that does not keep its transcript keeps
+the timings but not the record.
+
 These arrive on each turn's `turn_end` event, which your own application also receives on its `eventHook` when you
 use the agent verb directly.
 

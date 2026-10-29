@@ -1,0 +1,144 @@
+---
+title: Connected agent
+subtitle: An agent built and run on Dialogflow CES or ElevenLabs Agents, put on the phone by Studio.
+---
+
+A **Connected agent** is built and runs on another platform: **Dialogflow CES** or **ElevenLabs Agents**. Its prompt,
+knowledge and conversation live there. Studio connects it to the phone by its id and keeps everything around the
+call: phone numbers, transfers, the secure detour, recording, the tools it asks for, and call history.
+
+A Connected agent has no **Prompt** or **Knowledge** section in Studio. Its settings are in the agent's **Connected
+agent** section; transfers, the detour and hangup are in **Transfer & hangup**; and the client-side tools it calls are
+matched in **Tools**.
+
+## Credentials
+
+| Platform | Credential | Where in the jambonz portal |
+|---|---|---|
+| **Dialogflow CES** | a Dialogflow CES credential holding the Google service account | **LLM Services**, **Hosted agents** |
+| **ElevenLabs Agents** | an ElevenLabs Agents key | **LLM Services**, **Speech-to-speech** |
+
+Each is its own credential. A Google speech credential is never used for CES, and an ElevenLabs speech credential is
+not an ElevenLabs Agents credential. You choose the platform in the **New agent** dialog; if the account has no
+credential for it yet, you can still build the agent and add the credential later. Changing **Platform** later clears
+the credential and the agent.
+
+## Dialogflow CES
+
+In **Connected agent**, choose the **Credential** and fill in:
+
+| Field | What it is |
+|---|---|
+| **Project** | The Google Cloud project. |
+| **Region** | The agent's region (`us` to start). |
+| **Agent (CES app id)** | The app id from the CES console. |
+| **Deployment** | Optional. Empty uses the latest. |
+| **Language** | The conversation's language (`en-US` to start). |
+
+Under **Options**:
+
+- **Voice**: **Vendor voice** (Google synthesizes the agent's speech, the default) or **jambonz voice** (text comes
+  back from CES and a text-to-speech credential in your account speaks it; choose the credential and voice).
+- **Welcome event**: sent when the call connects, with the variables as parameters. Default `welcome`.
+- **If the caller says nothing for** and **send this event**: after that many seconds of silence (up to 60), send
+  the event (default `no_input`) to the agent. Off at 0, the default.
+- **Caller can interrupt the agent**: barge-in on the vendor's audio. On by default.
+
+The call ends when your CES agent ends its session; Studio hangs up and records the reason CES gives.
+
+### Client-side tools
+
+In **Tools**, under **Client-side tools your CES agent asks for**, list the client-side tools your CES agent can
+call. Each name is matched to a tool on this Studio agent, or to the transfer or detour tool named in **Transfer &
+hangup**. A name with no match blocks publishing; **Create tool** starts a Studio tool with that name. Server-side
+tools run inside Google and are not listed.
+
+In the CES agent's instructions, have it call a tool rather than announce it, and give it no line to say after a
+transfer or detour tool: told to speak after a call, CES sometimes speaks and skips the call.
+
+## ElevenLabs Agents
+
+In **Connected agent**, choose the **Credential**, then the **Agent**. Studio lists the agents that key can run in
+ElevenLabs.
+
+When you choose an agent, Studio reads from ElevenLabs:
+
+- its **name**
+- its **audio formats**, for what it listens in and speaks in. They must be raw PCM (for example `pcm_16000`, which
+  suits phone calls); any other format blocks publishing until you change it in ElevenLabs.
+- its **client tools**
+- whether it allows its **first message to be overridden** (see [A returning caller](#a-returning-caller))
+- its **voice**
+
+Studio shows what it read under the agent. If you change the agent in ElevenLabs, select **Read the agent again**.
+
+The agent's prompt, voice, greeting and tools are set in ElevenLabs. Studio carries out the client tools the agent
+calls: those matched to tools on the Studio agent in **Tools**, plus the transfer, detour and hangup tools below. A
+client tool with no match blocks publishing.
+
+The call ends when the agent ends the conversation (its end call tool) or calls `hangup`.
+
+## Client tools named as in Transfer & hangup
+
+A Connected agent asks Studio for a transfer, the secure detour or a hangup by calling a client-side tool. Studio
+answers the tool and carries out the action with the settings in **Transfer & hangup**. The tool names in your CES or
+ElevenLabs agent must match the names there (the labels say **CES** or **ElevenLabs** in place of _platform_):
+
+| Action | Turned on with | Tool name | Default |
+|---|---|---|---|
+| Transfer | **Transfer to a person** | **Tool name in your _platform_ agent** | `transfer_to_human` |
+| Secure detour | **Secure detour and return** | **Detour tool name in your _platform_ agent** | `secure_detour` |
+| Hang up (ElevenLabs Agents only) | **Let the agent hang up** | fixed | `hangup` |
+
+- **Transfer**: **When the agent should transfer the call** becomes the tool's description. Under **Add this tool to
+  your _platform_ agent**, Studio shows the **Client-side tool definition** to add: its name, description and
+  parameters. The parameters include the destination when the destination is **Chosen by the agent**, and a
+  `summary` for the brief on a warm transfer.
+- **Secure detour**: a client-side tool with no parameters.
+- **Hang up**: a CES agent ends the call by ending its session, so it needs no hangup tool.
+
+For an ElevenLabs agent, when one of these is turned on and the agent has no client tool with its name, Studio notes
+that the agent cannot transfer, take the detour or end the call. Add the client tool in ElevenLabs, then select
+**Read the agent again**.
+
+## Variables
+
+A Connected agent has no prompt, so its variables are declared in **Connected agent**, under **Variables go in as
+session parameters** (CES) or **Variables go in as dynamic variables** (ElevenLabs). Each has a **Name** and comes
+**From** a **Fixed value**, a **SIP header** or the **Dialer payload**. Up to 20.
+
+- CES receives them with the welcome event, as session parameters.
+- ElevenLabs receives them when the conversation starts, as dynamic variables; use them as `{{name}}` in the agent's
+  prompt and first message.
+
+`caller_phone`, `dnis` and `call_sid` are always sent.
+
+## Studio's own lines
+
+Studio speaks some lines itself, with a text-to-speech credential from your account: the brief on a warm transfer,
+and for a CES agent the detour message (**Caller hears first**). An ElevenLabs agent says the detour message itself.
+
+- **ElevenLabs Agents**: **Voice for Studio's own lines** is below the agent. When the agent has a voice, **Speak them
+  in the agent's voice** speaks Studio's lines in that voice, with an ElevenLabs text-to-speech credential. When you
+  first choose an agent that has a voice and your account has an ElevenLabs text-to-speech credential, Studio turns
+  this on for you.
+- **Dialogflow CES** with **Vendor voice**: choose a text-to-speech credential and voice under **Voice for Studio's
+  own lines**, in **Options**. With **jambonz voice**, Studio's lines use that voice.
+
+## A returning caller
+
+A caller can come back to the agent: from a transfer that does not go through, when **If the transfer does not go
+through** is set to **Back to the agent**, or at the end of the secure detour.
+
+- **Dialogflow CES**: the caller returns to the same CES session.
+- **ElevenLabs Agents**: there is no session to return to, so Studio connects the caller to the agent again. If the
+  agent allows its first message to be overridden, Studio leaves the first message out, and the returning caller is
+  not greeted again. If it does not, the caller hears the first message again; with a transfer or the detour turned
+  on, Studio notes this. To fix it, allow the first message to be overridden in the agent's Security settings in
+  ElevenLabs, then select **Read the agent again**.
+
+## Next
+
+- [Realtime voice API](/agent-studio/agent-types/realtime-voice-api): build the agent in Studio, with one vendor
+  running the voice loop
+- [Getting started](/agent-studio/getting-started): credentials and your first test call
