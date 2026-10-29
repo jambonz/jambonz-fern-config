@@ -161,6 +161,8 @@ The **Greeting** card, under the prompt, sets how the call opens.
   voice pipeline agent, Ultravox and Deepgram Voice Agent speak them exactly; OpenAI Realtime, OpenAI GPT-Live and
   Rime Prism are asked to say them, and their model may reword them. With **Wait for the other party to speak
   first**, the words are the agent's first reply, which the model may also reword.
+  Variables such as `{{caller_number}}` in a Text greeting are filled in on Cascaded voice pipeline agents; on a
+  Realtime voice API agent, put them in the prompt and let the model greet.
 
 On OpenAI Realtime, the agent always speaks first; Studio shows a note if the wait option is on.
 

@@ -71,7 +71,8 @@ X-Studio-Signature: t=<unix seconds>,v1=<hex>
 v1 = HMAC-SHA256(signing_secret, t + "." + METHOD + "." + path_with_query + "." + raw_body)
 ```
 
-Reject a request whose `v1` does not match. The signing secret is shown once, when the tool is created.
+Reject a request whose `v1` does not match, or whose `t` is more than 300 seconds from now. The signing secret is
+created when you first save the tool and shown once; **Rotate secret…** replaces it.
 
 ### Testing a tool
 
@@ -116,8 +117,8 @@ toolset.
 a phone menu. Turning it on also turns on `send_dtmf`, and turns off answering machine detection, silence check-ins,
 tool filler and the goodbye before hanging up.
 
-`send_dtmf` and DTMF only are not available to a Connected agent. A tool of your own cannot be named
-`search_knowledge_base`.
+`send_dtmf` and DTMF only are not available to a Connected agent, and DTMF only is not available to a Realtime voice
+API agent, whose vendor speaks regardless. A tool of your own cannot be named `search_knowledge_base`.
 
 ## Filling the silence while a tool runs
 

@@ -166,9 +166,9 @@ Studio sends at most 3 deliveries at a time for each account; others wait their 
 |---|---|
 | **When** | when the attempt was made |
 | **Call** | the start of the call id |
-| **Attempt** | 1 for the first try, then each retry; 0 for a call skipped while paused |
+| **Attempt** | 1 for the first try, then each retry; 0 for a call that was not sent (paused, or too large) |
 | **Status** | **Delivered**, the HTTP status your endpoint returned, or **Failed** |
-| **Error** | why it failed, for example `http 500`, `timeout`, `redirect not followed`, `blocked: private address` or `paused` |
+| **Error** | why it failed, for example `http 500`, `timeout`, `redirect not followed`, `blocked: private address`, `paused` or `too_large` |
 
 While deliveries are paused, the list says so at the top. Recent deliveries is shown to Owners and Admins.
 

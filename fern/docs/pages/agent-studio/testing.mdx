@@ -147,8 +147,9 @@ holds:
 The same steps are printed to the browser console as they happen, as lines starting with `[test call]`, with the
 test session and call ids.
 
-On the call's page, test calls have a **Diagnostics** card built from this report, the recording and the jambonz
-session. It checks each link of the audio round trip and names the first one that failed:
+On the call's page, test calls have a **Diagnostics** line built from this report, the recording and the jambonz
+session. It checks each link of the audio round trip and gives one verdict: that every link checked out, or the first
+one that failed. **Details** opens the evidence for each link:
 
 | Link | Checked from |
 |---|---|
@@ -159,7 +160,7 @@ session. It checks each link of the audio round trip and names the first one tha
 | **jambonz → browser** | loss on the audio received |
 | **You hear it** | the level of the audio received |
 
-When the call was recorded, the card also shows the level of each side of the recording, one bar per second.
+Under **Details**, a recorded call also shows the level of each side of the recording, one bar per second.
 
 ## Next
 
