@@ -1,0 +1,70 @@
+---
+title: Paxa Labs
+subtitle: Thai, English and Mandarin voices, direction tags, speed and reading language for Paxa TTS.
+---
+
+[Paxa Labs](https://paxalabs.com/docs) generates speech in Thai, English and Mandarin Chinese, including sentences that mix them. The same Paxa API key also serves [speech recognition](/verbs/verbs/recognizer). Paxa tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "[warm, unhurried] สวัสดีครับ your order ships today ครับ",
+  "synthesizer": {
+    "vendor": "paxa",
+    "language": "th-TH",
+    "voice": "khanomkrok",
+    "options": {
+      "speed": 1.0
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key on the [API keys page](https://paxalabs.com/app/keys) of the Paxa dashboard. Keys start with `pxa_`, and jambonz sends the key as a `Bearer` token. Add it as a **Paxa Labs** speech credential in the portal or API; one credential is used for both text-to-speech and speech-to-text.
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `paxa-tts-flash-v2` | Default. 50 voices, each speaking Thai, English and Mandarin Chinese. Reads direction tags. |
+| `paxa-tts-flash-v1` | Each voice is designed around one language and reads the other two with a foreign accent. Serves 24 kHz audio only; jambonz resamples it. |
+
+Pick the model on the speech credential.
+
+## Voices and languages
+
+A voice is a lowercase id such as `khanomkrok` or `nomyen`. Every `paxa-tts-flash-v2` voice speaks Thai, English and Mandarin Chinese, and a single sentence can switch between them without any markup. Paxa's [voice list](https://paxalabs.com/docs/text-to-speech) covers both models.
+
+[Designed voices](https://paxalabs.com/docs/designed-voices) you have saved in your Paxa account have ids that start with `voice_`. They work with `paxa-tts-flash-v2` only, and only with an API key from the account that saved them.
+
+`synthesizer.language` does not pick the voice's language, since words are spoken in the language of their script. It sets how codes, digits and symbols are read: `th-*` is sent as `th`, `en-*` as `en`, and `zh-*` or `cmn-*` as `zh`. Any other language is not sent, and Paxa follows the language most of the text is written in. Set `options.language` to choose explicitly; it takes precedence over `synthesizer.language`.
+
+## Direction tags
+
+On `paxa-tts-flash-v2`, write tags into the text to direct the delivery: a direction in square brackets such as `[whispering]` or `[calm, measured]` changes how the following words are spoken, sounds such as `[laughs]` play where they are written, `[um]` and `[hmm]` are spoken as hesitations, and `<emph>…</emph>` and `<whisper>…</whisper>` mark a span. jambonz passes tags to Paxa unchanged. Paxa rejects some tags, such as accents, other voices or a bracket without letters, with a `tag_invalid` error; see Paxa's [direction tags](https://paxalabs.com/docs/directions) for the full rules. On `paxa-tts-flash-v1` only the experimental voices read tags.
+
+## Options
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, `0.5` – `1.5` times the voice's own speed.
+</ParamField>
+
+<ParamField path="language" type="string" required={false}>
+  How codes, digits and symbols are read: `auto`, `th`, `en` or `zh`. Paxa's default is `auto`.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Paxa's own default applies.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set `api_uri` in the credential's **Extra Options**; it applies to both TTS and STT. Leave it out to use `api.paxalabs.com`.
+
+## Streaming
+
+Paxa supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz streams text to Paxa over a live connection, and on barge-in sends Paxa's cancel instead of reconnecting.
+
+Paxa returns word-level timestamps, so alignment events are available when alignment is enabled. Paxa bills speech with timestamps at a higher rate than plain speech; see Paxa's [pricing](https://paxalabs.com/docs/credits).

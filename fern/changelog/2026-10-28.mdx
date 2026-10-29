@@ -1,0 +1,20 @@
+<Card title="Paxa Labs" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Paxa Labs as a text-to-speech and speech-to-text vendor, for Thai, English and
+Mandarin Chinese.
+
+#### New Features & Improvements
+
+1. **Paxa Labs text-to-speech** — `paxa` is available as a TTS vendor, with streaming TTS and
+   speech credentials in the portal and API. Each `paxa-tts-flash-v2` voice speaks Thai,
+   English and Mandarin Chinese, including in mixed sentences, and voices designed in your
+   Paxa account (`voice_…`) work too. Options are `speed` and `language`, direction tags
+   such as `[whispering]` are read from the text, and word-level timestamps make alignment
+   events available. See [Paxa Labs](/guides/features/tts-vendor-settings/paxa).
+1. **Paxa Labs speech-to-text** — the same `paxa` credential serves realtime speech
+   recognition with the `paxa-stt-lite-realtime-v1-preview` model, a research preview. Paxa
+   detects turns itself and returns one final transcript per turn. `hints` are sent as
+   Paxa's vocabulary (up to 50 terms), and `paxaOptions` sets `style`, `convention` and
+   word `timestamps`. See [recognizer](/verbs/verbs/recognizer).
