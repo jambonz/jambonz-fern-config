@@ -1,0 +1,109 @@
+<Card title="11.1.11" icon="regular cloud" iconPosition="left">
+jambonz Commercial 11.1.11 (jambonz.cloud release)
+</Card>
+
+**11.1.11** runs every kind of [Agent Studio](/agent-studio/overview) agent, including a
+[custom harness](/agent-studio/custom-harness/overview) that puts your own code in charge of what the agent says,
+and realtime voice agents on Rime Prism, Deepgram Voice Agent and Ultravox. It adds
+[AssemblyAI](/guides/features/tts-vendor-settings/assemblyai) as a text-to-speech vendor and ships
+[Paxa Labs](/guides/features/tts-vendor-settings/paxa) text-to-speech and speech-to-text. The [agent](/verbs/verbs/agent) verb can open a call with
+exact words instead of an LLM-generated greeting, and its `turn_end` event now covers the
+greeting turn and says when each side began speaking. Barge-in fades the agent's audio out
+instead of cutting it off with a click. The release also sends webhooks over HTTP/1.1 again,
+backs off from webhook URLs that keep answering 404, and reports why a streaming TTS vendor
+refused the text.
+
+#### New Features & Improvements
+
+1. **Custom harness agents** — the [agent](/verbs/verbs/agent) verb can be driven by a service you run
+   instead of an LLM (`llm.vendor: harness`). jambonz opens one WebSocket per call to your
+   harness, sends the caller's words one turn at a time and speaks the replies it streams
+   back, keeping its own speech recognition, turn-taking, barge-in and voice. The harness can
+   run the agent's tools, transfer the call, hang up and record its own turn data, and
+   receives the caller's keypresses as `dtmf` events. Build one in
+   [Agent Studio](/agent-studio/custom-harness/overview); see the
+   [quickstart](/agent-studio/custom-harness/quickstart) and
+   [protocol reference](/agent-studio/custom-harness/protocol).
+1. **More realtime voice and connected agents** — the [llm](/verbs/verbs/llm) verb adds
+   Rime Prism (`rime`) as a speech-to-speech vendor, and Deepgram Voice Agent, ElevenLabs
+   Agents, Ultravox, OpenAI Realtime and GPT-Live take their keys from the account's own
+   speech-to-speech credentials (portal: **LLM Services**, **Speech-to-speech** tab) when the
+   verb carries no key. These agents now report turns as `user_transcript`, `llm_response`,
+   `user_interruption` and `turn_end` events when the verb asks for them, and run warm
+   transfers: one at a time, with the parked caller muted to the model and the model's
+   answer heard if the transfer fails. The [dialogflow](/verbs/verbs/dialogflow) verb can name the
+   account's Dialogflow CES credential by label instead of carrying a service account. See
+   [Realtime voice API](/agent-studio/agent-types/realtime-voice-api) and
+   [Connected agent](/agent-studio/agent-types/connected-agent).
+1. **AssemblyAI text-to-speech** — `assemblyai`, already a speech-to-text vendor, is now
+   available for text-to-speech too, with streaming TTS, word-level alignment and regional
+   endpoints set by the credential. See [AssemblyAI](/guides/features/tts-vendor-settings/assemblyai).
+1. **Paxa Labs** — text-to-speech and realtime speech-to-text for Thai, English and Mandarin
+   Chinese from one `paxa` credential, as described in the October 28 entry. See
+   [Paxa Labs](/guides/features/tts-vendor-settings/paxa).
+1. **Agent greeting as text** — the [agent](/verbs/verbs/agent) verb's `greeting` may now be a string: the
+   agent speaks those exact words as its first turn, with no LLM call. The caller can
+   interrupt it, and the history records it as the agent's opening, as with a generated
+   greeting. `true` and `false` work as before.
+1. **Agent `turn_end` timing** — `turn_end` is now sent for the greeting turn too
+   (`greeting: true`, empty `transcript`), so a listener sees every turn the agent spoke. Each
+   `turn_end` also carries `caller_started_at` and `agent_started_at` (epoch ms), so a turn
+   that ends late (for example one held open by a transfer) can be placed where it happened.
+1. **Smoother barge-in** — when the caller interrupts, the agent's audio fades out over 60 ms
+   instead of stopping between two frames, which callers heard as a click. This applies to
+   streaming TTS, speech-to-speech, Dialogflow CES streaming, audio playout from a
+   [listen](/verbs/verbs/listen) stream, and stopping `play` or `say`.
+1. **Deepgram Multilingual** — a Deepgram speech credential now lists the Multilingual
+   (`multi`) language for the nova-2 and nova-3 models in the portal and API. Deepgram's
+   model list never includes it, although both models accept it.
+
+#### Bug Fixes
+
+- **Webhooks over HTTP/1.1** — since the HTTP client upgrade in an earlier release, HTTPS
+  webhooks (for example anything behind Cloudflare) were sent over HTTP/2, where a request
+  could sit on a dead connection until it failed with `Headers Timeout Error`. Webhook
+  requests use HTTP/1.1 again. WebSocket applications and vendor traffic are unaffected.
+- **Webhook URLs that keep answering 404** — after a URL answers 404 three times in a row,
+  requests to it fail at once with the same 404 for the next 60 seconds instead of being
+  sent; any other answer resets the count. Skipped requests are logged once per account per
+  minute and do not raise alerts. Timeouts and 5xx responses are handled as before.
+- **Streaming TTS refusals** — when a streaming TTS vendor refused the text mid-stream (for
+  example Rime with "Invalid speaker"), the agent went silent and nothing said why. The
+  vendor's reason is now logged, raised as a `TTS_FAILURE` alert, and sent to the agent's
+  eventHook as `tts_error`.
+- **Barge-in during long replies** — a barge-in during a long Dialogflow CES or
+  speech-to-speech reply could wait until the queued audio had played out, and a barge-in
+  during streaming TTS could let the rest of a cancelled reply play. Both now stop at once.
+- **ElevenLabs agents** — an ElevenLabs agent that speaks at a different rate from the one
+  it listens at (for example `pcm_16000` in, `pcm_24000` out) played slow and low-pitched. Its
+  audio now plays at the agent's own output rate.
+- **OpenAI Realtime tool results** — a tool result sent back as a plain `{result}` or `{error}`
+  object, rather than a `conversation.item.create`, was dropped, leaving the caller in
+  silence. It is now sent to the model as the function call's output.
+- **Refused websocket applications** — when the verbs a websocket app returned for
+  `session:new` failed validation, the call was declined and the socket closed with no
+  reason. jambonz now sends a `jambonz:error` message with the validation error before
+  closing.
+- **Out-of-dialog REFER** — drachtio 10.1.12 passes an out-of-dialog REFER (RFC 7647) to
+  the application instead of discarding it, and no longer leaks a dialog entry for each
+  subscription that ends with a terminating NOTIFY.
+- **Security** — the HTTP client library (undici) is updated to 8.12.3 for its recent
+  security releases.
+
+#### Component Versions
+
+| Component | 11.1.10 | 11.1.11 |
+|---|---|---|
+| jambonz | 11.1.10 | **11.1.11** |
+| mediajam | 0.5.18 | **0.5.20** |
+| drachtio | 10.1.11 | **10.1.12** |
+| rtpengine | 14.1.1.8-jambonz14 | 14.1.1.8-jambonz14 |
+| jambonz OSS (sbc-*) | 0.9.15 | 0.9.15 |
+| upload-recordings | 1.9.3 | 1.9.3 |
+| monitoring-agent | 10.2.2 | 10.2.2 |
+| pcap-server | 1.0.5 | 1.0.5 |
+| heplify-server | 1.0.5 | 1.0.5 |
+
+#### Availability
+
+**jambonz.cloud** - October 30, 2026

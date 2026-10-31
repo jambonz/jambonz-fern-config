@@ -375,6 +375,10 @@ The `eventHook` receives real-time events during the conversation. In WebSocket 
     - `tool_ms` — Total time spent in tool calls
     - `tts_ms` — TTS engine latency (text sent → first audio received)
     - `preflight` — Early generation metrics: `result` (`hit`, `miss`, or `pending`) and `tokens` buffered on a hit
+
+    **Timing fields** (epoch milliseconds, at the top level of the event):
+    - `caller_started_at` — when the caller began speaking in this turn; absent when the caller did not speak (for example the greeting)
+    - `agent_started_at` — when the agent began speaking in this turn; absent when the agent did not speak
   </Accordion>
 
   <Accordion title="user_transcript">
