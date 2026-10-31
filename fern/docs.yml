@@ -421,6 +421,8 @@ navigation:
             path: ./docs/pages/tutorials/gptlive.mdx
           - page: OpenAI Realtime API
             path: ./docs/pages/tutorials/openai.mdx
+          - page: Pipecat
+            path: ./docs/pages/tutorials/pipecat.mdx
           - page: Qwen Omni Realtime
             path: ./docs/pages/tutorials/qwen.mdx
           - page: xAI Grok Voice ThinkFast 2.0
