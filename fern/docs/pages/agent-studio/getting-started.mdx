@@ -1,0 +1,132 @@
+---
+title: Getting started
+subtitle: Connect Agent Studio to your jambonz account, check your credentials, create an agent and call it from your browser.
+---
+
+Agent Studio runs your agents on a jambonz account: its phone numbers, carriers and speech and LLM credentials. Studio
+reads them; it never adds numbers, carriers or credentials. You add those in the jambonz portal, and Studio picks them
+up.
+
+## What you need
+
+- **A jambonz account**, on jambonz.cloud or on your own jambonz (version 11.1.6 or newer; Studio checks the
+  version when you connect).
+- **The account SID**: in the jambonz portal, under **Account**, shown under the account name.
+- **An account API key**: in the jambonz portal, under **Account**, **API keys**. A key from **Service providers**,
+  **API keys** is not accepted. If you have several accounts under one service provider, connect each one
+  separately, with its own SID and key.
+
+## Connect your jambonz account
+
+1. Under **Where your jambonz runs**, choose **jambonz.cloud**, or **Self-hosted** and enter the **Hostname** of your
+   jambonz portal (for example `jambonz.example.com`). Studio finds the API from the portal's hostname and tells you
+   whether it can reach it.
+2. Enter the **Account SID** and paste the **API key**.
+3. Select **Connect**.
+
+Studio checks the key and then sets up the account:
+
+- **The SIP realm.** Browser test calls need the account to have a SIP realm. If yours already has one, Studio uses
+  it. If not, Studio sets one, a subdomain of your jambonz system's SIP domain. If the realm is set but its DNS is not
+  provisioned, or jambonz does not accept it, Studio says so: the connection still works, but browser test calls
+  will not until the realm has DNS and a certificate (or you set one in the jambonz portal).
+- **Its own application.** Studio creates the jambonz application it routes calls through. Your existing applications
+  are left alone.
+
+The API key is stored encrypted; only its last four characters are shown again.
+
+When the account is connected, Studio shows how many numbers, carriers, credentials and applications it found, and
+whether the account is **Ready for agents?**: whether it has a **Speech to text** credential, a **Model** (LLM)
+credential and a **Voice (streaming)** credential. If one is missing, add it in the jambonz portal and select
+**Check again**.
+
+## Credentials
+
+Every credential lives in the jambonz account. Add them in the jambonz portal:
+
+- **Speech services**: speech-to-text and text-to-speech credentials.
+- **LLM Services**: language models on the **Language models** tab, realtime voice APIs and ElevenLabs Agents on
+  the **Speech-to-speech** tab, and Dialogflow CES on the **Hosted agents** tab.
+
+What each kind of agent needs:
+
+| Kind | Credentials | Where in the jambonz portal |
+|---|---|---|
+| **Cascaded voice pipeline** | speech-to-text, an LLM, and text-to-speech from a vendor that streams | **Speech services**; **LLM Services**, **Language models** |
+| **Realtime voice API** | one of OpenAI Realtime, OpenAI GPT-Live, Rime Prism, Deepgram Voice Agent or Ultravox | **LLM Services**, **Speech-to-speech** |
+| **Connected agent** | Dialogflow CES, or ElevenLabs Agents | CES: **LLM Services**, **Hosted agents**. ElevenLabs Agents: **LLM Services**, **Speech-to-speech** |
+| **Custom harness** | speech-to-text, and text-to-speech from a vendor that streams | **Speech services** |
+
+A realtime voice API, Dialogflow CES or ElevenLabs Agents credential is its own credential in the portal. It is never
+a language model or speech credential that happens to use the same key, and Studio does not offer it as a pipeline's
+LLM.
+
+A realtime voice API or Connected agent may also need a text-to-speech credential, for the lines Studio speaks itself
+(see [Realtime voice API](/agent-studio/agent-types/realtime-voice-api) and [Connected agent](/agent-studio/agent-types/connected-agent)).
+
+Studio's **Credentials** page lists every speech and LLM credential in the account, which stage it serves (Hear,
+Think, Speak) and which agents use it. You can test a credential there, but adding or changing one is done in the
+jambonz portal. A credential's label matters only when you have more than one for the same vendor: the label picks
+which one an agent uses.
+
+If you are a Member of the workspace, ask an Owner or Admin to add a missing credential.
+
+## Create your first agent
+
+Select **New agent**. The dialog has two steps.
+
+**1. Where will you build this agent?** Choose one of the four kinds:
+
+- **Build it in Studio**: **Cascaded voice pipeline** or **Realtime voice API**. You write the prompt and add tools,
+  knowledge and guardrails in Studio.
+- **Connect an agent built elsewhere**: **Connected agent** or **Custom harness**. The agent's behaviour lives on
+  another platform or in your own code.
+
+The **Realtime voice API** and **Connected agent** cards list their vendors, with a dot marking those your account
+has a credential for. The line at
+the bottom of the dialog says whether the account has what the chosen kind needs. If it does not, **Continue** is
+disabled until you add the credential.
+
+**2. New agent.** Fill in:
+
+- **Vendor** (Realtime voice API) or **Platform** (Connected agent): which one this agent runs on. Studio starts on
+  the first one your account has a credential for. You can build the agent before the credential exists.
+- **Name**.
+- **Direction**: **Inbound** (answers calls to your numbers) or **Outbound** (answers calls your system places).
+  Direction sets starting defaults. Inbound: answering machine detection off, and the greeting plays as soon as the
+  call connects. Outbound: answering machine detection on, the agent waits for the other party to speak, and the call
+  goal is on.
+- **Start from** (Cascaded voice pipeline and Realtime voice API only): **Blank**, **A template** or **Copy of an
+  agent**. The templates are **Front desk**, **Front desk (multilingual)** and **Lead follow-up**. A template also
+  asks for a **Prompt style** and, where the prompt uses it, a **Business name**; the front desk templates ask for an
+  optional number to **Transfer calls to**. A copy takes everything from an agent of the same kind, except its
+  numbers.
+
+Select **Create and open**. You can change everything later except the kind of agent and its direction. To try
+another kind, copy the agent into a new one.
+
+## Make a test call
+
+Open the **Test** panel from the agent's header. For an inbound agent:
+
+1. Under **Call from**, choose **This browser**.
+2. Under **Version to call**, keep **Draft (unsaved changes included)** to call what you are editing, or choose a
+   published version.
+3. Leave **Record and keep the transcript** on to keep the call in the call history.
+4. Select **Start test call** and allow the browser to use your microphone.
+
+The panel shows each turn as it happens. For an outbound agent, choose **This browser** under **Ring me on** and
+select **Have the agent call this browser**.
+
+**My phone** places a real call instead. For an inbound agent you call one of the agent's numbers and watch the call
+in the panel; the published version answers it, and it counts in Calls and Usage. For an outbound agent the agent
+calls your phone through a carrier with an outbound gateway, from the agent's caller ID.
+
+A test call needs the agent to have no blocking issues; the builder marks them in red and links to each one.
+
+## Next
+
+- [Cascaded voice pipeline](/agent-studio/agent-types/cascaded-pipeline): speech recognition, model and voice
+- [Realtime voice API](/agent-studio/agent-types/realtime-voice-api): one vendor runs the voice loop
+- [Connected agent](/agent-studio/agent-types/connected-agent): Dialogflow CES and ElevenLabs Agents
+- [Custom harness](/agent-studio/custom-harness/overview): your own code decides what the agent says

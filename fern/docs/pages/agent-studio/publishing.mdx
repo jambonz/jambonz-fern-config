@@ -1,0 +1,158 @@
+---
+title: Publishing
+subtitle: Edit a draft, publish it as a version, and put that version on the phone.
+---
+
+Every agent has one **draft** and any number of **published versions**. You edit the draft; callers get the published
+version. Nothing you change in the builder reaches a caller until you publish.
+
+## Drafts and versions
+
+The draft saves itself as you work. The status next to the agent's name tells you where it stands:
+
+| Status | Meaning |
+|---|---|
+| **Draft · v1** | never published; the next publish creates v1 |
+| **Published v3** | v3 is live and the draft matches it |
+| **Published v3 · draft edits** | v3 is live and the draft has changes that are not published yet |
+
+You can test the draft from the [Test panel](/agent-studio/testing) at any time without publishing it.
+
+## Publish
+
+Click **Publish** in the builder header (⌘⇧P). The dialog saves the draft, runs the checks again and shows:
+
+- the problems that block publishing, if any, each with a **Fix →** link to the section to change
+- what changed since the live version (or **First version**)
+- **Label** (optional): a name shown instead of `v4` in History, experiments and Calls
+- **Note for the history** (optional): what changed and why
+
+Click **Publish as v4** (the number is the next version). Callers on the agent's numbers get the new version on their
+next call. Calls already in progress finish on the version they started with. The draft stays editable.
+
+### What publishing freezes
+
+A published version is a snapshot of the agent with its prompt, guardrails and tools as they are at that moment.
+Later edits to a prompt, guardrail or tool in your library reach callers only when you publish again; the builder
+header says when the live version runs an older copy of something you have since changed. Knowledge bases are the
+exception: they answer from their current documents.
+
+### What blocks publishing
+
+The **Publish** button is disabled, and the header shows a count of issues, while the draft has errors: a missing
+credential, a setting jambonz would reject, or an agent too large for jambonz to accept (publishing is blocked above
+90% of the size limit). The dialog lists each one with a link to fix it.
+
+## History
+
+**History** in the builder header (⌘⇧H) lists every publish and saved draft, newest first, with who made it, when, its
+note and its size. The live version is marked **Published**.
+
+Each version has these actions:
+
+| Action | What it does |
+|---|---|
+| **View** | the version's summary, its full config, and the jambonz verbs it compiles to |
+| **Compare with draft** | what differs between that version and the current draft |
+| **Restore as draft** | replaces the draft with this version's settings; nothing goes live |
+| **Roll back to this version** | publishes this version again as a new version number, live for new calls; the draft is not changed |
+| **Add label** / **Rename** | sets or changes a published version's label |
+
+**Restore as draft** is for picking up an old version and editing it. **Roll back** is for getting an old version back
+in front of callers now: rolling back to v2 when v5 is live publishes it as v6. Rolling back is available to Owners and
+Admins.
+
+Owners and Admins can also select versions and delete them. Deleted versions are gone for good. Some versions are
+locked, for example a version taking calls in a running experiment; the row says why.
+
+The footer of History shows how many versions are kept. Older draft saves are removed automatically; you can change
+this in the account settings under **Version retention**.
+
+## Unpublish
+
+**Unpublish…** at the bottom of History takes the agent off the phone: new calls can't reach it. Its versions stay in
+History and you can publish again at any time.
+
+You can't unpublish an agent that still has phone numbers routed to it. Studio lists the numbers; route them elsewhere
+first.
+
+## Inbound and outbound agents
+
+You choose an agent's direction when you create it, and it can't be changed afterwards.
+
+- An **inbound** agent answers calls to phone numbers you route to it.
+- An **outbound** agent answers calls that your system places through the jambonz REST API.
+
+The builder's **Phone numbers** section (called **Placing calls** for an outbound agent) is where you set this up.
+
+## Route phone numbers to an inbound agent
+
+Only published agents can receive a number. In the agent's **Phone numbers** section, under **Numbers routed to this
+agent**, pick a number from **Add a number from your jambonz account…** and click **Route here**. To take a number
+off the agent, click **Stop routing here**. Routing is pushed to jambonz right away.
+
+The list offers only numbers already in your jambonz account that aren't routed to another agent or owned by another
+jambonz application. To add numbers or carriers, use the jambonz portal.
+
+The account's **Phone numbers** page lists every number with where its calls go, and has **Route to agent…** on each
+row. From there you can also move a number between agents, or take a number from another jambonz application. Studio
+asks first, because that application stops receiving calls to the number.
+
+Routing a number sets its application in jambonz to Studio's router application (`studio-router`), which sends each
+call to the right agent.
+
+Changing number routing is limited to Owners and Admins. Members see the numbers routed to an agent, read-only.
+
+### Unassigned numbers
+
+At the bottom of the Agents list you choose what happens to calls on numbers that point at Studio but aren't routed
+to an agent: **Unassigned numbers go to** a published agent you pick, or **No default**, which declines them.
+
+## Place calls from an outbound agent
+
+Your system starts each call through the jambonz REST API and decides who to call, when and how fast. Studio answers
+each call with the agent.
+
+In the agent's **Placing calls** section, set:
+
+- **Caller ID to present**: the number the person you call sees. Studio sends it as entered; your carrier, or the PBX
+  behind a trunk, decides what it accepts.
+- **Dial out through**: **Default (jambonz routing)**, or a carrier in your account with an outbound gateway.
+
+Below those settings, **Start one call** shows a ready-to-run request with your account's values filled in, which
+you can copy. It looks like this, with your own values in place of the capitalized placeholders:
+
+```bash
+curl -X POST https://api.jambonz.cloud/v1/Accounts/ACCOUNT_SID/Calls \
+  -H "Authorization: Bearer $JAMBONZ_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "application_sid": "ROUTER_APPLICATION_SID",
+    "from": "+14155550100",
+    "to": { "type": "phone", "number": "TO_NUMBER" },
+    "tag": { "agent_id": "AGENT_ID", "env_vars": { "customer_name": "Ada" } }
+  }'
+```
+
+| Field | What it is |
+|---|---|
+| `application_sid` | Studio's router application on your jambonz account |
+| `from` | the agent's caller ID |
+| `to` | the number to call; when you chose a carrier, it also carries `"trunk"` with the carrier's name |
+| `tag.agent_id` | the agent that handles the call |
+| `tag.env_vars` | the values the prompt expects for this call, filled in for each `{{name}}` it uses |
+
+The published version answers each call. While an [experiment](/agent-studio/experiments) runs, add
+`"experiment_group": "A"` or `"B"` to `env_vars` to choose the group yourself; leave it out and Studio splits the
+calls.
+
+Each outbound call ends when it reaches the account's **Longest call (seconds)** limit, under **Outbound calls** in
+the account settings.
+
+Each call's result appears in [Calls](/agent-studio/calls). To have it posted to your own system as well, turn on the
+[result webhook](/agent-studio/webhooks).
+
+## Next
+
+- [Testing](/agent-studio/testing): call the draft or any published version before it goes live
+- [Experiments](/agent-studio/experiments): send a share of calls to a second published version and compare

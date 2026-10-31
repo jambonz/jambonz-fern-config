@@ -1,0 +1,160 @@
+---
+title: Calls and usage
+subtitle: Every call your agents take, with its transcript, timings, tools, transfers and recording.
+---
+
+**Calls** lists the calls handled by agents built in Studio. Other traffic on your jambonz account is not shown. Test
+calls are listed too, marked **Test**.
+
+## The call list
+
+At the top, five figures summarize the calls in the current filter:
+
+| Figure | What it counts |
+|---|---|
+| **Calls** | calls in the range, and how many agents took them |
+| **Answered by a person** | share answered by a person, with the shares for machines and no answer |
+| **Goal reached** | share of calls with a goal that reached it |
+| **Transferred** | calls transferred, with the shares bridged and returned to the agent |
+| **Caller wait per turn** | the median time the caller waited for the agent to reply, and the 95th percentile |
+
+Each row shows when the call started and its direction, the agent and number, who answered, whether the goal was
+reached, how the call ended, and its length. Click a row to open the call.
+
+To narrow the list:
+
+- **Find a call**: search by call id, SIP Call-ID, an `X-` header value or a phone number
+- an agent, and a range: **Last 7 days**, **Today** or **Custom…** (up to 90 days, within the last 90 days)
+- **Inbound** or **Outbound**
+- **Answered by**: **Person**, **Machine**, **Undetermined**
+- **Goal**: **Reached** or **Not reached**
+- **Transfer**: **Transferred** or **Not transferred**
+- **Ended before the agent spoke**: calls that ended before the first turn, for example because the application was
+  unreachable or the LLM provider returned an error
+- an experiment, to compare its two groups (see [Experiments](/agent-studio/experiments))
+
+**Export CSV** at the bottom of the list downloads the calls in the current filter.
+
+### How a call ended
+
+The **Ended** column says how each call finished, in words. For example: **Caller hung up**, **Agent hung up ·
+conversation complete**, **Transferred · bridged**, **Transfer failed · Caller hung up**, **Left message after beep**,
+**Not answered after 30 s**, **Busy**, **Failed (SIP 486)**, or **Ended before the agent spoke · application
+unreachable**.
+
+## A call's page
+
+The header shows the agent, the call's direction, the kind of agent, and **Test** for a test call. Under it: when the
+call started, its length, the number, the version that answered and the call id. On the right:
+
+- **Recording**: play the call in the page, when it was recorded
+- **Download**: the files kept for the call (see [Downloads](#downloads))
+- **Open agent**: the agent in the builder
+
+Five figures sum up the call:
+
+| Figure | What it shows |
+|---|---|
+| **Answered by** | Person, Machine, Undetermined, No answer or Unknown, and how long answering machine detection took |
+| **Goal** | Reached, Not reached, or Not tracked when the agent has no goal; and what reached it: a transfer that bridged, a tool that succeeded, or the agent marking it |
+| **Transfer** | None, Bridged, Returned or Failed, with how the transfer was made and how long it rang; **Handed off** when the call went to another jambonz application |
+| **Interruptions** | how many times the caller cut the agent off |
+| **Caller wait** | the median wait per turn, and the slowest turn |
+
+### Turns
+
+Below the figures is the transcript, one card per turn. Each card has the time into the call, what the caller said
+and what the agent said, and tags:
+
+- **greeting**: the agent's opening line
+- **interrupted**: the caller talked over the agent
+- **cut off**: the agent's reply was cut off
+- **tool:** followed by a name: a tool the agent called in this turn
+
+The caller's line shows the speech recognizer's **confidence**, when it reports one.
+
+On the right of each card is the turn's latency, by stage, colored green, amber or red:
+
+| Stage | Label | Green up to | Amber up to |
+|---|---|---|---|
+| `stt` | **Speech to text** | 900 ms | 2000 ms |
+| `eot` | **End of turn** | 900 ms | 2000 ms |
+| `llm` | **LLM first token** | 1000 ms | 1800 ms |
+| `tool` | **Tool call** | 1000 ms | 2500 ms |
+| `tts` | **TTS first audio** | 300 ms | 800 ms |
+
+A stage that was not measured is left out. For a **Realtime voice API** agent the vendor reports only the time from
+its own end-of-turn decision to the first audio of the reply, shown as **Reply after end of turn**. For a **Custom
+harness** agent the `llm` stage is `harness` (**Harness first chunk**): the time from the end of the caller's turn to
+the harness's first reply chunk.
+
+Click a turn to open its details beside the transcript: the full caller and agent text, each latency and the total,
+and the turn's tool calls with their round-trip time, result and HTTP status. For a Custom harness agent it also shows
+the harness's **Turn record**: its route, steps, model calls and tools (see
+[the turn record](/agent-studio/custom-harness/protocol#the-turn-record)).
+
+Under the last turn, a summary line gives the number of turns, the average of each stage, and the slowest turn.
+
+If the transcript is empty, the page says **Transcript not kept for this agent.**
+
+### Events
+
+Between the turns, the page shows what else happened, at the time it happened. Click one for its details.
+
+- answering machine detection: **Answered by a person**, **Answered by a machine** or **Answer detection inconclusive**
+- **Caller interrupted the agent**
+- each tool call: **ran** or **failed**, with its round-trip time and HTTP status
+- transfers: **Transfer started** (with the last digits of the number), **Transfer answered** and how long it rang,
+  **Transfer: busy**, **Transfer: no answer** or **Transfer failed** with the SIP status and the carrier's reason,
+  **Transfer bridged**, **Transfer returned to the agent**
+- **Custom hold audio failed; caller heard hold music**, with the reason
+- the secure detour: **Secure detour started**, **Detour answered**, **Back from the detour**
+- **Goal marked reached**, when the agent marks it
+- **Call ended**, with the reason
+
+### Diagnostics for test calls
+
+A browser test call's page also has a **Diagnostics** line: one verdict on the audio round trip, either that every link
+checked out or the first one that failed. **Details** opens the evidence for each link. See
+[What the test report records](/agent-studio/testing#what-the-test-report-records).
+
+### Downloads
+
+| Download | What it is | When it's there |
+|---|---|---|
+| **Recording (MP3)** | both sides of the call, from your storage bucket | the call was recorded and the file has not expired |
+| **Full transcript (session file)** | every turn, tool call, vendor timing and event, as JSON | the call has ended, the account keeps **Full observability**, and the transcript was kept |
+| **SIP trace (pcap)** | the call's signalling, for Wireshark, fetched from jambonz | jambonz has a trace for the call |
+
+When a download isn't available, the menu says why.
+
+## Recordings and transcripts
+
+Calls are always listed and transcribed live. Keeping the audio and the session file needs two things:
+
+1. **Observability** set up for the account: a storage bucket, and what to keep for each call, either **Recording
+   only** or **Full observability** (recording plus the session file).
+2. **Recording and session data** turned on for the agent, in the builder's **Conversation** section. The switch
+   controls recording; the session file follows the account setting.
+
+Until observability is set up, Calls shows a banner saying so. Owners and Admins can set it up from there.
+
+## Usage
+
+**Usage** shows minutes, calls and model usage for calls handled by agents built in Studio. Pick an agent (or all of
+them) and a range: **Last 7 days**, **Today** or **Custom…** (up to 92 days).
+
+The page shows:
+
+- totals: **Calls**, **Minutes**, **Turns** (with the average per call), and **Tool calls** (HTTP, MCP and knowledge)
+- **Minutes per day**, as a chart
+- a table by agent: **Calls**, **Minutes**, **Turns**, **TTS characters (est.)**, **STT minutes (est.)** and
+  **Tool calls**
+
+Test calls are left out unless you turn on **Include test calls**. Figures marked (est.) are estimates. **Export
+CSV** downloads usage by day, agent and kind, with a column that marks estimates.
+
+## Next
+
+- [Testing](/agent-studio/testing): make a call and watch it in the test panel
+- [Webhooks](/agent-studio/webhooks): send each call's result to your own system

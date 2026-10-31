@@ -1,0 +1,88 @@
+---
+title: Knowledge
+subtitle: Give an agent documents and pages it can search during a call.
+---
+
+A knowledge base is a set of documents your agents can search while they talk: product sheets, policies, FAQ pages.
+During a call the agent looks up what it needs and answers from the passages it finds.
+
+Knowledge bases belong to the account (**Knowledge** in the navigation), and several agents can share one. The
+**Knowledge** section of an agent says which ones that agent uses.
+
+## Which agents can use it
+
+| Kind | Knowledge |
+|---|---|
+| **Cascaded voice pipeline** | search, and pinned facts |
+| **Realtime voice API** | search |
+| **Custom harness** | not available: your harness does its own retrieval |
+| **Connected agent** | not available: knowledge lives on the agent's own platform |
+
+## Creating a knowledge base
+
+Search uses an embedding model on your own key. Before the first knowledge base, add one with **Embedding keys** on
+the Knowledge page. Studio supports embedding keys from OpenAI, Azure OpenAI, Cohere, Voyage and Google.
+
+**New knowledge base** asks for:
+
+- **Name** and an optional **Description**
+- **Language**: the language of the documents, used for keyword matching
+- **Embedding key** and **Model**
+
+The embedding key and model cannot be changed after the knowledge base is created.
+
+## Adding documents
+
+On the knowledge base's page, under **Documents**:
+
+- **Upload files**: PDF, DOCX, HTML, Markdown or plain text, up to 20 MB each. Drop them on the page or use
+  **Choose files**.
+- **Import from URL**: a public **Page URL**. Tick **Also import linked pages on the same site** and set **Maximum
+  pages** (1 to 50) to import more than one page. Pages behind a sign-in are not imported.
+
+Each document is split into passages and indexed. Its status goes from **Queued** to **Parsing** to **Indexed**, or
+**Failed** with the reason. From a document's menu you can **View chunks**, **Reindex** or delete it.
+
+## Trying a search
+
+**Try a search**, on the knowledge base's page, runs a question the way a caller would ask it and shows the passages
+the agent would receive, ranked by meaning and keywords together. Use it to check that your documents answer the
+questions callers ask.
+
+## Attaching a knowledge base to an agent
+
+In the agent's Knowledge section, **Attach knowledge base** adds one; **Remove** takes it off. An agent can have up
+to 10. Only Owners and Admins can change the knowledge attached to an agent.
+
+With at least one knowledge base attached, the agent gets a `search_knowledge_base` tool. The model calls it with a
+short question when it needs facts, and gets back quoted passages from all the attached knowledge bases. With none
+attached, the agent answers from its prompt only.
+
+The fold under the list tunes the search:
+
+| Setting | What it does | Default |
+|---|---|---|
+| **Results per search** | the most passages returned for one search, 1 to 5 | 3 |
+| **Minimum relevance** | passages scoring below this are left out (applies to meaning-based matches before they are combined with keyword matches) | 0.30 |
+| **Tool description** | tells the model when to search. Empty uses Studio's own description, which names the attached knowledge bases | empty |
+
+## Pinned facts
+
+Some facts every caller may ask about, such as opening hours or an address, are better known than searched for. Put
+them in **Always-known facts** on the knowledge base's page (up to 4,000 characters).
+
+In the agent's Knowledge section, turn on **Pin facts** for that knowledge base to add its facts to the agent's
+prompt, so the model always has them. Pinned facts are added as quoted reference material, with a note telling the
+model not to follow instructions inside them. **Pin facts** appears only on Cascaded voice pipeline agents, the only
+kind whose prompt Studio adds them to.
+
+When you save new facts, drafts use them at once; a live agent uses them after it is published again.
+
+If the pinned facts make the agent too large to send to jambonz, Studio leaves them out and shows **Over the call
+budget** on that knowledge base. Shorten the facts or turn the pin off.
+
+## What blocks publishing
+
+- a knowledge base that was deleted, or is being deleted, while still attached
+
+Remove it from the agent, or attach another one.

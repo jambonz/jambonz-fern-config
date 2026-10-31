@@ -1,0 +1,105 @@
+---
+title: Experiments
+subtitle: Send a share of real calls to a second published version and compare how the calls go.
+---
+
+An experiment runs two published versions of one agent side by side:
+
+- **Control (A)**: what callers get today, the live version
+- **Test (B)**: the change you want to try
+
+Every call during the experiment lands in one group or the other, and only those calls are compared. Calls before or
+after the experiment, and calls to other agents, are not counted.
+
+Experiments are available for **Cascaded voice pipeline** agents. An agent runs one experiment at a time.
+
+## Set one up
+
+Open the agent's **Experiments** section in the builder and click **New experiment**.
+
+| Field | What to set |
+|---|---|
+| **Name** | what you are trying, for example "Shorter greeting" |
+| **Control · what callers get today** | fixed to the live version; the agent must be published |
+| **Test · the change** | another published version, or **Publish the current draft as B…** |
+| **Share of calls going to the test group (B)** | 5% to 95%, in steps of 5; 50% by default |
+| **Start** | **Now**, or **At a time** to schedule it |
+| **End** (optional) | **When I stop it**, **After a number of live conversations in each group** (at least 50; 500 by default), or **At a time** |
+| **Compare on** | the measures to show in the results (see below) |
+
+Click **Start experiment**, or **Schedule experiment** when it starts later.
+
+**Publish the current draft as B…** publishes the draft as a new version without making it live: callers keep getting
+the live version, and the new version takes calls only as the test group once the experiment starts.
+
+## How calls are split
+
+Each call is assigned to A or B when it arrives, at the share you set. The assignment is made per call, so the same
+caller can land in different groups on different calls.
+
+- **Inbound agents**: every routed number uses the same share.
+- **Outbound agents**: Studio picks the group for each call, or you choose it yourself by adding
+  `"experiment_group": "A"` or `"B"` to the call's `env_vars`. See
+  [Place calls from an outbound agent](/agent-studio/publishing#place-calls-from-an-outbound-agent).
+
+Every call in an experiment is stamped with the experiment and its group. You can see the group in Calls, and it is in
+the [result webhook](/agent-studio/webhooks) payload.
+
+## What is measured
+
+Results are counted per **live conversation** unless the measure says otherwise: a call that was answered, not by a
+machine, and had at least one turn. Unanswered calls and voicemail don't dilute either group.
+
+| Measure | Better when |
+|---|---|
+| **Goal reached** | higher |
+| **Live conversations, % of answered** | higher |
+| **Hung up in the first 2 turns** | lower |
+| **Reached 6 or more turns** | higher |
+| **Interrupted agent turns** | lower |
+| **False interruptions** | lower |
+| **Dead air after a barge-in (p90)** | lower |
+| **Caller wait per turn** | lower |
+| **Answering machine detection shares** (outbound agents only) | no direction |
+| **Minutes per answered call** | no direction |
+
+All are selected by default except **Minutes per answered call**. **Answering machine detection shares** is offered
+only for outbound agents.
+
+## Read the results
+
+While the experiment runs, the **Experiments** section shows:
+
+- the split, and how many calls each group answered
+- a table with each measure for **Control** and **Test**, and the **Difference** (B minus A), in points for
+  percentages. A difference is green when B is better and red when it is worse, for measures that have a better
+  direction.
+- how many live conversations each group has, with a note on how far to trust the difference: under 300 per group is a
+  lean, not a verdict; around 500 per group has been enough to call a 7-point change
+- **See these calls →**, which opens Calls filtered to the experiment
+
+In **Calls**, choosing the experiment from the filter shows the same comparison above the list, and the **A Control**
+and **B Test** buttons list one group's calls.
+
+## Stop or promote
+
+- **Stop** ends the experiment. All calls go back to the control group (A). The results so far are kept.
+- **Promote test** makes the test version (B) what every caller gets, and ends the experiment.
+- A scheduled experiment has **Cancel experiment** instead of **Stop**.
+
+An experiment with an end set stops by itself when it reaches it. Nothing is promoted automatically; you decide.
+
+When an experiment ends, its results are frozen and it moves to **Past experiments**, marked **Test promoted**,
+**Control kept** or **Stopped**.
+
+### Publishing while an experiment runs
+
+- Publishing a new version while an experiment runs does not change the experiment. The new version takes calls once
+  you stop it, and the test group can no longer be promoted.
+- Publishing or rolling back while an experiment is scheduled cancels it.
+- Versions taking calls in a running experiment can't be deleted.
+
+## Next
+
+- [Publishing](/agent-studio/publishing): versions, rollback and phone numbers
+- [Calls](/agent-studio/calls): each call's transcript, timings and outcome

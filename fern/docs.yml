@@ -20,6 +20,10 @@ tabs:
     display-name: Guides
     icon: fa-regular fa-book
     slug: guides
+  agent-studio:
+    display-name: Agent Studio
+    icon: fa-regular fa-robot
+    slug: agent-studio
   verbs:
     display-name: Verbs
     icon: fa-regular fa-tasks
@@ -190,6 +194,74 @@ navigation:
             path: ./docs/pages/features/api-rate-limits.mdx
           - page: Application Environment Variables
             path: ./docs/pages/features/app-env-vars.mdx
+  - tab: agent-studio
+    layout:
+      - page: Overview
+        path: ./docs/pages/agent-studio/overview.mdx
+        slug: overview
+      - page: Getting started
+        path: ./docs/pages/agent-studio/getting-started.mdx
+        slug: getting-started
+      - section: Agent types
+        slug: agent-types
+        contents:
+          - page: Cascaded voice pipeline
+            path: ./docs/pages/agent-studio/agent-types/cascaded-pipeline.mdx
+            slug: cascaded-pipeline
+          - page: Realtime voice API
+            path: ./docs/pages/agent-studio/agent-types/realtime-voice-api.mdx
+            slug: realtime-voice-api
+          - page: Connected agent
+            path: ./docs/pages/agent-studio/agent-types/connected-agent.mdx
+            slug: connected-agent
+      - section: Building an agent
+        slug: building
+        contents:
+          - page: Prompt and guardrails
+            path: ./docs/pages/agent-studio/building/prompt.mdx
+            slug: prompt
+          - page: Tools
+            path: ./docs/pages/agent-studio/building/tools.mdx
+            slug: tools
+          - page: Knowledge
+            path: ./docs/pages/agent-studio/building/knowledge.mdx
+            slug: knowledge
+          - page: Conversation
+            path: ./docs/pages/agent-studio/building/conversation.mdx
+            slug: conversation
+          - page: Transfer and hangup
+            path: ./docs/pages/agent-studio/building/transfer-and-hangup.mdx
+            slug: transfer-and-hangup
+      - page: Testing
+        path: ./docs/pages/agent-studio/testing.mdx
+        slug: testing
+      - page: Publishing and numbers
+        path: ./docs/pages/agent-studio/publishing.mdx
+        slug: publishing
+      - page: Calls and usage
+        path: ./docs/pages/agent-studio/calls.mdx
+        slug: calls
+      - page: Experiments
+        path: ./docs/pages/agent-studio/experiments.mdx
+        slug: experiments
+      - page: Result webhook
+        path: ./docs/pages/agent-studio/webhooks.mdx
+        slug: webhooks
+      - section: Custom harness
+        slug: custom-harness
+        contents:
+          - page: Overview
+            path: ./docs/pages/agent-studio/custom-harness/overview.mdx
+            slug: overview
+          - page: Quickstart
+            path: ./docs/pages/agent-studio/custom-harness/quickstart.mdx
+            slug: quickstart
+          - page: Protocol reference
+            path: ./docs/pages/agent-studio/custom-harness/protocol.mdx
+            slug: protocol
+          - page: SDK reference
+            path: ./docs/pages/agent-studio/custom-harness/sdk.mdx
+            slug: sdk
   - tab: verbs
     layout: 
       - section: Verbs
