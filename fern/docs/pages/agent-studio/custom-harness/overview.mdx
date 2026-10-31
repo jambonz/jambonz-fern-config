@@ -52,7 +52,10 @@ Audio never goes to the harness. Everything on the socket is JSON text.
    npm create @jambonz/agent-harness@latest my-agent
    ```
 
-   See the [quickstart](/agent-studio/custom-harness/quickstart).
+   See the [quickstart](/agent-studio/custom-harness/quickstart). For a smaller example to read, see
+   [examples/harness](https://github.com/jambonz/node-sdk/tree/main/examples/harness) in the node-sdk repository: it
+   routes each turn to a procedure with its own prompt, runs a tool of its own and keeps long numbers from being read
+   aloud.
 
 2. **A Custom harness agent** in Agent Studio, with:
    - **Harness URL**: where jambonz connects. It is part of the agent, so it changes when you publish, like any other
