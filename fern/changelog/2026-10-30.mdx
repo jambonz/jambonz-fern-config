@@ -2,7 +2,10 @@
 jambonz Commercial 11.1.11 (jambonz.cloud release)
 </Card>
 
-**11.1.11** adds [AssemblyAI](/guides/features/tts-vendor-settings/assemblyai) as a text-to-speech vendor and ships
+**11.1.11** runs every kind of [Agent Studio](/agent-studio/overview) agent, including a
+[custom harness](/agent-studio/custom-harness/overview) that puts your own code in charge of what the agent says,
+and realtime voice agents on Rime Prism, Deepgram Voice Agent and Ultravox. It adds
+[AssemblyAI](/guides/features/tts-vendor-settings/assemblyai) as a text-to-speech vendor and ships
 [Paxa Labs](/guides/features/tts-vendor-settings/paxa) text-to-speech and speech-to-text. The [agent](/verbs/verbs/agent) verb can open a call with
 exact words instead of an LLM-generated greeting, and its `turn_end` event now covers the
 greeting turn and says when each side began speaking. Barge-in fades the agent's audio out
@@ -12,6 +15,26 @@ refused the text.
 
 #### New Features & Improvements
 
+1. **Custom harness agents** — the [agent](/verbs/verbs/agent) verb can be driven by a service you run
+   instead of an LLM (`llm.vendor: harness`). jambonz opens one WebSocket per call to your
+   harness, sends the caller's words one turn at a time and speaks the replies it streams
+   back, keeping its own speech recognition, turn-taking, barge-in and voice. The harness can
+   run the agent's tools, transfer the call, hang up and record its own turn data, and
+   receives the caller's keypresses as `dtmf` events. Build one in
+   [Agent Studio](/agent-studio/custom-harness/overview); see the
+   [quickstart](/agent-studio/custom-harness/quickstart) and
+   [protocol reference](/agent-studio/custom-harness/protocol).
+1. **More realtime voice and connected agents** — the [llm](/verbs/verbs/llm) verb adds
+   Rime Prism (`rime`) as a speech-to-speech vendor, and Deepgram Voice Agent, ElevenLabs
+   Agents, Ultravox, OpenAI Realtime and GPT-Live take their keys from the account's own
+   speech-to-speech credentials (portal: **LLM Services**, **Speech-to-speech** tab) when the
+   verb carries no key. These agents now report turns as `user_transcript`, `llm_response`,
+   `user_interruption` and `turn_end` events when the verb asks for them, and run warm
+   transfers: one at a time, with the parked caller muted to the model and the model's
+   answer heard if the transfer fails. The [dialogflow](/verbs/verbs/dialogflow) verb can name the
+   account's Dialogflow CES credential by label instead of carrying a service account. See
+   [Realtime voice API](/agent-studio/agent-types/realtime-voice-api) and
+   [Connected agent](/agent-studio/agent-types/connected-agent).
 1. **AssemblyAI text-to-speech** — `assemblyai`, already a speech-to-text vendor, is now
    available for text-to-speech too, with streaming TTS, word-level alignment and regional
    endpoints set by the credential. See [AssemblyAI](/guides/features/tts-vendor-settings/assemblyai).
