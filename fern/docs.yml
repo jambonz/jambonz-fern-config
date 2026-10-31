@@ -214,6 +214,8 @@ navigation:
           - page: Connected agent
             path: ./docs/pages/agent-studio/agent-types/connected-agent.mdx
             slug: connected-agent
+          - link: Custom harness
+            href: /agent-studio/custom-harness/overview
       - section: Building an agent
         slug: building
         contents:
