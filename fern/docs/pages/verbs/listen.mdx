@@ -101,9 +101,11 @@ One text frame is sent immediately after the websocket connection is established
 This text frame contains a JSON string with all of the call attributes normally sent on an 
 HTTP request (e.g. callSid, etc), plus **sampleRate** and **mixType** properties describing 
 the audio sample rate and stream(s).  Additional metadata can also be added to this payload 
-using the **metadata** property as described in the table below.  Once the intial text frame 
-containing the metadata has been sent, the remote side should expect to receive only binary frames, 
-containing audio.  
+using the **metadata** property as described in the table below.  Only the first text frame 
+carries this metadata.  After it, audio arrives as binary frames, and further text frames may also 
+be sent: a DTMF digit if `passDtmf` is set, a `mark` in reply to a `mark`, `clearMarks` or 
+`killAudio` command, and a `playDone` after a non-streaming `playAudio` finishes.  A client 
+should treat only the first text frame as the metadata and handle the rest as events.  
 
 ### Passing DTMF
 

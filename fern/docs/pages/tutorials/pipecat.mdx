@@ -1,0 +1,172 @@
+---
+title: Pipecat
+subtitle: Using jambonz to connect custom telephony to a [Pipecat](https://github.com/pipecat-ai/pipecat) voice agent
+---
+
+<Note>
+The example application referenced in this article can be
+found [here](https://github.com/jambonz/pipecat-examples).
+</Note>
+
+Pipecat is an open-source framework for building voice agents from separate STT,
+LLM and TTS services. `JambonzFrameSerializer` connects a Pipecat pipeline to a
+jambonz call over a websocket: jambonz streams the caller's audio to the agent
+using the [listen](/verbs/verbs/listen) verb, and the agent speaks back on the
+same connection.
+
+Unlike the [agent](/verbs/verbs/agent) verb, where jambonz runs the
+conversation, here Pipecat runs the pipeline and jambonz handles the call. Use
+this when you already have a Pipecat application, or want turn-taking, context
+and tool calling to live in your own code.
+
+<Info>
+`JambonzFrameSerializer` is proposed for Pipecat in
+[pipecat-ai/pipecat#6112](https://github.com/pipecat-ai/pipecat/pull/6112).
+Until it is in a Pipecat release, the example application includes a copy of it.
+</Info>
+
+## The verb
+
+Your application's calling webhook answers the call with a `listen` verb that
+points at the agent's websocket:
+
+```json
+{
+  "verb": "listen",
+  "url": "wss://your-bot.example.com/ws",
+  "sampleRate": 16000,
+  "mixType": "mono",
+  "passDtmf": true,
+  "bidirectionalAudio": {
+    "enabled": true,
+    "streaming": true,
+    "sampleRate": 16000
+  }
+}
+```
+
+<Warning>
+`bidirectionalAudio.streaming` defaults to `false`, and while it is false the
+audio your agent sends back is discarded. Nothing is logged and no error is
+raised; the caller hears silence.
+</Warning>
+
+### Sample rates
+
+`sampleRate` is the rate jambonz sends the caller's audio at. It defaults to
+`8000`; `16000`, `24000`, `48000` and `64000` are also allowed. The serializer
+reads the rate from the first message on the websocket, so the same agent
+handles narrowband and wideband calls without changes. To get wideband audio,
+set it here.
+
+`bidirectionalAudio.sampleRate` is the rate jambonz reads the agent's audio at.
+It has no default; if omitted, jambonz uses the call's negotiated codec rate,
+which depends on the carrier and the far end.
+
+<Note>
+**Set `bidirectionalAudio.sampleRate` to the same value as `sampleRate`.** The
+serializer sends audio at the rate it received, so if the two differ the agent's
+speech plays fast or slow.
+</Note>
+
+### mixType
+
+Use `mono`, the default. The serializer rejects the other two values:
+
+- `stereo` carries both sides of the call as two interleaved channels.
+- `mixed` sums both sides into one channel, which would feed the agent's own
+  speech back to it.
+
+## The agent
+
+The serializer plugs into Pipecat's websocket transport like any other
+telephony serializer:
+
+```python
+from pipecat.serializers.jambonz import JambonzFrameSerializer
+from pipecat.transports.websocket.fastapi import (
+    FastAPIWebsocketParams,
+    FastAPIWebsocketTransport,
+)
+
+transport = FastAPIWebsocketTransport(
+    websocket=websocket,
+    params=FastAPIWebsocketParams(
+        audio_in_enabled=True,
+        audio_out_enabled=True,
+        serializer=JambonzFrameSerializer(),
+    ),
+)
+```
+
+The rest of the pipeline (STT, LLM, TTS) is standard Pipecat. The example
+application uses Deepgram and OpenAI, runs on Pipecat's development runner, and
+serves the calling webhook and the websocket from the same process.
+
+The serializer needs no configuration. The sample rate and the call's details
+come from the first message jambonz sends. After that message,
+`serializer.call_sid` and `serializer.trace_id` are available for matching your
+logs with jambonz's, and `serializer.call_meta` holds the whole message.
+
+## DTMF
+
+With `passDtmf` set, each digit the caller presses arrives on the websocket and
+becomes a Pipecat `InputDTMFFrame`:
+
+```json
+{ "event": "dtmf", "dtmf": "5", "duration": "1600" }
+```
+
+Handle it in a frame processor:
+
+```python
+from pipecat.frames.frames import InputDTMFFrame
+from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
+
+
+class CollectDigits(FrameProcessor):
+    async def process_frame(self, frame, direction: FrameDirection):
+        await super().process_frame(frame, direction)
+        if isinstance(frame, InputDTMFFrame):
+            print(f"caller pressed {frame.button.value}")
+        await self.push_frame(frame, direction)
+```
+
+## Ending the call
+
+To hang up from the agent, end the pipeline:
+
+```python
+from pipecat.frames.frames import EndFrame
+
+await worker.queue_frames([EndFrame()])
+```
+
+The serializer sends `disconnect`, which ends the `listen` verb. jambonz then
+calls the verb's `actionHook` if it has one, and otherwise hangs up.
+
+If your application should keep the call after the pipeline ends, pass
+`JambonzFrameSerializer.InputParams(disconnect_on_end=False)`.
+
+## Interruptions
+
+When the caller talks over the agent, Pipecat interrupts the response and the
+serializer sends `killAudio`, which stops playback and discards any buffered
+audio. Nothing else is needed.
+
+## Trying it
+
+You don't need a phone number to test. A SIP softphone registered to your
+account works:
+
+1. Run the example and expose it with `ngrok http 7860`.
+2. Create an application whose calling webhook is `https://<your-ngrok-host>/`.
+3. Add a SIP client, register a softphone with it, and set the application as
+   the account's device calling application.
+4. Dial any number from the softphone.
+
+<Tip>
+To test the narrowband path, limit the softphone to PCMU or PCMA and set both
+sample rates in the verb to `8000`. That matches the audio from a G.711 PSTN
+carrier.
+</Tip>
