@@ -135,6 +135,10 @@ There are several types of endpoints that you can dial:
   a nested [listen](/verbs/verbs/listen) action, which will cause audio from the call to be streamed to a remote server over a websocket connection.
 </ParamField>
 
+<ParamField path="onHoldHook" type="string" required={false}>
+  a webhook to call when either party puts the call on hold. It returns `play`, `say` or `pause` verbs to run for the other party, for example hold music. [See below](#onholdhook) for details.
+</ParamField>
+
 <ParamField path="referHook" type="string" required={false}>
   webhook to invoke when an incoming SIP REFER is received on a dialed call.  
   If the application wishes to accept and process the REFER, the webhook application should return an HTTP status code 200 with no body, and jambonz will send a SIP 202 Accepted.  
@@ -242,6 +246,43 @@ This webhook that is invoked when amd property is included and jambonz has eithe
 The purpose of the `exitMediaPath` is to support use cases where it is important that the media path not touch the jambonz system at all.  The common use case is the need to transfer a call to a human agent or credit card system where the caller will be giving their credit card details over the phone.  In order to have a PCI-Compliant transaction it is necessary that this conversation not be able to be recorded, stored, or in any way reach the jambonz system.  Performing the `dial` verb using the `exitMediaPath` property ensures this happens.
 
 For more details on controlling the media path during a call, please see [Controlling media path during call](/guides/features/managing-media-anchors).
+
+#### onHoldHook
+
+When `onHoldHook` is set, jambonz plays its own hold audio to the party on hold:
+
+1. One party sends a re-INVITE whose SDP has `a=sendonly` or `a=inactive`. That can be the caller or the party that was dialed.
+2. If media is anchored on the feature server, jambonz answers the re-INVITE itself and does not send it on to the other party. If media had been released, the re-INVITE is passed on, and jambonz then anchors media again for the length of the hold.
+3. jambonz calls `onHoldHook` and runs the verbs it returns for the **other** party, the one who was put on hold.
+4. When those verbs finish and the call is still on hold, jambonz calls `onHoldHook` again. Return an empty array to stop. A `play` with `"loop": "forever"` runs until the call comes off hold.
+5. When the holding party resumes the call (a re-INVITE without `a=sendonly` or `a=inactive`), jambonz stops the hold verbs and two-way audio continues. If media had been anchored only for the hold, it is released again.
+
+The webhook receives the usual call properties plus `hold_detail`, which has the `from` and `to` headers of the hold re-INVITE. Only `play`, `say` and `pause` are allowed in the response. If it contains any other verb, jambonz runs nothing and stops calling the hook for this hold.
+
+```json maxLines=100
+{
+  "verb": "dial",
+  "answerOnBridge": true,
+  "onHoldHook": "/hold",
+  "target": [
+    { "type": "phone", "number": "+15085551212" }
+  ]
+}
+```
+
+A response from `/hold`:
+
+```json maxLines=100
+[
+  {
+    "verb": "play",
+    "url": "https://example.com/hold-music.mp3",
+    "loop": "forever"
+  }
+]
+```
+
+Without `onHoldHook`, a hold re-INVITE is passed through to the other party, and whatever that party's phone or carrier does on hold is what the held party hears.
 
 #### proxy
 
