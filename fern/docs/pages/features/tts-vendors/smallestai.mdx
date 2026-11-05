@@ -1,0 +1,117 @@
+---
+title: Smallest AI
+subtitle: Lightning voices, speed, number and date reading, pronunciation dictionaries and content filtering for Smallest AI TTS.
+---
+
+[Smallest AI](https://docs.smallest.ai) generates speech with its Lightning models in English, Hindi and other Indic languages, and many European and Asian languages. The same Smallest AI API key also serves [speech recognition](/verbs/verbs/recognizer). Smallest AI tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "smallestai",
+    "language": "en-US",
+    "voice": "kaitlyn",
+    "options": {
+      "speed": 1.0
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in the Smallest AI console. Keys start with `sk_`, and jambonz sends the key as a `Bearer` token. Add it as a **Smallest AI** speech credential in the portal or API; one credential is used for both text-to-speech and speech-to-text.
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `lightning_v3.1_pro` | Default. |
+| `lightning_v3.1_pro_10_26` | Preview of the next Pro checkpoint. |
+| `lightning_v3.1` | Smallest AI retires this model on 2026-11-30. |
+
+Pick the model on the speech credential, or set `options.model_id` to override it for one verb.
+
+## Voices and languages
+
+A voice is a lowercase id such as `kaitlyn`, `meher` or `rhea`. The portal lists the `lightning_v3.1_pro` voices under each language; see Smallest AI's [voice list](https://docs.smallest.ai) for every model. Listing voices needs an API key, so the portal list is bundled with jambonz.
+
+jambonz maps `synthesizer.language` to Smallest AI's language code by its base language (`en-US` is sent as `en`, `cmn-*` as `zh`, `nb-*` or `nn-*` as `no`). It sends `en`, `hi`, `mr`, `kn`, `ta`, `bn`, `gu`, `te`, `ml`, `pa`, `or`, `es`, `de`, `fr`, `it`, `nl`, `sv`, `pt`, `ru`, `el`, `fi`, `no`, `pl`, `ar`, `zh`, `id`, `ja`, `ko`, `ms`, `tr` and `vi`; any other language is not sent, and Smallest AI uses the voice's default. Set `options.language` to choose explicitly, including `auto`; it takes precedence over `synthesizer.language`.
+
+## Options
+
+<ParamField path="model_id" type="string" required={false}>
+  The Lightning model to use, overriding the credential's model.
+</ParamField>
+
+<ParamField path="language" type="string" required={false}>
+  The language code sent to Smallest AI as-is, overriding `synthesizer.language`.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, `0.5` – `2` times the voice's own speed.
+</ParamField>
+
+<ParamField path="number_pronunciation_language" type="string" required={false}>
+  The language numbers are read in, when it differs from the text's language.
+</ParamField>
+
+<ParamField path="date_format" type="string" required={false}>
+  How ambiguous dates are read: `EU` (day first) or `US` (month first).
+</ParamField>
+
+<ParamField path="math_notation" type="boolean" required={false}>
+  Read mathematical notation in the text as spoken math.
+</ParamField>
+
+<ParamField path="pronunciation_dicts" type="array" required={false}>
+  Ids of pronunciation dictionaries in your Smallest AI account.
+</ParamField>
+
+<ParamField path="content_filter" type="object" required={false}>
+  Smallest AI's content filter, such as `{"enabled": true, "action": "reject"}`. `action` is `reject`, `flag` or `redact`.
+</ParamField>
+
+<ParamField path="session_id" type="string" required={false}>
+  Your own session id, echoed back by Smallest AI as `external_session_id`.
+</ParamField>
+
+<ParamField path="request_id" type="string" required={false}>
+  Your own request id, echoed back by Smallest AI as `external_request_id`.
+</ParamField>
+
+<ParamField path="expire_content" type="string" required={false}>
+  Sent as Smallest AI's `x-expire-content` header, which controls how long Smallest AI keeps the request's content.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Smallest AI's own default applies.
+
+### Streaming
+
+These apply when Smallest AI is driven by [TTS streaming](/guides/features/tts-streaming), for example from the `agent` verb.
+
+<ParamField path="max_buffer_flush_ms" type="number" required={false}>
+  Longest time Smallest AI holds buffered text before speaking it, `0` – `1000` milliseconds.
+</ParamField>
+
+<ParamField path="complete_backoff_ms" type="number" required={false}>
+  How long Smallest AI waits for more text before it ends the turn, `0` – `10000` milliseconds.
+</ParamField>
+
+<ParamField path="timeout" type="number" required={false}>
+  Seconds an idle connection stays open, up to `180`.
+</ParamField>
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a regional host or a proxy, set `api_uri` in the credential's **Extra Options** (or the credential's API URI field); it applies to both TTS and STT. A `ws://` or `http://` prefix turns off TLS. Leave it out to use `api.smallest.ai`.
+
+## Streaming
+
+Smallest AI supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz opens a new connection to Smallest AI for each turn, and on barge-in closes the connection.
+
+Smallest AI returns word-level timestamps for some voices, so alignment events are available for those voices when alignment is enabled.

@@ -1,0 +1,125 @@
+---
+title: Camb.ai
+subtitle: MARS voices in more than thirty locales, speaking rate, enhancement and inference tuning for Camb.ai TTS.
+---
+
+[Camb.ai](https://docs.camb.ai) generates speech with its MARS models in more than thirty locales, including English, Spanish, French, German, Arabic, Hindi and other Indian languages, Japanese, Korean and Mandarin Chinese. Camb.ai tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "camb",
+    "language": "en-US",
+    "voice": "147320",
+    "options": {
+      "speaking_rate": 1.0
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in the [Camb.ai studio](https://studio.camb.ai). jambonz sends the key in the `x-api-key` header. Add it as a **Camb.ai** speech credential in the portal or API. Camb.ai is used for text-to-speech only.
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `mars-flash` | Default. Low latency, 22.05 kHz. |
+| `mars-pro` | Higher quality, 48 kHz. |
+| `mars-instruct` | Reads `user_instructions` to direct the delivery, 22.05 kHz. |
+| `mars-8.1-flash-beta` | Beta, 48 kHz. |
+| `mars-8.1-pro-beta` | Beta, 48 kHz. |
+
+Pick the model on the speech credential, or set `options.model_id`. The model applies to `say` without streaming; [streaming](#streaming) always uses `mars-8.1-flash-beta`. jambonz resamples audio to the call's rate.
+
+## Voices and languages
+
+A voice is a numeric Camb.ai voice id. The portal lists `147320`, Camb.ai's default voice, for every locale; MARS voices are cross-lingual, so the same voice speaks whichever language is set. Voices you have cloned or created in your Camb.ai account work when you enter their id as a custom voice.
+
+`synthesizer.language` is sent lowercased, so `en-US` is sent as `en-us` and `pt-BR` as `pt-br`. Set `options.language` to send a Camb.ai language code directly; it takes precedence over `synthesizer.language`. If neither is set, `en-us` is used. A locale Camb.ai does not support is rejected by Camb.ai.
+
+## Options
+
+<ParamField path="language" type="string" required={false}>
+  Camb.ai language code, sent as written, such as `en-us` or `fr-ca`. Overrides `synthesizer.language`.
+</ParamField>
+
+<ParamField path="model_id" type="string" required={false}>
+  `mars-flash`, `mars-pro`, `mars-instruct`, `mars-8.1-flash-beta` or `mars-8.1-pro-beta`. Overrides the model on the credential. Not used when streaming.
+</ParamField>
+
+<ParamField path="speaking_rate" type="number" required={false}>
+  Speaking rate relative to the voice's own speed.
+</ParamField>
+
+<ParamField path="enhance_named_entities_pronunciation" type="boolean" required={false}>
+  Improve the pronunciation of names and other named entities.
+</ParamField>
+
+<ParamField path="apply_enhancement" type="boolean" required={false}>
+  Apply Camb.ai's audio enhancement to the output.
+</ParamField>
+
+<ParamField path="enhance_reference_audio_quality" type="boolean" required={false}>
+  Enhance the quality of the voice's reference audio before synthesis.
+</ParamField>
+
+<ParamField path="maintain_source_accent" type="boolean" required={false}>
+  Keep the voice's original accent when it speaks another language.
+</ParamField>
+
+<ParamField path="inference_steps" type="integer" required={false}>
+  Number of inference steps, `5` – `200`. More steps trade latency for quality.
+</ParamField>
+
+<ParamField path="idle_timeout" type="number" required={false}>
+  Seconds Camb.ai waits for more text before it synthesizes what it has. Streaming only. Every turn's first audio is delayed by this much, so keep it small (for example `0.3` – `1`); a large value such as `30` delays speech by 30 seconds.
+</ParamField>
+
+<ParamField path="word_timestamps" type="boolean" required={false}>
+  Return word-level timestamps. Streaming only. When unset, jambonz turns them on if alignment is enabled.
+</ParamField>
+
+<ParamField path="user_instructions" type="string" required={false}>
+  Spoken-delivery instructions for `mars-instruct`. Not used when streaming.
+</ParamField>
+
+<ParamField path="stability" type="number" required={false}>
+  Voice stability, `0` – `1`. Not used when streaming.
+</ParamField>
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature, `0.01` – `4`. Not used when streaming.
+</ParamField>
+
+<ParamField path="speaker_similarity" type="number" required={false}>
+  How closely the output follows the voice, `0` – `1`. Not used when streaming.
+</ParamField>
+
+<ParamField path="localize_speaker_weight" type="number" required={false}>
+  Weight of the localized speaker when the voice speaks another language, `0` – `1`. Not used when streaming.
+</ParamField>
+
+<ParamField path="acoustic_quality_boost" type="boolean" required={false}>
+  Boost acoustic quality. Not used when streaming.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Camb.ai's own default applies.
+
+Camb.ai rejects text shorter than three characters, so a very short `say` such as `"Hi"` fails.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set the **API base URL** on the credential, or `api_uri` in its **Extra Options**. Leave it out to use `client.camb.ai`.
+
+## Streaming
+
+Camb.ai supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz streams text to Camb.ai over a live connection with the `mars-8.1-flash-beta` model and opens a fresh connection for each turn; on barge-in it closes the connection and reconnects.
+
+Camb.ai returns word-level timestamps, so alignment events are available when alignment is enabled.

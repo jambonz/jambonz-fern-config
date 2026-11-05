@@ -1,0 +1,74 @@
+---
+title: Async
+subtitle: Async Flash and Pro voices in fifteen languages, with speed and stability for Async TTS.
+---
+
+[Async](https://docs.async.com) generates speech with its Flash and Pro models in up to fifteen languages, including English, Spanish, French, German, Italian, Portuguese, Arabic, Russian, Japanese, Hindi and Mandarin Chinese. Async tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "asyncai",
+    "language": "en-US",
+    "voice": "e0f39dc4-f691-4e78-bba5-5c636692cc04",
+    "options": {
+      "model_id": "async_flash_v1.0",
+      "speed_control": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in the Async dashboard. Keys start with `sk_`, and jambonz sends the key in the `x-api-key` header (as the `api_key` query parameter when streaming). Add it as an **Async** speech credential in the portal or API, using the vendor id `asyncai`. Async is used for text-to-speech only.
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `async_flash_v1.5` | Default. English, Spanish, French, German, Italian and Portuguese. |
+| `async_flash_v1.0` | Fifteen languages. The only model that honours `speed_control` and `stability`. |
+| `async_pro_v1.0` | English only. |
+
+Pick the model on the speech credential, or set `options.model_id`. jambonz always asks Async for 16-bit PCM at the call's sample rate.
+
+## Voices and languages
+
+A voice is an Async voice id, a UUID. The portal lists `e0f39dc4-f691-4e78-bba5-5c636692cc04`, Async's default voice, for every language. Other voices from your Async account work when you enter their id as a custom voice.
+
+`synthesizer.language` is sent as its language prefix, so `en-US` is sent as `en` and `pt-BR` as `pt`; `cmn-*` is sent as `zh` and `iw-*` as `he`. Async supports `en`, `fr`, `es`, `de`, `it`, `pt`, `ar`, `ru`, `ro`, `ja`, `he`, `hy`, `tr`, `hi` and `zh`. Any other language is not sent, and Async detects the language from the text. Set `options.language` to send a language code directly; it takes precedence over `synthesizer.language`. A language outside the chosen model may be rejected by Async.
+
+## Options
+
+<ParamField path="model_id" type="string" required={false}>
+  `async_flash_v1.5`, `async_flash_v1.0` or `async_pro_v1.0`. Overrides the model on the credential.
+</ParamField>
+
+<ParamField path="language" type="string" required={false}>
+  Async language code, such as `en` or `fr`, sent as written. Overrides `synthesizer.language`.
+</ParamField>
+
+<ParamField path="speed_control" type="number" required={false}>
+  Speaking rate, `0.7` – `2.0`. `async_flash_v1.0` only.
+</ParamField>
+
+<ParamField path="stability" type="integer" required={false}>
+  Voice stability, `0` – `100`. `async_flash_v1.0` only.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Async's own default applies.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set the **API base URL** on the credential, or `api_uri` in its **Extra Options**. Leave it out to use `api.async.com`.
+
+## Streaming
+
+Async supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz streams text to Async over a live connection and starts a new Async context for each turn; on barge-in it closes the current context and drops its remaining audio instead of reconnecting.
+
+Async does not return word-level timestamps, so alignment events are not available.

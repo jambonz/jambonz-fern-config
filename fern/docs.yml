@@ -138,6 +138,14 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/overview.mdx
               - page: AssemblyAI
                 path: ./docs/pages/features/tts-vendors/assemblyai.mdx
+              - page: Async
+                path: ./docs/pages/features/tts-vendors/asyncai.mdx
+              - page: Azure OpenAI
+                path: ./docs/pages/features/tts-vendors/azureopenai.mdx
+              - page: Bland AI
+                path: ./docs/pages/features/tts-vendors/bland.mdx
+              - page: Camb.ai
+                path: ./docs/pages/features/tts-vendors/camb.mdx
               - page: Cartesia
                 path: ./docs/pages/features/tts-vendors/cartesia.mdx
               - page: ElevenLabs
@@ -146,22 +154,50 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/fishaudio.mdx
               - page: Giggy
                 path: ./docs/pages/features/tts-vendors/giggy.mdx
+              - page: Gnani
+                path: ./docs/pages/features/tts-vendors/gnani.mdx
               - page: Gradium
                 path: ./docs/pages/features/tts-vendors/gradium.mdx
+              - page: Groq
+                path: ./docs/pages/features/tts-vendors/groq.mdx
+              - page: Hume
+                path: ./docs/pages/features/tts-vendors/hume.mdx
               - page: Inworld
                 path: ./docs/pages/features/tts-vendors/inworld.mdx
+              - page: Kokoro
+                path: ./docs/pages/features/tts-vendors/kokoro.mdx
+              - page: MiniMax
+                path: ./docs/pages/features/tts-vendors/minimax.mdx
               - page: Mistral
                 path: ./docs/pages/features/tts-vendors/mistral.mdx
               - page: Murf
                 path: ./docs/pages/features/tts-vendors/murf.mdx
+              - page: Neuphonic
+                path: ./docs/pages/features/tts-vendors/neuphonic.mdx
               - page: Paxa Labs
                 path: ./docs/pages/features/tts-vendors/paxa.mdx
               - page: Resemble
                 path: ./docs/pages/features/tts-vendors/resemble.mdx
+              - page: Respeecher
+                path: ./docs/pages/features/tts-vendors/respeecher.mdx
               - page: Rime Labs
                 path: ./docs/pages/features/tts-vendors/rimelabs.mdx
+              - page: Sarvam AI
+                path: ./docs/pages/features/tts-vendors/sarvam.mdx
+              - page: Simplismart
+                path: ./docs/pages/features/tts-vendors/simplismart.mdx
+              - page: Smallest AI
+                path: ./docs/pages/features/tts-vendors/smallestai.mdx
+              - page: Soniox
+                path: ./docs/pages/features/tts-vendors/soniox.mdx
+              - page: Speechmatics
+                path: ./docs/pages/features/tts-vendors/speechmatics.mdx
+              - page: Spitch
+                path: ./docs/pages/features/tts-vendors/spitch.mdx
               - page: Svara
                 path: ./docs/pages/features/tts-vendors/svara.mdx
+              - page: Vakyam
+                path: ./docs/pages/features/tts-vendors/vakyam.mdx
               - page: xAI
                 path: ./docs/pages/features/tts-vendors/xai.mdx
           - page: Answering machine detection

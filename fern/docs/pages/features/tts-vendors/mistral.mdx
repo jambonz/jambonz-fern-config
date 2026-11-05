@@ -29,7 +29,7 @@ The default model is `voxtral-mini-tts-3-0`. Set a different one with `synthesiz
 
 ## Emotion and pace tags
 
-Put tags inline in the text to change how a passage is spoken, such as `[emotion=happy]` or `[pace=slow]`, or both together: `[emotion=calm][pace=slow]`. Pace takes `very-slow`, `slow`, `moderate`, `fast` or `very-fast`. Voxtral does not speak a tag it does not recognize, so a misspelled tag is silently ignored. Text is synthesized a sentence at a time, and jambonz carries a reply's tags into each later sentence until one sets its own, so a tag at the start of a streamed reply shapes the whole reply.
+Put tags inline in the text to change how a passage is spoken, such as `[emotion=happy]` or `[pace=slow]`, or both together: `[emotion=calm][pace=slow]`. Pace takes `very-slow`, `slow`, `moderate`, `fast` or `very-fast`. Voxtral does not speak a tag it does not recognize, so a misspelled tag is silently ignored. Text is synthesized a sentence at a time, and jambonz carries the tags into each later sentence until one sets its own, so a tag at the start of the text shapes all of it.
 
 ## Options
 
@@ -61,6 +61,4 @@ To point at a non-default endpoint, such as a proxy, set `api_uri` in the creden
 
 ## Streaming
 
-Mistral supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. Voxtral has no connection that accepts text as it arrives, so jambonz collects the tokens into whole sentences and sends each sentence to Mistral as a separate streaming request. The first audio therefore starts once the first sentence is complete. Splitting at sentence boundaries keeps the intonation natural.
-
-On barge-in, jambonz cancels the request in progress. Voxtral does not return word-level timestamps, so jambonz cannot trim the assistant's turn to the words the caller actually heard.
+Mistral has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

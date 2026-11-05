@@ -1,0 +1,103 @@
+---
+title: Hume
+subtitle: Octave voices with acting directions, speed, trailing silence and instant mode.
+---
+
+[Hume](https://www.hume.ai) Octave is a text-to-speech model that takes acting directions alongside the text. Hume tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "hume",
+    "language": "en-US",
+    "voice": "Ava Song",
+    "options": {
+      "description": "warm and upbeat",
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+<Warning>
+Hume no longer lists the Octave TTS docs on its developer site, although the TTS API still answers. Confirm with Hume that Octave TTS is available on your account before relying on it in production.
+</Warning>
+
+## Credential
+
+Add a **Hume** speech credential in the portal or API, using the vendor id `hume`. Hume is used for text-to-speech only.
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| API key (`api_key`) | Yes | Your Hume API key, sent as the `X-Hume-Api-Key` header. |
+| API base URL (`api_uri`) | No | Host override, such as a proxy. Leave it out to use `api.hume.ai`. |
+| Model (`model_id`) | No | Octave version, `1` or `2`. Leave it out to let Hume choose. |
+
+When you save the credential, jambonz checks it by synthesizing a short phrase with the `Ava Song` voice.
+
+## Voices and languages
+
+The portal lists two voices from Hume's voice library under English (US): `Ava Song` (default) and `Male English Actor`. Any other voice can be entered as a custom voice:
+
+- a voice name is sent as the voice `name`, and a voice UUID is sent as the voice `id`;
+- for a voice you created or cloned in your Hume account, set `voice_provider` to `CUSTOM_VOICE`.
+
+Hume has no language setting: the spoken language follows the voice and the text. jambonz accepts `synthesizer.language` but does not send it to Hume.
+
+## Options
+
+Every option is optional. An option you don't set is not sent, so Hume's own default applies.
+
+<ParamField path="model_id" type="string" required={false}>
+  Octave version, `1` or `2`. Overrides the credential's model.
+</ParamField>
+
+<ParamField path="voice_provider" type="string" required={false}>
+  `HUME_AI` for a voice from Hume's library, or `CUSTOM_VOICE` for a voice in your account. jambonz defaults to `HUME_AI`.
+</ParamField>
+
+<ParamField path="description" type="string" required={false}>
+  Acting directions for the voice, such as `calm and reassuring`. Hume recommends 100 characters or fewer.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate. `0.75` to `1.5` is recommended.
+</ParamField>
+
+<ParamField path="trailing_silence" type="number" required={false}>
+  Seconds of silence added after the speech, `0` to `5`.
+</ParamField>
+
+<ParamField path="instant_mode" type="boolean" required={false}>
+  Lower latency streaming. Requires a voice. Not used when audio is rendered for caching.
+</ParamField>
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature.
+</ParamField>
+
+<ParamField path="context_generation_id" type="string" required={false}>
+  The id of an earlier Hume generation, so the new speech continues in the same style.
+</ParamField>
+
+<ParamField path="split_utterances" type="boolean" required={false}>
+  Non-streaming `say` only. Whether Hume splits the text into smaller parts.
+</ParamField>
+
+```json
+{
+  "model_id": "2",
+  "voice_provider": "CUSTOM_VOICE",
+  "trailing_silence": 0.5
+}
+```
+
+## Streaming
+
+Hume supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz keeps one connection to Hume for the call and sends the text as it arrives. Hume has no cancel message, so on barge-in jambonz closes the connection and opens a new one for the next turn.
+
+Hume does not return word-level timestamps to jambonz, so alignment events are not available.
