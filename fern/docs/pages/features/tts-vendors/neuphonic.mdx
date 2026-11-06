@@ -1,0 +1,71 @@
+---
+title: Neuphonic
+subtitle: Multilingual voices, speed, temperature and IPA dialect for Neuphonic TTS.
+---
+
+[Neuphonic](https://docs.neuphonic.com/build-group/text-to-speech) generates low-latency speech in more than forty languages, including English, most European languages, Arabic, Hindi, Japanese, Korean and Mandarin Chinese. Neuphonic tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "neuphonic",
+    "language": "en-US",
+    "voice": "eeb488b8-d532-4235-aa57-f070cfc44750",
+    "options": {
+      "speed": 1.0
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in the [Neuphonic dashboard](https://app.neuphonic.com). jambonz sends the key in the `X-API-KEY` header. Add it as a **Neuphonic** speech credential in the portal or API. Neuphonic is used for text-to-speech only.
+
+## Models
+
+Neuphonic has no model setting: the voice selects the model.
+
+## Voices and languages
+
+A voice is a Neuphonic voice id (a UUID). The portal lists Neuphonic's stock voices by language; Hannah (`eeb488b8-d532-4235-aa57-f070cfc44750`) is the English default. Voices you have cloned or created in your Neuphonic account are not listed, but work when you enter their id as a custom voice. If no voice is given, Neuphonic picks its own default voice.
+
+`synthesizer.language` is sent as Neuphonic's language code: the language prefix is used, so `en-US` is sent as `en` and `de-DE` as `de`. A few are mapped: `ar-SA` is sent as `ar_sa`, `ar-MA` as `ar_maghrebi`, `nb-*` and `nn-*` as `no`, and `cmn-*` as `zh`. A value that already contains an underscore is sent as written. Set `options.language` to send a Neuphonic language code directly; it takes precedence over `synthesizer.language`. If neither is set, `en` is used.
+
+## Options
+
+<ParamField path="language" type="string" required={false}>
+  Neuphonic language code, sent as written, such as `en`, `es` or `ar_sa`. Overrides the code derived from `synthesizer.language`.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate. Neuphonic's effective values are `0.7`, `1.0` and `1.5`; its default is `1.0`.
+</ParamField>
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature, `0` – `1`.
+</ParamField>
+
+<ParamField path="ipa_key" type="string" required={false}>
+  Regional sounds for `<phoneme:...>` tags: `es-castilian` or `pt-br`.
+</ParamField>
+
+<ParamField path="timestamps" type="boolean" required={false}>
+  Return word-level timestamps. Streaming only. When unset, jambonz turns them on if alignment is enabled.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Neuphonic's own default applies.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set the **API base URL** on the credential, or `api_uri` in its **Extra Options**. Leave it out to use `api.neuphonic.com`.
+
+## Streaming
+
+Neuphonic supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz streams text to Neuphonic over a live connection and opens a fresh connection for each turn; on barge-in it closes the connection and reconnects.
+
+Neuphonic returns word-level timestamps, so alignment events are available when alignment is enabled.

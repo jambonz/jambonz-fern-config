@@ -1,0 +1,103 @@
+---
+title: Simplismart
+subtitle: Orpheus, Veena and Qwen 3 TTS models, sampling controls and dedicated deployments for Simplismart TTS.
+---
+
+[Simplismart](https://docs.simplismart.ai) hosts open text-to-speech models: Orpheus for English, Veena for Hindi and English, and Qwen 3 TTS on a dedicated deployment. Simplismart tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "simplismart",
+    "language": "en-US",
+    "voice": "tara",
+    "options": {
+      "temperature": 0.7,
+      "top_p": 0.9
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in your Simplismart account. jambonz sends the key as `Authorization: Bearer <api key>`. Add it as a **Simplismart** speech credential in the portal or API, using the vendor id `simplismart`. Simplismart is used for text-to-speech only.
+
+The credential can also set a default model and an API host; see [Models](#models) and [Endpoint override](#endpoint-override).
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `canopylabs/orpheus-3b-0.1-ft` | Orpheus 3B, English. Default. |
+| `maya-research/Veena` | Veena, Hindi and English. Default when `synthesizer.language` is Hindi (`hi-*`) and no model is set. |
+| `qwen-tts` | Qwen 3 TTS. Served from a dedicated Simplismart deployment, so set the API host as well. |
+
+The model is chosen in this order: `options.model_id` on the verb, then the model on the credential, then Veena for a Hindi language, then Orpheus. Any model id that contains `qwen` is sent to Simplismart's Qwen endpoint; every other model uses the Orpheus/Veena endpoint.
+
+## Voices and languages
+
+The portal lists these voices:
+
+| Language | Voices |
+| --- | --- |
+| English (US) | `tara` (default), `leah`, `jess`, `mia`, `zoe` (female); `leo`, `dan`, `zac` (male) |
+| Hindi | `kavya` (default), `maitri` (female); `agastya`, `vinaya` (male) |
+
+Qwen 3 TTS uses its own voice names, such as `Chelsie`; enter them as a custom voice.
+
+Orpheus and Veena have no language parameter, so `synthesizer.language` only picks the default model. For Qwen, jambonz sends a language name derived from `synthesizer.language`: `en` English, `zh` Chinese, `ja` Japanese, `ko` Korean, `de` German, `fr` French, `ru` Russian, `pt` Portuguese, `es` Spanish and `it` Italian. Any other language is sent as `English`. Set `options.language` to send a different name.
+
+jambonz treats Simplismart audio as 16-bit PCM at 24 kHz and resamples it to the call's rate.
+
+## Options
+
+Every option is optional. An option you don't set is not sent, so Simplismart's own default applies.
+
+<ParamField path="model_id" type="string" required={false}>
+  `canopylabs/orpheus-3b-0.1-ft`, `maya-research/Veena` or `qwen-tts`. Overrides the model on the credential.
+</ParamField>
+
+### Orpheus and Veena
+
+These are sent only to the Orpheus/Veena endpoint and are ignored for Qwen.
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature.
+</ParamField>
+
+<ParamField path="top_p" type="number" required={false}>
+  Nucleus sampling threshold.
+</ParamField>
+
+<ParamField path="repetition_penalty" type="number" required={false}>
+  Penalty for repeated tokens.
+</ParamField>
+
+<ParamField path="max_tokens" type="integer" required={false}>
+  Maximum audio tokens generated per request. jambonz sends one request per sentence.
+</ParamField>
+
+### Qwen
+
+These are sent only to the Qwen endpoint and are ignored for Orpheus and Veena.
+
+<ParamField path="language" type="string" required={false}>
+  Language name, such as `English` or `Chinese`. Overrides the name jambonz derives from `synthesizer.language`.
+</ParamField>
+
+<ParamField path="leading_silence" type="boolean" required={false}>
+  Whether Qwen adds silence before the speech.
+</ParamField>
+
+## Endpoint override
+
+To use a dedicated deployment, such as one serving Qwen 3 TTS, set the **API host** on the credential, or `api_uri` in its **Extra Options** or in `synthesizer.options`. It is a host name such as `my-deployment.simplismart.live`; a scheme and trailing `/` are accepted and ignored. Leave it out to use `api.simplismart.live`.
+
+## Streaming
+
+Simplismart has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

@@ -56,6 +56,31 @@ See Google's [Gemini model catalog](https://ai.google.dev/gemini-api/docs/models
 | `gemini-2.5-pro` | Higher reasoning quality |
 | `gemini-2.0-flash-lite` | Cheapest option; no vision support |
 
+## Vendor-specific parameters
+
+Set these in [`llmOptions.vendorParams`](/verbs/verbs/agent); for Gemini they are added to the request's generation config.
+
+| Parameter | Models | Effect |
+|---|---|---|
+| `thinkingConfig: { thinkingLevel: "minimal" }` | Gemini 3.x | Minimizes thinking. **Recommended for voice:** in our tests `gemini-3.5-flash` reached its first token in ~1.0 s instead of ~3.5 s with its default thinking. `"low"`, `"medium"`, `"high"` think more. |
+| `thinkingConfig: { thinkingBudget: 0 }` | Gemini 2.5 | Turns off thinking (`gemini-2.5-flash`: ~0.6 s to first token instead of ~1.5 s in our tests). |
+| `safetySettings` | All | Per-category blocking thresholds, e.g. `[{ category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_LOW_AND_ABOVE" }]`. A blocked response ends the turn with no speech. |
+
+```js
+llm: {
+  vendor: 'google',
+  model: 'gemini-3.5-flash',
+  llmOptions: {
+    systemPrompt: 'You are a helpful voice assistant.',
+    vendorParams: { thinkingConfig: { thinkingLevel: 'minimal' } },
+  },
+}
+```
+
+<Note>
+`vertex-gemini` passes `vendorParams` into the generation config the same way.
+</Note>
+
 ## Quirks & errors
 
 <Note>

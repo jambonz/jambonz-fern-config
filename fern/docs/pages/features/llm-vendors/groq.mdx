@@ -1,11 +1,11 @@
 ---
 title: Groq
-subtitle: Configure jambonz to use Llama and Gemma models on Groq's LPU hardware for sub-100ms TTFT.
+subtitle: Configure jambonz to use open-weight models on Groq's LPU hardware for low TTFT.
 ---
 
-Groq runs open-weight Llama 3.x/3.3 and Gemma models on custom LPU silicon and gets ~5-10× the tokens/sec of GPU-backed providers. For real-time voice agents, this is the most compelling value proposition in the LLM market — your agent feels noticeably more responsive than the same prompt on `gpt-4o`.
+Groq runs open-weight models (OpenAI's GPT-OSS, Qwen) on custom LPU silicon with very high tokens/sec, which keeps a voice agent's turns short.
 
-The tradeoff: Groq's catalog is open-weight Llama / Gemma. Capable, but not GPT-5 / Claude-tier on hard reasoning. Pick Groq for "look up the order, read it back" voice agents; pick Anthropic / OpenAI / Bedrock for complex reasoning.
+The tradeoff: Groq's catalog is a small set of open-weight models. Capable, but not GPT-5 / Claude-tier on hard reasoning. Pick Groq for "look up the order, read it back" voice agents; pick Anthropic / OpenAI / Bedrock for complex reasoning.
 
 ## Get credentials
 
@@ -37,7 +37,7 @@ Click **Test** to verify.
 session.agent({
   llm: {
     vendor: 'groq',
-    model: 'llama-3.3-70b-versatile',
+    model: 'openai/gpt-oss-120b',
     llmOptions: {
       systemPrompt: 'You are a helpful voice assistant.',
     },
@@ -56,14 +56,31 @@ See Groq's [supported models page](https://console.groq.com/docs/models) for the
 
 | Model | Notes |
 |---|---|
-| `llama-3.3-70b-versatile` | Best general-purpose — reliable tool calls, fast |
-| `llama-3.1-8b-instant` | Fastest and cheapest; tool-capable but less reliable on complex flows |
-| `gemma2-9b-it` | Alternative open model |
+| `openai/gpt-oss-120b` | Best general-purpose choice on Groq; reliable tool calls |
+| `openai/gpt-oss-20b` | Smaller and cheaper |
+| `qwen/qwen3.8-27b` | Alternative open model with tool calling |
+
+<Warning>
+Groq retires models regularly. `llama-3.3-70b-versatile`, `llama-3.1-8b-instant` and `gemma2-9b-it` are no longer available; requests for them fail.
+</Warning>
+
+## Vendor-specific parameters
+
+Set these in [`llmOptions.vendorParams`](/verbs/verbs/agent); they are added to the Groq request as-is. Groq rejects parameters it doesn't support with a `400`, so stick to the ones below.
+
+| Parameter | Models | Effect |
+|---|---|---|
+| `reasoning_effort: "low"` | `openai/gpt-oss-20b`, `openai/gpt-oss-120b` | Less reasoning before the answer. In our tests `gpt-oss-20b` produced ~33 output tokens instead of 75–125 at the default (`"medium"`). GPT-OSS models reject `"none"` with a `400`. |
+| `reasoning_effort: "none"` | `qwen/qwen3.8-27b` | Disables reasoning. Qwen on Groq doesn't return reasoning at its default setting, so there is little to gain. |
+
+<Warning>
+**Never set `reasoning_format: "raw"`.** It puts the model's reasoning, wrapped in `<think>` tags, into the reply text, and with tools enabled Groq rejects the request with a `400`.
+</Warning>
 
 ## Quirks & errors
 
 <Note>
-**Tool-calling reliability scales with model size.** `llama-3.3-70b-versatile` handles multi-step tool calls cleanly. `llama-3.1-8b-instant` is faster and cheaper but occasionally fails to invoke tools when it should, or invokes them with malformed arguments. Test your specific tool definitions on both to find the right tradeoff.
+**Tool-calling reliability scales with model size.** Test your specific tool definitions on `openai/gpt-oss-120b` and the smaller models to find the right tradeoff.
 </Note>
 
 <Note>

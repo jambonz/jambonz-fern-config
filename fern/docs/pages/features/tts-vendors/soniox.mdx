@@ -1,0 +1,96 @@
+---
+title: Soniox
+subtitle: Realtime voices in sixty languages on the same key as Soniox speech-to-text.
+---
+
+[Soniox](https://soniox.com/docs/tts) text-to-speech uses the same API key as Soniox speech-to-text. Every voice speaks every supported language. Soniox tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "soniox",
+    "language": "en-US",
+    "voice": "Adrian",
+    "options": {
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set options in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in the [Soniox console](https://console.soniox.com). The key needs text-to-speech access. jambonz sends it as a `Bearer` token. In the portal, open or add the **Soniox** speech credential and check **Use for text-to-speech**; one credential can serve both text-to-speech and speech-to-text.
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| API key (`api_key`) | Yes | Your Soniox key, used for both TTS and STT. |
+| TTS model (`model_id`) | No | The text-to-speech model. Defaults to `tts-rt-v2`. |
+| TTS host (`api_uri`) | No | Host override for text-to-speech, such as `tts-rt.eu.soniox.com`, `tts-rt.jp.soniox.com` or `tts-rt.in.soniox.com` for regional data residency, or a proxy. Leave it out to use `tts-rt.soniox.com`. `ws://` or `http://` selects a plain connection. It does not change the speech-to-text host. |
+
+When you save the credential, jambonz checks text-to-speech by synthesizing a short phrase with the `Adrian` voice.
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `tts-rt-v2` | Default. Realtime model; every voice speaks every supported language. |
+
+## Voices and languages
+
+A voice is given by name, such as `Adrian`. A cloned voice from your Soniox account can be used by its id. Every voice speaks every language below, so the portal lists the same voices under each language; `Adrian` is the default.
+
+| Group | Voices |
+| --- | --- |
+| General | `Adrian`, `Maya`, `Daniel`, `Noah`, `Nina`, `Emma`, `Jack`, `Claire`, `Grace`, `Owen`, `Mina`, `Kenji` |
+| Spanish accent | `Rafael`, `Mateo`, `Lucia`, `Sofia` |
+| British | `Oliver`, `Arthur`, `Isla`, `Victoria` |
+| Australian | `Cooper`, `Mason`, `Ruby`, `Elise` |
+| Indian accent | `Arjun`, `Rohan`, `Priya`, `Meera` |
+
+Soniox takes a bare language code. jambonz sends the primary subtag of `synthesizer.language`, so `en-US` is sent as `en` and `es-ES` as `es`; `cmn` is sent as `zh`, `nb` and `nn` as `no`, `fil` as `tl` and `iw` as `he`. A language Soniox does not support is passed through and Soniox returns an error; jambonz does not fall back to English. Set `options.language` to send a code as is; it takes precedence over `synthesizer.language`.
+
+Supported languages: Afrikaans, Albanian, Arabic, Azerbaijani, Basque, Belarusian, Bengali, Bosnian, Bulgarian, Catalan, Chinese, Croatian, Czech, Danish, Dutch, English, Estonian, Finnish, French, Galician, German, Greek, Gujarati, Hebrew, Hindi, Hungarian, Indonesian, Italian, Japanese, Kannada, Kazakh, Korean, Latvian, Lithuanian, Macedonian, Malay, Malayalam, Marathi, Norwegian, Persian, Polish, Portuguese, Punjabi, Romanian, Russian, Serbian, Slovak, Slovenian, Spanish, Swahili, Swedish, Tagalog, Tamil, Telugu, Thai, Turkish, Ukrainian, Urdu, Vietnamese and Welsh.
+
+## Options
+
+Every option is optional. An option you don't set is not sent, so Soniox's own default applies.
+
+<ParamField path="model_id" type="string" required={false}>
+  Text-to-speech model. Overrides the credential's model.
+</ParamField>
+
+<ParamField path="language" type="string" required={false}>
+  Language code sent to Soniox as is, such as `fr`. Overrides the code derived from `synthesizer.language`.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, `0.7` – `1.3`. Soniox's default is `1.0`.
+</ParamField>
+
+<ParamField path="reduce_silence" type="boolean" required={false}>
+  Shortens pauses in the generated speech.
+</ParamField>
+
+<ParamField path="client_reference_id" type="string" required={false}>
+  Your own reference, up to 256 characters, attached to the request in Soniox's usage records.
+</ParamField>
+
+```json
+{
+  "speed": 1.2,
+  "reduce_silence": true
+}
+```
+
+## Streaming
+
+Soniox supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz streams text to Soniox over a live connection, starting a new Soniox stream for each turn, and on barge-in sends Soniox's cancel instead of reconnecting.
+
+Soniox returns character-level timestamps, so alignment events are available when alignment is enabled.
+
+Soniox limits a single stream to two minutes of audio; longer speech is cut off with an error. A stream that receives no text for several seconds is closed by Soniox, and the next text opens a new one.

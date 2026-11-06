@@ -85,15 +85,15 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 </ParamField>
 
 <ParamField path="earlyGeneration" type="boolean" required={false} default="false">
-  Enable speculative LLM prompting before end-of-turn is confirmed. When using Krisp turn detection, set this to `true` to speculatively prompt the LLM before Krisp confirms the turn has ended. If the transcript matches when the turn ends, buffered tokens are released immediately — reducing response latency. Deepgram Flux performs early generation automatically regardless of this setting.
+  Enable speculative LLM prompting before end-of-turn is confirmed. If the transcript matches when the turn ends, buffered tokens are released immediately — reducing response latency. Works with Krisp turn detection, Deepgram Flux and Speechmatics agent mode. With Deepgram Flux you must also set `stt.deepgramOptions.eagerEotThreshold`, or early generation never starts. Tool calls chosen by a speculative reply run only after the end of turn is confirmed. See [Early Generation](/guides/features/voice-agents#early-generation-speculative-preflight).
 </ParamField>
 
 <ParamField path="eventHook" type="string" required={false}>
   A webhook invoked for agent events. Receives event types: `user_transcript`, `agent_response`, `user_interruption`, `turn_end`, and `history_summarized`. See [eventHook Events](#eventhook-events) below.
 </ParamField>
 
-<ParamField path="greeting" type="boolean" required={false} default="true">
-  Whether the LLM should generate an initial greeting before the user speaks. Set to `false` if you want the agent to wait silently for the user to speak first.
+<ParamField path="greeting" type="boolean | string" required={false} default="true">
+  How the agent opens the call. `true`: the LLM generates a greeting before the user speaks. `false`: the agent waits silently for the user to speak first. A string: the agent speaks these exact words as its first turn, without calling the LLM; the user can interrupt it, and the conversation history records it as the agent's first reply.
 </ParamField>
 
 <ParamField path="handoff" type="object" required={false}>
@@ -155,16 +155,29 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
   Maximum number of tokens in the LLM response.
 </ParamField>
 
+<ParamField path="llm.llmOptions.vendorParams" type="object" required={false}>
+  Vendor-specific request parameters that jambonz has no first-class option for, passed to the vendor as-is. For example, OpenRouter's provider routing: `{ provider: { sort: 'latency' }, models: ['openai/gpt-4.1-mini'] }` (see [OpenRouter](/guides/features/bring-your-own-llm/openrouter#provider-routing)).
+
+  - Fields are added to the request body for OpenAI-compatible vendors (`openai`, `openrouter`, `groq`, `deepseek`, `xai`, `azure-openai`, …) and to the generation config for `google` and `vertex-gemini`. `anthropic` and `bedrock` ignore it.
+  - It can only add fields. Anything jambonz sets on the request wins: `model`, messages and tools always, and max tokens and temperature when you set `maxTokens` or `temperature`.
+  - Commonly used parameters, tested by us: [OpenAI](/guides/features/bring-your-own-llm/openai#vendor-specific-parameters), [Google](/guides/features/bring-your-own-llm/google#vendor-specific-parameters), [DeepSeek](/guides/features/bring-your-own-llm/deepseek#vendor-specific-parameters), [OpenRouter](/guides/features/bring-your-own-llm/openrouter#provider-routing).
+  - jambonz does not validate the contents. A misspelled field, or one the vendor rejects, surfaces as a vendor error on the first turn.
+</ParamField>
+
 <ParamField path="mcpServers" type="array" required={false}>
   External MCP servers that provide tools to the LLM. The agent verb connects to each server at startup, discovers available tools, and makes them callable by the LLM. Each entry requires a `url` property and optionally `auth` and `roots`.
 </ParamField>
 
 <ParamField path="noiseIsolation" type="string or object" required={false}>
-  Enable server-side noise isolation to reduce background noise. As a string, pass `"krisp"` or `"rnnoise"` for default settings. As an object: `{ mode: "krisp", level: 80, direction: "read" }`. `direction` can be `"read"` (filter caller audio, default) or `"write"` (filter outbound audio). Krisp requires an API key on self-hosted systems.
+  Enable server-side noise isolation to reduce background noise. As a string, pass `"krisp"`, `"rnnoise"` or `"kugelaudio"` for default settings. As an object: `{ mode: "krisp", level: 80, direction: "read" }`. `direction` can be `"read"` (filter caller audio, default) or `"write"` (filter outbound audio). Krisp requires an API key on self-hosted systems. For `"kugelaudio"`, the object also takes `label` (which KugelAudio speech credential to use) and `auth` (`{apiKey, apiUri}` on the verb instead of a credential); see [KugelAudio Clarity](/guides/features/voice-agents#kugelaudio-clarity).
 </ParamField>
 
 <ParamField path="noResponseTimeout" type="number" required={false} default="12">
   Seconds to wait after the assistant finishes speaking before prompting the user to respond. When triggered, the LLM is prompted with a system cue to check if the user is still there. Set to `0` to disable.
+</ParamField>
+
+<ParamField path="noResponseMaxPrompts" type="number" required={false} default="0">
+  End the agent after this many no-response prompts in a row get no reply. The `actionHook` then fires with `completion_reason: "no_response"`, so your application decides what happens next, for example saying goodbye and hanging up. The count resets whenever the user speaks. `0` or unset: no limit. Added in 11.1.6.
 </ParamField>
 
 <ParamField path="stt" type="object" required={false}>
@@ -331,7 +344,9 @@ The `eventHook` receives real-time events during the conversation. In WebSocket 
 
 <AccordionGroup>
   <Accordion title="turn_end">
-    Sent at the end of each conversational turn. The most useful event for observability.
+    Sent at the end of each conversational turn, including the agent's greeting. The most useful event for observability.
+
+    The greeting's `turn_end` has `"greeting": true` and an empty `transcript`.
 
     ```json
     {
@@ -364,6 +379,10 @@ The `eventHook` receives real-time events during the conversation. In WebSocket 
     - `tool_ms` — Total time spent in tool calls
     - `tts_ms` — TTS engine latency (text sent → first audio received)
     - `preflight` — Early generation metrics: `result` (`hit`, `miss`, or `pending`) and `tokens` buffered on a hit
+
+    **Timing fields** (epoch milliseconds, at the top level of the event):
+    - `caller_started_at` — when the caller began speaking in this turn; absent when the caller did not speak (for example the greeting)
+    - `agent_started_at` — when the agent began speaking in this turn; absent when the agent did not speak
   </Accordion>
 
   <Accordion title="user_transcript">

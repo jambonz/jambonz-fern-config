@@ -143,13 +143,19 @@ A warm, parked transfer with a spoken brief, hold music, and a fallback when nob
 </ParamField>
 
 <ParamField path="disposition.voicemailUrl" type="string" required={false}>
-  SIP URI or HTTP URL to route the caller to voicemail. **Required** whenever any
-  disposition value is `voicemail`.
+  Webhook that jambonz invokes when a disposition resolves to `voicemail`. This is a
+  standard jambonz webhook (not a SIP URI): it receives the standard call attributes plus
+  `transfer_result: "voicemail"` and `transfer_reason`, and the verbs it returns replace the
+  current application — for example `say` + `record` to take a message, or a `dial` to your
+  voicemail system. Use an HTTP(S) URL, or for WebSocket applications a hook name sent over
+  the socket. If the webhook returns no verbs, execution continues with the verbs following
+  `transfer`. **Required** whenever any disposition value is `voicemail`.
 </ParamField>
 
 <ParamField path="actionHook" type="string" required={false}>
   Fires when the transfer resolves — whether the call was bridged, returned to the caller,
-  sent to voicemail, or failed. See [actionHook properties](#actionhook-properties).
+  or failed. Not called when a `voicemail` disposition applies; `disposition.voicemailUrl`
+  is invoked instead. See [actionHook properties](#actionhook-properties).
 </ParamField>
 
 <ParamField path="eventHook" type="string" required={false}>
@@ -164,12 +170,14 @@ A warm, parked transfer with a spoken brief, hold music, and a fallback when nob
 ## actionHook properties
 
 When the transfer resolves, the **actionHook** is called with these additional parameters
-(alongside the standard call attributes):
+(alongside the standard call attributes). The `disposition.voicemailUrl` webhook receives
+the same parameters, with `transfer_result` set to `voicemail`:
 
 - `transfer_result` — one of:
   - `bridged` — the caller and destination were connected and the transfer completed.
   - `returned` — the transfer did not connect and the caller was returned to the application (control falls through to subsequent verbs, or to the verbs returned by the actionHook).
   - `failed` — the transfer ended on a `hangup` disposition or a fatal error.
+  - `voicemail` — a `voicemail` disposition applied (sent only to `disposition.voicemailUrl`).
 - `transfer_reason` — the underlying cause:
   - `completed` — destination answered and the call bridged.
   - `no-answer` — destination did not answer within `timeout`.
@@ -186,7 +194,7 @@ the standard call attributes plus an `event_type` and event-specific fields:
 - `transfer.initiated` — fired at the start; includes `mode` and `callerPresent`.
 - `transfer.bridged` — caller and destination connected.
 - `transfer.returned` — transfer did not connect; includes `transfer_reason`.
-- `transfer.failed` — transfer ended on failure; includes `transfer_reason`.
+- `transfer.failed` — transfer ended on failure, including a `voicemail` disposition; includes `transfer_reason`.
 
 eventHook failures never interrupt the transfer.
 

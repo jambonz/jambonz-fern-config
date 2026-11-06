@@ -1,0 +1,68 @@
+---
+title: Bland AI
+subtitle: Bland AI voices with expressiveness and stability controls for Bland AI TTS.
+---
+
+[Bland AI](https://docs.bland.ai/api-v2/post/tts-ws) generates speech from a voice id, which also selects the Bland model (for example `btts-3`). Bland tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "bland",
+    "language": "en-US",
+    "voice": "29158307-9893-4149-8a75-bc9ce313d64e",
+    "options": {
+      "expressiveness": 0.7,
+      "stability": 0.5
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in your Bland account. jambonz sends the key as `Authorization: Bearer <api key>`. Add it as a **Bland AI** speech credential in the portal or API, using the vendor id `bland`. Bland AI is used for text-to-speech only.
+
+## Voices and languages
+
+A voice is a Bland voice UUID; voice names are not accepted. The voice decides the model, so there is no model setting. The portal lists these built-in voices under English (US):
+
+| Voice | Voice id |
+| --- | --- |
+| Karen (female). Default. | `29158307-9893-4149-8a75-bc9ce313d64e` |
+| Matthew (male) | `1d4dc605-071b-4eee-81b3-099b2894d0d1` |
+| River | `2f29fdbb-c55e-4add-9c7c-93437ebf379d` |
+
+Cloned voices and voices added from the Bland library work when you enter their UUID as a custom voice.
+
+Bland has no language parameter, so `synthesizer.language` is not sent to Bland; the voice determines how the text is spoken.
+
+jambonz asks Bland for 16-bit PCM at 16 kHz and resamples it to the call's rate.
+
+## Options
+
+<ParamField path="expressiveness" type="number" required={false}>
+  Expressiveness, `0.0` – `1.0`.
+</ParamField>
+
+<ParamField path="stability" type="number" required={false}>
+  Stability, `0.0` – `1.0`.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so the voice's own default applies.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set the **API base URL** on the credential, or `api_uri` in its **Extra Options**. Leave it out to use `api.bland.ai`.
+
+## Streaming
+
+Bland AI supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz streams text to Bland over a live connection and starts a new Bland context for each turn; on barge-in it cancels the current context and drops its remaining audio instead of reconnecting.
+
+Bland does not return word-level timestamps, so alignment events are not available.
+
+Bland accounts have a concurrency limit. A live streaming connection counts against it, so a second call or a non-streaming `say` on the same account can be rejected with `concurrency_limit_reached` until the first one ends.

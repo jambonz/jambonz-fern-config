@@ -1,0 +1,66 @@
+---
+title: Gnani
+subtitle: Indic and Indian English Timbre voices, speed and language for Gnani TTS.
+---
+
+[Gnani](https://docs.gnani.ai) generates speech in Indian English, Hindi, Hinglish and eight other Indic languages with its Timbre models, served from `api.vachana.ai`. The same Gnani API key also serves [speech recognition](/verbs/verbs/recognizer). Gnani tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "नमस्ते, आपका order आज ship हो जाएगा।",
+  "synthesizer": {
+    "vendor": "gnani",
+    "language": "hi-IN",
+    "voice": "Nalini",
+    "options": {
+      "speed": 1.0
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in your Gnani account at [app.gnani.ai](https://app.gnani.ai). jambonz sends it in the `X-API-Key-ID` header. Add it as a **Gnani** speech credential in the portal or API; one credential is used for both text-to-speech and speech-to-text. The key must be allowed to use both services, or Gnani rejects the request with `SCOPE_NOT_ALLOWED`.
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `timbre-v2.5` | Default. Voices designed around one language, such as `Kaveri` (English) or `Nalini` (Hindi). |
+| `timbre-v3.0` | Thirteen voices, such as `Shivani` or `Avinash`, that speak every supported language. |
+
+Pick the model on the speech credential, or set `options.model_id` to override it for one verb. A voice must belong to the model in use: jambonz does not pick the model from the voice, and Gnani rejects a `timbre-v3.0` voice sent with `timbre-v2.5`.
+
+## Voices and languages
+
+A voice is a name such as `Kaveri` or `Shivani`, sent exactly as written. Gnani has no API for its voices, so the portal list, taken from Gnani's [voice list](https://docs.gnani.ai/api/TTS/available-voices), is bundled with jambonz: under each language it shows that language's `timbre-v2.5` voices, then the `timbre-v3.0` voices.
+
+Gnani speaks `en-IN`, `hi-IN`, `bn-IN`, `gu-IN`, `kn-IN`, `ml-IN`, `mr-IN`, `pa-IN`, `ta-IN` and `te-IN`, plus `hi-en` (Hinglish, `timbre-v2.5` voice `Poorvi`) and `auto`. jambonz maps `synthesizer.language` to one of these codes: `auto` and `hi-en` are used as-is, otherwise the base language is used with `-IN` (`hi` becomes `hi-IN`, `en-US` becomes `en-IN`), and any other language is sent as `auto`. Set `options.language` to choose explicitly; it takes precedence over `synthesizer.language`.
+
+## Options
+
+<ParamField path="model_id" type="string" required={false}>
+  The Timbre model to use, `timbre-v2.5` or `timbre-v3.0`, overriding the credential's model.
+</ParamField>
+
+<ParamField path="language" type="string" required={false}>
+  The language code sent to Gnani, overriding `synthesizer.language`: `auto`, `hi-en`, or one of the codes above.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, a number such as `0.85` – `1.15`. Gnani rejects word values such as `medium`, so jambonz drops them.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Gnani's own default applies.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set `api_uri` on the credential or in its **Extra Options**; it applies to both TTS and STT. A `ws://` or `http://` prefix turns off TLS. Leave it out to use `api.vachana.ai`.
+
+## Streaming
+
+Gnani has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

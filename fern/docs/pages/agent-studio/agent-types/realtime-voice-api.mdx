@@ -1,0 +1,134 @@
+---
+title: Realtime voice API
+subtitle: One vendor's model listens, thinks and speaks. jambonz carries the call, adds the transfer and hangup tools, and records every turn.
+---
+
+A **Realtime voice API** agent hands the whole voice loop to one vendor: speech recognition, turn-taking, barge-in,
+the model and the voice all run inside the vendor's session. You choose the vendor, the model and the voice. It
+gives the lowest latency and the most natural turn-taking, with one vendor to configure. jambonz runs it with the
+[llm verb](/verbs/verbs/llm).
+
+You write the prompt and add tools and knowledge in Studio, as for a pipeline agent. The vendor, model and voice are
+in the agent's **Model & voice** section.
+
+## Vendors and credentials
+
+Each vendor needs its own credential in your jambonz account, added in the jambonz portal under **LLM Services**,
+on the **Speech-to-speech** tab. It is a credential of its own, separate from any language model or speech
+credential for the same vendor.
+
+| Vendor | Starting model | Starting voice | Notes |
+|---|---|---|---|
+| **OpenAI Realtime** | `gpt-realtime` | `marin` | Also suggests `gpt-realtime-mini`. |
+| **OpenAI GPT-Live** | `gpt-live-1` | `marin` | Tool calls, transfers and hangups run on a separate **Model for delegated work** (starts on `gpt-6.1-terra`). |
+| **Rime Prism** | none | `astra` | No model choice. Four voices: `astra`, `aurora`, `brando` and `wawona`. English only. |
+| **Deepgram Voice Agent** | `gpt-4.1-mini` | `flux-kit-en` | Deepgram listens (Flux for English, Nova-3 otherwise), runs the LLM and speaks with a Flux or Aura voice, and bills all three to your Deepgram account. |
+| **Ultravox** | `ultravox-v0.7` | `Olivia` | Ultravox has many voices; Studio suggests a few English ones. |
+| **Google Gemini Live** | `gemini-3.8-live` | `Kore` | Runs on the Gemini Developer API or on Vertex AI, by the credential. `gemini-3.8-live` runs on both; `gemini-3.8-live-extended-thinking` and `gemini-3.1-flash-live-preview` are Gemini API only, `gemini-live-2.5-flash-native-audio` is Vertex AI only. Voices are Gemini's prebuilt voices. |
+| **xAI Grok Voice** | `grok-voice-latest` | `eve` | Also suggests `grok-voice-3.0`. |
+| **Qwen Omni Realtime** | `qwen3.8-omni-flash-realtime` | `Tina` | Alibaba Cloud Model Studio (DashScope). |
+| **AssemblyAI Voice Agent** | none | `alba` | No model choice. Speaks only a greeting written as text. |
+| **Azure Voice Live** | `gpt-realtime` | `en-US-Ava:DragonHDLatestNeural` | The voice is an Azure voice by its full name, or one of the model's own voices such as `marin`. Other models include `gpt-4.1`, `gpt-5` and `phi4-mm-realtime`. |
+| **Azure OpenAI Realtime** | `gpt-realtime` | `marin` | The model is the name of your Azure deployment. The caller's words reach the call history only if you name a transcription deployment (see [Options](#options)). |
+| **Amazon Nova Sonic** | `amazon.nova-2-5-sonic` | `tiffany` | Runs on Amazon Bedrock. `tiffany` and `matthew` speak every Nova language. |
+
+Most credentials are an API key. These need more:
+
+| Vendor | Credential |
+|---|---|
+| **Google Gemini Live** | Either an **API key** (Gemini Developer API), or a **service account** key (JSON) for Vertex AI, with the Vertex AI User role, plus the region (`us-central1` to start) and optionally the project (the service account's own by default). |
+| **Qwen Omni Realtime** | An API key and the **workspace host** it belongs to, for example `ws-xxxx.ap-southeast-1.maas.aliyuncs.com`, or `dashscope-intl.aliyuncs.com` for the international default. |
+| **Azure Voice Live** | A key of the Azure AI Foundry (AI Services) resource and its host, for example `my-resource.services.ai.azure.com`. |
+| **Azure OpenAI Realtime** | A key of the Azure OpenAI resource and its host, for example `my-resource.openai.azure.com`. The deployment is chosen in the agent, not the credential. |
+| **Amazon Nova Sonic** | An IAM user's access key ID and secret access key, allowed `bedrock:InvokeModelWithBidirectionalStream` on the Nova Sonic model, and a Bedrock region where Nova Sonic is enabled (`us-east-1` to start). Long-lived keys only: a session token is not accepted. |
+
+For the hosts, a full endpoint URL is accepted; only the host is used.
+
+You choose the vendor in the **New agent** dialog. If the account has no credential for it yet, you can still build
+the agent and add the credential later.
+
+## Model & voice
+
+| Field | What it is |
+|---|---|
+| **Vendor** | One of the vendors above. Switching vendor clears the credential and starts from that vendor's model and voice. |
+| **Credential** | The vendor's credential from your jambonz account. When you have more than one, the label picks which. |
+| **Model** | The vendor's model. For Deepgram Voice Agent this is **LLM (managed by Deepgram)**, and for Azure OpenAI Realtime it is **Deployment**. Not shown for Rime Prism or AssemblyAI Voice Agent. |
+| **Voice** | The vendor's voice. |
+| **Language** | The language of the conversation (`en-US` to start). |
+| **Model for delegated work** | OpenAI GPT-Live only: the model its tool calls, transfers and hangups run on. |
+
+For every field you can pick a suggestion or type any model, voice or language code the vendor accepts.
+
+### Options
+
+The **Options** fold takes extra vendor settings as JSON:
+
+- **OpenAI Realtime** and **OpenAI GPT-Live**: any key from the OpenAI section of the [llm verb](/verbs/verbs/llm)
+  docs, for example `turn_detection` or `temperature`. Studio asks OpenAI Realtime to transcribe the caller, so the
+  call history has the caller's words; set `input_audio_transcription` here to change that.
+- **Rime Prism**: only `turn_detection` (`interrupt_response`, `eagerness`, `prism_end_of_turn_timeout_ms`) and
+  `truncation`. Anything else is left out.
+- **Deepgram Voice Agent**: `listen`, `think` and `speak` are merged into Deepgram's providers; `mip_opt_out`, `tags`
+  and `flags` go in the settings.
+- **Ultravox**: any setting of an Ultravox call, such as `temperature`, `vadSettings` or `inactivityMessages`.
+- **xAI Grok Voice**, **Qwen Omni Realtime** and **Azure OpenAI Realtime**: keys of the session, as for OpenAI
+  Realtime. Studio turns on turn detection for xAI (`server_vad`), and asks Qwen to transcribe the caller
+  (`qwen3-asr-flash-realtime`); an option overrides either. Azure OpenAI transcribes the caller only with a
+  transcription deployment of yours: set `input_audio_transcription` to it, or the call history will not have the
+  caller's words. Studio notes this until you do.
+- **Azure Voice Live**: keys of the Voice Live session, such as `turn_detection`. Studio asks Voice Live to transcribe
+  the caller, with `whisper-1` for the `gpt-realtime` models and with Azure Speech in the agent's **Language** for
+  the others; set `input_audio_transcription` to change that.
+- **Google Gemini Live**: keys of the Live API `setup`. `generationConfig` is merged with the voice. Studio turns on
+  input and output transcription and a sliding context window, and sends session resumption.
+- **AssemblyAI Voice Agent**: keys of the session. `output` is merged with the voice.
+- **Amazon Nova Sonic**: keys of the session. `promptStart` is merged with the voice and tools.
+
+Do not put the prompt, tools or voice here; Studio adds them. For Rime Prism, Deepgram Voice Agent, Ultravox, Google
+Gemini Live, AssemblyAI Voice Agent and Amazon Nova Sonic, Studio notes any option it leaves out.
+
+### Handled by the vendor
+
+Speech recognition, turn detection, barge-in, the voice and noise handling happen inside the vendor's session. The
+pipeline's turn-taking and interruption settings do not appear in the **Conversation** section for these agents;
+tune them through the vendor's options.
+
+### Greeting
+
+**OpenAI Realtime**, **xAI Grok Voice**, **Azure OpenAI Realtime** and **Azure Voice Live** agents always speak
+first. If the greeting is set to wait for the caller, Studio notes that it will not wait. Rime Prism, OpenAI GPT-Live,
+Qwen Omni Realtime, Google Gemini Live and Amazon Nova Sonic can wait for the caller.
+
+**AssemblyAI Voice Agent** speaks only a greeting written as **Text**, word for word. With **Model improvises**, it
+waits for the caller to speak first, and Studio notes that.
+
+## Studio's own lines
+
+On a warm transfer, Studio speaks a brief to the person who answers ("Brief the person first", in **Transfer &
+hangup**). The vendor's voice is inside its session, so Studio speaks the brief itself, with a text-to-speech
+credential from your account. The secure detour's message is different: a Realtime voice API agent says that line
+itself, in its own voice.
+
+When the agent has a warm transfer with a brief, **Model & voice** shows **Voice for Studio's own lines**:
+
+- **Speak them in the agent's voice**: shown when the vendor also sells the agent's voice as text-to-speech. Turn it
+  on and Studio speaks the brief in the same voice as the agent:
+
+  | Vendor | When it is offered | Text-to-speech credential needed |
+  |---|---|---|
+  | Deepgram Voice Agent | a Flux voice (`flux-…`) or an Aura voice (`aura-…`) | Deepgram Flux for a Flux voice, Deepgram for an Aura voice |
+  | Rime Prism | the `astra` or `wawona` voice | RimeLabs |
+
+  Studio offers only credentials of that vendor, and uses the agent's voice. If the chosen credential is from another
+  vendor, Studio notes that it needs one from the agent's vendor.
+- Otherwise, choose a text-to-speech credential and a voice for Studio's lines. For every other vendor and voice,
+  the brief is spoken in a voice you choose here.
+
+If no voice is chosen, Studio notes that it has no voice to speak the brief with. The transfer's **Brief for the
+person** field in **Transfer & hangup** shows which voice will speak it, with a link back here.
+
+## Next
+
+- [Cascaded voice pipeline](/agent-studio/agent-types/cascaded-pipeline): choose each stage's vendor yourself
+- [Connected agent](/agent-studio/agent-types/connected-agent): an agent built on Dialogflow CES or ElevenLabs

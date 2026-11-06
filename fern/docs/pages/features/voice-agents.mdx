@@ -193,20 +193,34 @@ This requirement does not apply to jambonz.cloud customers — Krisp features ar
 
 Early generation speculatively sends the transcript to the LLM *before* end-of-turn is confirmed. If the transcript matches when the turn does end, buffered tokens are released immediately — shaving off the LLM prompt time. If the user keeps talking and the transcript changes, the speculative response is discarded.
 
-There are two ways early generation is triggered:
+Early generation is off by default. Set `earlyGeneration: true` to turn it on. What starts the speculative prompt depends on how the end of turn is detected:
 
-- **Krisp turn detection** — Set `earlyGeneration: true` to opt in. Krisp emits an early signal that triggers the speculative LLM prompt before final end-of-turn confirmation.
-- **Deepgram Flux** — Early generation happens automatically. Flux emits a native `EagerEndOfTurn` event that triggers preflight regardless of the `earlyGeneration` setting.
+- **Krisp turn detection** — the prompt starts when the STT delivers a final transcript, while the agent is still waiting for Krisp to confirm the end of turn.
+- **Deepgram Flux** — the prompt starts on Flux's `EagerEndOfTurn` event. Flux only sends that event when you also set `stt.deepgramOptions.eagerEotThreshold`. Without it, `earlyGeneration: true` has no effect and the agent logs a warning.
+- **Speechmatics agent mode** (`speechmaticsagent`) — the prompt starts on the `smart` profile's turn prediction, or on the `adaptive` profile's end-of-turn prediction.
 
-For other STT vendors with native turn-taking (assemblyai, speechmatics), early generation is not available.
+Other STT vendors, including AssemblyAI, send no early end-of-turn signal, so early generation does not apply to them.
 
 ```js
+// Krisp
 session.agent({
   turnDetection: 'krisp',
   earlyGeneration: true,
   // ...
 }).send();
+
+// Deepgram Flux
+session.agent({
+  stt: {
+    vendor: 'deepgramflux',
+    deepgramOptions: { eagerEotThreshold: 0.5 },
+  },
+  earlyGeneration: true,
+  // ...
+}).send();
 ```
+
+Early generation works with tools. The speculative reply can choose tool calls, but jambonz does not send them to your `toolHook` until the end of turn is confirmed and the transcript still matches. If the caller keeps talking, the speculative tool calls are dropped and never run. Each tool call runs at most once, for the turn the caller actually finished.
 
 The [turn_end event](#event-handling) includes `preflight` metrics so you can track hit rates:
 - `hit` — speculative transcript matched final, tokens released immediately
@@ -247,6 +261,14 @@ The `noResponseTimeout` property handles the case where the user goes silent aft
 When the timeout fires, the LLM is prompted with a system cue: *"The user has not responded. Briefly check if they are still there or ask if they need help."* This generates a natural follow-up rather than leaving dead air.
 
 Defaults to `12` seconds. Set to `0` to disable. The timer is cancelled if the user starts speaking.
+
+By default the agent keeps prompting for as long as the call lasts. To stop after a few unanswered prompts (a dead line, or a user who has walked away), set `noResponseMaxPrompts` (added in 11.1.6):
+
+```json
+{ "noResponseTimeout": 12, "noResponseMaxPrompts": 3 }
+```
+
+After that many prompts in a row with no reply, the agent ends and its `actionHook` receives `completion_reason: "no_response"`. The count resets whenever the user speaks.
 
 This also covers the "missed speech" case: when VAD detects speech but STT returns no transcript, the no-response timer handles the re-prompt.
 
@@ -644,7 +666,7 @@ The `turn_end` latency breakdown helps you identify bottlenecks and optimize res
 | `llm_ms` | Pure LLM thinking time (tool RTT subtracted) | Use faster models (e.g., `gpt-4.1-mini`). Keep system prompts concise. Enable `earlyGeneration`. |
 | `tool_ms` | Total time in tool calls | Optimize tool endpoint latency. Use caching where appropriate. |
 | `tts_ms` | TTS engine latency (text → first audio) | Choose streaming-capable TTS (Cartesia, ElevenLabs, Deepgram). |
-| `preflight` | Speculative preflight result | Enable `earlyGeneration` with Krisp. Monitor hit rate — high miss rates may indicate the threshold is too aggressive. |
+| `preflight` | Speculative preflight result | Enable `earlyGeneration` (with Flux, also set `eagerEotThreshold`). Monitor hit rate — high miss rates may indicate the threshold is too aggressive. |
 
 ## Conversation History Summarization
 
@@ -674,9 +696,10 @@ A `history_summarized` event is sent to the `eventHook`:
 
 The `noiseIsolation` property enables server-side noise cancellation on call audio, improving STT accuracy in noisy environments.
 
-Two vendors are available:
+Three vendors are available:
 - **`"krisp"`** — Krisp's proprietary noise cancellation. [Listen to audio samples](https://lab.krisp.ai/products/voice-isolation/audio-samples) to hear the model in action.
 - **`"rnnoise"`** — Open-source RNNoise-based noise cancellation. No API key required.
+- **`"kugelaudio"`** — KugelAudio Clarity, a cloud noise-removal service. Requires a KugelAudio API key; see [KugelAudio Clarity](#kugelaudio-clarity) below.
 
 <Note>
 Krisp noise isolation has the same licensing requirement as Krisp turn detection — see the [warning above](#krisp-turn-detection) for self-hosted licensing details.
@@ -702,6 +725,46 @@ Detailed configuration:
 
 - `level` — Suppression level 0–100. Higher values are more aggressive. Default: 100.
 - `direction` — `"read"` filters caller audio (default), `"write"` filters outbound audio.
+
+### KugelAudio Clarity
+
+KugelAudio Clarity removes background noise in KugelAudio's cloud: jambonz streams the call audio to KugelAudio and plays back the cleaned audio it returns.
+
+```json
+{ "noiseIsolation": "kugelaudio" }
+```
+
+**Credentials.** In the portal, add a KugelAudio speech credential (**Account → Speech**) and tick **Use for noise isolation**. jambonz uses the credential with no label unless you name one with `label`. To keep a separate key for noise isolation, give that credential a label and pass it:
+
+```json
+{
+  "noiseIsolation": {
+    "mode": "kugelaudio",
+    "label": "clarity"
+  }
+}
+```
+
+You can also pass the key on the verb with `auth`, in which case no credential is looked up:
+
+```json
+{
+  "noiseIsolation": {
+    "mode": "kugelaudio",
+    "auth": { "apiKey": "<your KugelAudio API key>" }
+  }
+}
+```
+
+If there is no key on the verb and no matching credential with **Use for noise isolation** ticked, noise isolation does not start, the call continues without it, and jambonz raises an alert.
+
+**Options.**
+- `model` — the Clarity model. Defaults to `clarity-1`.
+- `direction` — `"read"` (caller audio, default) or `"write"`, as for the other vendors.
+- `level` has no effect with KugelAudio.
+- To use a regional KugelAudio endpoint, set `apiUri` in `auth` (for example `api.eu.kugelaudio.com`), or `api_uri` in the credential's **Extra Options**.
+
+**Delay.** Because the audio makes a round trip to KugelAudio, the filtered audio runs a fixed delay behind the original, roughly the round-trip time. Until the first cleaned audio arrives, that direction is silent, so turn noise isolation on before the conversation starts rather than mid-sentence. If KugelAudio stops returning audio for more than a second, jambonz passes the unfiltered audio through and reconnects, so a stall does not leave the line silent.
 
 ## Error Recovery
 

@@ -1,0 +1,146 @@
+---
+title: Tools
+subtitle: HTTP requests, MCP servers and the built-in tools an agent can use during a call.
+---
+
+Tools let an agent do more than talk: look up an order, book an appointment, press keys, transfer the call. Each tool
+has a name and a description, and the description is how the model decides when to use it.
+
+Tools live in the account's library (**Tools** in the navigation), so several agents can share one. The **Tools**
+section of an agent lists the tools that agent uses.
+
+## How each kind of agent uses tools
+
+| Kind | How tools are offered |
+|---|---|
+| **Cascaded voice pipeline** | given to the language model you chose |
+| **Realtime voice API** | sent to the vendor with the session |
+| **Custom harness** | offered to your harness in `session:start`; it runs them through jambonz with `tool:call` requests. Tools your harness owns itself are not listed here |
+| **Connected agent** | your agent's client-side tools are answered by Studio, matched by name; its other tools stay on its own platform |
+
+Whatever the kind, every tool call goes through Studio, which makes the request, applies the timeout and records the
+call and its result in the call history.
+
+## Adding a tool to an agent
+
+Under **Add tool** in the agent's Tools section:
+
+- **From the library**: pick an HTTP tool or an MCP server already in the account.
+- **New HTTP request**: create a tool; it is added to the library and to this agent.
+- **Connect an MCP server**: add a server; its tools are added to this agent.
+
+**Edit** opens a tool's settings; **Remove** takes it off this agent and leaves it in the library. An agent can have
+up to 40 tools turned on. At the limit, a tool you add is added turned off.
+
+<Note>
+Editing a tool in the library changes it for every agent that uses it. The tool's row shows how many other agents
+share it.
+</Note>
+
+## HTTP tools
+
+An HTTP tool is one request the model can make, with parameters it fills in.
+
+| Field | What it is |
+|---|---|
+| **Name** | what the model calls the tool. snake_case: lowercase letters, digits and underscores |
+| **Method and URL** | `GET`, `POST`, `PUT`, `PATCH` or `DELETE`, and an `https://` URL on a public domain name. Use `{parameter}` in the path or query to insert a value the model supplies |
+| **When the model should use it** | the tool description, in plain language. This matters more than the name |
+| Parameters | each parameter's name, type, whether it is required, and what the model should put there. Parameters not used in the URL are sent as the JSON body |
+| **What the caller hears while it runs** | a line the agent says before calling the tool. Leave it empty for silence |
+
+The fold below these holds the rest:
+
+- **Authentication**: **Bearer token**, **Basic auth**, **API key header** or **None**. The secret is either entered
+  here, where it is stored encrypted with the tool, or taken from one of your account variables.
+- **Timeout**: 1 to 15 seconds, 8 by default. Callers wait in silence while a tool runs.
+- **Headers**: extra request headers. Tick **secret** to store a value encrypted.
+- **If the request fails**: **Tell the model it failed, let it recover**, or **Say a fixed line and continue** with
+  the **Line to say**.
+
+Secrets are never part of the agent's settings, and they are never shown again after you save them. If you change a
+tool's host, Studio asks for its secrets again rather than send stored ones to a new host.
+
+### Verifying requests
+
+Studio signs every request with an `X-Studio-Signature` header, so your server can check that a request came from
+your Studio account:
+
+```
+X-Studio-Signature: t=<unix seconds>,v1=<hex>
+v1 = HMAC-SHA256(signing_secret, t + "." + METHOD + "." + path_with_query + "." + raw_body)
+```
+
+Reject a request whose `v1` does not match, or whose `t` is more than 300 seconds from now. The signing secret is
+created when you first save the tool and shown once; **Rotate secret…** replaces it.
+
+### Testing a tool
+
+**Test this tool** runs the saved tool from Studio's servers with sample values, the way a real call would, and
+shows each step of the request (DNS, TLS, request, response) with its timing. Tests run the saved version, so save
+your changes first.
+
+## MCP servers
+
+An MCP server gives an agent a set of tools at once.
+
+| Field | What it is |
+|---|---|
+| **Name** | how the server appears in your lists, and the prefix of its tool names |
+| **Server URL** | the server's `https://` URL. A URL ending in `/sse` is used as SSE; any other as Streamable HTTP |
+| **Authentication** | **None**, **Bearer token** or **Header**, with the value stored encrypted |
+
+When you add a server, Studio connects to it and lists its tools. The model sees each one as
+`<server name>__<tool name>`. **Rediscover** lists them again after the server changes.
+
+In the agent's Tools section, an MCP server shows how many of its tools the agent uses. **Edit** opens the server's
+tool list; untick any tool the model should not see.
+
+Only MCP tools are used; MCP resources and prompts are not. Tool parameters reach your server with the names it
+declared, even when its schema uses camelCase.
+
+## Built-in tools
+
+Some tools come with Studio. The **Built in** card in the Tools section shows them, so you can see the model's whole
+toolset.
+
+| Tool | What it does | Where it is set |
+|---|---|---|
+| `transfer_to_human` | transfers the call | [Transfer & hangup](/agent-studio/building/transfer-and-hangup) |
+| `hangup` | ends the call | [Transfer & hangup](/agent-studio/building/transfer-and-hangup) |
+| `secure_detour` | sends the caller to another system and back | [Transfer & hangup](/agent-studio/building/transfer-and-hangup) |
+| `search_knowledge_base` | searches the attached knowledge bases | [Knowledge](/agent-studio/building/knowledge) |
+| `mark_goal_reached` | marks the call goal reached | [Conversation](/agent-studio/building/conversation), under **Call goal** › **The model decides** |
+| `send_dtmf` | presses keypad digits on the call, for example to get through a menu after a transfer | the switch on the Built in card |
+
+**DTMF only**, also on the Built in card, makes an agent that never speaks: it listens and presses keys, for driving
+a phone menu. Turning it on also turns on `send_dtmf`, and turns off answering machine detection, silence check-ins,
+tool filler and the goodbye before hanging up.
+
+`send_dtmf` and DTMF only are not available to a Connected agent, and DTMF only is not available to a Realtime voice
+API agent, whose vendor speaks regardless. A tool of your own cannot be named `search_knowledge_base`.
+
+## Filling the silence while a tool runs
+
+A tool can take a few seconds. There are two ways to keep the caller company:
+
+- **What the caller hears while it runs**, on each HTTP tool: a line the agent says before it calls that tool.
+- **While tools run**, in [Conversation](/agent-studio/building/conversation): short spoken phrases or an audio loop
+  that start after a delay while any tool runs. This applies to Cascaded voice pipeline agents.
+
+## Connected agents
+
+For a Connected agent, the Tools section starts with **Client-side tools your CES agent asks for**. List the
+client-side tool names your agent calls (**Add tool name**). Each name is matched to a Studio tool with the same
+name on this agent, or to the transfer or detour tool that Studio handles itself. A name with no match blocks
+publishing; **Create tool** starts a new HTTP tool with that name.
+
+## What blocks publishing
+
+- a tool that was deleted from the library, or an HTTP tool with no URL
+- an MCP server that was deleted, has no tools, or no longer lists a tool the agent uses
+- a Connected agent's client-side tool with no matching Studio tool
+- an agent whose whole configuration, tools included, is too large to send to jambonz
+
+Two tools with the same name, a tool named like a built-in tool, and more than 40 tools turned on are shown as
+notes.

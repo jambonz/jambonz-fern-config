@@ -8,7 +8,7 @@ text-to-speech end to end.
 
 #### New Features & Improvements
 
-1. **Mutual TLS (mTLS) for self-hosted servers** — drachtio can present a client certificate on outbound TLS connections, so a carrier or SIP peer that requires mutual authentication can be reached from a self-hosted deployment. See [Mutual TLS](/self-hosting/overview/mtls) for how to obtain a client certificate and configure it.
+1. **Mutual TLS (mTLS) for self-hosted servers** — drachtio can present a client certificate on outbound TLS connections, so a carrier or SIP peer that requires mutual authentication can be reached from a self-hosted deployment. See [Mutual TLS](/self-hosting/overview/mutual-tls) for how to obtain a client certificate and configure it.
 1. **nineninesix.ai TTS** — Added nineninesix.ai (`gepard-1.0`) as a text-to-speech vendor for [say](/verbs/verbs/say), with speech-credential support in the API and the portal. The model emits no word timestamps, so playout tracking is unavailable on it.
 1. **Sub-account cap per enterprise organization** — An enterprise organization can be limited to a maximum number of sub-accounts.
 
@@ -28,19 +28,19 @@ text-to-speech end to end.
 #### Availability
 
 **AWS** — AMIs are published for all nine deployment variants on both amd64 and
-arm64, in all 30 regions the CloudFormation templates support. See the [AWS installation instructions](/self-hosting/aws) to deploy a self-hosted cluster.
+arm64, in all 30 regions the CloudFormation templates support. See the [AWS installation instructions](/self-hosting/hosting-providers/aws) to deploy a self-hosted cluster.
 
 **Debian packages** — `jambonz-mini` 11.1.2 is published in the apt repository
 for **both amd64 and arm64**, installable on a fresh Debian 12 (bookworm) host
 with `apt-get install jambonz-mini`. See the
-[Debian package instructions](/self-hosting/debian-package).
+[Debian package instructions](/self-hosting/bare-metal-vps/debian-package).
 
 **GCP** — images are published for all nine deployment variants on both amd64
 and arm64, and the terraform examples reference them. See the
-[GCP installation instructions](/self-hosting/gcp) to deploy or upgrade.
+[GCP installation instructions](/self-hosting/hosting-providers/gcp) to deploy or upgrade.
 
 **Azure** — images are published to the community gallery for all nine
 deployment variants on both amd64 and arm64: amd64 in 30 regions, arm64 in the
 29 regions that offer Ampere VM sizes. The terraform examples reference them,
 and `architecture = "arm64"` selects the arm64 image definitions. See the
-[Azure installation instructions](/self-hosting/azure) to deploy or upgrade.
+[Azure installation instructions](/self-hosting/hosting-providers/azure) to deploy or upgrade.

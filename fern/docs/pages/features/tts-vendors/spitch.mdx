@@ -1,0 +1,66 @@
+---
+title: Spitch
+subtitle: Voices for English, Yoruba, Hausa, Igbo, Amharic and Nigerian Pidgin, with speed control, for Spitch TTS.
+---
+
+[Spitch](https://docs.spitch.app) provides text-to-speech voices for English and African languages. Spitch tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "spitch",
+    "language": "en-US",
+    "voice": "lina",
+    "options": {
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in your Spitch account. jambonz sends the key as `Authorization: Bearer <api key>`. Add it as a **Spitch** speech credential in the portal or API, using the vendor id `spitch`. Spitch is used for text-to-speech only.
+
+The credential can also set an API host; see [Endpoint override](#endpoint-override).
+
+## Voices and languages
+
+Spitch has no model setting. The portal lists these voices, grouped by the language they were designed for:
+
+| Language | Voices |
+| --- | --- |
+| English | `lina` (default), `john`, `lucy`, `jude`, `henry`, `kani`, `kingsley`, `remi` |
+| Yoruba | `sade` (default), `funmi`, `segun`, `femi` |
+| Hausa | `amina` (default), `hasan`, `zainab`, `aliyu` |
+| Igbo | `ngozi` (default), `obinna`, `amara`, `ebuka` |
+| Amharic | `hana` (default), `tesfaye`, `tena`, `haile` |
+| Nigerian Pidgin | `justice` (default), `ufoma`, `tega`, `boma` |
+
+Every voice can speak every language. jambonz sends the language code from `synthesizer.language` without its region: `en`, `yo`, `ha`, `ig` or `am`. Any other language, including Nigerian Pidgin, is not sent, and the voice speaks the text as written.
+
+jambonz requests Spitch audio as 16-bit PCM at 24 kHz and resamples it to the call's rate.
+
+## Options
+
+Every option is optional. An option you don't set is not sent, so Spitch's own default applies.
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, from `0.7` to `1.2`.
+</ParamField>
+
+<ParamField path="api_uri" type="string" required={false}>
+  API host. Overrides the API host on the credential; see [Endpoint override](#endpoint-override).
+</ParamField>
+
+## Endpoint override
+
+To use a different Spitch endpoint, set the **API base URL** on the credential, or `api_uri` in its **Extra Options** or in `synthesizer.options`. It is a host name such as `api.spitch.app`; a scheme and trailing `/` are accepted and ignored. Leave it out to use `api.spitch.app`.
+
+## Streaming
+
+Spitch has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

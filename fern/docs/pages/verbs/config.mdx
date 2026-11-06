@@ -182,15 +182,23 @@ The `config` verb is non-blocking.
 </ParamField>
 
 <ParamField path="noiseIsolation.vendor" type="string" required={false}>
-  Noise isolation vendor: `"krisp"` or `"rnnoise"`. Krisp requires an API key on self-hosted systems. RNNoise is open-source and requires no API key.
+  Noise isolation vendor: `"krisp"`, `"rnnoise"` or `"kugelaudio"`. Krisp requires an API key on self-hosted systems. RNNoise is open-source and requires no API key. KugelAudio needs a KugelAudio API key, from a speech credential or from `auth`; see [KugelAudio Clarity](/guides/features/voice-agents#kugelaudio-clarity).
 </ParamField>
 
 <ParamField path="noiseIsolation.level" type="number" required={false}>
-  Suppression level 0–100. Higher values are more aggressive. Default: 100.
+  Suppression level 0–100. Higher values are more aggressive. Default: 100. Has no effect with KugelAudio.
 </ParamField>
 
 <ParamField path="noiseIsolation.model" type="string" required={false}>
   Optional model name override.
+</ParamField>
+
+<ParamField path="noiseIsolation.label" type="string" required={false}>
+  KugelAudio only. The label of the KugelAudio speech credential to use. Without it, jambonz uses the unlabelled KugelAudio credential that has **Use for noise isolation** enabled.
+</ParamField>
+
+<ParamField path="noiseIsolation.auth" type="object" required={false}>
+  KugelAudio only. Credentials passed on the verb instead of a speech credential: `apiKey`, and optionally `apiUri` for a regional endpoint (for example `api.eu.kugelaudio.com`).
 </ParamField>
 
 <ParamField path="turnTaking" type="object" required={false}>

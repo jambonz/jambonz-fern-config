@@ -1,0 +1,343 @@
+<Card title="Sarvam AI" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Sarvam AI as a text-to-speech and speech-to-text vendor, for Indian English,
+Hindi and other Indic languages.
+
+#### New Features & Improvements
+
+1. **Sarvam AI text-to-speech** — `sarvam` is available as a TTS vendor, with streaming TTS and
+   speech credentials in the portal and API. The Bulbul models `bulbul:v4-flash` (default),
+   `bulbul:v3` and `bulbul:v2` cover eleven Indian languages, and the portal lists the
+   `bulbul:v4-flash` personas by language. Options are `pace`, `pitch`, `loudness`,
+   `temperature`, `enable_preprocessing` and `dict_id`, plus buffering controls for
+   streaming. See [Sarvam AI](/guides/features/tts-vendor-settings/sarvam).
+1. **Sarvam AI speech-to-text** — the same `sarvam` credential serves realtime speech
+   recognition with `saaras:v3-realtime` (default) or `saaras:v4`, in 23 Indian languages or
+   with automatic language detection. Sarvam signals the start and end of speech and returns
+   a final transcript after each pause. `sarvamOptions` sets the stream type, the transcript
+   mode (including translation to English), the voice activity settings, a prompt and, for
+   `saaras:v4`, key terms. See [recognizer](/verbs/verbs/recognizer).
+
+<Card title="Smallest AI" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Smallest AI as a text-to-speech and speech-to-text vendor, for English, Indic,
+European and Asian languages.
+
+#### New Features & Improvements
+
+1. **Smallest AI text-to-speech** — `smallestai` is available as a TTS vendor, with streaming
+   TTS and speech credentials in the portal and API. The Lightning models
+   `lightning_v3.1_pro` (default), `lightning_v3.1_pro_10_26` and `lightning_v3.1` are
+   supported, and the portal lists the Pro voices by language. Options are `speed`,
+   `language`, `number_pronunciation_language`, `date_format`, `math_notation`,
+   `pronunciation_dicts` and `content_filter`, plus buffering controls for streaming, and
+   word-level timestamps make alignment events available for the voices that return them.
+   See [Smallest AI](/guides/features/tts-vendor-settings/smallestai).
+1. **Smallest AI speech-to-text** — the same `smallestai` credential serves realtime speech
+   recognition with Pulse (`pulse`, default, or the English-only `pulse-2`). `hints` are sent
+   as Pulse's keywords (up to 100 terms), and `smallestaiOptions` sets formatting,
+   end-of-utterance timing, diarization, redaction, timestamps and detection features. See
+   [recognizer](/verbs/verbs/recognizer).
+
+<Card title="Azure OpenAI" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Azure OpenAI as a text-to-speech and speech-to-text vendor, using the OpenAI
+speech models deployed on your own Azure OpenAI resource.
+
+#### New Features & Improvements
+
+1. **Azure OpenAI text-to-speech** — `azureopenai` is available as a TTS vendor for one-shot
+   `say` (no TTS streaming), with speech credentials in the portal and API. A credential holds the resource key, the
+   resource endpoint and the deployment names. The default deployment is `gpt-4o-mini-tts`
+   with the voice `alloy`, and options are `speed`, `instructions` and `model_id`. See
+   [Azure OpenAI](/guides/features/tts-vendor-settings/azureopenai).
+1. **Azure OpenAI speech-to-text** — the same `azureopenai` credential serves realtime speech
+   recognition on a transcription deployment (`gpt-live-transcribe` by default, or
+   `gpt-realtime-whisper`, `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`).
+   `azureopenaiOptions` mirrors `openaiOptions`: deployment, model family, prompt, languages,
+   keywords, delay, noise reduction, turn detection and local voice activity settings. See
+   [recognizer](/verbs/verbs/recognizer).
+
+<Card title="Gnani" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Gnani as a text-to-speech and speech-to-text vendor, for Indian English, Hindi,
+Hinglish and other Indic languages.
+
+#### New Features & Improvements
+
+1. **Gnani text-to-speech** — `gnani` is available as a TTS vendor for one-shot `say` (no TTS
+   streaming), with speech credentials in the portal and API. The Timbre models `timbre-v2.5` (default) and
+   `timbre-v3.0` cover ten Indian languages plus Hinglish, and the portal lists the voices by
+   language. Options are `model_id`, `language` and `speed`. See [Gnani](/guides/features/tts-vendor-settings/gnani).
+1. **Gnani speech-to-text** — the same `gnani` credential serves realtime speech recognition
+   with `prisma-v2.5` (default) or `prisma-v3.0`, in ten Indian languages or with automatic
+   Indic detection. Gnani signals the start and end of speech and returns one final transcript
+   per utterance. `hints` are sent as bias words or key terms, and `gnaniOptions` sets the
+   transcript format, substitutions, context, idle timeout and voice activity settings. See
+   [recognizer](/verbs/verbs/recognizer).
+
+<Card title="Meta" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Meta as a speech-to-text vendor, in 25 languages with code-switching.
+
+#### New Features & Improvements
+
+1. **Meta speech-to-text** — `meta` is available as an STT vendor, with speech credentials in
+   the portal and API, for realtime speech recognition with Meta's `muse-voice-transcribe-1.0`.
+   Meta signals the start of speech, sends interim transcripts and returns one final transcript
+   per turn. The recognizer's `language` is sent as a language bias, `hints` are sent as
+   keywords, and `metaOptions` sets the mode, the partial transcript style, keywords, language
+   bias and a session id. See [recognizer](/verbs/verbs/recognizer).
+
+<Card title="MiniMax" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds MiniMax as a text-to-speech vendor, with voices in more than twenty languages.
+
+#### New Features & Improvements
+
+1. **MiniMax text-to-speech** — `minimax` is available as a TTS vendor, with streaming TTS and
+   speech credentials in the portal and API. The Speech models `speech-2.8-turbo` (default)
+   through `speech-01-hd` are available, and the portal lists MiniMax's system voices by
+   language. Options include speed, volume, pitch, emotion, text normalization, language boost,
+   voice effects, pronunciation dictionaries and voice mixing. Streaming sends text over a live
+   connection and cancels on barge-in. See [MiniMax](/guides/features/tts-vendor-settings/minimax).
+
+<Card title="Neuphonic" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Neuphonic as a text-to-speech vendor, with voices in more than forty languages.
+
+#### New Features & Improvements
+
+1. **Neuphonic text-to-speech** — `neuphonic` is available as a TTS vendor, with streaming TTS and
+   speech credentials in the portal and API. The portal lists Neuphonic's stock voices by
+   language, and account voices can be used by their voice id. Options are `language`, `speed`,
+   `temperature`, `ipa_key` and, for streaming, `timestamps`. Streaming returns word-level
+   timestamps, so alignment events are available. See
+   [Neuphonic](/guides/features/tts-vendor-settings/neuphonic).
+
+<Card title="Camb.ai" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Camb.ai as a text-to-speech vendor, with MARS voices in more than thirty locales.
+
+#### New Features & Improvements
+
+1. **Camb.ai text-to-speech** — `camb` is available as a TTS vendor, with streaming TTS and
+   speech credentials in the portal and API. Models are `mars-flash` (default), `mars-pro`,
+   `mars-instruct` and the `mars-8.1` betas; voices are numeric ids, and cloned voices work by
+   their id. Options include `speaking_rate`, enhancement switches, `inference_steps` and the
+   `mars-instruct` `user_instructions`. Streaming returns word-level timestamps, so alignment
+   events are available. See [Camb.ai](/guides/features/tts-vendor-settings/camb).
+
+<Card title="Async" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Async as a text-to-speech vendor, with voices in up to fifteen languages.
+
+#### New Features & Improvements
+
+1. **Async text-to-speech** — `asyncai` is available as a TTS vendor, with streaming TTS and
+   speech credentials in the portal and API. Models are `async_flash_v1.5` (default),
+   `async_flash_v1.0` and `async_pro_v1.0`; voices are Async voice ids. Options are
+   `model_id`, `language`, `speed_control` and `stability`. Streaming does not return word
+   timestamps, so alignment events are not available.
+   See [Async](/guides/features/tts-vendor-settings/asyncai).
+
+<Card title="Respeecher" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Respeecher as a text-to-speech vendor, with real-time models in six languages.
+
+#### New Features & Improvements
+
+1. **Respeecher text-to-speech** — `respeecher` is available as a TTS vendor, with streaming TTS
+   and speech credentials in the portal and API. Models are `en-rt` (default), `ua-rt`, `ar-rt`,
+   `de-rt`, `pt-br-rt` and `sv-rt`, picked from the language unless `model_id` is set. Options
+   are `model_id` and the sampling controls `seed`, `temperature`, `top_k`, `top_p`, `min_p`,
+   `presence_penalty`, `repetition_penalty` and `frequency_penalty`. Streaming does not return
+   word timestamps, so alignment events are not available.
+   See [Respeecher](/guides/features/tts-vendor-settings/respeecher).
+
+<Card title="Bland AI" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Bland AI as a text-to-speech vendor.
+
+#### New Features & Improvements
+
+1. **Bland AI text-to-speech** — `bland` is available as a TTS vendor, with streaming TTS and
+   speech credentials in the portal and API. The voice is a Bland voice UUID, which also selects
+   the model; Karen is the default en-US voice. Options are `expressiveness` and `stability`.
+   Streaming does not return word timestamps, so alignment events are not available.
+   See [Bland AI](/guides/features/tts-vendor-settings/bland).
+
+<Card title="Simplismart" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Simplismart as a text-to-speech vendor.
+
+#### New Features & Improvements
+
+1. **Simplismart text-to-speech** — `simplismart` is available as a TTS vendor for one-shot `say`
+   (no TTS streaming), with speech credentials in the portal and API. Models are Orpheus 3B (default), Veena for Hindi
+   and Qwen 3 TTS on a dedicated deployment, set with the credential's API host. Options are
+   `model_id`, `temperature`, `top_p`, `repetition_penalty` and `max_tokens`, plus `language` and
+   `leading_silence` for Qwen.
+   See [Simplismart](/guides/features/tts-vendor-settings/simplismart).
+
+<Card title="Spitch" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Spitch as a text-to-speech vendor.
+
+#### New Features & Improvements
+
+1. **Spitch text-to-speech** — `spitch` is available as a TTS vendor for one-shot `say` (no TTS
+   streaming), with speech credentials in the portal and API. Voices cover English, Yoruba, Hausa, Igbo, Amharic
+   and Nigerian Pidgin; `lina` is the default en-US voice. Options are `speed` and `api_uri`.
+   See [Spitch](/guides/features/tts-vendor-settings/spitch).
+
+<Card title="Kokoro" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Kokoro as a text-to-speech vendor, for self-hosted Kokoro servers.
+
+#### New Features & Improvements
+
+1. **Kokoro text-to-speech** — `kokoro` is available as a TTS vendor for one-shot `say` (no TTS
+   streaming), with speech credentials in the portal and API. jambonz calls your server's OpenAI-compatible
+   `/v1/audio/speech` endpoint; the credential needs the server's API base URL, and the API key
+   is optional. The portal lists the bundled voices for nine languages; `af_heart` is the default
+   en-US voice. Options are `model_id`, `lang_code`, `speed`, `volume_multiplier`,
+   `normalization_options`, `voice_aliases`, `allow_voice_tags`, `ssml`, `api_uri` and `api_key`.
+   See [Kokoro](/guides/features/tts-vendor-settings/kokoro).
+
+<Card title="Vakyam" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Vakyam as a text-to-speech vendor, for Indian English and Indic languages.
+
+#### New Features & Improvements
+
+1. **Vakyam text-to-speech** — `vakyam` is available as a TTS vendor for one-shot `say` (no TTS
+   streaming), with speech credentials in the portal and API. The `raaga-v1` model covers `en-IN`, `hi-IN`,
+   `ta-IN`, `te-IN`, `kn-IN`, `mr-IN`, `gu-IN` and `bn-IN`, and the portal lists 16 voices for
+   every language; `Archana` is the default. Other jambonz languages map to the matching `xx-IN`
+   code, falling back to `en-IN`. Options are `model_id`, `speed`, `language` and `api_uri`.
+   See [Vakyam](/guides/features/tts-vendor-settings/vakyam).
+
+<Card title="Groq" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Groq as a text-to-speech vendor, using Canopy Labs' Orpheus models.
+
+#### New Features & Improvements
+
+1. **Groq text-to-speech** — `groq` is available as a TTS vendor for one-shot `say` (no TTS
+   streaming), with speech credentials in the portal and API. `canopylabs/orpheus-v1-english` covers `en-US`
+   (default voice `autumn`) and `canopylabs/orpheus-arabic-saudi` covers `ar-SA` (default voice
+   `fahad`); the model is picked by language unless `model_id` is set. Options are `model_id`,
+   `speed` and `sample_rate`; sentences longer than 200 characters are split. A Groq speech credential is separate from a Groq LLM service.
+   See [Groq](/guides/features/tts-vendor-settings/groq).
+
+<Card title="Hume" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Hume Octave as a text-to-speech vendor.
+
+#### New Features & Improvements
+
+1. **Hume text-to-speech** — `hume` is available as a TTS vendor, with streaming TTS and
+   speech credentials in the portal and API. The default voice is `Ava Song`; a voice UUID or a
+   voice from your own account (`voice_provider: CUSTOM_VOICE`) can be entered as a custom voice.
+   Options are `model_id` (Octave `1` or `2`), `voice_provider`, `description`, `speed`,
+   `trailing_silence`, `instant_mode`, `temperature`, `context_generation_id` and
+   `split_utterances`. Hume has no language setting, and alignment events are not available.
+   Hume no longer lists the Octave TTS docs, so confirm availability with Hume before production use.
+   See [Hume](/guides/features/tts-vendor-settings/hume).
+
+<Card title="Inworld" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds speech-to-text to the existing Inworld vendor, in 30 languages.
+
+#### New Features & Improvements
+
+1. **Inworld speech-to-text** — the `inworld` credential, until now TTS only, can be used for
+   realtime speech recognition with `inworld/inworld-stt-1`. A credential used only for STT no
+   longer needs a TTS model. Inworld signals the start of speech, sends interim transcripts and
+   returns one final transcript per turn. The recognizer's `language` is sent as its primary
+   subtag, or omitted for automatic detection; `hints` are sent as prompts (up to 100), and
+   `inworldOptions` sets word timestamps, diarization, end-of-turn confidence and silence,
+   voice activity threshold, inactivity timeout and voice profile. See
+   [recognizer](/verbs/verbs/recognizer) and [Inworld](/guides/features/tts-vendor-settings/inworld).
+
+<Card title="Speechmatics" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds text-to-speech to the existing Speechmatics vendor, for British and American English.
+
+#### New Features & Improvements
+
+1. **Speechmatics text-to-speech** — the `speechmatics` credential, until now STT only, can be
+   used for one-shot text-to-speech `say` (no TTS streaming). A credential used only for TTS no longer needs
+   the STT endpoint. The preview voices are `sarah` (default) and `theo` for `en-GB`, and `megan`
+   and `jack` for `en-US`; `synthesizer.language` is not sent. Options are `sm_app` and
+   `api_uri`. Speechmatics TTS is a preview product.
+   See [Speechmatics](/guides/features/tts-vendor-settings/speechmatics).
+
+<Card title="Soniox" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds text-to-speech to the existing Soniox vendor, in sixty languages.
+
+#### New Features & Improvements
+
+1. **Soniox text-to-speech** — the `soniox` credential, until now STT only, can be used for
+   text-to-speech, with streaming TTS. The credential gains an optional TTS model (`tts-rt-v2`,
+   the default) and an optional TTS host for regional endpoints. The portal lists 28 voices,
+   each speaking every language; `Adrian` is the default, and `synthesizer.language` is sent as
+   its bare language code. Options are `model_id`, `language`, `speed`, `reduce_silence` and
+   `client_reference_id`. Streaming sends text over a live connection, cancels on barge-in and
+   returns character-level timestamps, so alignment events are available.
+   See [Soniox](/guides/features/tts-vendor-settings/soniox).
+
+<Card title="TTS streaming" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+TTS streaming is now limited to vendors whose websocket accepts text token by token.
+
+#### Changes
+
+1. **Speechify, Giggy and Mistral no longer stream TTS** — these vendors have no token-streaming
+   websocket, so `say` with `stream: true` and the `agent` verb no longer use them; one-shot
+   `say` is unchanged. The new HTTP-only vendors above (Azure OpenAI, Gnani, Simplismart,
+   Spitch, Kokoro, Vakyam, Groq and Speechmatics) are one-shot `say` only for the same reason.

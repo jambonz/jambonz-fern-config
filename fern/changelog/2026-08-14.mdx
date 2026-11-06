@@ -73,13 +73,13 @@ install or upgrade.
 **AWS** — AMIs are published for all nine deployment variants on both amd64 and
 arm64, in all 30 regions the CloudFormation templates support. The AMIs and
 their EBS snapshots are public, so `generate-cf.sh` copies them into your own
-account. See the [AWS installation instructions](/self-hosting/aws) to deploy or
+account. See the [AWS installation instructions](/self-hosting/hosting-providers/aws) to deploy or
 upgrade a self-hosted cluster.
 
 **Debian packages** — `jambonz-mini` 11.1.1 is published in the apt repository
 for **both amd64 and arm64**, installable on a fresh Debian 12 (bookworm) host
 with `apt-get install jambonz-mini`. See the
-[Debian package instructions](/self-hosting/debian-package).
+[Debian package instructions](/self-hosting/bare-metal-vps/debian-package).
 
 As of this release the package pins every jambonz component to an exact version,
 so an install resolves to a known-good set rather than to whatever is newest in

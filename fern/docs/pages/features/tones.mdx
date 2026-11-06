@@ -1,0 +1,295 @@
+---
+title: Tones
+description: Generate tones for playback in verbs or as dialMusic
+hidden: false
+---
+
+jambonz has a built in tone generate which can create either simple tones like a confirmatin beep or generate more complex patterns fpr things like ringing tone.
+
+These. can be used in place of a URL in the [play](/verbs/verbs/play) verb or in multiple other verbs that have a playback function; [dial.dialMusic](/verbs/verbs/dial), [dub.play](/verbs/verbs/dub) [config.onHoldMusic](/verbs/verbs/config)
+
+
+## Tone
+
+Tone urls generate a simple single frequncy tone played for a given duration. 
+```
+tone://?freq=<hz>&duration=<ms>&gainDb=<db>
+```
+
+| Param | Meaning | Default |
+|-------|---------|---------|
+| `freq` | frequency in Hz | `440` |
+| `duration` | length in ms; omit for an unbounded tone (plays until `play.stop`/replace) | infinite |
+| `gainDb` | level adjustment in dB (applied to the base amplitude of 8000) | `0` |
+
+Examples:
+- `tone://` — 440 Hz, plays until stopped
+- `tone://?freq=1000&duration=500` — 1 kHz for half a second
+- `tone://?freq=350&duration=2000&gainDb=-6` — 350 Hz, 2 sec, 6 dB quieter
+
+## Tone Stream
+
+jambonz supports a common subset of the TGML format to generate more complex tones, these are most commonly used for things like ringing tone.
+
+```
+tone_stream://%(on_ms, off_ms, freq1[, freq2, …])
+```
+
+**Tone elements** — `%(on_ms, off_ms, freq1[, freq2, …])`
+- `on_ms` / `off_ms` — tone and silence durations in milliseconds
+- one or more frequencies, **mixed** (summed) when you list several — e.g. `%(2000,4000,440,480)`
+- `off_ms = 0` → a continuous (held) tone for the `on` duration
+
+**Sequences** — multiple elements joined with `;`, played in order as one period
+- e.g. UK ring: `%(400,200,400,450);%(400,2000,400,450)`
+
+**Loop suffix** — `;loops=N`
+- `N` times through the whole sequence; **`-1` = loop forever** (until `play.stop`/replace)
+- omitted = play once
+
+**Default variables** (apply to `%()` elements that follow them)
+- `v=<dB>` — volume, relative to the base level (−63…0 dB range)
+- `d=<ms>` — default on-duration when an element leaves the `on` field blank
+- `w=<ms>` — default off-duration when the `off` field is blank
+
+### Not supported (returns an error)
+- **Volume sweeps / ramps** — `>`, `<`, `+` (e.g. the FS "BONG")
+- **Prefix repeat counts** — `l=` (per-tone) and `L=` (whole-script)
+- **Channel / sample-rate overrides** — `c=`, `r=`
+- **File-based form** — `tone_stream://path=/path/to.tgml`
+- **Frequency-notation operators** — modulation `×`, "either/or" `//`, sequence `/` (these are E.180 *notation*, not TGML input; the parser only takes plain numbers)
+
+Anything unrecognized fails with `unsupported tone_stream token "..."` rather than silently degrading — so a typo or an unsupported form surfaces instead of playing the wrong thing.
+
+
+### International Tones
+
+Jambonz includes aliases for the ring tone pattern in most countries, you can sepcify this using the tone_stream url format:
+
+```
+tone_stream://<country>.<tone>
+```
+
+| Param | Meaning |
+|-------|---------|
+| `country` | The 2 letter country code eg `us` | 
+| `tone` | Type of tone, currently only `ring` is supported|
+
+
+Consult this tabled for the full list of supported countries, their urls and tone patterns
+
+| Country | Shorthand | `tone_stream://` URL | ITU E.180 (freq / cadence) | Notes |
+| --- | --- | --- | --- | --- |
+| Albania (Republic of) | `tone_stream://al.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Algeria (People's Democratic Republic of) | `tone_stream://dz.ring` | `tone_stream://%(1500,3500,425)` | 425 / 1.5 on 3.5 off |  |
+| Andorra (Principality of) | `tone_stream://ad.ring` | `tone_stream://%(1500,3000,425)` | 425 / 1.5 on 3.0 off |  |
+| Angola (Republic of) | `tone_stream://ao.ring` | `tone_stream://%(1000,5000,425)` | 25 / 1.0 on 5.0 off | ITU 25 Hz (ring current) → 425 Hz |
+| Anguilla | `tone_stream://ai.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Antigua and Barbuda | `tone_stream://ag.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Argentine Republic | `tone_stream://ar.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Aruba | `tone_stream://aw.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Ascension | `tone_stream://ac.ring` | `tone_stream://%(384,192,400,450);%(384,2016,400,450)` | 400+450 / 0.384 on 0.192 off 0.384 on 2.016 off |  |
+| Australia | `tone_stream://au.ring` | `tone_stream://%(400,200,400,425,450);%(400,2000,400,425,450)` | 400x425//400+425+450//400+450 / 0.4 on 0.2 off 0.4 on 2.0 off | `//` either/or → 400+425+450 |
+| Austria | `tone_stream://at.ring` | `tone_stream://%(1000,5000,420)` | 420//450 / 1.0 on 5.0 off | `//` either/or → 420 |
+| Bahamas (Commonwealth of the) | `tone_stream://bs.ring` | `tone_stream://%(2000,4000,480)` | 480//620 / 2.0 on 4.0 off | `//` either/or → 480 |
+| Bahrain (Kingdom of) | `tone_stream://bh.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Bangladesh (People's Republic of) | `tone_stream://bd.ring` | `tone_stream://%(1000,4000,450)` | 450 / 1.0 on 4.0 off |  |
+| Barbados | `tone_stream://bb.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Belarus (Republic of) | `tone_stream://by.ring` | `tone_stream://%(800,3200,425)` | 425 / 0.8 on 3.2 off |  |
+| Belgium | `tone_stream://be.ring` | `tone_stream://%(1000,3000,425)` | 425 / 1.0 on 3.0 off |  |
+| Benin (Republic of) | `tone_stream://bj.ring` | `tone_stream://%(1700,3300,440)` | 440//425 / 1.7 on 3.3 off | `//` either/or → 440 |
+| Bermuda | `tone_stream://bm.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Bhutan (Kingdom of) | `tone_stream://bt.ring` | `tone_stream://%(400,200,400);%(400,2600,400)` | 400+25 / 0.4 on 0.2 off 0.4 on 2.6 off | dropped ring-current freq |
+| Bosnia and Herzegovina | `tone_stream://ba.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Botswana (Republic of) | `tone_stream://bw.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Brazil (Federative Republic of) | `tone_stream://br.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| British Virgin Islands | `tone_stream://vg.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Brunei Darussalam | `tone_stream://bn.ring` | `tone_stream://%(400,200,400,450);%(400,200,400,450)` | 400+450 / 0.4 on 0.2 off 0.4 on 0.2 off |  |
+| Bulgaria (Republic of) | `tone_stream://bg.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Burkina Faso | `tone_stream://bf.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Burundi (Republic of) | `tone_stream://bi.ring` | `tone_stream://%(1700,3300,425)` | 425 / 1.7 on 3.3 off |  |
+| Cambodia (Kingdom of) | `tone_stream://kh.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Cameroon (Republic of) | `tone_stream://cm.ring` | `tone_stream://%(1700,3300,440)` | 440 / 1.7 on 3.3 off |  |
+| Canada | `tone_stream://ca.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Cayman Islands | `tone_stream://ky.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Central African Republic | `tone_stream://cf.ring` | `tone_stream://%(1700,3300,425)` | 425 / 1.7 on 3.3 off |  |
+| Chad (Republic of) | `tone_stream://td.ring` | `tone_stream://%(1700,3300,440)` | 440 / 1.7 on 3.3 off |  |
+| Channel Islands: Guernsey | `tone_stream://gg.ring` | `tone_stream://%(400,200,400,450)` | 400+450 / 0.4 on 0.2 off |  |
+| Channel Islands: Jersey | `tone_stream://je.ring` | `tone_stream://%(400,200,400,450);%(400,2000,400,450)` | 400+450 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Chile | `tone_stream://cl.ring` | `tone_stream://%(1000,3000,400)` | 400 / 1.0 on 3.0 off |  |
+| China (People's Republic of) | `tone_stream://cn.ring` | `tone_stream://%(1000,4000,450)` | 450 / 1.0 on 4.0 off |  |
+| Colombia (Republic of) | `tone_stream://co.ring` | `tone_stream://%(1000,4500,425)` | 425 / 1.0 on 4.5 off |  |
+| Comoros (Union of the) | `tone_stream://km.ring` | `tone_stream://%(1710,50,440)` | 440 / 1.71 on 0.05 off |  |
+| Cook Islands | `tone_stream://ck.ring` | `tone_stream://%(400,200,400,450)` | 400+450 / 0.4 on 0.2 off |  |
+| Costa Rica | `tone_stream://cr.ring` | `tone_stream://%(1200,4900,450)` | 450 / 1.2 on 4.9 off |  |
+| Croatia (Republic of) | `tone_stream://hr.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Cuba | `tone_stream://cu.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Cyprus (Republic of) | `tone_stream://cy.ring` | `tone_stream://%(1500,3000,425)` | 425 / 1.5 on 3.0 off |  |
+| Czech Republic | `tone_stream://cz.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Côte d'Ivoire (Republic of) | `tone_stream://ci.ring` | `tone_stream://%(1700,3300,425)` | 425 / 1.7 on 3.3 off |  |
+| Democratic Republic of the Congo | `tone_stream://cd.ring` | `tone_stream://%(2000,4000,450)` | 450 / 2.0 on 4.0 off |  |
+| Denmark | `tone_stream://dk.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Diego Garcia | `tone_stream://io.ring` | `tone_stream://%(1000,3000,440)` | 440/480 / 1.0 on 3.0 off | `/` sequence → first freq |
+| Djibouti (Republic of) | `tone_stream://dj.ring` | `tone_stream://%(1500,3500,425)` | 425 / 1.5 on 3.5 off |  |
+| Dominica (Commonwealth of) | `tone_stream://dm.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Dominican Republic | `tone_stream://do.ring` | `tone_stream://%(400,200,400);%(400,2200,400)` | 400//450 / 0.4 on 0.2 off 0.4 on 2.2 off | `//` either/or → 400 |
+| Ecuador | `tone_stream://ec.ring` | `tone_stream://%(1200,4650,425)` | 425 / 1.2 on 4.65 off |  |
+| Egypt (Arab Republic of) | `tone_stream://eg.ring` | `tone_stream://%(2000,1000,425)` | 425x50 / 2.0 on 1.0 off |  |
+| El Salvador (Republic of) | `tone_stream://sv.ring` | `tone_stream://%(1200,4600,425)` | 425 / 1.2 on 4.6 off |  |
+| Estonia (Republic of) | `tone_stream://ee.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Ethiopia (Federal Democratic Republic of) | `tone_stream://et.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Falkland Islands (Malvinas) | `tone_stream://fk.ring` | `tone_stream://%(400,200,400,450)` | 400+450 / 0.4 on 0.2 off |  |
+| Faroe Islands | `tone_stream://fo.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Fiji (Republic of) | `tone_stream://fj.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425x25 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Finland | `tone_stream://fi.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| France | `tone_stream://fr.ring` | `tone_stream://%(1500,3500,440)` | 440 / 1.5 on 3.5 off |  |
+| French Departments and Territories in the Indian Ocean | `tone_stream://re.ring` | `tone_stream://%(1500,3500,440)` | 440 / 1.5 on 3.5 off |  |
+| French Guiana (French Department of) | `tone_stream://gf.ring` | `tone_stream://%(1500,3500,440)` | 440 / 1.5 on 3.5 off |  |
+| French Polynesia (Territoire français d'outre-mer) | `tone_stream://pf.ring` | `tone_stream://%(1700,3300,440)` | 440 / 1.7 on 3.3 off |  |
+| Gabonese Republic | `tone_stream://ga.ring` | `tone_stream://%(1700,3300,440)` | 440 / 1.7 on 3.3 off |  |
+| Gambia (Republic of the) | `tone_stream://gm.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Georgia | `tone_stream://ge.ring` | `tone_stream://%(1000,4000,425)` | 25 / 1.0 on 4.0 off | ITU 25 Hz (ring current) → 425 Hz |
+| Germany (Federal Republic of) | `tone_stream://de.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Ghana | `tone_stream://gh.ring` | `tone_stream://%(1000,4000,400)` | 400 / 1.0 on 4.0 off |  |
+| Gibraltar | `tone_stream://gi.ring` | `tone_stream://%(400,200,400,450);%(400,2000,400,450)` | 400+450 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Greece | `tone_stream://gr.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Greenland (Denmark) | `tone_stream://gl.ring` | `tone_stream://%(1000,4000,445)` | 445//425 / 1.0 on 4.0 off | `//` either/or → 445 |
+| Grenada | `tone_stream://gd.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Guadeloupe (French Department of) | `tone_stream://gp.ring` | `tone_stream://%(1500,3500,440)` | 440 / 1.5 on 3.5 off |  |
+| Guinea (Republic of) | `tone_stream://gn.ring` | `tone_stream://%(400,200,450)` | 450 / 0.4 on 0.2 off |  |
+| Guyana | `tone_stream://gy.ring` | `tone_stream://%(1750,3250,425)` | 425 / 1.75 on 3.25 off |  |
+| Honduras (Republic of) | `tone_stream://hn.ring` | `tone_stream://%(1000,4000,440)` | 440 / 1.0 on 4.0 off |  |
+| Hong Kong, China | `tone_stream://hk.ring` | `tone_stream://%(400,200,440,480);%(400,3000,440,480)` | 440+480 / 0.4 on 0.2 off 0.4 on 3.0 off |  |
+| Hungary (Republic of) | `tone_stream://hu.ring` | `tone_stream://%(1250,3750,425)` | 425 / 1.25 on 3.75 off |  |
+| Iceland | `tone_stream://is.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| India (Republic of) | `tone_stream://in.ring` | `tone_stream://%(400,200,400);%(400,2000,400)` | 400x25 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Indonesia (Republic of) | `tone_stream://id.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Iran (Islamic Republic of) | `tone_stream://ir.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Iraq (Republic of) | `tone_stream://iq.ring` | `tone_stream://%(1000,0,400)` | 400 / continuous | continuous ring (held tone) |
+| Ireland | `tone_stream://ie.ring` | `tone_stream://%(400,200,400,450);%(400,2000,400,450)` | 400+450//425 / 0.4 on 0.2 off 0.4 on 2.0 off | `//` either/or → 400+450 |
+| Israel (State of) | `tone_stream://il.ring` | `tone_stream://%(1000,3000,400)` | 400 / 1.0 on 3.0 off |  |
+| Italy | `tone_stream://it.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Jamaica | `tone_stream://jm.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Japan | `tone_stream://jp.ring` | `tone_stream://%(1000,2000,400)` | 400x(15\~20) / 1.0 on 2.0 off |  |
+| Jordan (Hashemite Kingdom of) | `tone_stream://jo.ring` | `tone_stream://%(1000,4000,420)` | 420x40 / 1.0 on 4.0 off |  |
+| Kenya (Republic of) | `tone_stream://ke.ring` | `tone_stream://%(670,3000,425);%(1500,5000,425)` | 425 / 0.67 on 3.0 off 1.5 on 5.0 off |  |
+| Kiribati (Republic of) | `tone_stream://ki.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Korea (Republic of) | `tone_stream://kr.ring` | `tone_stream://%(1000,2000,440,480)` | 440+480 / 1.0 on 2.0 off |  |
+| Kuwait (State of) | `tone_stream://kw.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Kyrgyz Republic | `tone_stream://kg.ring` | `tone_stream://%(800,3200,425)` | 425 / 0.8 on 3.2 off |  |
+| Lao People's Democratic Republic | `tone_stream://la.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Latvia (Republic of) | `tone_stream://lv.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Lebanon | `tone_stream://lb.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Lesotho (Kingdom of) | `tone_stream://ls.ring` | `tone_stream://%(1000,4000,400)` | 400/425 / 1.0 on 4.0 off | `/` sequence → first freq |
+| Liberia (Republic of) | `tone_stream://lr.ring` | `tone_stream://%(1000,4000,425)` | 425//450 / 1.0 on 4.0 off | `//` either/or → 425 |
+| Liechtenstein (Principality of) | `tone_stream://li.ring` | `tone_stream://%(1000,0,425)` | 425 / continuous | continuous ring (held tone) |
+| Lithuania (Republic of) | `tone_stream://lt.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Luxembourg | `tone_stream://lu.ring` | `tone_stream://%(1000,4000,425)` | 425//2125 / 1.0 on 4.0 off | `//` either/or → 425 |
+| Macao, China | `tone_stream://mo.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Madagascar (Republic of) | `tone_stream://mg.ring` | `tone_stream://%(1700,3300,440)` | 440//425 / 1.7 on 3.3 off | `//` either/or → 440 |
+| Malawi | `tone_stream://mw.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Malaysia | `tone_stream://my.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Maldives (Republic of) | `tone_stream://mv.ring` | `tone_stream://%(400,200,400);%(400,2000,400)` | 400 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Mali (Republic of) | `tone_stream://ml.ring` | `tone_stream://%(1500,3000,425)` | 425 / 1.5 on 3.0 off |  |
+| Malta | `tone_stream://mt.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Martinique (French Department of) | `tone_stream://mq.ring` | `tone_stream://%(1500,3500,440)` | 440 / 1.5 on 3.5 off |  |
+| Mauritania (Islamic Republic of) | `tone_stream://mr.ring` | `tone_stream://%(1500,3500,425)` | 425 / 1.5 on 3.5 off |  |
+| Mauritius (Republic of) | `tone_stream://mu.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Mayotte | `tone_stream://yt.ring` | `tone_stream://%(1500,3500,440)` | 440 / 1.5 on 3.5 off |  |
+| Mexico | `tone_stream://mx.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Moldova (Republic of) | `tone_stream://md.ring` | `tone_stream://%(800,3200,425)` | 425 / 0.8 on 3.2 off |  |
+| Monaco (Principality of) | `tone_stream://mc.ring` | `tone_stream://%(1700,3300,440)` | 440 / 1.7 on 3.3 off |  |
+| Montserrat | `tone_stream://ms.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Morocco (Kingdom of) | `tone_stream://ma.ring` | `tone_stream://%(1700,3300,425)` | 425 / 1.7 on 3.3 off |  |
+| Mozambique (Republic of) | `tone_stream://mz.ring` | `tone_stream://%(1000,5000,400)` | 400 / 1.0 on 5.0 off |  |
+| Myanmar (Union of) | `tone_stream://mm.ring` | `tone_stream://%(2000,4000,400)` | 400 / 2.0 on 4.0 off |  |
+| Namibia (Republic of) | `tone_stream://na.ring` | `tone_stream://%(400,200,400);%(400,2000,400)` | 400x33 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Nauru (Republic of) | `tone_stream://nr.ring` | `tone_stream://%(1000,4000,400)` | 400 / 1.0 on 4.0 off |  |
+| Nepal (Federal Democratic Republic of) | `tone_stream://np.ring` | `tone_stream://%(1100,3100,425)` | 425 / 1.1 on 3.1 off |  |
+| Netherlands (Kingdom of the) | `tone_stream://nl.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| New Caledonia (Territoire français d'outre-mer) | `tone_stream://nc.ring` | `tone_stream://%(1700,3300,440)` | 440 / 1.7 on 3.3 off |  |
+| New Zealand | `tone_stream://nz.ring` | `tone_stream://%(400,200,400,450);%(400,2000,400,450)` | 400+450 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Niger (Republic of the) | `tone_stream://ne.ring` | `tone_stream://%(1700,3300,440)` | 440 / 1.7 on 3.3 off |  |
+| Nigeria (Federal Republic of) | `tone_stream://ng.ring` | `tone_stream://%(2000,4000,400)` | 400//450 / 2.0 on 4.0 off | `//` either/or → 400 |
+| Norway | `tone_stream://no.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Oman (Sultanate of) | `tone_stream://om.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Pakistan (Islamic Republic of) | `tone_stream://pk.ring` | `tone_stream://%(1000,2000,400)` | 400 / 1.0 on 2.0 off |  |
+| Panama (Republic of) | `tone_stream://pa.ring` | `tone_stream://%(1200,4650,425)` | 425 / 1.2 on 4.65 off |  |
+| Papua New Guinea | `tone_stream://pg.ring` | `tone_stream://%(400,200,400,450);%(400,2000,400,450)` | 425//400x25//400x16 2/3//400+450//410x20 / 0.4 on 0.2 off 0.4 on 2.0 off | `//` either/or → 400+450 |
+| Paraguay (Republic of) | `tone_stream://py.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Peru | `tone_stream://pe.ring` | `tone_stream://%(150,300,425)` | 425 / 0.15 on 0.30 off |  |
+| Philippines (Republic of the) | `tone_stream://ph.ring` | `tone_stream://%(1000,4000,425,480)` | 425+480 / 1.0 on 4.0 off |  |
+| Poland (Republic of) | `tone_stream://pl.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Portugal | `tone_stream://pt.ring` | `tone_stream://%(1000,5000,425)` | 425 / 1.0 on 5.0 off |  |
+| Puerto Rico | `tone_stream://pr.ring` | `tone_stream://%(2000,4000,440,480)` | no ringing tone listed | Not listed in E.180 (payphone tone only); US-style 440+480 commonly applies |
+| Qatar (State of) | `tone_stream://qa.ring` | `tone_stream://%(380,250,400,450);%(380,2000,400,450)` | 400+450 / 0.38 on 0.25 off 0.38 on 2.0 off |  |
+| Romania | `tone_stream://ro.ring` | `tone_stream://%(1850,4150,450)` | 450x25 / 1.85 on 4.15 off |  |
+| Russian Federation | `tone_stream://ru.ring` | `tone_stream://%(800,3200,425)` | 425 / 0.8 on 3.2 off |  |
+| Rwanda (Republic of) | `tone_stream://rw.ring` | `tone_stream://%(1700,3300,440)` | 440 / 1.7 on 3.3 off |  |
+| Saint Helena | `tone_stream://sh.ring` | `tone_stream://%(400,200,400,450)` | 400+450 / 0.4 on 0.2 off |  |
+| Saint Kitts and Nevis | `tone_stream://kn.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Saint Lucia | `tone_stream://lc.ring` | `tone_stream://%(375,250,425);%(375,2000,425)` | 425 / 0.375 on 0.25 off 0.375 on 2.0 off |  |
+| Saint Vincent and the Grenadines | `tone_stream://vc.ring` | `tone_stream://%(400,200,400,450);%(400,2000,400,450)` | 400+450 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Samoa (Independent State of) | `tone_stream://ws.ring` | `tone_stream://%(400,200,425)` | 425x25 / 0.4 on 0.2 off |  |
+| San Marino (Republic of) | `tone_stream://sm.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Sao Tome and Principe (Democratic Republic of) | `tone_stream://st.ring` | `tone_stream://%(1000,5000,400)` | 400 / 1.0 on 5.0 off |  |
+| Saudi Arabia (Kingdom of) | `tone_stream://sa.ring` | `tone_stream://%(1200,4600,425)` | 425 / 1.2 on 4.6 off |  |
+| Senegal (Republic of) | `tone_stream://sn.ring` | `tone_stream://%(1700,3300,400)` | 400 / 1.7 on 3.3 off |  |
+| Serbia (Republic of) | `tone_stream://rs.ring` | `tone_stream://%(1000,9000,450)` | 450x25 / 1.0 on 9.0 off |  |
+| Seychelles (Republic of) | `tone_stream://sc.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Sierra Leone | `tone_stream://sl.ring` | `tone_stream://%(1000,4000,425)` | 425//450 / 1.0 on 4.0 off | `//` either/or → 425 |
+| Singapore (Republic of) | `tone_stream://sg.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425x24 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Slovak Republic | `tone_stream://sk.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Slovenia (Republic of) | `tone_stream://si.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Solomon Islands | `tone_stream://sb.ring` | `tone_stream://%(400,200,400,450)` | 400+450 / 0.4 on 0.2 off |  |
+| South Africa (Republic of) | `tone_stream://za.ring` | `tone_stream://%(400,200,400);%(400,2000,400)` | 400x33 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Spain | `tone_stream://es.ring` | `tone_stream://%(1500,3000,425)` | 425 / 1.5 on 3.0 off |  |
+| Sri Lanka (Democratic Socialist Republic of) | `tone_stream://lk.ring` | `tone_stream://%(400,200,425);%(400,2000,425)` | 425 / 0.4 on 0.2 off 0.4 on 2.0 off |  |
+| Sudan (Republic of the) | `tone_stream://sd.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Suriname (Republic of) | `tone_stream://sr.ring` | `tone_stream://%(1000,1000,425)` | 425 / 1.0 on 1.0 off |  |
+| Swaziland (Kingdom of) | `tone_stream://sz.ring` | `tone_stream://%(400,200,400);%(400,4000,400)` | 400 / 0.4 on 0.2 off 0.4 on 4.0 off |  |
+| Sweden | `tone_stream://se.ring` | `tone_stream://%(1000,5000,425)` | 425 / 1.0 on 5.0 off |  |
+| Switzerland (Confederation of) | `tone_stream://ch.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Syrian Arab Republic | `tone_stream://sy.ring` | `tone_stream://%(1000,500,400)` | 400//450 / 1.0 on 0.5 off | `//` either/or → 400 |
+| Tajikistan (Republic of) | `tone_stream://tj.ring` | `tone_stream://%(800,3200,425)` | 25 / 0.8 on 3.2 off | ITU 25 Hz (ring current) → 425 Hz |
+| Tanzania (United Republic of) | `tone_stream://tz.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Thailand | `tone_stream://th.ring` | `tone_stream://%(1000,4000,400)` | 400 / 1.0 on 4.0 off |  |
+| The Former Yugoslav Republic of Macedonia | `tone_stream://mk.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Tokelau | `tone_stream://tk.ring` | `tone_stream://%(400,200,400,450)` | 400+450 / 0.4 on 0.2 off |  |
+| Trinidad and Tobago | `tone_stream://tt.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Tunisia | `tone_stream://tn.ring` | `tone_stream://%(1200,4650,425)` | 425 / 1.20 on 4.65 off |  |
+| Turkey | `tone_stream://tr.ring` | `tone_stream://%(2000,4000,450)` | 450 / 2.0 on 4.0 off |  |
+| Turkmenistan | `tone_stream://tm.ring` | `tone_stream://%(400,4000,425)` | 25 / 0.4 on 4.0 off | ITU 25 Hz (ring current) → 425 Hz |
+| Turks and Caicos Islands | `tone_stream://tc.ring` | `tone_stream://%(2000,4000,440,480)` | 440+480 / 2.0 on 4.0 off |  |
+| Tuvalu | `tone_stream://tv.ring` | `tone_stream://%(1000,500,425);%(1000,10000,425)` | 425 / 1.0 on 0.5 off 1.0 on 10.0 off |  |
+| Uganda (Republic of) | `tone_stream://ug.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| United Arab Emirates | `tone_stream://ae.ring` | `tone_stream://%(400,200,400,450);%(400,2000,400,450)` | 400+450//425 / 0.4 on 0.2 off 0.4 on 2.0 off | `//` either/or → 400+450 |
+| United Kingdom of Great Britain and Northern Ireland | `tone_stream://gb.ring` | `tone_stream://%(400,200,400,450);%(400,2000,400,450)` | 400+450//400x25//400x16 2/3 / 0.4 on 0.2 off 0.4 on 2.0 off | `//` either/or → 400+450 |
+| United States of America | `tone_stream://us.ring` | `tone_stream://%(2000,4000,440,480)` | 420x40//500x40//440+480 / 2.0 on 4.0 off | `//` either/or → 440+480 |
+| Uruguay (Eastern Republic of) | `tone_stream://uy.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Vanuatu (Republic of) | `tone_stream://vu.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Venezuela (Bolivarian Republic of) | `tone_stream://ve.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Vietnam | `tone_stream://vn.ring` | `tone_stream://%(1000,4000,425)` | not in E.180 | Not in ITU-T E.180; common VN ringback 425 Hz, 1 s on / 4 s off |
+| Wallis and Futuna (Territoire français d'outre-mer) | `tone_stream://wf.ring` | `tone_stream://%(1500,3500,440)` | 440 / 1.5 on 3.5 off |  |
+| Yemen (Republic of) | `tone_stream://ye.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Zambia (Republic of) | `tone_stream://zm.ring` | `tone_stream://%(1000,4000,425)` | 425 / 1.0 on 4.0 off |  |
+| Zimbabwe (Republic of) | `tone_stream://zw.ring` | `tone_stream://%(1000,4000,450)` | 450 / 1.0 on 4.0 off |  |
+
+
+### Notation & approximations
+
+E.180 uses a compact frequency notation; these URLs translate it as follows:
+
+- `f1+f2` — simultaneous dual tone → **both frequencies mixed** in one `%( )`.
+- `f1×f2` — f1 **modulated** by f2 → modulation can't be expressed in `tone_stream`, so the **carrier f1** is used (e.g. Singapore `425×24` → 425 Hz).
+- `f1/f2` — f1 **followed by** f2 (sequence) → the **first** frequency is used (flagged in Notes).
+- `f1//f2` — *some exchanges use f1, others f2* → the common **dual-tone** alternative is chosen where present (e.g. US `420×40//500×40//440+480` → 440+480), otherwise the first (flagged).
+- Some entries list **25 Hz** (the ringing *current*, inaudible as a tone) → substituted with **425 Hz** audible ringback (flagged).
+- Cadences map 1:1: `0.4 on 0.2 off 0.4 on 2.0 off` → `%(400,200,…);%(400,2000,…)`.
+
+### Caveats
+
+- Generated from E.180 (2010); operators may have changed tones since. Verify anything critical.
+- Where a country lists **Ringing tone I/II/III** variants, the **first (primary)** variant is used; the source column shows the ITU value.
+- **Puerto Rico** has no ringing tone in E.180 (only a payphone tone); US-style 440+480 commonly applies.
+- "Warble" tones (three simultaneous frequencies, e.g. Australia 400+425+450) are rendered as a plain mix — close, but not a true frequency sweep.
