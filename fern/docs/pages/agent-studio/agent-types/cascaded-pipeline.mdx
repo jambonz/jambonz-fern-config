@@ -1,0 +1,142 @@
+---
+title: Cascaded voice pipeline
+subtitle: jambonz recognizes the caller's speech, a language model you choose writes the reply, and a voice you choose speaks it.
+---
+
+A **Cascaded voice pipeline** agent runs in three stages, each with its own vendor: speech recognition, a language
+model and a voice. You can mix vendors, tune each stage, and see the latency of each one on every turn. jambonz runs
+the pipeline with the [agent verb](/verbs/verbs/agent).
+
+You set up the three stages in the agent's **Pipeline** section, and how the agent takes turns in its
+**Conversation** section.
+
+## What it needs
+
+Three credentials in your jambonz account:
+
+- a **speech-to-text** credential (jambonz portal: **Speech services**)
+- an **LLM** credential (jambonz portal: **LLM Services**, **Language models**)
+- a **text-to-speech** credential from a vendor that streams audio (jambonz portal: **Speech services**). The agent
+  verb needs streaming text-to-speech; a voice that does not stream blocks publishing.
+
+A new pipeline agent starts with the first credential of each kind in your account. Change any of them in
+**Pipeline**.
+
+Realtime voice API, Dialogflow CES, ElevenLabs Agents and harness credentials are not offered as the pipeline's
+language model.
+
+## Pipeline
+
+The section shows the stages in the order audio flows: **Hear**, **Think**, **Speak**. Each stage card has a
+credential, its main settings, a status for the credential (passed, failed, or not tested) with a **Test** button, and
+an **Options** fold for the rest. When you have more than one credential for the same vendor, the label picks which
+one the stage uses.
+
+### Hear
+
+| Field | What it does |
+|---|---|
+| **Speech to text** | The speech-to-text credential. |
+| **Model** | The recognition model, from the models jambonz lists for the vendor. When it lists none, the credential's model is used. |
+| **Language** | The language the agent listens for (`en-US` to start). |
+
+Under **Options**:
+
+- **_Vendor_ options** (for example **Deepgram options**): any key from the vendor's section of the
+  [recognizer](/verbs/verbs/recognizer) docs, as JSON. Applied as-is at call time.
+- **Boost these words**: names and product words recognition should listen for, such as `Acme, refill, co-pay`.
+- **Fallback vendor if this one fails**: another speech-to-text credential to use if this one fails.
+
+### Think
+
+| Field | What it does |
+|---|---|
+| **Model provider** | The LLM credential. |
+| **Model** | The model. Choose a suggestion or type any model name the vendor accepts. For Azure OpenAI, type your deployment name. |
+
+Under **Options**:
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Start thinking before the caller has finished** | off | Prompts the model speculatively while turn detection is still deciding whether the caller has finished. |
+| **Longest reply** | 300 tokens | The most the model may say in one reply (1 to 4096 tokens). Keeps the agent from monologuing. |
+| **Temperature** | 0.4 | 0 to 2; 0 to 1 for Claude models. Reasoning models ignore it. |
+| **Reasoning effort** | the model's default | Shown for reasoning models: **Minimal**, **Low**, **Medium** or **High**. |
+
+### Speak
+
+| Field | What it does |
+|---|---|
+| **Text to speech** | The text-to-speech credential. |
+| **Voice** | The voice, from the voices the vendor lists for the language. |
+
+Under **Options**:
+
+- **_Vendor_ options**: keys from the [synthesizer](/verbs/verbs/synthesizer) docs for this vendor, as JSON.
+  Applied as-is at call time.
+- **Language**: the language the agent speaks. **Same as Hear** keeps it in step with the Hear language; choose
+  another when the agent should speak a different language than it hears.
+- **Fallback voice** and **Fallback voice ID**: another text-to-speech credential, and the voice to use with it, if
+  this one fails.
+- **Pronunciations**: one per line, written like `Acme → ak-mee`. Up to 50.
+- **Caller's language**: see below.
+
+### Speaking the caller's language
+
+**Caller's language**, under the Speak card's **Options**, lets the agent switch voices when the caller speaks
+another language:
+
+- **Off: always speak the language above** (the default)
+- **Switch once, to the first language the caller speaks**
+- **Switch whenever the caller changes language**
+
+With either switch on, select **Add a language** for each language the agent should answer in, and choose a voice for
+it (up to 10). The agent starts in the Speak language and switches when Hear reports a different one.
+
+This needs a speech-to-text setup that reports the language it hears: Deepgram with language Multilingual,
+AssemblyAI with language detection, Google or Azure with alternative languages, Soniox with language identification,
+or Gladia. The **Front desk (multilingual)** template starts with this set up for English, Spanish, French, German
+and Portuguese, where your speech vendors have the languages and voices.
+
+### Noise isolation
+
+**More voice settings**, at the bottom of the section, has **Noise isolation**: **Off**, **Krisp** or **RNNoise**. It
+filters background noise from the call audio before the agent hears it. When it is on, set its **Level** (0 to 100)
+and what it **Applies to**: **Caller audio** or **Agent audio**. It is on (Krisp) by default for outbound agents and
+off for inbound agents.
+
+## Conversation: turn-taking and interruptions
+
+The **Conversation** section sets how the agent takes turns, handles interruptions and fills silence. A sentence at
+the top summarizes the current settings; each value in it links to its control.
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Speech needed to interrupt the agent** | 0.5 s | How long the caller must speak before the agent stops talking (0.2 to 2 s). Shorter feels responsive; longer ignores coughs and noise. |
+| **End-of-turn detection** | the speech-to-text vendor | Who decides the caller has finished: the speech-to-text vendor, or the **Krisp turn model**. |
+| **Check in after silence** | 10 s | The agent says something if the caller goes quiet (0 to 30 s; off at 0). |
+
+**End-of-turn detection**: Deepgram Flux, AssemblyAI and Speechmatics detect the end of a turn natively. With other
+speech-to-text vendors, Studio warns that replies will be slower; choose the **Krisp turn model**, which listens to
+how the caller speaks rather than only the pause. With Deepgram Flux, you can also set its **End-of-turn threshold**,
+**Eager end-of-turn threshold** and **Silence that ends the turn anyway**.
+
+Under **Options**:
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Unanswered prompts before hang-up** | 2 | How many check-ins go unanswered before the agent ends the call (0 to 10; 0 means never hang up). |
+| **Let callers interrupt the agent** | on | The agent stops talking when the caller speaks. |
+| **Stay quiet after an interruption** | off | When off, the agent may resume if the caller only made a noise. |
+| **How interruptions are detected** | **Voice activity** | **Voice activity**, or **Interrupt prediction** with a **Prediction sensitivity** (0 to 1, default 0.5). |
+| **Respond** | 0.5 | With the Krisp turn model: from **Sooner** to **Later**. |
+| **While tools run** | **Short phrases** | What the caller hears while a tool runs: **Off**, **Short phrases** (with a **Phrase style**, default "friendly and brief") or **Audio loop** (a public https **Audio URL**). |
+| **Start filler after** | 2 s | How long a tool runs before the filler starts (0 to 5 s). |
+
+**Restore all defaults**, at the bottom of the section, puts these back.
+
+## Next
+
+- [Realtime voice API](/agent-studio/agent-types/realtime-voice-api): one vendor runs the whole voice loop
+- [Custom harness](/agent-studio/custom-harness/overview): keep this speech recognition and voice, with your own
+  code deciding what to say

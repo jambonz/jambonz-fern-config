@@ -60,6 +60,28 @@ See OpenAI's [model catalog](https://developers.openai.com/api/docs/models/all) 
 | `gpt-4o-mini` | Previous-generation default; still widely deployed and supported |
 | `gpt-4o` | Previous-generation flagship |
 
+## Vendor-specific parameters
+
+Set these in [`llmOptions.vendorParams`](/verbs/verbs/agent); they are added to the OpenAI request as-is.
+
+| Parameter | Models | Effect |
+|---|---|---|
+| `reasoning_effort: "none"` | GPT-5 family | Turns off reasoning. **Recommended for voice:** in our tests `gpt-5.4-mini` reached its first token in ~1.1 s instead of ~3.2 s with its default reasoning. `"low"`, `"medium"`, `"high"` trade latency for reasoning. |
+| `verbosity: "low"` | GPT-5 family only | Shorter answers (about 20% fewer tokens in our tests). Other models reject it with a `400`. |
+| `parallel_tool_calls: false` | Models with tool calling | At most one tool call per turn. By default the model may call several tools at once (e.g. weather for two cities). |
+| `service_tier: "priority"` | Models eligible for priority processing | Requests OpenAI's priority processing for more consistent latency, billed at a higher rate. |
+
+```js
+llm: {
+  vendor: 'openai',
+  model: 'gpt-5.4-mini',
+  llmOptions: {
+    systemPrompt: 'You are a helpful voice assistant.',
+    vendorParams: { reasoning_effort: 'none', verbosity: 'low' },
+  },
+}
+```
+
 ## Quirks & errors
 
 <Note>

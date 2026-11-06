@@ -1,0 +1,84 @@
+---
+title: Groq
+subtitle: Orpheus voices for English and Saudi Arabic, with speed and sample rate control.
+---
+
+[Groq](https://console.groq.com/docs/text-to-speech) serves Canopy Labs' Orpheus text-to-speech models through its OpenAI-compatible speech endpoint (`POST /openai/v1/audio/speech`). Groq tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "groq",
+    "language": "en-US",
+    "voice": "autumn",
+    "options": {
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Add a **Groq** speech credential in the portal or API, using the vendor id `groq`. Groq is used for text-to-speech only.
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| API key (`api_key`) | Yes | Your Groq key (`gsk_...`), sent as `Authorization: Bearer <api key>`. |
+| API base URL (`api_uri`) | No | Host override, such as a proxy. `http://` is used when given, otherwise `https://`. Leave it out to use `api.groq.com`. |
+| Model (`model_id`) | No | Default model for this credential. Leave it out to pick the model by language. |
+
+When you save the credential, jambonz checks it by synthesizing a short phrase in `en-US` with the `autumn` voice. A credential whose model is `canopylabs/orpheus-arabic-saudi` is checked in `ar-SA` with the `fahad` voice instead.
+
+<Note>
+A Groq speech credential is separate from a Groq LLM service used by the [agent verb](/guides/features/bring-your-own-llm/groq). Add each one where it is used, even when they share the same API key.
+</Note>
+
+<Warning>
+Groq requires you to accept each Orpheus model's terms in the Groq console before first use. Until then, requests for that model fail.
+</Warning>
+
+## Voices and languages
+
+| Language | Model | Voices |
+| --- | --- | --- |
+| English (US) `en-US` | `canopylabs/orpheus-v1-english` | `autumn` (default), `diana`, `hannah`, `austin`, `daniel`, `troy` |
+| Arabic (Saudi) `ar-SA` | `canopylabs/orpheus-arabic-saudi` | `fahad` (default), `sultan`, `abdullah`, `lulwa`, `noura`, `aisha` |
+
+jambonz does not send `synthesizer.language` to Groq; it uses it only to pick the model. Any Arabic language (`ar`, `ar-SA`, ...) uses `canopylabs/orpheus-arabic-saudi`, and every other language uses `canopylabs/orpheus-v1-english`. Set `model_id` to choose the model yourself.
+
+Orpheus accepts bracketed vocal directions in the text, such as `[cheerful]`, and jambonz passes them through unchanged.
+
+jambonz requests WAV audio, removes the header and resamples the audio to the call's rate. Without `sample_rate`, Groq's default of 48 kHz is assumed.
+
+## Options
+
+Every option is optional. An option you don't set is not sent, so Groq's own default applies.
+
+<ParamField path="model_id" type="string" required={false}>
+  `canopylabs/orpheus-v1-english` or `canopylabs/orpheus-arabic-saudi`. Overrides the credential's model and the choice by language.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, from `0.5` to `5`. `1` is normal speed.
+</ParamField>
+
+<ParamField path="sample_rate" type="integer" required={false}>
+  Output sample rate: `8000`, `16000`, `22050`, `24000`, `32000`, `44100` or `48000`.
+</ParamField>
+
+```json
+{
+  "model_id": "canopylabs/orpheus-arabic-saudi",
+  "speed": 0.9,
+  "sample_rate": 24000
+}
+```
+
+## Streaming
+
+Groq has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

@@ -1,6 +1,6 @@
 # jambonz Developer Documentation
 
-This repository contains the configuration and content for the jambonz Developer Documentation site, built using [Fern](https://buildwithfern.com). jambonz is an open-source telephony platform for deploying Voice AI applications at scale.
+This repository contains the configuration and content for the jambonz Developer Documentation site, built using [Fern](https://buildwithfern.com). jambonz is the bring your own everything telephony platform for deploying Voice AI applications at scale.
 
 **Live Documentation:** https://docs.jambonz.org
 

@@ -1,0 +1,105 @@
+---
+title: Sarvam AI
+subtitle: Indic and Indian English voices, pace, pitch, loudness, temperature and pronunciation dictionaries for Sarvam TTS.
+---
+
+[Sarvam AI](https://docs.sarvam.ai) generates speech in Indian English, Hindi and other Indic languages with its Bulbul models. The same Sarvam API key also serves [speech recognition](/verbs/verbs/recognizer). Sarvam tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "नमस्ते, आपकी booking confirm हो गई है।",
+  "synthesizer": {
+    "vendor": "sarvam",
+    "language": "hi-IN",
+    "voice": "kavya_hi_conversational",
+    "options": {
+      "pace": 1.0
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in your Sarvam account. jambonz sends it in the `api-subscription-key` header. Add it as a **Sarvam AI** speech credential in the portal or API; one credential is used for both text-to-speech and speech-to-text.
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `bulbul:v4-flash` | Default. Persona voices such as `simran_en_customer`. |
+| `bulbul:v3` | Speakers such as `shubh` or `kavya`. |
+| `bulbul:v2` | Speakers such as `anushka` or `abhilash`. |
+
+Pick the model on the speech credential, or set `options.model_id` to override it for one verb.
+
+## Voices and languages
+
+A `bulbul:v4-flash` voice is a persona id of the form `<name>_<language>_<style>`, such as `simran_en_customer` or `kavya_hi_conversational`. The portal lists the `bulbul:v4-flash` personas under each language; see Sarvam's [voice list](https://docs.sarvam.ai/api/api-guides-tutorials/text-to-speech/voices) for every model. Sarvam has no API for its preset voices, so the portal list is bundled with jambonz. A voice must belong to the model in use: a `bulbul:v3` speaker does not work with `bulbul:v4-flash`.
+
+Sarvam speaks `bn-IN`, `en-IN`, `gu-IN`, `hi-IN`, `kn-IN`, `ml-IN`, `mr-IN`, `od-IN` (Odia), `pa-IN`, `ta-IN` and `te-IN`. `bulbul:v4-flash` has no personas for `ml-IN` or `od-IN` yet. jambonz maps `synthesizer.language` to one of these codes: an exact match is used as-is, otherwise the base language is used with `-IN` (`hi` becomes `hi-IN`, `en-US` becomes `en-IN`, `or-IN` becomes `od-IN`), and any other language is sent as `en-IN`. Set `options.language` to choose explicitly; it takes precedence over `synthesizer.language`.
+
+## Options
+
+<ParamField path="model_id" type="string" required={false}>
+  The Bulbul model to use, overriding the credential's model.
+</ParamField>
+
+<ParamField path="language" type="string" required={false}>
+  The language code sent to Sarvam, overriding `synthesizer.language`.
+</ParamField>
+
+<ParamField path="pace" type="number" required={false}>
+  Speaking rate relative to the voice's normal speed.
+</ParamField>
+
+<ParamField path="pitch" type="number" required={false}>
+  Voice pitch. Sarvam documents it for `bulbul:v2`.
+</ParamField>
+
+<ParamField path="loudness" type="number" required={false}>
+  Voice loudness. Sarvam documents it for `bulbul:v2`.
+</ParamField>
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature, for `bulbul:v3` and `bulbul:v4-flash`.
+</ParamField>
+
+<ParamField path="enable_preprocessing" type="boolean" required={false}>
+  Turn on Sarvam's text preprocessing (normalization) before synthesis.
+</ParamField>
+
+<ParamField path="dict_id" type="string" required={false}>
+  The id of a pronunciation dictionary in your Sarvam account.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Sarvam's own default applies.
+
+### Streaming
+
+These apply when Sarvam is driven by [TTS streaming](/guides/features/tts-streaming), for example from the `agent` verb.
+
+<ParamField path="min_buffer_size" type="number" required={false}>
+  Characters Sarvam buffers before it starts speaking, `30` – `200`.
+</ParamField>
+
+<ParamField path="max_chunk_length" type="number" required={false}>
+  Maximum length of a synthesis chunk, `50` – `500` characters.
+</ParamField>
+
+### Non-streaming `say`
+
+<ParamField path="enable_cached_responses" type="boolean" required={false}>
+  Let Sarvam answer repeated text from its own cache. Sarvam marks this as beta.
+</ParamField>
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set `api_uri` in the credential's **Extra Options**; it applies to both TTS and STT. A `ws://` or `http://` prefix turns off TLS. Leave it out to use `api.sarvam.ai`.
+
+## Streaming
+
+Sarvam supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. Sarvam has no cancel message, so on barge-in jambonz closes the connection and opens a new one. Sarvam does not return word-level timestamps, so alignment events are not available.

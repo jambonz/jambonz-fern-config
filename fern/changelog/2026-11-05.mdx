@@ -1,0 +1,15 @@
+<Card title="Saidwire" icon="regular crown" iconPosition="left">
+jambonz Commercial (next release)
+</Card>
+
+This entry adds Saidwire as a speech-to-text vendor for English.
+
+#### New Features & Improvements
+
+1. **Saidwire speech-to-text** — `saidwire` is available as a realtime STT vendor, with
+   speech credentials in the portal and API. Saidwire follows Deepgram's streaming
+   protocol and is handled like `deepgram`: interim results, a final transcript per
+   utterance, and jambonz's own turn detection in the [agent](/verbs/verbs/agent) verb. It is
+   English only and mono, and reports a fixed confidence of 0.95. `saidwireOptions` sets
+   `punctuate`, `smartFormatting`, `endpointing`, `utteranceEndMs` and `vadEvents`. See
+   [recognizer](/verbs/verbs/recognizer).

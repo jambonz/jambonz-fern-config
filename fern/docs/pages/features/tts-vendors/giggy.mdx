@@ -3,7 +3,7 @@ title: Giggy
 subtitle: Voices, speed and repeatable output for Giggy TTS.
 ---
 
-[Giggy](https://giggy.ai) is a text-to-speech service with a large public voice catalog, covering more than 80 languages, plus any voices you create in your own Giggy account. Giggy tuning is passed in `synthesizer.options`.
+[Giggy](https://giggy.ai) is a text-to-speech service with a large public voice catalog, covering more than 80 languages, plus any voices you create in your own Giggy account. The same Giggy API key also serves [speech recognition](/verbs/verbs/recognizer). Giggy tuning is passed in `synthesizer.options`.
 
 ```json
 {
@@ -43,7 +43,7 @@ Both options are optional. An option you don't set is not sent, so Giggy's own d
 
 ## Endpoint override
 
-Giggy credentials have no API base URL field in the portal. If you need to point at a non-default endpoint, such as a proxy, set `api_uri` in **Extra Options** alongside the tuning fields:
+Giggy credentials have no API base URL field in the portal. If you need to point text-to-speech at a non-default endpoint, such as a proxy, set `api_uri` in **Extra Options** alongside the tuning fields (for speech recognition, use `giggyOptions.giggySttUri` on the recognizer instead):
 
 ```json
 {
@@ -56,6 +56,4 @@ Leave it out to use Giggy's standard endpoint (`giggy.ai`).
 
 ## Streaming
 
-Giggy supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. Giggy has no connection that accepts text as it arrives, so jambonz collects the tokens into whole sentences and sends each sentence to Giggy as a separate request. The first audio therefore starts once the first sentence is complete. Splitting at sentence boundaries keeps the intonation natural.
-
-On barge-in, jambonz cancels the request in progress. Giggy does not return word-level timestamps, so jambonz cannot trim the assistant's turn to the words the caller actually heard.
+Giggy has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

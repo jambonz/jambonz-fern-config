@@ -81,3 +81,28 @@ is needed beyond enabling that feature — jambonz requests the timing itself.
 unavailable on them. Both are marked deprecated in the portal and are no longer
 offered for new speech credentials; existing credentials that use them keep
 working, and you can still select them if you need to.
+
+## Speech-to-text
+
+The same `inworld` credential also serves realtime speech recognition. Check **Use for
+speech-to-text** on the credential; the TTS model is only required when it is also used for
+text-to-speech. The credential's STT model defaults to `inworld/inworld-stt-1`, and `api_uri` in
+**Extra Options** moves both TTS and STT to another host.
+
+```json
+{
+  "verb": "gather",
+  "input": ["speech"],
+  "recognizer": {
+    "vendor": "inworld",
+    "language": "en-US",
+    "hints": ["jambonz"],
+    "inworldOptions": {
+      "maxTurnSilence": 800
+    }
+  }
+}
+```
+
+Inworld detects turns itself and returns one final transcript per turn. See `inworldOptions` in
+[recognizer](/verbs/verbs/recognizer) for languages, hints and every option.
