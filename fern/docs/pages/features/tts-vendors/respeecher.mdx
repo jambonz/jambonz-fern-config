@@ -1,0 +1,106 @@
+---
+title: Respeecher
+subtitle: Respeecher real-time voices in English, Ukrainian and more, with sampling controls for Respeecher TTS.
+---
+
+[Respeecher](https://space.respeecher.com/docs) generates speech with real-time models for English, Ukrainian, Arabic, German, Brazilian Portuguese and Swedish. Respeecher tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "respeecher",
+    "language": "en-US",
+    "voice": "samantha",
+    "options": {
+      "temperature": 0.8,
+      "seed": 42
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in Respeecher Space. jambonz sends the key in the `X-API-Key` header. Add it as a **Respeecher** speech credential in the portal or API, using the vendor id `respeecher`. Respeecher is used for text-to-speech only.
+
+## Models
+
+Respeecher has one model per language, and there is no separate language field: the model sets the language.
+
+| Model | Language |
+| --- | --- |
+| `en-rt` | English. Default. |
+| `ua-rt` | Ukrainian |
+| `ar-rt` | Arabic |
+| `de-rt` | German |
+| `pt-br-rt` | Brazilian Portuguese |
+| `sv-rt` | Swedish |
+
+jambonz picks the model from `synthesizer.language` by its prefix: `en` uses `en-rt`, `uk` uses `ua-rt`, `ar` uses `ar-rt`, `de` uses `de-rt`, `pt` uses `pt-br-rt` and `sv` uses `sv-rt`. Any other language uses `en-rt`. Set `options.model_id` to choose the model directly; it takes precedence over a `model_id` on the credential, which takes precedence over the language.
+
+jambonz asks Respeecher for 16-bit PCM at 24 kHz and resamples it to the call's rate.
+
+## Voices and languages
+
+A voice is a Respeecher voice id. The portal lists these voices:
+
+| Language | Voice id |
+| --- | --- |
+| English (US) | `samantha` (female, American), `amara` (female, Indian) |
+| Ukrainian | `olesia-conversation` |
+
+Other voices from your Respeecher account, including voices for the Arabic, German, Brazilian Portuguese and Swedish models, work when you enter their id as a custom voice together with the matching language or `options.model_id`.
+
+## Options
+
+<ParamField path="model_id" type="string" required={false}>
+  `en-rt`, `ua-rt`, `ar-rt`, `de-rt`, `pt-br-rt` or `sv-rt`. Overrides the model picked from the language.
+</ParamField>
+
+<ParamField path="seed" type="integer" required={false}>
+  Random seed, for repeatable output.
+</ParamField>
+
+<ParamField path="temperature" type="number" required={false}>
+  Sampling temperature, `0` or higher.
+</ParamField>
+
+<ParamField path="top_k" type="integer" required={false}>
+  Top-k sampling, `-1` (off) or greater than `0`.
+</ParamField>
+
+<ParamField path="top_p" type="number" required={false}>
+  Top-p sampling, greater than `0` and up to `1`.
+</ParamField>
+
+<ParamField path="min_p" type="number" required={false}>
+  Min-p sampling, `0` – `1`.
+</ParamField>
+
+<ParamField path="presence_penalty" type="number" required={false}>
+  Presence penalty, `0` – `2`.
+</ParamField>
+
+<ParamField path="repetition_penalty" type="number" required={false}>
+  Repetition penalty, `1` – `2`.
+</ParamField>
+
+<ParamField path="frequency_penalty" type="number" required={false}>
+  Frequency penalty, `0` – `2`.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Respeecher's own default applies.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as a proxy, set the **API base URL** on the credential, or `api_uri` in its **Extra Options**. Leave it out to use `api.respeecher.com`.
+
+## Streaming
+
+Respeecher supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz streams text to Respeecher over a live connection and starts a new Respeecher context for each turn; on barge-in it cancels the current context and drops its remaining audio instead of reconnecting.
+
+Respeecher does not return word-level timestamps, so alignment events are not available.

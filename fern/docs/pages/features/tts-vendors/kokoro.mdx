@@ -1,0 +1,117 @@
+---
+title: Kokoro
+subtitle: Self-hosted Kokoro voices over an OpenAI-compatible API, with speed, volume, voice mixing and text normalization.
+---
+
+[Kokoro](https://github.com/remsky/Kokoro-FastAPI) is an open-weight text-to-speech model that you run on your own server. jambonz talks to it through Kokoro-FastAPI's OpenAI-compatible speech endpoint (`POST /v1/audio/speech`). Kokoro tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "kokoro",
+    "language": "en-US",
+    "voice": "af_heart",
+    "options": {
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Add a **Kokoro** speech credential in the portal or API, using the vendor id `kokoro`. Kokoro is used for text-to-speech only.
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| API base URL (`api_uri`) | Yes | Your server's base URL, such as `http://kokoro.internal:8880`. `http://` is used when given, otherwise `https://`. A trailing `/` or `/v1` is ignored. |
+| API key (`api_key`) | No | Sent as `Authorization: Bearer <api key>`, only when set. Use it when your server or a proxy in front of it checks a key. |
+| Model (`model_id`) | No | The `model` sent in each request. Leave it out to use `kokoro`. |
+
+There is no default host: the server must be reachable from jambonz. When you save the credential, jambonz checks it by synthesizing a short phrase with the `af_heart` voice, so that voice must exist on your server.
+
+## Voices and languages
+
+Voices live on your server. The portal lists the voices bundled with Kokoro, grouped by language:
+
+| Language | Voices |
+| --- | --- |
+| English (US) | `af_heart` (default), `af_alloy`, `af_aoede`, `af_bella`, `af_jessica`, `af_kore`, `af_nicole`, `af_nova`, `af_river`, `af_sarah`, `af_sky`, `am_adam`, `am_echo`, `am_eric`, `am_fenrir`, `am_liam`, `am_michael`, `am_onyx`, `am_puck`, `am_santa` |
+| English (UK) | `bf_emma` (default), `bf_alice`, `bf_isabella`, `bf_lily`, `bm_daniel`, `bm_fable`, `bm_george`, `bm_lewis` |
+| Spanish | `ef_dora` (default), `em_alex`, `em_santa` |
+| French | `ff_siwis` |
+| Hindi | `hf_alpha` (default), `hf_beta`, `hm_omega`, `hm_psi` |
+| Italian | `if_sara` (default), `im_nicola` |
+| Japanese | `jf_alpha` (default), `jf_gongitsune`, `jf_nezumi`, `jf_tebukuro`, `jm_kumo` |
+| Portuguese (Brazil) | `pf_dora` (default), `pm_alex`, `pm_santa` |
+| Chinese (Mandarin) | `zf_xiaobei` (default), `zf_xiaoni`, `zf_xiaoxiao`, `zf_xiaoyi`, `zm_yunjian`, `zm_yunxi`, `zm_yunxia`, `zm_yunyang` |
+
+Any other voice your server has works too: put its id in `voice`. Kokoro-FastAPI also accepts a mix of voices, such as `af_bella+af_sky`.
+
+jambonz does not send `synthesizer.language` to Kokoro. Kokoro picks the pronunciation language from the first letter of the voice id, which is right for every bundled voice. To force a different one, set `lang_code`.
+
+jambonz requests Kokoro audio as 16-bit PCM at 24 kHz and resamples it to the call's rate.
+
+## Options
+
+Every option is optional. An option you don't set is not sent, so the server's own default applies.
+
+<ParamField path="model_id" type="string" required={false}>
+  The `model` sent in each request. Overrides the credential's model. Kokoro-FastAPI accepts `kokoro`, `tts-1`, `tts-1-hd` and `gpt-4o-mini-tts`; other hosts may use another name.
+</ParamField>
+
+<ParamField path="lang_code" type="string" required={false}>
+  Pronunciation language: `a` (American English), `b` (British English), `e` (Spanish), `f` (French), `h` (Hindi), `i` (Italian), `j` (Japanese), `p` (Brazilian Portuguese) or `z` (Mandarin). Leave it out to let the voice decide.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, from `0.25` to `4`. `1` is normal speed.
+</ParamField>
+
+<ParamField path="volume_multiplier" type="number" required={false}>
+  Output volume multiplier, from `0` to `10`. `1` leaves the volume unchanged.
+</ParamField>
+
+<ParamField path="normalization_options" type="object" required={false}>
+  Text normalization settings, passed to the server as given. Kokoro-FastAPI accepts the booleans `normalize`, `unit_normalization`, `url_normalization`, `email_normalization`, `optional_pluralization_normalization`, `phone_normalization`, `caps_normalization`, `replace_remaining_symbols` and `remove_emoji`.
+</ParamField>
+
+<ParamField path="voice_aliases" type="object" required={false}>
+  Map of alias names to voice ids or mixes, passed to the server as given. A value may be a voice or mix string, or `{"voice": "af_bella", "rate": 0.8}`.
+</ParamField>
+
+<ParamField path="allow_voice_tags" type="boolean" required={false}>
+  Allow voice tags in the text to switch voices mid-utterance. The server can disable it with ENABLE_VOICE_TAGS=false.
+</ParamField>
+
+<ParamField path="ssml" type="boolean" required={false}>
+  Treat the text as SSML. Requires `allow_voice_tags: true`; the server can disable SSML (403) with ENABLE_SSML=false.
+</ParamField>
+
+<ParamField path="api_uri" type="string" required={false}>
+  Server base URL. Overrides the credential's API base URL.
+</ParamField>
+
+<ParamField path="api_key" type="string" required={false}>
+  API key. Overrides the credential's API key.
+</ParamField>
+
+```json
+{
+  "lang_code": "b",
+  "speed": 0.95,
+  "volume_multiplier": 1.2,
+  "normalization_options": {
+    "normalize": true,
+    "phone_normalization": true
+  }
+}
+```
+
+## Streaming
+
+Kokoro has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

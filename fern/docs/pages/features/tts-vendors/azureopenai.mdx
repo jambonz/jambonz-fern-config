@@ -1,0 +1,66 @@
+---
+title: Azure OpenAI
+subtitle: OpenAI voices from your own Azure OpenAI deployment, with speed and spoken instructions.
+---
+
+[Azure OpenAI](https://learn.microsoft.com/azure/ai-foundry/openai/) serves OpenAI's text-to-speech models from a resource in your own Azure subscription. The same credential also serves [speech recognition](/verbs/verbs/recognizer). Azure OpenAI tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Thanks for calling. Your order ships today.",
+  "synthesizer": {
+    "vendor": "azureopenai",
+    "language": "en-US",
+    "voice": "alloy",
+    "options": {
+      "speed": 1.1,
+      "instructions": "Speak in a warm, upbeat tone."
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+In the Azure portal, open your Azure OpenAI resource and copy a key and the endpoint from **Keys and Endpoint**. Add them as an **Azure OpenAI** speech credential in the portal or API: the key as the API key, and the endpoint, such as `https://myres.openai.azure.com`, as the endpoint. jambonz sends the key in the `api-key` header. One credential is used for both text-to-speech and speech-to-text. Microsoft Entra ID tokens are not supported.
+
+## Deployments
+
+Azure OpenAI addresses a model by the name of the deployment you created for it, not by the model name. Enter the TTS deployment name on the speech credential; it defaults to `gpt-4o-mini-tts`, so a deployment with that name needs no setting. Set `options.model_id` to use another deployment for one verb.
+
+| Model | Notes |
+| --- | --- |
+| `gpt-4o-mini-tts` | Default. Follows `instructions`. |
+| `tts` | Lower latency. |
+| `tts-hd` | Higher quality. |
+
+## Voices and languages
+
+The portal lists `alloy`, `echo`, `fable`, `onyx`, `nova` and `shimmer`; `alloy` is the default. Any other voice your deployment supports can be entered by name. Every voice is multilingual and speaks the language the text is written in, so `synthesizer.language` is not sent to Azure.
+
+## Options
+
+<ParamField path="model_id" type="string" required={false}>
+  The TTS deployment name, overriding the credential's deployment.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, `0.25` – `4.0` times normal speed.
+</ParamField>
+
+<ParamField path="instructions" type="string" required={false}>
+  How to speak, such as tone, pace or accent. Followed by `gpt-4o-mini-tts` deployments.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so Azure's own default applies.
+
+## Endpoint override
+
+The endpoint on the credential is required, since every Azure OpenAI resource has its own host. To point one verb or credential elsewhere, such as a proxy, set `api_uri` in `synthesizer.options` or the credential's **Extra Options**; it takes precedence over the credential's endpoint, and the credential's `api_uri` in **Extra Options** applies to STT too. jambonz drops any path from `/openai` on, so a full Azure URL works. An `http://` prefix turns off TLS.
+
+## Streaming
+
+Azure OpenAI has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

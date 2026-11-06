@@ -1,0 +1,81 @@
+---
+title: Vakyam
+subtitle: Raaga voices for English (India) and seven Indic languages, with speed control.
+---
+
+[Vakyam](https://docs.vakyam.ai) is a text-to-speech service for Indian English and Indic languages, using the Raaga model. Vakyam tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "नमस्ते, आपकी booking confirm हो गई है।",
+  "synthesizer": {
+    "vendor": "vakyam",
+    "language": "hi-IN",
+    "voice": "Archana",
+    "options": {
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Add a **Vakyam** speech credential in the portal or API, using the vendor id `vakyam`. Vakyam is used for text-to-speech only.
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| API key (`api_key`) | Yes | Your Vakyam key (`vak_live_...`), sent as `Authorization: Bearer <api key>`. |
+| API base URL (`api_uri`) | No | Host override, such as a proxy. `http://` is used when given, otherwise `https://`. Leave it out to use `api.vakyam.ai`. |
+| Model (`model_id`) | No | Default model for this credential. Leave it out to use `raaga-v1`. |
+
+When you save the credential, jambonz checks it by synthesizing a short phrase in `en-IN` with the `Archana` voice.
+
+## Voices and languages
+
+Vakyam supports eight languages: `en-IN` (English, India), `hi-IN` (Hindi), `ta-IN` (Tamil), `te-IN` (Telugu), `kn-IN` (Kannada), `mr-IN` (Marathi), `gu-IN` (Gujarati) and `bn-IN` (Bengali). Every voice speaks every language:
+
+| Gender | Voices |
+| --- | --- |
+| Female | `Archana` (default), `Bhamini`, `Kavya`, `Meena`, `Neha`, `Nisha`, `Priya`, `Vidya` |
+| Male | `Aakash`, `Amit`, `Anand`, `Jay`, `Kiran`, `Mohan`, `Vikram`, `Yash` |
+
+Voice names are case-sensitive. A cloned voice id (`vc_...`) from your Vakyam account works too: put it in `voice`.
+
+Vakyam accepts only the eight `xx-IN` codes above. jambonz maps `synthesizer.language` by its language part, so `en-US` and `en` become `en-IN`, `hi` becomes `hi-IN`, and so on. Any other language falls back to `en-IN`. To send a specific code, set `language` in the options.
+
+Vakyam serves a single model, `raaga-v1`, which is the default. jambonz requests 16-bit PCM at 24 kHz and resamples it to the call's rate.
+
+## Options
+
+Every option is optional. An option you don't set is not sent, so Vakyam's own default applies.
+
+<ParamField path="model_id" type="string" required={false}>
+  The model. Overrides the credential's model. Defaults to `raaga-v1`.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, `0.5` – `2`. `1` is normal speed.
+</ParamField>
+
+<ParamField path="language" type="string" required={false}>
+  One of `en-IN`, `hi-IN`, `ta-IN`, `te-IN`, `kn-IN`, `mr-IN`, `gu-IN` or `bn-IN`, sent to Vakyam as given instead of the mapped `synthesizer.language`.
+</ParamField>
+
+<ParamField path="api_uri" type="string" required={false}>
+  Host override. Overrides the credential's API base URL.
+</ParamField>
+
+```json
+{
+  "language": "ta-IN",
+  "speed": 0.9
+}
+```
+
+## Streaming
+
+Vakyam has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

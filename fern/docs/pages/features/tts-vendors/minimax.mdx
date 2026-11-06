@@ -1,0 +1,114 @@
+---
+title: MiniMax
+subtitle: Multilingual Speech voices, emotion, speed, volume, pitch, voice effects and pronunciation dictionaries for MiniMax TTS.
+---
+
+[MiniMax](https://platform.minimax.io/docs/guides/speech-t2a-websocket) generates speech with its Speech models in more than twenty languages, including English, Mandarin, Cantonese, Japanese, Korean and most European languages. MiniMax tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "minimax",
+    "language": "en-US",
+    "voice": "English_expressive_narrator",
+    "options": {
+      "speed": 1.1,
+      "emotion": "happy"
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in the [MiniMax developer platform](https://platform.minimax.io). jambonz sends the key as a `Bearer` token; no Group ID is needed. Add it as a **MiniMax** speech credential in the portal or API. MiniMax is used for text-to-speech only.
+
+## Models
+
+| Model | Notes |
+| --- | --- |
+| `speech-2.8-turbo` | Default. Low latency. |
+| `speech-2.8-hd` | Higher quality, more latency. |
+| `speech-2.6-turbo`, `speech-2.6-hd` | Previous generation. |
+| `speech-02-turbo`, `speech-02-hd` | Older generation. |
+| `speech-01-turbo`, `speech-01-hd` | Oldest generation. |
+
+Pick the model on the speech credential, or set `options.model_id` to override it for one verb.
+
+## Voices and languages
+
+A voice is a MiniMax voice id such as `English_expressive_narrator` or `Japanese_IntellectualSenior`, sent exactly as written. The portal lists MiniMax's system voices by language, taken from MiniMax's [voice list](https://platform.minimax.io/docs/faq/system-voice-id). Cloned or designed voices in your MiniMax account can be used by their voice id.
+
+The voice alone selects the language: `synthesizer.language` is not sent to MiniMax. To help MiniMax with a language or dialect, set `options.language_boost`, for example `English`, `Chinese,Yue` or `auto`.
+
+## Options
+
+<ParamField path="model_id" type="string" required={false}>
+  The Speech model to use, overriding the credential's model.
+</ParamField>
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, `0.5` – `2`. MiniMax's default is `1`.
+</ParamField>
+
+<ParamField path="vol" type="number" required={false}>
+  Volume, above `0` up to `10`. MiniMax's default is `1`.
+</ParamField>
+
+<ParamField path="pitch" type="integer" required={false}>
+  Pitch shift in semitones, `-12` – `12`. MiniMax's default is `0`.
+</ParamField>
+
+<ParamField path="emotion" type="string" required={false}>
+  `happy`, `sad`, `angry`, `fearful`, `disgusted`, `surprised`, `calm`, `fluent` or `whisper`. By default MiniMax picks the emotion from the text.
+</ParamField>
+
+<ParamField path="text_normalization" type="boolean" required={false}>
+  Read numbers, dates and symbols as words in Chinese and English.
+</ParamField>
+
+<ParamField path="english_normalization" type="boolean" required={false}>
+  Improve how numbers are read in English. Streaming only.
+</ParamField>
+
+<ParamField path="latex_read" type="boolean" required={false}>
+  Read LaTeX formulas written between `$` signs.
+</ParamField>
+
+<ParamField path="language_boost" type="string" required={false}>
+  The language or dialect to favour, by MiniMax's name for it, such as `English`, `Chinese,Yue` or `auto`.
+</ParamField>
+
+<ParamField path="text_normalization_mode" type="string" required={false}>
+  `basic` or `quality`.
+</ParamField>
+
+<ParamField path="continuous_sound" type="boolean" required={false}>
+  Smooth the joins between sentences. `speech-2.8-*` models and streaming only.
+</ParamField>
+
+<ParamField path="voice_modify" type="object" required={false}>
+  Voice effects: `pitch`, `intensity` and `timbre`, each `-100` – `100`, and `sound_effects`, one of `spacious_echo`, `auditorium_echo`, `lofi_telephone` or `robotic`. MiniMax applies these to non-streamed audio only, so they have no effect on streamed speech.
+</ParamField>
+
+<ParamField path="pronunciation_dict" type="object" required={false}>
+  Custom pronunciations, as `{"tone": ["omg/oh my god"]}`.
+</ParamField>
+
+<ParamField path="timbre_weights" type="array" required={false}>
+  Mix up to four voices, as `[{"voice_id": "English_expressive_narrator", "weight": 1}]`.
+</ParamField>
+
+Every option is optional. An option you don't set is not sent, so MiniMax's own default applies.
+
+## Endpoint override
+
+To point at a non-default endpoint, such as MiniMax's `api-uw.minimax.io` or `api.minimaxi.com`, or a proxy, set `api_uri` on the credential or in its **Extra Options**. Leave it out to use `api.minimax.io`.
+
+## Streaming
+
+MiniMax supports [TTS streaming](/guides/features/tts-streaming), so it can be driven token by token from an LLM using `tts:tokens`, for example from the `agent` verb. jambonz streams text to MiniMax over a live connection, and on barge-in sends MiniMax's cancel instead of reconnecting. jambonz does not request MiniMax's word timestamps, so alignment events are not available.

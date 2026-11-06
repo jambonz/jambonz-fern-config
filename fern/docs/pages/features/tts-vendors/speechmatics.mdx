@@ -1,0 +1,67 @@
+---
+title: Speechmatics
+subtitle: British and American English preview voices on the same key as Speechmatics speech-to-text.
+---
+
+[Speechmatics](https://docs.speechmatics.com/text-to-speech/quickstart) text-to-speech uses the same API key as Speechmatics speech-to-text. jambonz sends the text to Speechmatics' `POST /generate/<voice>` endpoint and asks for 16 kHz PCM audio. Speechmatics tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "speechmatics",
+    "language": "en-GB",
+    "voice": "sarah"
+  }
+}
+```
+
+You can also set options in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+<Warning>
+Speechmatics text-to-speech is a preview product. Its host, voices and limits may change; confirm availability with Speechmatics before production use.
+</Warning>
+
+## Credential
+
+Create an API key in the [Speechmatics portal](https://portal.speechmatics.com). jambonz sends it as a `Bearer` token. In the portal, open or add the **Speechmatics** speech credential and check **Use for text-to-speech**; one credential can serve both text-to-speech and speech-to-text.
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| API key (`api_key`) | Yes | Your Speechmatics key, used for both TTS and STT. |
+| Endpoint (`speechmatics_stt_uri`) | Only for speech-to-text | The realtime STT host. A credential used only for text-to-speech can leave it out. |
+| TTS host (`api_uri`) | No | Host override for text-to-speech, such as a proxy. Set it over the API or as `api_uri` in **Extra Options**. Leave it out to use `preview.tts.speechmatics.com`. |
+
+When you save the credential, jambonz checks text-to-speech by synthesizing a short phrase with the `sarah` voice.
+
+## Voices and languages
+
+| Language | Voices |
+| --- | --- |
+| English (UK) `en-GB` | `sarah` (default, female), `theo` (male) |
+| English (US) `en-US` | `megan` (female), `jack` (male) |
+
+Speechmatics has no language or model setting for text-to-speech; the voice decides how the text is spoken. jambonz uses `synthesizer.language` only to group voices in the portal and does not send it, so any language code works with any voice.
+
+## Options
+
+Every option is optional. An option you don't set is not sent.
+
+<ParamField path="sm_app" type="string" required={false}>
+  Sent as the `sm-app` query parameter, which Speechmatics uses to identify the calling application.
+</ParamField>
+
+<ParamField path="api_uri" type="string" required={false}>
+  Text-to-speech host override. `http://` is used when given, otherwise `https://`. Overrides the credential's TTS host.
+</ParamField>
+
+```json
+{
+  "sm_app": "my-voice-app"
+}
+```
+
+## Streaming
+
+Speechmatics has no token-streaming websocket, so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.

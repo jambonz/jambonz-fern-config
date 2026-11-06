@@ -1456,6 +1456,444 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
   </Accordion>
 
+  <Accordion title="sarvamOptions">
+    Sarvam AI (`sarvam`) uses [Sarvam realtime transcription](https://docs.sarvam.ai/api-reference/speech-to-text/transcribe/realtime/ws) with the model `saaras:v3-realtime` by default. Sarvam's voice activity detection signals when the caller starts and stops speaking, streams interim transcripts (sent as interim results when `interim` is enabled) and returns one final transcript after each pause. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb, Sarvam's start of speech is used for barge-in, and each final ends the user's turn, unless `turnDetection` is set to `krisp`.
+
+    Sarvam requires a language. jambonz sends the recognizer's `language` mapped to one of Sarvam's codes: `en-IN`, `hi-IN`, `bn-IN`, `kn-IN`, `ml-IN`, `mr-IN`, `or-IN`, `pa-IN`, `ta-IN`, `te-IN`, `gu-IN`, `as-IN`, `ur-IN`, `ne-IN`, `kok-IN`, `ks-IN`, `sd-IN`, `sa-IN`, `sat-IN`, `mni-IN`, `brx-IN`, `mai-IN` or `doi-IN`. An exact match is used as-is; otherwise the base language is used with `-IN` (`en-US` becomes `en-IN`, `hi` becomes `hi-IN`, `od-IN` becomes `or-IN`). Any other language, or `any`, turns on Sarvam's automatic detection (`auto`).
+
+    The recognizer's own properties carry the rest: `model` picks the realtime model (`saaras:v3-realtime` or `saaras:v4`), and with `saaras:v4` `hints` are sent as Sarvam's `keyterms`, up to 50 terms of up to 64 characters each; jambonz does not send hints beyond those limits, and sends none with any other model. `hintsBoost` is not used.
+
+    The Sarvam credential is used for both TTS and STT. Its `api_uri` in **Extra Options** moves STT off `api.sarvam.ai` too.
+
+    <ParamField path="model" type="string" required={false}>
+      The realtime model, such as `saaras:v3-realtime` or `saaras:v4`, overriding the recognizer's `model` and the credential.
+    </ParamField>
+
+    <ParamField path="language" type="string" required={false}>
+      A Sarvam language code, or `auto`, overriding the recognizer's `language`.
+    </ParamField>
+
+    <ParamField path="streamType" type="string" required={false}>
+      `fast` sends interim transcripts with the lowest latency, `balanced` (Sarvam's default) trades latency for accuracy, and `simulated` sends no interim transcripts.
+    </ParamField>
+
+    <ParamField path="mode" type="string" required={false}>
+      How final transcripts are written: `transcribe` (Sarvam's default), `translate` (into English), `verbatim`, `translit` or `codemix`. Interim transcripts are always plain transcription.
+    </ParamField>
+
+    <ParamField path="endpointing" type="string" required={false}>
+      `vad` (Sarvam's default) ends each utterance after a pause. `manual` waits for speech signals that jambonz does not send, so finals arrive only when the session ends.
+    </ParamField>
+
+    <ParamField path="threshold" type="number" required={false}>
+      Voice activity threshold, between `0` and `1`. Sarvam's default is `0.3`.
+    </ParamField>
+
+    <ParamField path="prefixPaddingMs" type="integer" required={false}>
+      Audio kept before detected speech, in milliseconds. Sarvam's default is `300`.
+    </ParamField>
+
+    <ParamField path="silenceDurationMs" type="integer" required={false}>
+      Silence that ends an utterance, in milliseconds; this sets how long a pause ends the user's turn. Sarvam's default is `500`.
+    </ParamField>
+
+    <ParamField path="minSpeechDurationMs" type="integer" required={false}>
+      Shortest sound counted as speech, in milliseconds. Sarvam's default is `250`.
+    </ParamField>
+
+    <ParamField path="returnTimestamps" type="boolean" required={false}>
+      Ask Sarvam for the start and end time of each final transcript.
+    </ParamField>
+
+    <ParamField path="prompt" type="string" required={false}>
+      Terminology or context that guides the final transcript.
+    </ParamField>
+
+    <ParamField path="keyterms" type="array" required={false}>
+      Up to 50 terms of up to 64 characters each, used instead of `hints`. `saaras:v4` only.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="smallestaiOptions">
+    Smallest AI (`smallestai`) uses [Smallest AI Pulse realtime transcription](https://docs.smallest.ai) with the model `pulse` by default. Pulse streams interim transcripts (sent as interim results when `interim` is enabled) and returns final transcripts; a long utterance may produce more than one final, and a `gather` ends on the first. Each transcript's confidence is the average of its word confidences when Pulse returns them, otherwise 1.0. In the [`agent`](/verbs/verbs/agent) verb with `model: pulse-2`, the agent uses Pulse's end-of-turn detection (a final with `eot_finalized`) and its speech-start event, as with Deepgram Flux; jambonz turns `vadEvents` on for it. With `pulse`, jambonz's own turn detection decides when the user's turn ends.
+
+    jambonz sends the recognizer's `language` mapped to one of Pulse's codes: `en`, `hi`, `hi-dev`, `de`, `es`, `ru`, `it`, `fr`, `nl`, `pt`, `zh`, `yue`, `ja`, `ko`, `gu`, `mr`, `or`, `bn`, `ta`, `te`, `kn`, `ml`, `north_indic`, `multi-asian` or `multi-south-indic`. An exact match is used as-is; otherwise the base language is used (`en-US` becomes `en`, `zh-CN` becomes `zh`, `yue-HK` becomes `yue`). `any`, `auto` or any other language is not sent, and Pulse uses its own default. `pulse-2` is English-only, so with it only `en` is sent.
+
+    The recognizer's own properties carry the rest: `model` picks the realtime model (`pulse` or `pulse-2`, default `pulse`), and when `keywords` is not set `hints` are sent as Pulse's `keywords`, up to 100 terms; a hint's `boost`, or `hintsBoost`, is sent as the term's intensifier, capped at 10. Hints that contain `,` or `:` are not sent. `words` turns on `wordTimestamps`.
+
+    The Smallest AI credential is used for both TTS and STT. Its `api_uri` moves STT off `api.smallest.ai` too, for example to `api.us.smallest.ai`, which Smallest AI uses for Chinese, Cantonese, Japanese, Korean and `multi-asian`.
+
+    <ParamField path="language" type="string" required={false}>
+      A Pulse language code sent as-is, such as `north_indic`, `hi-dev` or `multi-asian`, overriding the recognizer's `language`.
+    </ParamField>
+
+    <ParamField path="wordTimestamps" type="boolean" required={false}>
+      Ask Pulse for word-level timestamps.
+    </ParamField>
+
+    <ParamField path="diarize" type="boolean" required={false}>
+      Label words by speaker.
+    </ParamField>
+
+    <ParamField path="vadEvents" type="boolean" required={false}>
+      Ask Pulse for its speech start and end events. On `pulse-2` in the `agent` verb, speech start becomes the agent's start of turn.
+    </ParamField>
+
+    <ParamField path="endpointing" type="boolean" required={false}>
+      Turn Pulse's end-of-utterance detection on or off.
+    </ParamField>
+
+    <ParamField path="eouTimeoutMs" type="integer" required={false}>
+      Silence that ends an utterance, `100` – `10000` milliseconds.
+    </ParamField>
+
+    <ParamField path="format" type="boolean" required={false}>
+      Turn Pulse's transcript formatting on or off.
+    </ParamField>
+
+    <ParamField path="punctuate" type="boolean" required={false}>
+      Add punctuation to transcripts.
+    </ParamField>
+
+    <ParamField path="capitalize" type="boolean" required={false}>
+      Capitalize transcripts.
+    </ParamField>
+
+    <ParamField path="itnNormalize" type="boolean" required={false}>
+      Write numbers, dates and similar spoken forms in written form.
+    </ParamField>
+
+    <ParamField path="noFormatDelay" type="boolean" required={false}>
+      Send final transcripts without waiting for formatting.
+    </ParamField>
+
+    <ParamField path="finalizeOnWords" type="boolean" required={false}>
+      Send a final transcript once an utterance reaches `maxWords` words.
+    </ParamField>
+
+    <ParamField path="maxWords" type="integer" required={false}>
+      Word count at which an utterance is finalized, at least `1`.
+    </ParamField>
+
+    <ParamField path="redactPii" type="boolean" required={false}>
+      Redact personal information in transcripts.
+    </ParamField>
+
+    <ParamField path="redactPci" type="boolean" required={false}>
+      Redact payment card information in transcripts.
+    </ParamField>
+
+    <ParamField path="sentenceTimestamps" type="boolean" required={false}>
+      Ask Pulse for sentence-level timestamps.
+    </ParamField>
+
+    <ParamField path="emotionDetection" type="boolean" required={false}>
+      Ask Pulse to detect the speaker's emotion.
+    </ParamField>
+
+    <ParamField path="genderDetection" type="boolean" required={false}>
+      Ask Pulse to detect the speaker's gender.
+    </ParamField>
+
+    <ParamField path="keywords" type="array" required={false}>
+      Up to 100 terms to boost, each `term` or `term:intensifier`, used instead of `hints`.
+    </ParamField>
+
+    <ParamField path="timeout" type="integer" required={false}>
+      Longest session, `1` – `10800` seconds.
+    </ParamField>
+
+    <ParamField path="expireContent" type="string" required={false}>
+      Sent as Smallest AI's `x-expire-content` header, which controls how long Smallest AI keeps the session's content.
+    </ParamField>
+
+    <ParamField path="externalSessionId" type="string" required={false}>
+      Your own session id, sent as Pulse's `external_session_id` to tag the session in Smallest AI.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="azureopenaiOptions">
+    Azure OpenAI (`azureopenai`) uses [Azure OpenAI realtime transcription](https://learn.microsoft.com/azure/ai-foundry/openai/how-to/realtime-audio) on your own Azure OpenAI resource, and works like `openaiOptions`. Azure addresses a model by its deployment name: the recognizer's `model` or `deployment` below names the deployment, falling back to the credential's STT deployment and then to `gpt-live-transcribe`. Because a deployment name can be anything, jambonz picks the model family from `model` below, or the credential's `stt_model` in **Extra Options**, or else from the deployment name when it contains one of the family names; `gpt-live-transcribe` is assumed otherwise.
+
+    With `gpt-live-transcribe` and `gpt-realtime-whisper` jambonz detects end of speech locally (see `vadMode`, `vadSilenceMs`, `vadVoiceMs`) and commits each utterance, with a 20 second limit per utterance. The other families use Azure's turn detection (`turn_detection`, default `server_vad`). Each final transcript is reported with a confidence computed from its log probabilities when Azure returns them, otherwise 1.0. In the [`agent`](/verbs/verbs/agent) verb jambonz's own turn detection decides when the user's turn ends, as with `openai`.
+
+    `language` is sent with its region removed (`en-US` becomes `en`); `auto` or no language lets Azure detect it. With `gpt-live-transcribe` the language is sent as a one-item `languages` list, and `hints` are sent as `keywords` unless `keywords` is set.
+
+    The Azure OpenAI credential is used for both TTS and STT. Its endpoint is required; `api_uri` in **Extra Options** overrides it for both.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Azure OpenAI key to authenticate with, overriding the credential's key.
+    </ParamField>
+
+    <ParamField path="deployment" type="string" required={false}>
+      The STT deployment name, overriding the recognizer's `model` and the credential's deployment.
+    </ParamField>
+
+    <ParamField path="model" type="string" required={false}>
+      The model family behind the deployment: `gpt-live-transcribe`, `gpt-realtime-whisper`, `gpt-4o-transcribe`, `gpt-4o-mini-transcribe` or `whisper-1`. It decides how end of speech is detected and which fields are sent.
+    </ParamField>
+
+    <ParamField path="prompt" type="string" required={false}>
+      An optional text to guide the model's style or vocabulary.
+    </ParamField>
+
+    <ParamField path="languages" type="string[]" required={false}>
+      Used only with `gpt-live-transcribe`. A list of language hints, e.g. `["en", "fr"]`, used instead of the recognizer's `language`.
+    </ParamField>
+
+    <ParamField path="keywords" type="string[]" required={false}>
+      Used only with `gpt-live-transcribe`. Literal terms that may appear in the audio, used instead of `hints`.
+    </ParamField>
+
+    <ParamField path="delay" type="string" required={false}>
+      Used only with `gpt-live-transcribe`. `minimal`, `low`, `medium`, `high` or `xhigh`: the latency/accuracy trade-off.
+    </ParamField>
+
+    <ParamField path="input_audio_noise_reduction" type="string" required={false}>
+      `near_field` or `far_field` noise reduction on the input audio.
+    </ParamField>
+
+    <ParamField path="turn_detection" type="object" required={false}>
+      Azure's turn detection, for the families that use it.
+    </ParamField>
+
+    <ParamField path="turn_detection.type" type="string" required={true}>
+      `none`, `server_vad` or `semantic_vad`. `none` sends no turn detection.
+    </ParamField>
+
+    <ParamField path="turn_detection.eagerness" type="string" required={false}>
+      Used only with `semantic_vad`. `low`, `medium`, `high` or `auto`.
+    </ParamField>
+
+    <ParamField path="turn_detection.threshold" type="number" required={false}>
+      Used only with `server_vad`. Activation threshold, `0.0` – `1.0`.
+    </ParamField>
+
+    <ParamField path="turn_detection.prefix_padding_ms" type="number" required={false}>
+      Used only with `server_vad`. Audio to include before detected speech, in milliseconds.
+    </ParamField>
+
+    <ParamField path="turn_detection.silence_duration_ms" type="number" required={false}>
+      Used only with `server_vad`. Silence that ends speech, in milliseconds.
+    </ParamField>
+
+    <ParamField path="turn_detection.idle_timeout_ms" type="number" required={false}>
+      Used only with `server_vad`. Milliseconds of silence after which the server commits the audio buffer even if no speech was detected. Not sent unless set.
+    </ParamField>
+
+    <ParamField path="vadMode" type="integer" required={false}>
+      Used only with `gpt-live-transcribe` or `gpt-realtime-whisper`. Sensitivity of the local voice activity detector, `0` – `3`. Defaults to 2.
+    </ParamField>
+
+    <ParamField path="vadSilenceMs" type="integer" required={false}>
+      Used only with `gpt-live-transcribe` or `gpt-realtime-whisper`. Silence that ends an utterance, in milliseconds. Defaults to 500.
+    </ParamField>
+
+    <ParamField path="vadVoiceMs" type="integer" required={false}>
+      Used only with `gpt-live-transcribe` or `gpt-realtime-whisper`. Voice needed to detect the start of speech, in milliseconds. Defaults to 250.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="gnaniOptions">
+    Gnani (`gnani`) uses [Gnani Prisma realtime transcription](https://docs.gnani.ai/api/STT/stt-websocket) with the model `prisma-v2.5` by default. Gnani's voice activity detection signals when the caller starts and stops speaking and returns one final transcript per utterance; there are no interim results. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb Gnani's start of speech is used for barge-in, and each final ends the user's turn, unless `turnDetection` is set to `krisp`. Audio is sent at 8 kHz or 16 kHz; any other rate is resampled to 16 kHz.
+
+    jambonz sends the recognizer's `language` mapped to one of Gnani's codes: `bn-IN`, `en-IN`, `gu-IN`, `hi-IN`, `kn-IN`, `ml-IN`, `mr-IN`, `pa-IN`, `ta-IN` or `te-IN`. The base language is used with `-IN` (`en-US` becomes `en-IN`, `hi` becomes `hi-IN`), and any other language is sent as `en-IN`. `any`, `auto` or `indic-auto` turns on Gnani's automatic detection of Indic languages (`indic-auto`), and a comma-separated list such as `hi-IN,en-IN` is sent as-is for `prisma-v3.0`'s multi-language mode.
+
+    The recognizer's own properties carry the rest: `model` picks the realtime model (`prisma-v2.5` or `prisma-v3.0`), falling back to the credential's STT model. With `prisma-v3.0`, `hints` are sent as Gnani's `keyterms`, up to 200 phrases. With `prisma-v2.5`, hints are split into single words, words with anything other than letters are dropped, and up to 100 are sent as Gnani's `bias_list` with a `bias_score` of 1 unless `biasScore` is set. `keyterms` or `biasList` below take the place of `hints`. `hintsBoost` is not used.
+
+    Gnani closes a session after 15 minutes, and after 60 seconds without speech unless `idleTimeoutSec` is set; jambonz does not reconnect. An error Gnani reports for one utterance is logged and recognition continues.
+
+    The Gnani credential is used for both TTS and STT. Its `api_uri` moves STT off `api.vachana.ai` too.
+
+    <ParamField path="format" type="string" required={false}>
+      How transcripts are written: `verbatim`, `transcribe`, `codemix` or `transliterate`.
+    </ParamField>
+
+    <ParamField path="itnNativeNumerals" type="boolean" required={false}>
+      Write numbers in the language's native numerals.
+    </ParamField>
+
+    <ParamField path="enableSubstitution" type="boolean" required={false}>
+      Apply `substitutionMap` to transcripts.
+    </ParamField>
+
+    <ParamField path="substitutionMap" type="array" required={false}>
+      Up to 10 replacements, each `{"patterns": ["..."], "replacement": "..."}`: any of the patterns (up to 200 characters each) is replaced by `replacement`.
+    </ParamField>
+
+    <ParamField path="biasList" type="array" required={false}>
+      Up to 100 words to favor, used instead of `hints`. Sent with any model.
+    </ParamField>
+
+    <ParamField path="biasScore" type="number" required={false}>
+      How strongly `biasList` is favored: `0`, `0.5`, `1`, `1.5` or `2`.
+    </ParamField>
+
+    <ParamField path="keyterms" type="array" required={false}>
+      Up to 200 terms, used instead of `hints`. `prisma-v3.0` only.
+    </ParamField>
+
+    <ParamField path="topic" type="string" required={false}>
+      What the conversation is about, up to 1600 characters, to guide recognition.
+    </ParamField>
+
+    <ParamField path="previousText" type="string" required={false}>
+      Text that came before the audio, to guide recognition.
+    </ParamField>
+
+    <ParamField path="speakerNames" type="array" required={false}>
+      One to four names of the people speaking.
+    </ParamField>
+
+    <ParamField path="idleTimeoutSec" type="integer" required={false}>
+      Seconds without speech before Gnani closes the session, `5` – `900`. Gnani's default is `60`.
+    </ParamField>
+
+    <ParamField path="requestId" type="string" required={false}>
+      An id sent to Gnani with the session, to correlate it with Gnani's logs.
+    </ParamField>
+
+    <ParamField path="vadThreshold" type="number" required={false}>
+      Voice activity threshold, between `0` and `1`. Gnani's default is `0.7`.
+    </ParamField>
+
+    <ParamField path="minSilenceMs" type="integer" required={false}>
+      Silence that ends an utterance, `100` – `2000` milliseconds. Gnani's default is `500`.
+    </ParamField>
+
+    <ParamField path="minSpeechMs" type="integer" required={false}>
+      Shortest sound counted as speech, `50` – `2000` milliseconds. Gnani's default is `100` (`200` at 8 kHz).
+    </ParamField>
+
+    <ParamField path="minSegmentMs" type="integer" required={false}>
+      Shortest utterance transcribed, `100` – `1000` milliseconds. Gnani's default is `120`.
+    </ParamField>
+
+    <ParamField path="maxSpeechS" type="number" required={false}>
+      Longest utterance before Gnani splits it, `5` – `120` seconds. Off by default.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="metaOptions">
+    Meta (`meta`) uses [Meta Muse Voice realtime transcription](https://dev.meta.ai/docs/api-reference/voice/realtime) with the model `muse-voice-transcribe-1.0`. jambonz runs Meta in `ENDPOINTING` mode by default: Meta signals when the caller starts speaking, sends interim transcripts (sent as interim results when `interim` is enabled), and returns one final transcript per turn. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb Meta's start of speech is used for barge-in, and each final ends the user's turn, unless `turnDetection` is set to `krisp`. Audio is sent at 16 kHz or 24 kHz; any other rate is resampled to 16 kHz.
+
+    jambonz sends the recognizer's `language` to Meta as a language name in `languageBias`, a bias that never filters out other languages: `en-US` becomes `English`, `zh-CN` becomes `Mandarin Chinese`. Meta covers Arabic, Bengali, Dutch, English, French, German, Hebrew, Hindi, Indonesian, Italian, Japanese, Kannada, Korean, Malay, Mandarin Chinese, Marathi, Polish, Portuguese, Spanish, Tagalog, Tamil, Telugu, Thai, Turkish and Vietnamese. `any`, `auto` or a language Meta does not list sends no bias, and Meta detects the language. `altLanguages` is not used.
+
+    The recognizer's own properties carry the rest: `model` picks the realtime model, falling back to the credential's STT model. `hints` are sent as Meta's `keywords`, together with `keywords` below. `hintsBoost` is not used.
+
+    Meta closes a session after 60 minutes, and when audio stops arriving in real time; jambonz does not reconnect. An error from Meta ends recognition.
+
+    The credential's `api_uri` (or `api_uri` in **Extra Options**) moves STT off `api.meta.ai`.
+
+    <ParamField path="mode" type="string" required={false}>
+      `ENDPOINTING` (default) ends each turn on Meta's voice activity detection. `DIARIZATION` also labels speakers; jambonz does not report the labels.
+    </ParamField>
+
+    <ParamField path="partialMode" type="string" required={false}>
+      `CUMULATIVE` makes each interim result the full transcript so far. `DELTA` makes it only the new text. Meta's default is `CUMULATIVE`. Finals are the full turn either way.
+    </ParamField>
+
+    <ParamField path="emitAudioProgress" type="boolean" required={false}>
+      Ask Meta for audio progress events. jambonz does not report them.
+    </ParamField>
+
+    <ParamField path="keywords" type="array" required={false}>
+      Words or phrases to favor, added to `hints`.
+    </ParamField>
+
+    <ParamField path="languageBias" type="array" required={false}>
+      Language names to bias toward, such as `["English", "Spanish"]`, used instead of the name mapped from `language`.
+    </ParamField>
+
+    <ParamField path="sessionId" type="string" required={false}>
+      An id sent to Meta with the session, to correlate it with Meta's logs.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="inworldOptions">
+    Inworld (`inworld`) uses [Inworld realtime transcription](https://docs.inworld.ai/api-reference/sttAPI/speechtotext/transcribe-stream-websocket) with the model `inworld/inworld-stt-1`. Inworld detects turns itself: it signals when the caller starts speaking, sends interim transcripts (sent as interim results when `interim` is enabled), and returns one final transcript per turn. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb Inworld's start of speech is used for barge-in, and each final ends the user's turn, unless `turnDetection` is set to `krisp`. Audio is sent at 16 kHz or 48 kHz; any other rate is resampled to 16 kHz.
+
+    jambonz sends the primary subtag of the recognizer's `language` to Inworld: `en-US` becomes `en`, `zh-TW` becomes `zh`. Inworld covers `ar`, `yue`, `zh`, `cs`, `da`, `nl`, `en`, `fil`, `fi`, `fr`, `de`, `el`, `hi`, `hu`, `id`, `it`, `ja`, `ko`, `mk`, `ms`, `fa`, `pl`, `pt`, `ro`, `ru`, `es`, `sv`, `th`, `tr` and `vi`. `any`, `auto` or a language Inworld does not list sends no language, and Inworld detects it. `altLanguages` is not used.
+
+    The recognizer's own properties carry the rest: `model` picks the realtime model, falling back to the credential's STT model and then `inworld/inworld-stt-1`. `hints` are sent as Inworld's `prompts`, together with `prompts` below. A term may contain only letters, digits, spaces and `. , ' ( ) : ! ? ; -`; jambonz drops other terms and duplicates and sends at most 100. `hintsBoost` is not used.
+
+    An error from Inworld ends recognition.
+
+    The Inworld credential is used for both TTS and STT. Its `api_uri` in **Extra Options** moves STT off `api.inworld.ai` too.
+
+    <ParamField path="prompts" type="array" required={false}>
+      Words or phrases to favor, added to `hints`. Up to 100.
+    </ParamField>
+
+    <ParamField path="includeWordTimestamps" type="boolean" required={false}>
+      Ask Inworld for word-level timestamps. Also turned on by the recognizer's `words`.
+    </ParamField>
+
+    <ParamField path="enableSpeakerDiarization" type="boolean" required={false}>
+      Ask Inworld to label speakers. Turns on word timestamps too. Speaker labels are in the raw vendor event (`vendor.evt.result.transcription.wordTimestamps[].speaker`).
+    </ParamField>
+
+    <ParamField path="endOfTurnConfidenceThreshold" type="number" required={false}>
+      How confident Inworld must be that the caller finished before it ends the turn, `0` – `1`.
+    </ParamField>
+
+    <ParamField path="minEndOfTurnSilenceWhenConfident" type="integer" required={false}>
+      Silence needed to end a turn once Inworld is confident the caller finished, `20` – `5000` milliseconds.
+    </ParamField>
+
+    <ParamField path="maxTurnSilence" type="integer" required={false}>
+      Silence that ends a turn regardless of confidence, `20` – `5000` milliseconds.
+    </ParamField>
+
+    <ParamField path="vadThreshold" type="number" required={false}>
+      Voice activity sensitivity, above `0` up to `1`. `0` (manual turns) is not supported.
+    </ParamField>
+
+    <ParamField path="inactivityTimeoutSeconds" type="integer" required={false}>
+      Seconds without speech before Inworld closes the session, `1` or more. Inworld documents that `inworld/inworld-stt-1` does not apply it yet.
+    </ParamField>
+
+    <ParamField path="enableVoiceProfile" type="boolean" required={false}>
+      Ask Inworld for a voice profile of the speaker. jambonz passes it through in the vendor event.
+    </ParamField>
+
+    <ParamField path="voiceProfileTopN" type="integer" required={false}>
+      How many voice profile labels Inworld returns, `1` or more. Used with `enableVoiceProfile`.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="saidwireOptions">
+    Saidwire (`saidwire`) uses [Saidwire streaming speech-to-text](https://saidwire.com/docs/api), which follows Deepgram's `/v1/listen` protocol. It is English only, and each stream carries one audio channel. Results are handled as for `deepgram`: interim results (when `interim` is enabled) are followed by a final transcript for each utterance, and a final with `speech_final` marks a pause of at least `endpointing` milliseconds. In the [`agent`](/verbs/verbs/agent) verb, jambonz's own voice activity and turn detection decide when the user's turn ends, as with `deepgram`. Saidwire reports every transcript and word with a fixed confidence of 0.95, so confidence does not separate good results from poor ones.
+
+    `language` is sent only when it is English (`en` or `en-XX`, such as `en-US` or `en-GB`); any other language is not sent, and Saidwire uses `en`. The recognizer's `hints`, `hintsBoost` and `model` are not used. Saidwire accepts many other Deepgram parameters, such as `keyterm`, `diarize`, `numerals` and `redact`, but ignores them, so jambonz does not offer them.
+
+    A Saidwire speech credential holds the API key. Its optional `api_uri` connects to a host other than `api.saidwire.com`; a `ws://` or `http://` prefix turns off TLS.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      Saidwire API key to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="punctuate" type="boolean" required={false}>
+      Add punctuation and capitals to the transcript. Saidwire's default is `false`.
+    </ParamField>
+
+    <ParamField path="smartFormatting" type="boolean" required={false}>
+      Sent as `smart_format`, which Saidwire treats the same as `punctuate`.
+    </ParamField>
+
+    <ParamField path="endpointing" type="number | boolean" required={false}>
+      Milliseconds of pause that end an utterance, at least `500`; Saidwire's default is `800`. Setting it is recommended, for example `500`. `false` turns it off: finals still arrive at longer pauses (about one second), but never with `speech_final`. Whenever `endpointing` is set, jambonz also asks for an `UtteranceEnd` after 1000 ms of silence (unless `utteranceEndMs` is set), as with `deepgram`, so turns still end with `endpointing: false`.
+    </ParamField>
+
+    <ParamField path="utteranceEndMs" type="number" required={false}>
+      Milliseconds with no speech, from `100` to `10000`, before Saidwire sends an `UtteranceEnd` message. Off by default, or `1000` when `endpointing` is set.
+    </ParamField>
+
+    <ParamField path="vadEvents" type="boolean" required={false}>
+      Ask Saidwire for `SpeechStarted` messages, an energy-based hint that speech began.
+    </ParamField>
+  </Accordion>
+
 </AccordionGroup>
 
 
