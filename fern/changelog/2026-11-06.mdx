@@ -1,0 +1,111 @@
+<Card title="11.1.12" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.12
+</Card>
+
+**11.1.12** adds more than twenty speech vendors, including the Sarvam AI and Saidwire
+vendors previewed on November 4 and 5, and seven more speech-to-speech vendors for
+realtime voice agents: Google Gemini, xAI, Qwen, AssemblyAI, Azure VoiceLive, Azure OpenAI
+and Amazon Nova. Portal users can now be set to sign in with GitHub or Google. Agents on
+speech-to-text vendors that do their own turn detection now end the caller's turn when the
+vendor says so, and the release fixes call hold on anchored-media dials, ElevenLabs data
+residency for speech-to-text, and a socket leak with Azure speech-to-text.
+
+#### New Features & Improvements
+
+1. **New speech vendors** — speech-to-text: `sarvam`, `smallestai`, `gnani`, `meta`,
+   `saidwire`, `azureopenai` and `inworld`. Text-to-speech: `sarvam`, `smallestai`, `gnani`,
+   `minimax`, `neuphonic`, `asyncai`, `respeecher`, `camb`, `hume`, `bland` and `soniox` with
+   streaming TTS, and `vakyam`, `simplismart`, `groq`, `speechmatics`, `azureopenai`, `kokoro`
+   and `spitch` for `say`. Each has speech credentials in the portal and API. See
+   [TTS vendor settings](/guides/features/tts-vendor-settings/overview).
+1. **KugelAudio speech-to-text** — `kugelaudio`, already a text-to-speech and noise isolation
+   vendor, now provides streaming speech-to-text (`kugel-ear-1`). See
+   [KugelAudio](/guides/features/tts-vendor-settings/kugel-audio).
+1. **Soniox speech-to-text v6** — Soniox credentials and recognizers can use the
+   `stt-rt-v6` model.
+1. **More speech-to-speech vendors** — the [llm](/verbs/verbs/llm) verb and Agent Studio add
+   Google Gemini (with a Gemini API key or a Vertex AI service account), xAI, Qwen,
+   AssemblyAI, Azure VoiceLive, Azure OpenAI and Amazon Nova as realtime voice agents, each
+   with an account credential in the portal (**LLM Services**, **Speech-to-speech** tab) and
+   a key test that does not open a billable session. These agents report turns to Agent
+   Studio like the existing ones. See [Realtime voice API](/agent-studio/agent-types/realtime-voice-api).
+1. **Sign in with GitHub or Google** — a portal user can be created or edited to sign in with
+   GitHub or Google instead of a password. The user receives an invitation email and is
+   linked to their account on first sign-in by verified email address. Switching a user to
+   GitHub or Google removes their password; switching back requires a new initial password,
+   which they must change at first sign-in. `GET /Users` reports each user's `provider` and
+   whether the invitation is still pending.
+1. **OpenAI Realtime errors** — an OpenAI Realtime agent now reports an `engine_error` turn
+   event when the vendor returns an error, a response fails, or the connection fails or
+   drops, and the verb's actionHook carries an `error` field.
+1. **Speech-to-speech close reason** — when a speech-to-speech vendor closes the connection,
+   the disconnect now includes the vendor's close code and reason.
+1. **API version** — `GET /v1/Version` returns the api-server release.
+1. **Portal** — call traces mark Dialogflow CES turns that the agent started without caller
+   speech, and the hosted portal has the service provider switcher back for admins.
+
+#### Changes in Behavior
+
+1. **Turn detection by the speech vendor** — with the [agent](/verbs/verbs/agent) verb, speech-to-text
+   vendors that do their own turn detection (`deepgramflux`, `assemblyai`,
+   `speechmaticsagent`, `zoom`, `gradium`, `mistral`, `paxa` and others) now end the caller's
+   turn on the vendor's end-of-turn signal only, not also on the final transcript, which
+   could run the turn twice. An end of turn with no words is ignored.
+1. **Azure OpenAI realtime endpoint** — Azure OpenAI realtime agents connect to the GA
+   endpoint (`openai/v1/realtime?model=`) instead of the preview `api-version` and
+   `deployment` endpoint.
+1. **Gemini tool calls** — Gemini realtime agents send one toolHook per tool call, carrying
+   the vendor's call id, instead of one per batch.
+1. **Tenant checks** — changing a SIP gateway's carrier with `PUT /SipGateways` now returns
+   400. Assigning a phone number to an account outside your scope returns 403, and assigning
+   it to an unknown account or application, or to an application of a different account,
+   returns 400.
+1. **Credential validation** — a speech credential request missing a required field returns
+   400 instead of 500. LLM credentials that have never been tested now show as untested
+   rather than failed, and are tested again when the portal lists them.
+
+#### Removals
+
+1. **Streaming TTS for Speechify, Giggy and Mistral** — these vendors no longer support
+   streaming text-to-speech (the [agent](/verbs/verbs/agent) verb, or `say` with `stream: true`). `say`
+   without streaming is unaffected.
+
+#### Bug Fixes
+
+- **Hold on anchored-media dials** — when a [dial](/verbs/verbs/dial) anchors media, the caller's hold
+  and resume are now answered by jambonz and passed to the `onHoldHook`.
+- **Azure speech-to-text socket leak** — speech-to-text vendor connections are now closed when
+  recognition stops. Azure connections were left open, which over time caused gaps of up to 1.3
+  seconds in text-to-speech.
+- **ElevenLabs data residency** — ElevenLabs speech-to-text, and its credential test, use the
+  host set by the credential's data residency.
+- **Deepgram Flux** — Flux uses the recognizer's model and language.
+- **Speech-to-text connection failures** — alerts and errors now give the vendor's reason.
+- **AssemblyAI agents** — an AssemblyAI agent can be asked to reply mid-call.
+- **VAD barge-in** — when VAD barge-in stopped the agent for a sound the speech-to-text vendor
+  never transcribed, the agent now resumes instead of staying silent.
+- **OpenAI speech-to-text** — OpenAI's speech-stopped event now reaches the agent.
+- **Dialogflow CES traces** — traces of long CES calls are no longer dropped.
+- **License changes** — calls are no longer refused while a license change is being applied.
+- **Recent calls** — the list no longer empties after the date filter changes.
+
+#### Component Versions
+
+| Component | 11.1.11 | 11.1.12 |
+|---|---|---|
+| jambonz | 11.1.11 | **11.1.12** |
+| mediajam | 0.5.20 | **0.5.21** |
+| drachtio | 10.1.12 | 10.1.12 |
+| rtpengine | 14.1.1.8-jambonz14 | 14.1.1.8-jambonz14 |
+| jambonz OSS (sbc-*) | 0.9.15 | 0.9.15 |
+| upload-recordings | 1.9.3 | 1.9.3 |
+| monitoring-agent | 10.2.2 | 10.2.2 |
+| pcap-server | 1.0.5 | 1.0.5 |
+| heplify-server | 1.0.5 | 1.0.5 |
+
+#### Availability
+
+**jambonz.cloud** - November 7, 2026
+
+**self-hosted Debian packages** - available now: install `jambonz-mini` 11.1.12 from the
+jambonz apt repository (Debian 12 bookworm), amd64 and arm64.
