@@ -139,6 +139,8 @@ The following LLMs are currently supported:
 - Google Gemini Live API (via Gemini Developer API or Vertex AI)
 - AssemblyAI Voice Agent
 - xAI Voice Agent
+- Qwen Omni Realtime (Alibaba Cloud Model Studio)
+- Azure OpenAI Realtime
 - Azure Voice Live
 - Amazon Nova Sonic (Amazon Bedrock)
 
@@ -551,11 +553,136 @@ Tool/function calling uses the same fields as OpenAI's (`session_update.tools`, 
 
 When `session_update.audio.input.transcription` is configured, caller-speech transcripts arrive on `conversation.item.input_audio_transcription.updated`. Unlike OpenAI's `.completed` event, this event is **cumulative** — each update contains the full transcript so far, not just a delta.
 
+## Qwen Omni Realtime
+
+Set `vendor: 'qwen'` to use Alibaba's [Qwen Omni Realtime](https://www.alibabacloud.com/help/en/model-studio/realtime) models on Alibaba Cloud Model Studio (DashScope). Qwen speaks an OpenAI Realtime-style dialect: `llmOptions` carries a `session_update` and an optional `response_create`, forwarded as the `session.update` and `response.create` client events. jambonz connects to `wss://{host}/api-ws/v1/realtime?model={model}`.
+
+```js
+session.llm({
+  vendor: 'qwen',
+  model: 'qwen3.5-omni-flash-realtime',
+  auth: {
+    apiKey: process.env.DASHSCOPE_API_KEY,
+    host: 'ws-xxxx.ap-southeast-1.maas.aliyuncs.com'
+  },
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  llmOptions: {
+    session_update: {
+      instructions: 'You are a friendly, helpful voice assistant on a phone call. Keep answers short.',
+      voice: 'Tina',
+      input_audio_transcription: { model: 'qwen3-asr-flash-realtime' }
+    },
+    response_create: {
+      instructions: 'Greet the caller and ask how you can help.'
+    }
+  }
+});
+```
+
+### Model selection
+
+<ParamField path="model" type="string" required={false}>
+  Qwen Omni Realtime model name, for example `qwen3.8-omni-flash-realtime`, `qwen3.5-omni-plus-realtime` or `qwen3.5-omni-flash-realtime`. Defaults to `qwen3.5-omni-flash-realtime`.
+</ParamField>
+
+### Authentication and host
+
+<ParamField path="auth.apiKey" type="string" required={true}>
+  A DashScope API key, sent as a bearer token. Keys are bound to a region and workspace, so the host must match the key.
+</ParamField>
+
+<ParamField path="auth.host" type="string" required={false}>
+  The host the key belongs to: a workspace host such as `ws-xxxx.ap-southeast-1.maas.aliyuncs.com`, or `dashscope.aliyuncs.com` for the China (Beijing) region. Defaults to the international endpoint, `dashscope-intl.aliyuncs.com`. A pasted console URL works too; jambonz keeps only the hostname. `connectOptions.host` takes precedence when both are set.
+</ParamField>
+
+### Required session_update
+
+**`llmOptions.session_update` is required.** Audio does not flow until Qwen confirms the first `session.updated`.
+
+### Speaking first
+
+`response_create` is **optional**. With server-side turn detection Qwen replies on its own once the caller speaks, so omit `response_create` to have the agent wait for the caller. Include one to have it speak first, for example with a greeting in its `instructions`.
+
+### Audio format
+
+jambonz sends Qwen the caller's audio as 16 kHz pcm16 and plays Qwen's 24 kHz audio to the caller. Do not set a different audio format in `session_update`.
+
+### Input transcription
+
+Qwen transcribes the caller only when asked. Set `session_update.input_audio_transcription` (for example `{ model: 'qwen3-asr-flash-realtime' }`); the caller's words then arrive on `conversation.item.input_audio_transcription.completed`.
+
+### Tool calls
+
+Tools go in `session_update.tools`, in the same function format as OpenAI. jambonz routes each call to your `toolHook` and returns its result to Qwen.
+
+### Barge-in
+
+When the caller talks over the agent, jambonz cancels the reply in progress if the verb's `cancelOnBargeIn` is set, and only when it is a reply jambonz asked for.
+
+## Azure OpenAI Realtime
+
+Set `vendor: 'microsoft'` to use OpenAI's realtime models deployed on your own [Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio) resource. It speaks the same OpenAI Realtime GA dialect described in the [OpenAI Realtime](#openai-realtime) section above: `llmOptions` carries the same `response_create` and `session_update` payloads, in the same format. jambonz connects to Azure's GA realtime endpoint, `wss://{host}/openai/v1/realtime?model={deployment}`.
+
+```js
+session.llm({
+  vendor: 'microsoft',
+  model: 'gpt-realtime',  // your deployment's name
+  auth: { apiKey: process.env.AZURE_OPENAI_API_KEY },
+  connectOptions: { host: 'my-resource.openai.azure.com' },
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  llmOptions: {
+    session_update: {
+      type: 'realtime',
+      instructions: 'You are a friendly, helpful voice assistant on a phone call.',
+      audio: {
+        input: { transcription: { model: 'my-transcribe-deployment' } },
+        output: { voice: 'marin' }
+      }
+    },
+    response_create: {
+      instructions: 'Greet the caller and ask how you can help.'
+    }
+  }
+});
+```
+
+### Model and connection
+
+<ParamField path="model" type="string" required={true}>
+  The name of your Azure deployment of a realtime model, which is not necessarily the model's name.
+</ParamField>
+
+<ParamField path="connectOptions.host" type="string" required={true}>
+  Your Azure OpenAI resource host, for example `my-resource.openai.azure.com`.
+</ParamField>
+
+<ParamField path="connectOptions.path" type="string" required={false}>
+  Overrides the endpoint path, for example to reach Azure's preview realtime endpoint instead of the GA one.
+</ParamField>
+
+<ParamField path="auth.apiKey" type="string" required={true}>
+  A key of the Azure OpenAI resource. jambonz sends it as the `api-key` query parameter.
+</ParamField>
+
+### Speaking first
+
+As with OpenAI, **`llmOptions.response_create` is required**: jambonz sends it as soon as the session opens, so the agent always speaks first.
+
+### Input transcription
+
+Azure transcribes the caller only with a transcription model deployed on the same resource. Set `session_update.audio.input.transcription.model` to that deployment's name; without one, no caller transcripts arrive.
+
+`vendor: 'microsoft'` is not [Azure Voice Live](#azure-voice-live), which is a separate Azure service with its own session shape.
+
 ## Azure Voice Live
 
 Set `vendor: 'voicelive'` and point `connectOptions.host` at your Microsoft Foundry or Azure Speech resource to use the [Azure Voice Live API](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/voice-live). jambonz connects to `wss://{host}/voice-live/realtime`.
 
-Voice Live is **not** the same thing as `vendor: 'microsoft'`. That vendor targets the older Azure OpenAI Realtime deployment endpoint (`openai/realtime`) and shares its payload shapes with `vendor: 'openai'`. Voice Live is a separate service that keeps the Realtime *event* vocabulary but uses its own flat session shape and adds Azure-only capabilities: Azure Speech voices, semantic VAD, server-side noise suppression and echo cancellation, word timestamps and visemes, and non-realtime chat models (e.g. `gpt-4.1`) paired with Azure speech to text.
+Voice Live is **not** the same thing as `vendor: 'microsoft'`. That vendor targets a realtime model deployed on your Azure OpenAI resource (see [Azure OpenAI Realtime](#azure-openai-realtime)) and shares its payload shapes with `vendor: 'openai'`. Voice Live is a separate service that keeps the Realtime *event* vocabulary but uses its own flat session shape and adds Azure-only capabilities: Azure Speech voices, semantic VAD, server-side noise suppression and echo cancellation, word timestamps and visemes, and non-realtime chat models (e.g. `gpt-4.1`) paired with Azure speech to text.
 
 ```js
 session.llm({
