@@ -158,13 +158,15 @@ The **Greeting** card, under the prompt, sets how the call opens.
   outbound calls, so the agent answers the "hello" before greeting. It is on by default for new outbound agents.
 - **Greeting comes from**: **Model improvises** writes the greeting from the prompt, so it can vary from call to call
   and use variables. **Text** gives the words the agent opens with, and the caller can interrupt them. A Cascaded
-  voice pipeline agent, Ultravox and Deepgram Voice Agent speak them exactly; OpenAI Realtime, OpenAI GPT-Live and
-  Rime Prism are asked to say them, and their model may reword them. With **Wait for the other party to speak
-  first**, the words are the agent's first reply, which the model may also reword.
-  Variables such as `{{caller_number}}` in a Text greeting are filled in on Cascaded voice pipeline agents; on a
-  Realtime voice API agent, put them in the prompt and let the model greet.
+  voice pipeline agent, Ultravox, Deepgram Voice Agent and AssemblyAI Voice Agent speak them exactly; the other
+  Realtime voice API vendors are asked to say them, and their model may reword them. With **Wait for the other party
+  to speak first**, the words are the agent's first reply, which the model may also reword.
+  Variables such as `{{caller_number}}` in a Text greeting are filled in, except on OpenAI GPT-Live, Deepgram Voice
+  Agent and Ultravox; for those, put them in the prompt and let the model greet.
 
-On OpenAI Realtime, the agent always speaks first; Studio shows a note if the wait option is on.
+On OpenAI Realtime, xAI Grok Voice, Azure OpenAI Realtime and Azure Voice Live, the agent always speaks first; Studio
+shows a note if the wait option is on. AssemblyAI Voice Agent speaks only a Text greeting; with **Model improvises**
+it waits for the caller.
 
 ## What blocks publishing
 
