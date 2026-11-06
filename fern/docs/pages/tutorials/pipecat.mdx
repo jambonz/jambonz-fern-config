@@ -60,12 +60,15 @@ set it here.
 
 `bidirectionalAudio.sampleRate` is the rate jambonz reads the agent's audio at.
 It has no default; if omitted, jambonz uses the call's negotiated codec rate,
-which depends on the carrier and the far end.
+which depends on the carrier and the far end. Nothing on the websocket reports
+it, so the agent has to be told.
 
 <Note>
-**Set `bidirectionalAudio.sampleRate` to the same value as `sampleRate`.** The
-serializer sends audio at the rate it received, so if the two differ the agent's
-speech plays fast or slow.
+**Pass the same value to the serializer as `audio_out_sample_rate`.** Pipecat
+then converts the agent's audio to that rate before sending it. If the two
+differ, the agent's speech plays fast or slow. Using one rate for
+`sampleRate`, `bidirectionalAudio.sampleRate` and `audio_out_sample_rate` keeps
+it simple.
 </Note>
 
 ### mixType
@@ -93,7 +96,10 @@ transport = FastAPIWebsocketTransport(
     params=FastAPIWebsocketParams(
         audio_in_enabled=True,
         audio_out_enabled=True,
-        serializer=JambonzFrameSerializer(),
+        serializer=JambonzFrameSerializer(
+            # Must match the verb's bidirectionalAudio.sampleRate.
+            JambonzFrameSerializer.InputParams(audio_out_sample_rate=16000)
+        ),
     ),
 )
 ```
@@ -102,8 +108,9 @@ The rest of the pipeline (STT, LLM, TTS) is standard Pipecat. The example
 application uses Deepgram and OpenAI, runs on Pipecat's development runner, and
 serves the calling webhook and the websocket from the same process.
 
-The serializer needs no configuration. The sample rate and the call's details
-come from the first message jambonz sends. After that message,
+Apart from `audio_out_sample_rate`, the serializer needs no configuration. The
+caller's sample rate and the call's details come from the first message jambonz
+sends. After that message,
 `serializer.call_sid` and `serializer.trace_id` are available for matching your
 logs with jambonz's, and `serializer.call_meta` holds the whole message.
 
