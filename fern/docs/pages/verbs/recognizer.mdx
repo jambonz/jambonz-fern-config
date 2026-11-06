@@ -1336,6 +1336,56 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
   </Accordion>
 
+  <Accordion title="kugelaudioOptions">
+    KugelAudio (`kugelaudio`) uses [KugelAudio streaming speech-to-text](https://docs.kugelaudio.com/features/speech-to-text) with the model `kugel-ear-1`. KugelAudio detects the end of each turn itself: words are streamed as they are recognized (sent as interim results when `interim` is enabled), and one final transcript is returned per turn. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb each final ends the user's turn, unless `turnDetection` is set to `krisp`.
+
+    Speech-to-text is enabled per KugelAudio organization, and the API key needs the speech-to-text permission. Without them the connection is refused and the credential test in the portal fails.
+
+    `language` is sent as a two-letter code (`de-DE` becomes `de`). Supported: `cs`, `da`, `de`, `el`, `en`, `es`, `fi`, `fr`, `hu`, `it`, `nl`, `pl`, `pt`, `ro`, `sv`. Any other language, or none, uses KugelAudio's automatic detection.
+
+    The KugelAudio credential is used for TTS, STT and noise isolation. Its `api_uri` in **Extra Options** (for example `api.eu.kugelaudio.com`) moves STT to that host too.
+
+    <ParamField path="apiKey" type="string" required={false}>
+      KugelAudio API key to authenticate with (overrides the credential configured in jambonz).
+    </ParamField>
+
+    <ParamField path="model" type="string" required={false}>
+      STT model. Default `kugel-ear-1`, currently the only model.
+    </ParamField>
+
+    <ParamField path="languages" type="array" required={false}>
+      Languages to detect among, most likely first (for example `["de", "en"]`). Replaces `language`. Unsupported codes are dropped.
+    </ParamField>
+
+    <ParamField path="turnDetection" type="string" required={false}>
+      How a turn ends. `kugelturn` (default) is KugelAudio's end-of-turn model, which can close a turn after a pause of about 200 ms. `vad` ends a turn after one second of silence.
+    </ParamField>
+
+    <ParamField path="turnDetectionLevel" type="string" required={false}>
+      How eagerly `kugelturn` ends a turn: `responsive` (default) or `conservative`, which waits longer. Not sent when `turnDetection` is `vad`.
+    </ParamField>
+
+    <ParamField path="boostedPhrases" type="array" required={false}>
+      Words or phrases to favor, such as names and brands, up to 64 characters each. When omitted, the recognizer's `hints` are used. Phrases KugelAudio would reject (longer than 64 characters, or containing `<` or `>`) are not sent. `hintsBoost` is not used.
+    </ParamField>
+
+    <ParamField path="dictionaryIds" type="array" required={false}>
+      Ids of KugelAudio dictionaries that bias recognition. An id that does not belong to the key's project ends the session with an error.
+    </ParamField>
+
+    <ParamField path="projectId" type="integer" required={false}>
+      KugelAudio project the session is billed to.
+    </ParamField>
+
+    <ParamField path="kugelaudioSttUri" type="string" required={false}>
+      Custom host to connect to instead of `api.kugelaudio.com`, such as `api.eu.kugelaudio.com` or a proxy. Overrides the credential's `api_uri`.
+    </ParamField>
+
+    <ParamField path="kugelaudioSttUseTls" type="boolean" required={false}>
+      Use TLS when connecting to `kugelaudioSttUri`. Default `true`.
+    </ParamField>
+  </Accordion>
+
   <Accordion title="mistralOptions">
     Mistral (`mistral`) uses [Voxtral realtime transcription](https://docs.mistral.ai/studio/audio/speech-to-text/transcribe-in-realtime). Text is streamed as it is recognized (sent as interim results when `interim` is enabled). With turn detection on, which is the default, Voxtral detects the end of the speaker's turn and jambonz returns one final transcript per turn. Transcripts are reported with a confidence of 1.0. In the [`agent`](/verbs/verbs/agent) verb each final ends the user's turn, unless `turnDetection` is set to `krisp`. Voxtral's early end-of-turn signal drives `earlyGeneration`.
 
