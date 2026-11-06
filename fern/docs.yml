@@ -156,6 +156,8 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/giggy.mdx
               - page: Gnani
                 path: ./docs/pages/features/tts-vendors/gnani.mdx
+              - page: Google
+                path: ./docs/pages/features/tts-vendors/google.mdx
               - page: Gradium
                 path: ./docs/pages/features/tts-vendors/gradium.mdx
               - page: Groq
@@ -166,6 +168,8 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/inworld.mdx
               - page: Kokoro
                 path: ./docs/pages/features/tts-vendors/kokoro.mdx
+              - page: KugelAudio
+                path: ./docs/pages/features/tts-vendors/kugelaudio.mdx
               - page: MiniMax
                 path: ./docs/pages/features/tts-vendors/minimax.mdx
               - page: Mistral
@@ -190,6 +194,8 @@ navigation:
                 path: ./docs/pages/features/tts-vendors/smallestai.mdx
               - page: Soniox
                 path: ./docs/pages/features/tts-vendors/soniox.mdx
+              - page: Speechify
+                path: ./docs/pages/features/tts-vendors/speechify.mdx
               - page: Speechmatics
                 path: ./docs/pages/features/tts-vendors/speechmatics.mdx
               - page: Spitch
