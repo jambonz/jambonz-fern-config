@@ -174,7 +174,7 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       The version of the streaming API to use, `v2` or `v3`.
     </ParamField>
     <ParamField path="speechModel" type="string" required={false}>
-      AssemblyAI speech model to use for recognition (e.g., `u3-rt-pro`).
+      AssemblyAI speech model to use for recognition: `universal-3-6-pro`, `universal-3-5-pro`, `u3-rt-pro`, `whisper-rt`, `universal-streaming-english` or `universal-streaming-multilingual`. If not set, the model saved on the speech credential is used; a credential with no saved model uses `u3-rt-pro`. New credentials created in the portal default to `universal-3-6-pro`.
     </ParamField>
     <ParamField path="formatTurns" type="boolean" required={false}>
       Format each speaker turn. Default: `true`.
@@ -198,7 +198,13 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
       Prompt text to guide the recognition model — typically a description of the expected user response. Improves accuracy when the response is predictable (e.g., the text of the question you just asked). See also [`autogeneratePrompt`](#param-autogenerateprompt) on the recognizer, which auto-populates this from a nested `say` in a `gather` verb.
     </ParamField>
     <ParamField path="languageDetection" type="boolean" required={false}>
-      Enable automatic language detection.
+      Include the detected `language_code` and `language_confidence` in each transcript. This only controls reporting; it does not change which languages are recognized.
+    </ParamField>
+    <ParamField path="languageCodes" type="array" required={false}>
+      (Universal-3.5 Pro and Universal-3.6 Pro) Languages to bias transcription toward, e.g. `["en", "es"]`. The model can still switch between the listed languages mid-utterance. Universal-3.6 Pro supports 32 languages and detects them automatically when this is not set.
+    </ParamField>
+    <ParamField path="voiceFocus" type="string" required={false}>
+      Isolate the primary speaker and suppress background voices and noise before transcription. `near-field` suits phones and headsets; `far-field` suits distant microphones such as conference rooms. Default: off.
     </ParamField>
     <ParamField path="vadThreshold" type="number" required={false}>
       Voice activity detection threshold.
