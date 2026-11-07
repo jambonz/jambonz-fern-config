@@ -1069,6 +1069,29 @@ session.llm({
   Enable [session resumption](https://ai.google.dev/api/live#session-resumption). Pass `{}` to opt in, or `{ handle: "..." }` to resume a previous session. Resumption handles are delivered back to the application via `llm_event` `sessionResumptionUpdate` messages.
 </ParamField>
 
+### Tool calls
+
+Declare your functions in `llmOptions.setup.tools`, as Gemini's [`functionDeclarations`](https://ai.google.dev/api/live#bidigeneratecontentsetup). MCP tools and the handoff and hangup tools are added for you. When Gemini calls a function, jambonz calls your `toolHook`. The payload includes `function_calls`, Gemini's list of calls (its `functionCalls`, snake_cased like every hook payload), each with its `id`, `name` and `args`.
+
+Gemini expects each result back in its own [`toolResponse`](https://ai.google.dev/api/live#bidigeneratecontenttoolresponse) message: a `functionResponses` entry with the call's `id` and `name`, and your result as `response`.
+
+```js
+session.on('/toolCall', async(evt) => {
+  const functionResponses = await Promise.all(evt.function_calls.map(async({ id, name, args }) => ({
+    id,
+    name,
+    response: await runTool(name, args)   // any JSON object, e.g. { ok: true, reason: 'voicemail detected' }
+  })));
+  session.sendToolOutput(evt.tool_call_id, { toolResponse: { functionResponses } });
+});
+```
+
+Gemini waits until every call has a response, so answer each one, with an error result if it failed (for example `{ error: 'order not found' }`).
+
+<Warning>
+Send the result inside `toolResponse.functionResponses`. Releases before 11.1.12 drop a bare result such as `{ ok: true }`, logging `invalid tool output, must be functionResponses`. Gemini never gets the answer, and the agent stalls. From 11.1.12, jambonz wraps a bare JSON object for you, adding the call's `id` and `name`, and sends each function call to your `toolHook` separately with `name`, `args` and `tool_call_id`. The `toolResponse` form works in every release.
+</Warning>
+
 ## AssemblyAI Voice Agent
 
 Set `vendor: 'assemblyai'` and supply your AssemblyAI API key via `auth.api_key`. `llmOptions` is the [AssemblyAI Voice Agent `session` payload](https://www.assemblyai.com/docs/voice-agents/voice-agent-api/events-reference#sessionupdate) passed through verbatim — there is no jambonz-specific wrapper. jambonz wraps it as `{type: 'session.update', session: <llmOptions>}` and sends it as the first client message after the websocket connects to `wss://agents.assemblyai.com/v1/ws`. See the [AssemblyAI Voice Agent product page](https://www.assemblyai.com/products/voice-agent-api) and [Voice Agent API docs](https://www.assemblyai.com/docs/voice-agents/voice-agent-api) for an overview.
