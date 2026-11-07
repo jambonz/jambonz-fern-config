@@ -2,9 +2,9 @@
 jambonz Commercial 11.1.12
 </Card>
 
-**11.1.12** adds more than twenty speech vendors and seven more speech-to-speech vendors for
-realtime voice agents: Google Gemini, xAI, Qwen, AssemblyAI, Azure VoiceLive, Azure OpenAI
-and Amazon Nova. Portal users can now be set to sign in with GitHub or Google. Agents on
+**11.1.12** adds more than twenty speech vendors and brings seven speech-to-speech vendors to
+Agent Studio as realtime voice agents: Google Gemini, xAI, Qwen, AssemblyAI, Azure VoiceLive,
+Azure OpenAI and Amazon Nova. Portal users can now be set to sign in with GitHub or Google. Agents on
 speech-to-text vendors that do their own turn detection now end the caller's turn when the
 vendor says so, and the release fixes call hold on anchored-media dials, ElevenLabs data
 residency for speech-to-text, and a socket leak with Azure speech-to-text.
@@ -22,10 +22,10 @@ residency for speech-to-text, and a socket leak with Azure speech-to-text.
    [KugelAudio](/guides/features/tts-vendor-settings/kugel-audio).
 1. **Soniox speech-to-text v6** — Soniox credentials and recognizers can use the
    `stt-rt-v6` model.
-1. **More speech-to-speech vendors** — the [llm](/verbs/verbs/llm) verb and Agent Studio add
-   Google Gemini (with a Gemini API key or a Vertex AI service account), xAI, Qwen,
-   AssemblyAI, Azure VoiceLive, Azure OpenAI and Amazon Nova as realtime voice agents, each
-   with an account credential in the portal (**LLM Services**, **Speech-to-speech** tab) and
+1. **Speech-to-speech vendors in Agent Studio** — Agent Studio adds Google Gemini (with a
+   Gemini API key or a Vertex AI service account), xAI, Qwen, AssemblyAI, Azure VoiceLive,
+   Azure OpenAI and Amazon Nova as realtime voice agents. These vendors were already available
+   in the [llm](/verbs/verbs/llm) verb; each now has an account credential in the portal (**LLM Services**, **Speech-to-speech** tab) and
    a key test that does not open a billable session. These agents report turns to Agent
    Studio like the existing ones. See [Realtime voice API](/agent-studio/agent-types/realtime-voice-api).
 1. **Sign in with GitHub or Google** — a portal user can be created or edited to sign in with
