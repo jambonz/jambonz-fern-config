@@ -278,6 +278,18 @@ navigation:
           - page: Transfer and hangup
             path: ./docs/pages/agent-studio/building/transfer-and-hangup.mdx
             slug: transfer-and-hangup
+      - section: Situations
+        slug: situations
+        contents:
+          - page: Overview
+            path: ./docs/pages/agent-studio/situations/overview.mdx
+            slug: overview
+          - page: Starting situations from your server
+            path: ./docs/pages/agent-studio/situations/server-control.mdx
+            slug: server-control
+          - page: Building a server for Studio
+            path: ./docs/pages/agent-studio/situations/building-a-server.mdx
+            slug: building-a-server
       - page: Testing
         path: ./docs/pages/agent-studio/testing.mdx
         slug: testing

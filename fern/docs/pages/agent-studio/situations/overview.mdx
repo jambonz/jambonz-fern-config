@@ -1,0 +1,175 @@
+---
+title: Situations
+subtitle: Change an agent's instructions and tools during a call, when something comes up.
+---
+
+A call rarely follows one script. A caller says they've lost their job, disputes a charge, or asks to be called back
+later. Each of these needs its own instructions, and sometimes its own tools, but only once it comes up.
+
+A **situation** is one of these. You describe it once on the agent. During a call, while a situation is **active**:
+
+- its instructions are added to the agent's prompt;
+- tools can be offered that the agent doesn't otherwise have, and tools it does have can be hidden.
+
+When the situation is **resolved**, its instructions and tool changes are removed again. A situation can come up at
+any point in a call, in any order with others, or not at all.
+
+<Note>
+Situations are available for **Cascaded voice pipeline** agents. See [Which agents can use
+situations](#which-agents-can-use-situations).
+</Note>
+
+## Who starts a situation
+
+Each situation is started in one of two ways:
+
+| | **The agent decides** | **Only your server** |
+|---|---|---|
+| Who starts it | the model, when the conversation calls for it; your server can start it too | one of your tools, in its result |
+| What the model sees beforehand | the situation's name and its **When it applies** line | nothing |
+| Who resolves it | the model or your server | your server |
+| What it gives you | guidance: the model judges when it applies | a guarantee: the agent has none of the situation's instructions or tools until your server says so |
+
+Use **The agent decides** for things the model can recognise from the conversation: hardship, a complaint, a
+request for a callback.
+
+Use **Only your server** when something must be true before the agent may act, and only your systems can tell. A
+collections agent shouldn't discuss a debt until the caller's identity is checked. Your `verify_identity` tool checks
+it and starts a `negotiation` situation, which adds the instructions and the `record_agreement` tool. Until then the
+model can't see the negotiation instructions and can't call `record_agreement`, however the conversation goes.
+
+[Starting situations from your server](/agent-studio/situations/server-control) explains how a tool does this.
+
+## Adding a situation
+
+Open the agent and choose **Situations**, between **Conversation** and **Tools**. **New situation** adds one.
+
+| Field | What it is |
+|---|---|
+| **Name** | snake_case: a lowercase letter, then lowercase letters, digits and underscores, up to 48 characters. The model and your server refer to the situation by this name |
+| **Who can start it** | **The agent decides** or **Only your server** |
+| **When it applies** | for **The agent decides** only: one line, up to 300 characters, telling the model when to start it. The model reads only this line to decide |
+| **Instructions** | up to 4,000 characters, added to the prompt while the situation is active. Say what the agent should do, and when the situation counts as resolved |
+| **Tools offered only while active** | tools from this agent's Tools section that the model can't call until the situation starts |
+| **Tools hidden while active** | tools the model can't call while the situation is active |
+
+For **Only your server**, the **When it applies** line is replaced by the result your tool returns to start the
+situation.
+
+An agent can have up to 10 situations, and up to 3 can be active at once.
+
+### What the model is told
+
+The card at the top of the Situations section shows the text added to the end of the prompt for the situations the
+agent decides. For example:
+
+```
+## Situations
+Call enter_situation with a situation's name as soon as it applies, even while others are active: several can be active at once.
+Call resolve_situation only when the situation's own instructions say it is resolved. The caller moving on to another topic does not resolve it.
+Resolving a situation only changes your instructions; it doesn't end the call.
+- hardship: The caller says they can't pay because of a job loss, illness or similar.
+- callback_request: The caller asks to be called back at another time.
+```
+
+With it, the model gets two built-in tools, `enter_situation` and `resolve_situation`, each taking the situation's
+name. Situations that only your server can start are left out of this text and out of these tools.
+
+While a situation is active, its instructions are added to the prompt under a heading of their own:
+
+```
+## Active situation: hardship
+Acknowledge the hardship and don't push for payment today. Offer to pause collection for 30 days...
+```
+
+Several active situations each add their own block, in the order they started.
+
+### Tools
+
+A tool listed under **Tools offered only while active** is taken out of the agent's tools when the call starts, and
+offered only while that situation is active. If two active situations both offer a tool, it is offered once.
+
+A tool listed under **Tools hidden while active** is withheld while the situation is active. If one active situation
+offers a tool and another hides it, it is hidden.
+
+The built-in tools that end or transfer the call, `hangup` and `transfer_to_human`, can't be hidden. Neither can
+`enter_situation` or `resolve_situation`.
+
+Studio enforces the tool list itself, not only the model. If the model calls a tool that isn't offered at that
+moment, for example from an earlier turn, the call is refused and the model is told the tool isn't available right
+now.
+
+## Writing good situations
+
+- **Keep each "When it applies" line narrow.** The model starts a situation as soon as the line seems to apply. "The
+  caller mentions a bill" will fire on almost every call; "The caller says a charge on their bill is wrong" won't.
+- **Say in the instructions when the situation is resolved.** The model resolves a situation only when its
+  instructions say so, not because the caller changes the subject. For example: "Once the dispute is recorded with
+  `record_dispute`, the situation is resolved."
+- **You don't need to tell the agent to keep going.** Resolving a situation only changes the instructions, and the
+  model is told that. Don't add "don't hang up" to each situation.
+- **Put what a situation needs in the situation.** The agent has a situation's instructions only while it is active,
+  so keep anything it needs afterwards in the main prompt.
+- **Use Only your server for anything that must not happen by mistake**: taking payment, changing an account,
+  discussing information the caller hasn't been verified for.
+
+## How many can be active
+
+Up to 3 situations can be active at once.
+
+| When 3 are already active | What happens |
+|---|---|
+| the model starts another | it is refused, and told to resolve one that no longer applies first |
+| your server starts another | the oldest situation the model started is dropped to make room |
+| your server starts another, and all 3 were started by your server | it is refused |
+
+Starting a situation that is already active, or resolving one that isn't, changes nothing.
+
+## In Calls
+
+Every change is recorded in the call history and shown in [Calls](/agent-studio/calls) and the test call view:
+
+| On the timeline | When |
+|---|---|
+| **Started** *name* | a situation started, with who started it: the model, or the tool whose result started it |
+| **Resolved** *name* | a situation was resolved |
+| **Dropped** *name* | a situation was dropped to make room for one your server started |
+| **Refused to start** or **Refused to resolve** *name* | a change was refused, with the reason |
+
+Each turn shows the situations that changed in it, and the situations active through it. The turn's details include a
+**Situations** section with the same information.
+
+`enter_situation` and `resolve_situation` calls aren't listed with the turn's tool calls when they succeed: the
+situation change shows instead. A failed call is listed, with its error.
+
+## Which agents can use situations
+
+| Agent type | Situations |
+|---|---|
+| **Cascaded voice pipeline** | yes |
+| **Realtime voice API** | not yet |
+| **Connected agent** | no: its instructions and tools live in the vendor's console, so Studio can't change them during a call |
+| **Custom harness** | no: your harness owns the prompt and tools, so it handles situations in its own code |
+
+For the other agent types, the **Situations** tab is shown greyed out, and hovering over it says why. If an agent
+that has situations is changed to one of these types, its situations are kept but not used, and publishing is blocked
+until they are removed.
+
+## What blocks publishing
+
+- the agent's type doesn't support situations
+- a situation offers or hides a tool that isn't one of the agent's tools
+- a situation hides a built-in tool
+
+These are notes, and don't block publishing:
+
+- a situation the agent decides has no **When it applies** line, so the model can't tell when to start it
+- a situation has no instructions and no tool changes, so starting it changes nothing
+- one of the agent's own tools is named `enter_situation` or `resolve_situation`
+
+## Next
+
+- [Starting situations from your server](/agent-studio/situations/server-control): start and resolve situations from
+  your tools' results
+- [Building a server for Studio](/agent-studio/situations/building-a-server): receive Studio's tool requests and
+  verify them
