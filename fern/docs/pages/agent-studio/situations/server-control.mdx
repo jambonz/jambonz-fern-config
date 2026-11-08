@@ -39,6 +39,42 @@ Add `actions.resolve_situation`:
 One result can carry both: `{ "actions": { "resolve_situation": "triage", "situation": "negotiation" } }` resolves
 `triage` and starts `negotiation`.
 
+## From an MCP tool
+
+An MCP tool sends `actions` in its result, in either of two places.
+
+**In the text**, when the tool's text content is a JSON object:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"verified\": true, \"customer_name\": \"Jordan Lee\", \"actions\": {\"situation\": \"negotiation\"}}"
+    }
+  ]
+}
+```
+
+The model gets `{"verified": true, "customer_name": "Jordan Lee"}` as the text.
+
+**In `structuredContent`**, when the text is written for the model:
+
+```json
+{
+  "content": [{ "type": "text", "text": "Agreement AGR-1234 recorded." }],
+  "structuredContent": { "recorded": true, "actions": { "resolve_situation": "negotiation" } }
+}
+```
+
+The model gets the text, `Agreement AGR-1234 recorded.`, unchanged.
+
+If the text is a JSON object with `actions`, Studio uses that and ignores `structuredContent`. If your tool declares
+an output schema that doesn't allow extra properties, add `actions` to it, or `structuredContent` won't validate.
+
+A result with `isError: true` changes nothing. Starting and resolving work exactly as for HTTP tools, including
+[when the change reaches the agent](#when-the-change-reaches-the-agent).
+
 ## What Studio does with `actions`
 
 Studio removes `actions` from the result before the model sees it. The model gets the rest of the result, and is never
