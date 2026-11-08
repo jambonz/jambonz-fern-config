@@ -3,7 +3,7 @@ title: Starting situations from your server
 subtitle: Start and resolve situations from your tools' results, so the agent acts only when your systems say it may.
 ---
 
-Any of the agent's HTTP tools can start or resolve a [situation](/agent-studio/situations/overview) by adding an
+Any of the agent's HTTP or MCP tools can start or resolve a [situation](/agent-studio/situations/overview) by adding an
 `actions` object to its result. This is the only way to start a situation set to **Only your server**, and
 it also works for situations the agent decides.
 
@@ -76,11 +76,11 @@ Starting a situation that is already active, or resolving one that isn't, does n
 
 ### Which results are read
 
-- `actions` is read from HTTP tools' successful results only, a `2xx` answer. An error result's `actions` is
-  ignored.
-- MCP tools can't start or resolve situations.
-- The result must be a JSON object, sent with a JSON `Content-Type`. `actions` must be an object; any other value is
-  passed to the model unchanged.
+- `actions` is read from successful results only. An error result's `actions` is ignored.
+- **HTTP tools:** a `2xx` answer whose body is a JSON object, sent with a JSON `Content-Type`.
+- **MCP tools:** a result that isn't an error, with `actions` either in its text, when the text is a JSON object, or
+  in its `structuredContent`. Studio removes it from the text; any other text reaches the model unchanged.
+- `actions` must be an object; any other value is passed to the model unchanged.
 - Unknown keys in `actions` are ignored.
 
 ## Example: a collections agent
