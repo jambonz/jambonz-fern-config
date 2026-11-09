@@ -39,6 +39,9 @@ Add `actions.resolve_situation`:
 One result can carry both: `{ "actions": { "resolve_situation": "triage", "situation": "negotiation" } }` resolves
 `triage` and starts `negotiation`.
 
+Resolving a situation also ends the active situations that wait for it (**The agent can start it**: only once it has
+started). Your server can start a situation whatever it waits for.
+
 ## From an MCP tool
 
 An MCP tool sends `actions` in its result, in either of two places.
@@ -100,6 +103,7 @@ happens at once: it is recorded on the call, and the situation's tools stop bein
 Studio refuses a change, and records it on the call as **Refused to start** or **Refused to resolve**, when:
 
 - the agent has no situation with that name;
+- the result resolves a situation that isn't active;
 - 3 situations are already active and all 3 were started by your server.
 
 When 3 are active and at least one was started by the model, starting another drops the oldest one the model started
@@ -108,7 +112,7 @@ to make room. The call records it as **Dropped**.
 A refusal doesn't change the result the model sees, and isn't reported back to your server. Check the call in
 [Calls](/agent-studio/calls) to see it.
 
-Starting a situation that is already active, or resolving one that isn't, does nothing and isn't recorded.
+Starting a situation that is already active does nothing and isn't recorded.
 
 ### Which results are read
 
