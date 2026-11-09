@@ -193,7 +193,7 @@ until they are removed.
 - the agent's type doesn't support situations
 - a situation offers or hides a tool that isn't one of the agent's tools
 - a situation hides a built-in tool
-- a situation waits for a situation the agent doesn't have, or for itself
+- a situation waits for a situation the agent doesn't have, for itself, or for one that waits for it in turn
 - one of the agent's own tools is named `enter_situation` or `resolve_situation`: its calls would never start or
   resolve a situation
 
