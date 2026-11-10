@@ -278,21 +278,24 @@ navigation:
           - page: Transfer and hangup
             path: ./docs/pages/agent-studio/building/transfer-and-hangup.mdx
             slug: transfer-and-hangup
-      - page: Testing
-        path: ./docs/pages/agent-studio/testing.mdx
-        slug: testing
-      - page: Publishing and numbers
-        path: ./docs/pages/agent-studio/publishing.mdx
-        slug: publishing
-      - page: Calls and usage
-        path: ./docs/pages/agent-studio/calls.mdx
-        slug: calls
-      - page: Experiments
-        path: ./docs/pages/agent-studio/experiments.mdx
-        slug: experiments
-      - page: Result webhook
-        path: ./docs/pages/agent-studio/webhooks.mdx
-        slug: webhooks
+      - section: Testing and running
+        skip-slug: true
+        contents:
+          - page: Testing
+            path: ./docs/pages/agent-studio/testing.mdx
+            slug: testing
+          - page: Publishing and numbers
+            path: ./docs/pages/agent-studio/publishing.mdx
+            slug: publishing
+          - page: Calls and usage
+            path: ./docs/pages/agent-studio/calls.mdx
+            slug: calls
+          - page: Experiments
+            path: ./docs/pages/agent-studio/experiments.mdx
+            slug: experiments
+          - page: Result webhook
+            path: ./docs/pages/agent-studio/webhooks.mdx
+            slug: webhooks
       - section: Custom harness
         slug: custom-harness
         contents:
