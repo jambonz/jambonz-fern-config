@@ -278,6 +278,9 @@ navigation:
           - page: Transfer and hangup
             path: ./docs/pages/agent-studio/building/transfer-and-hangup.mdx
             slug: transfer-and-hangup
+          - page: Handing calls to other agents
+            path: ./docs/pages/agent-studio/building/handoff.mdx
+            slug: handoff
       - section: Testing and running
         skip-slug: true
         contents:
