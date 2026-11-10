@@ -7,10 +7,10 @@ Before you start, check the [requirements](/agent-studio/self-hosting/overview#r
 server's DNS name already resolves to its public IP:
 
 ```bash
-dig +short studio.example.com
+getent hosts studio.example.com
 ```
 
-It must print the server's IP. The certificate step depends on it.
+It must print the server's public IP. The certificate step depends on it.
 
 ## 1. Add the apt sources
 
@@ -45,7 +45,9 @@ sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y jambonz-studio
 ```
 
-This installs Studio and its data stores. It starts nothing: it ends by telling you to run `studio configure`.
+This installs Studio and its data stores, and ends by telling you to run `studio configure`. Studio itself is not
+started yet. Debian starts MariaDB and Redis (on `127.0.0.1` only) and nginx with its default page on port 80;
+`studio configure` sets them up.
 
 ## 3. Configure
 
@@ -109,8 +111,8 @@ Every line should show a ✓: the `api`, `gw`, `rag` and `worker` services, and 
 The platform Admin manages workspaces and their users. It does not build agents itself.
 
 1. Open the link `studio configure` printed, set the Admin's password and sign in.
-2. Under **Admin**, select **New workspace**. Enter a **Workspace name** and the email of its **First user**, who
-   becomes the workspace's owner. This must be a different email from the Admin's.
+2. Under **Admin**, select **New workspace**. Enter a **Workspace name**, and the **Name** and **Email** of its
+   **First user**, who becomes the workspace's owner. The email must be different from the Admin's.
 3. Studio shows that user's activation link. Mail is off, so it is not emailed: select **Copy link** and give it to
    the user. It is shown once; **Regenerate link** issues a new one and the previous link stops working.
 4. The user opens the link, sets a password and signs in. From here, follow
