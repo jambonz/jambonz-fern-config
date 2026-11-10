@@ -1,0 +1,123 @@
+---
+title: Install
+subtitle: Install Agent Studio from the jambonz apt repository and bring it up with studio configure.
+---
+
+Before you start, check the [requirements](/agent-studio/self-hosting/overview#requirements), and make sure the
+server's DNS name already resolves to its public IP:
+
+```bash
+dig +short studio.example.com
+```
+
+It must print the server's IP. The certificate step depends on it.
+
+## 1. Add the apt sources
+
+Two sources: the jambonz repository, and NodeSource for Node.js (Debian 12's own Node is too old).
+
+```bash
+sudo apt-get update
+sudo apt-get install -y curl ca-certificates gnupg
+
+# jambonz apt repository
+sudo install -d /etc/apt/keyrings
+curl -fsSL https://jambonz-debian-packages.s3.us-east-2.amazonaws.com/jambonz.gpg \
+  | sudo gpg --yes --dearmor -o /etc/apt/keyrings/jambonz.gpg
+echo "deb [signed-by=/etc/apt/keyrings/jambonz.gpg] https://jambonz-debian-packages.s3.us-east-2.amazonaws.com/debian bookworm main" \
+  | sudo tee /etc/apt/sources.list.d/jambonz.list
+
+# NodeSource
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo bash -
+```
+
+If the server already runs jambonz from our Debian package, the jambonz source is already there.
+
+<Warning>
+**Pre-release testers only:** until Studio is released, its packages are in the `bookworm-staging` distribution.
+Replace `bookworm main` with `bookworm-staging main` in the `echo` line above. (This note is removed at release.)
+</Warning>
+
+## 2. Install the package
+
+```bash
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y jambonz-studio
+```
+
+This installs Studio and its data stores. It starts nothing: it ends by telling you to run `studio configure`.
+
+## 3. Configure
+
+```bash
+sudo studio configure --host studio.example.com --email admin@example.com
+```
+
+`--host` is the server's DNS name. `--email` is the email of the **platform Admin**, the user who manages
+workspaces on this Studio, and the address Let's Encrypt uses for expiry notices.
+
+`studio configure`:
+
+1. generates the passwords and keys Studio needs into `/etc/jambonz-studio/studio.env`, readable only by root and the
+   Studio service;
+2. sets up MariaDB, Redis, ClickHouse and Qdrant, each listening on `127.0.0.1` only, with ClickHouse's memory
+   capped at about 20% of the server's RAM;
+3. gets a TLS certificate for `--host` and sets up nginx for HTTPS (below);
+4. creates the databases, starts Studio and checks that every service is healthy;
+5. creates the platform Admin and prints a link to set its password.
+
+It takes a minute or two. **Copy the link printed at the end**
+(`https://studio.example.com/activate/...`): it is how the Admin signs in the first time.
+
+`studio configure` is safe to run again, for example to change a setting. Options you leave out keep their previous
+values, and the generated passwords and keys are never replaced. See [Configuration](/agent-studio/self-hosting/configuration)
+for every option.
+
+### The TLS certificate
+
+By default, `studio configure` gets a certificate from **Let's Encrypt**:
+
+1. nginx serves your hostname on port 80, and `certbot` asks Let's Encrypt for a certificate. Let's Encrypt checks
+   that you control the name by connecting to `http://<host>/.well-known/acme-challenge/...`, which is why DNS must
+   point at the server and port 80 must be open.
+2. The certificate is installed in `/etc/letsencrypt/live/<host>/`, nginx switches to HTTPS, and port 80 redirects
+   to 443.
+3. It renews automatically: `certbot.timer` renews it before it expires and nginx reloads to use it. You can check
+   the renewal setup at any time with `sudo certbot renew --dry-run`.
+
+If the certificate can't be issued, configure stops with:
+
+```
+Let's Encrypt failed for <host>: does its DNS point at this host, and is port 80 open?
+```
+
+Fix the cause and run `studio configure` again.
+
+To use your own certificate instead, see [Your own certificate](/agent-studio/self-hosting/configuration#your-own-certificate).
+
+## 4. Check it
+
+```bash
+studio health
+```
+
+Every line should show a ✓: the `api`, `gw`, `rag` and `worker` services, and MariaDB, Redis, ClickHouse and Qdrant.
+`studio status` shows the version, processes, disk and certificate as well.
+
+## 5. Sign in and add your first workspace
+
+The platform Admin manages workspaces and their users. It does not build agents itself.
+
+1. Open the link `studio configure` printed, set the Admin's password and sign in.
+2. Under **Admin**, select **New workspace**. Enter a **Workspace name** and the email of its **First user**, who
+   becomes the workspace's owner. This must be a different email from the Admin's.
+3. Studio shows that user's activation link. Mail is off, so it is not emailed: select **Copy link** and give it to
+   the user. It is shown once; **Regenerate link** issues a new one and the previous link stops working.
+4. The user opens the link, sets a password and signs in. From here, follow
+   [Getting started](/agent-studio/getting-started) to connect your jambonz account and build an agent.
+
+To add more people later, open the workspace under **Admin** and add them; each gets an activation link the same
+way.
+
+Without mail, self sign-up and password-reset emails are off. To turn them on, see
+[Mail](/agent-studio/self-hosting/configuration#mail).

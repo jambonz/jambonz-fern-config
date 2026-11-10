@@ -1,0 +1,59 @@
+---
+title: Self-hosting Agent Studio
+subtitle: Run Agent Studio on your own Debian server, next to your own jambonz.
+---
+
+Agent Studio is available hosted at [studio.jambonz.org](https://studio.jambonz.org), and as a Debian package you
+install on your own server. A self-hosted Studio is free and works the same way: it connects to a jambonz account
+with an account SID and API key, and runs your agents' tools, knowledge bases and call history.
+
+Studio is a standalone install. It runs its own data stores (MariaDB, Redis, ClickHouse and Qdrant) on its own
+server and shares nothing with jambonz. It can sit in the same network as your jambonz and talks to it only over the
+network.
+
+## Requirements
+
+**Server**
+
+| | Minimum | Recommended |
+|---|---|---|
+| OS | Debian 12 (bookworm), amd64 or arm64 | |
+| CPU and memory | 2 vCPU, 8 GB RAM | 4 vCPU, 16 GB RAM for heavy knowledge-base use or high call volume |
+| Disk | 50 GB | 100 GB; on cloud servers, a separate data volume (see [Configuration](/agent-studio/self-hosting/configuration#data-directory)) plus a 20 GB root volume |
+
+- A public IP address and a **DNS name** for the server (for example `studio.example.com`).
+- Inbound **TCP 80 and 443** from the internet. Port 80 is used to get and renew the Let's Encrypt certificate, and
+  redirects to 443.
+
+**Your jambonz**
+
+- jambonz **11.1.6 or later**.
+- Its REST API reachable from the Studio server over `https` on a **public address**. Studio does not yet connect to a
+  jambonz API on a private IP address or an internal-only hostname.
+- Its feature servers able to reach the Studio server on port 443. jambonz connects to Studio over a secure
+  WebSocket (`wss://<studio host>/jambonz/ws`), so Studio's certificate must be one jambonz trusts; a Let's Encrypt
+  certificate is.
+- For **browser test calls**, your jambonz SBC must accept WebRTC over WSS on port 8443 with a valid certificate (see
+  **Setting up WebRTC and SIP TLS** in the Self-Hosting docs). Without it, phone calls to your agents still work.
+
+## What gets installed
+
+| Package | What it is |
+|---|---|
+| `jambonz-studio` | Studio itself, under `/opt/jambonz-studio`, run by pm2 under the `jambonz-studio` systemd service, plus the `studio` command |
+| `jambonz-studio-qdrant` | Qdrant, the vector store behind knowledge bases |
+| `clickhouse-server` and friends | ClickHouse, which holds call history and usage, at the version Studio is tested with |
+| from Debian | MariaDB, Redis, nginx and certbot |
+
+Every data store listens on `127.0.0.1` only. nginx is the only thing listening on public ports.
+
+## Steps
+
+1. [Install](/agent-studio/self-hosting/install): add the apt sources, install the package, run `studio configure`
+   and sign in.
+2. [Configuration](/agent-studio/self-hosting/configuration): mail, Google and GitHub sign-in, agent engines, a data
+   directory, your own certificate.
+3. [Upgrades and operations](/agent-studio/self-hosting/operations): upgrading, the `studio` command, logs, backups.
+
+Once it is running, everything in the rest of the Agent Studio docs applies, starting with
+[Getting started](/agent-studio/getting-started).
