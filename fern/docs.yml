@@ -278,21 +278,24 @@ navigation:
           - page: Transfer and hangup
             path: ./docs/pages/agent-studio/building/transfer-and-hangup.mdx
             slug: transfer-and-hangup
-      - page: Testing
-        path: ./docs/pages/agent-studio/testing.mdx
-        slug: testing
-      - page: Publishing and numbers
-        path: ./docs/pages/agent-studio/publishing.mdx
-        slug: publishing
-      - page: Calls and usage
-        path: ./docs/pages/agent-studio/calls.mdx
-        slug: calls
-      - page: Experiments
-        path: ./docs/pages/agent-studio/experiments.mdx
-        slug: experiments
-      - page: Result webhook
-        path: ./docs/pages/agent-studio/webhooks.mdx
-        slug: webhooks
+      - section: Testing and running
+        skip-slug: true
+        contents:
+          - page: Testing
+            path: ./docs/pages/agent-studio/testing.mdx
+            slug: testing
+          - page: Publishing and numbers
+            path: ./docs/pages/agent-studio/publishing.mdx
+            slug: publishing
+          - page: Calls and usage
+            path: ./docs/pages/agent-studio/calls.mdx
+            slug: calls
+          - page: Experiments
+            path: ./docs/pages/agent-studio/experiments.mdx
+            slug: experiments
+          - page: Result webhook
+            path: ./docs/pages/agent-studio/webhooks.mdx
+            slug: webhooks
       - section: Custom harness
         slug: custom-harness
         contents:
@@ -308,6 +311,21 @@ navigation:
           - page: SDK reference
             path: ./docs/pages/agent-studio/custom-harness/sdk.mdx
             slug: sdk
+      - section: Self-hosting
+        slug: self-hosting
+        contents:
+          - page: Overview
+            path: ./docs/pages/agent-studio/self-hosting/overview.mdx
+            slug: overview
+          - page: Install
+            path: ./docs/pages/agent-studio/self-hosting/install.mdx
+            slug: install
+          - page: Configuration
+            path: ./docs/pages/agent-studio/self-hosting/configuration.mdx
+            slug: configuration
+          - page: Upgrades and operations
+            path: ./docs/pages/agent-studio/self-hosting/operations.mdx
+            slug: operations
   - tab: verbs
     layout: 
       - section: Verbs
@@ -475,6 +493,8 @@ navigation:
         contents:
           - page: Debian package
             path: ./docs/pages/self-hosting/debian-package.mdx
+          - link: Agent Studio
+            href: /agent-studio/self-hosting/overview
       - section: Kubernetes
         path: ./docs/pages/self-hosting/k8s-overview.mdx
         contents:
