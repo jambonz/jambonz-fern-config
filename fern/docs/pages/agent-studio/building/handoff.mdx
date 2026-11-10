@@ -1,0 +1,107 @@
+---
+title: Handing calls to other agents
+subtitle: Pass a call from one Studio agent to another on the same call, with the facts it needs and without a second greeting.
+---
+
+An agent can hand a call to another Studio agent in the same workspace: a front desk that hands billing calls to a
+billing agent, or an English agent that hands to a Spanish one on a different voice. The caller stays on the same
+call. The next agent is not greeted again: it is told what it was handed and carries on from what the caller last
+said. It can hand the caller back.
+
+## Handoff, situation or application
+
+A handoff ends one agent and starts another, so it costs two model turns back to back and a new speech or
+speech-to-speech session. Use it when something has to change that an agent can't change in place.
+
+| The caller needs… | Use |
+|---|---|
+| Different instructions or tools, same engine and voice | a situation |
+| A different engine, voice, speech vendor or language model | a handoff |
+| An agent that another team builds and publishes | a handoff |
+| A queue, an IVR, a conference or your own code | **Send the call to another jambonz application** ([Transfer & hangup](/agent-studio/building/transfer-and-hangup)) |
+
+## Receiving handoffs
+
+An agent takes handed-over calls only once you allow it. Open its **Transfer & hangup** section and turn on
+**Receive calls from other agents**, then publish it: the agents that hand calls to it read its live version.
+
+| Setting | What it does | Default |
+|---|---|---|
+| **What this agent handles** | from the caller's side, for example "The caller has a question about a charge, a bill or a payment." Agents that hand calls here offer it to their model | empty |
+| **Conversation it is given** | **A summary written by the previous agent**, **The last turns of the conversation** (2 to 20), or **Only the handed-over values** | A summary |
+| **When the call arrives** | **Answers what the caller last said**, or **Says a fixed line first** | Answers what the caller last said |
+| **Values it needs handed over** | up to 8 values the previous agent must fill in when it hands off (see below) | none |
+
+The card shows the note the agent is given when a call arrives. It is told the handoff is done, not to greet the
+caller or mention a transfer, what it was handed, and (with a summary) the previous agent's summary.
+
+**Says a fixed line first** plays the line as soon as the agent's voice is ready, which hides most of the wait for
+its first model turn; then it waits for the caller. It is spoken by cascaded pipeline agents only; other kinds answer
+the note instead. The line can use handed-over values.
+
+A Custom harness or Dialogflow CES agent can't receive handoffs.
+
+### Values handed over
+
+Each value has a **Name** (snake_case, up to 32 characters), a **Type** (**Text**, **Number**, **Yes / no** or **One
+of a list**), and a description that tells the previous agent what to put there. Mark a value **Required** to refuse
+a handoff without it, and **Sensitive** to keep it out of every log and call record (the receiving agent still gets
+it).
+
+Use a value in the prompt or the fixed line as `{{handoff.name}}`, for example:
+
+```text
+The caller's account number is {{handoff.account_id}}. Read it back and ask them to confirm it.
+```
+
+Values stay with the call: an agent the call reaches later, or comes back to, sees every value handed over so far.
+
+## Handing a call to another agent
+
+In the agent that hands calls over, turn on **Hand the call to another agent** and choose the agent. Each one
+becomes a tool for the model, `send_to_<name>`, whose parameters are the values the other agent asks for, so the
+model fills them in the same tool call that decides to hand off.
+
+**When should the call go to this agent?** tells the model when to use it, from the caller's side. Left empty, the
+other agent's **What this agent handles** is used. The model is told to hand off without announcing it: the next
+agent speaks straight away. **Says to the caller before handing over** adds a line in this agent's voice, at the
+cost of a longer handoff; a fixed opening on the receiving agent is usually better.
+
+Agents and applications share one list of at most 5 destinations.
+
+### Sending callers back
+
+To let the receiving agent send callers back, list the first agent as one of its destinations, and turn on
+**Receive calls from other agents** on the first agent. A handoff to an agent that already took part in the call is
+a return: that agent runs the same version as before, gets the whole conversation, and is told the caller is back and
+what they last said.
+
+## Limits
+
+| Limit | What happens |
+|---|---|
+| At most 4 handoffs per call, returns included | the fifth is refused |
+| The same agent to the same agent at most twice per call | refused as a loop |
+| Straight back to the agent that just handed you the call, before the caller speaks | refused as a loop |
+| A required value is missing or a value doesn't fit its type | refused; the model is told which, and asks the caller |
+| The other agent is unpublished, deleted, or doesn't receive handoffs | refused |
+
+A refused handoff leaves the call with the agent that tried, which is told why and keeps helping the caller.
+
+## In the call history
+
+The call's timeline shows each handoff: **Handed to Billing** with the values passed and the context given, **Billing
+answered** with the time from the handoff to its first reply, **Back with Front desk** for a return, and **Handoff to
+Billing refused** with the reason. A test call's console shows the same.
+
+The call belongs to the agent it was routed to (its number and experiment) in the call list and usage.
+
+## What blocks publishing
+
+- a destination is this agent itself
+- the chosen agent no longer exists, is not published, or doesn't receive handoffs in its live version
+- **Receive calls from other agents** is on for a Custom harness or Dialogflow CES agent
+
+Builder notes (not blocking) point out a destination with no description, two destinations that read alike, more than
+3 agent destinations, a destination that uses the same engine, model and voice as this agent (a situation may do),
+and a handed-over value the prompt never uses.

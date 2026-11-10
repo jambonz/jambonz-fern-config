@@ -1,6 +1,6 @@
 ---
 title: Configuration
-subtitle: Every studio configure option, mail, Google and GitHub sign-in, agent engines, a data directory and your own certificate.
+subtitle: Every studio configure option, mail, Google and GitHub sign-in, agent engines, a data directory, sign-in limits and your own certificate.
 ---
 
 All configuration goes through `studio configure`, run as root. Run it again to change a setting: options you leave
@@ -124,6 +124,19 @@ sudo studio configure --cert /path/to/fullchain.pem --key /path/to/privkey.pem
 The certificate must be valid for `--host` and not expired; configure checks both. It is copied to
 `/etc/jambonz-studio/tls/`, so later runs don't need the original files. Renewal is up to you: run configure again
 with the new files.
+
+## Sign-in limits
+
+Studio refuses a password sign-in with `429` after 5 attempts for one email, or 10 from one IP address, in 15 minutes.
+A test server that signs in on every automated run can allow more. Add the limits to `/etc/jambonz-studio/studio.env`:
+
+```bash
+SIGN_IN_LIMIT_EMAIL=100
+SIGN_IN_LIMIT_IP=200
+```
+
+then run `sudo studio configure` to reload Studio. configure keeps lines it doesn't manage. Keep the defaults on a
+server people sign in to from the internet.
 
 ## Secrets from AWS SSM
 
