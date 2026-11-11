@@ -323,6 +323,21 @@ navigation:
           - page: SDK reference
             path: ./docs/pages/agent-studio/custom-harness/sdk.mdx
             slug: sdk
+      - section: Self-hosting
+        slug: self-hosting
+        contents:
+          - page: Overview
+            path: ./docs/pages/agent-studio/self-hosting/overview.mdx
+            slug: overview
+          - page: Install
+            path: ./docs/pages/agent-studio/self-hosting/install.mdx
+            slug: install
+          - page: Configuration
+            path: ./docs/pages/agent-studio/self-hosting/configuration.mdx
+            slug: configuration
+          - page: Upgrades and operations
+            path: ./docs/pages/agent-studio/self-hosting/operations.mdx
+            slug: operations
   - tab: verbs
     layout: 
       - section: Verbs
@@ -490,6 +505,8 @@ navigation:
         contents:
           - page: Debian package
             path: ./docs/pages/self-hosting/debian-package.mdx
+          - link: Agent Studio
+            href: /agent-studio/self-hosting/overview
       - section: Kubernetes
         path: ./docs/pages/self-hosting/k8s-overview.mdx
         contents:

@@ -1,0 +1,81 @@
+---
+title: Upgrades and operations
+subtitle: Upgrade Agent Studio without dropping calls, use the studio command, and know what to back up.
+---
+
+## Upgrades
+
+```bash
+sudo apt-get update
+sudo apt-get install --only-upgrade jambonz-studio
+```
+
+The upgrade:
+
+1. runs the database migrations (they only go forward);
+2. publishes the new web app; browser tabs opened before the upgrade keep working;
+3. reloads the Studio services one process at a time, so Studio stays up;
+4. checks that every service is healthy.
+
+Calls in progress are not dropped. The process that serves calls finishes the calls it has before it stops, which can
+take up to 15 minutes, and the upgrade command waits for that. Run upgrades when few calls are up.
+
+There is no rollback. If an upgrade fails, the previous version keeps running and apt reports the package as not
+fully configured; fix the cause (the output says what failed) and run `sudo dpkg --configure -a`. Installing an older
+version is only safe if the newer one ran no database migration; the release notes say which releases migrate.
+
+Studio's ClickHouse and Qdrant versions are pinned to the ones each Studio release is tested with, and apt upgrades
+them together with Studio.
+
+## The studio command
+
+Run on the server, as root or as a user with passwordless `sudo` (`configure` must run with `sudo`).
+
+| Command | What it does |
+|---|---|
+| `studio status` | version, processes, health, data stores, disk, certificate and key settings |
+| `studio health` | the health of every service and data store; exits 1 if any fail |
+| `studio version` | version, commit and database migration levels |
+| `studio env` | the effective settings, without secret values |
+| `studio logs [api\|gw\|rag\|worker]` | follow the logs as readable lines; `--since 10m`, `--call <call_sid>`, `--session <id>`, `--no-follow` |
+| `studio calls` | recent calls, newest first (`--since 1h`, `--limit 20`) |
+| `studio call <call_sid or test session id>` | one call in detail: its record, timeline and log lines |
+| `studio restart [api\|gw\|rag\|worker]` | reload the services (asks first; calls drain as in an upgrade) |
+| `sudo studio configure ...` | change a setting (see [Configuration](/agent-studio/self-hosting/configuration)) |
+
+When something goes wrong, `studio health` names what is failing and `studio logs` or `studio call <sid>` usually says
+why. When you contact support@jambonz.org, include their output.
+
+## Where things are
+
+| Path | What |
+|---|---|
+| `/opt/jambonz-studio` | the application |
+| `/etc/jambonz-studio/studio.env` | settings and generated secrets |
+| `/etc/jambonz-studio/configure.env` | what `studio configure` was last given (no secrets) |
+| `/var/lib/jambonz-studio` | knowledge-base documents |
+| `/var/log/jambonz-studio` | service logs, rotated daily or at 50 MB, 14 kept |
+| `/var/www/jambonz-studio` | the web app nginx serves |
+
+The services run as the `jambonz-studio` user, under the `jambonz-studio` systemd service. Qdrant runs as
+`qdrant.service`; MariaDB, Redis, ClickHouse and nginx as their usual services.
+
+## Backups
+
+Back up the data stores' directories and `/etc/jambonz-studio`, or snapshot the data volume if you use
+[`--data-dir`](/agent-studio/self-hosting/configuration#data-directory).
+
+<Warning>
+`/etc/jambonz-studio/studio.env` holds `SECRETS_KEKS`, the key that encrypts the jambonz API keys and other
+credentials Studio stores. A database restored without the matching `studio.env` cannot decrypt them. Keep it with
+your backups, and keep it secret.
+</Warning>
+
+## Removing Studio
+
+```bash
+sudo apt-get remove jambonz-studio
+```
+
+This stops Studio (calls drain first) and removes the application. Your data, settings and keys are kept, even with
+`apt-get purge`, so a later install with `studio configure` picks them up again. Delete them yourself if you mean to.

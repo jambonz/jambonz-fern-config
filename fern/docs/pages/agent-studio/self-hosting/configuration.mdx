@@ -1,0 +1,143 @@
+---
+title: Configuration
+subtitle: Every studio configure option, mail, Google and GitHub sign-in, agent engines, a data directory and your own certificate.
+---
+
+All configuration goes through `studio configure`, run as root. Run it again to change a setting: options you leave
+out keep the values they had, and the generated passwords and keys are never replaced. Each run restarts a data store
+only if its own configuration changed, and reloads Studio without dropping calls.
+
+## Options
+
+| Option | What it does |
+|---|---|
+| `--host <fqdn>` | The server's public DNS name. Required the first time. |
+| `--email <address>` | The platform Admin's email, created on the first run; also the Let's Encrypt account email. |
+| `--cert <fullchain.pem> --key <privkey.pem>` | Use this certificate instead of Let's Encrypt. |
+| `--data-dir <dir>` | Keep all of Studio's data under `<dir>`, for example a separate data volume. |
+| `--engines <list>` | Agent engines besides the cascaded pipeline that your jambonz runs: `s2s`, `hosted`, `harness`. |
+| `--mail-from <from>` | Sender for Studio's mail, for example `'Agent Studio <studio@example.com>'`. |
+| `--mailgun-domain <domain>` | Send mail through Mailgun, from this sending domain. |
+| `--mailgun-url <url>` | Mailgun API endpoint; `https://api.eu.mailgun.net` for Mailgun's EU region. |
+| `--smtp-url <url>` | Send mail through an SMTP server instead of Mailgun. |
+| `--ssm-path <path> --aws-region <region>` | On AWS: read Studio's secrets from SSM Parameter Store instead of generating them. |
+
+Secrets (a Mailgun API key, OAuth client secrets) are never options, so they stay out of the process list and your
+shell history. You pass them in the environment of the command, as shown below. They are written to
+`/etc/jambonz-studio/studio.env`, which only root and the Studio service can read.
+
+`studio configure --help` prints the same list.
+
+## Mail
+
+By default Studio has no mail. Self sign-up is off, and the platform Admin creates workspaces and users and hands out
+their activation links (see [Install](/agent-studio/self-hosting/install#5-sign-in-and-add-your-first-workspace)).
+
+With mail configured, people sign up themselves, verify their email and reset their own passwords, and owners invite
+people to their workspaces by email. The Admin's workspace tools are then turned off.
+
+**Mailgun:**
+
+```bash
+sudo MAILGUN_API_KEY='key-...' studio configure \
+  --mail-from 'Agent Studio <studio@example.com>' --mailgun-domain mg.example.com
+```
+
+Add `--mailgun-url https://api.eu.mailgun.net` if your Mailgun domain is in the EU region.
+
+**SMTP:**
+
+```bash
+sudo SMTP_URL='smtps://user:password@smtp.example.com:465' studio configure \
+  --mail-from 'Agent Studio <studio@example.com>'
+```
+
+## Google and GitHub sign-in
+
+The sign-in page shows a **Continue with Google** or **Continue with GitHub** button for each provider Studio has a
+client ID and secret for.
+Create an OAuth client with the provider, with:
+
+- **Authorized JavaScript origin:** `https://<host>`
+- **Redirect URI:** `https://<host>/v1/auth/oauth/google/callback` (or `/github/callback`)
+
+Then pass its ID and secret to configure:
+
+```bash
+sudo GOOGLE_CLIENT_ID='....apps.googleusercontent.com' GOOGLE_CLIENT_SECRET='...' studio configure
+```
+
+For GitHub, use `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`. An ID without its secret, or the other way round, is
+refused.
+
+## Agent engines
+
+Out of the box, Studio publishes and tests **cascaded voice pipeline** agents only. The other kinds of agent need a
+jambonz release that runs them, so you turn them on for the jambonz this Studio connects to:
+
+| Engine | Agent kind |
+|---|---|
+| `s2s` | [Realtime voice API](/agent-studio/agent-types/realtime-voice-api) |
+| `hosted` | [Connected agent](/agent-studio/agent-types/connected-agent) |
+| `harness` | [Custom harness](/agent-studio/custom-harness/overview) |
+
+```bash
+sudo studio configure --engines s2s,hosted,harness
+```
+
+An agent whose engine is not turned on can still be built, but testing or publishing it is refused with
+`ENGINE_NOT_SUPPORTED`. If you are unsure whether your jambonz release runs an engine, ask
+support@jambonz.org.
+
+## Data directory
+
+On a cloud server, keep Studio's data on its own volume, so you can resize it, snapshot it and keep it if the server
+is replaced. Mount the volume first, then:
+
+```bash
+sudo studio configure --data-dir /data
+```
+
+Studio bind-mounts these directories from the data directory, with entries in `/etc/fstab`:
+
+| Directory | Holds |
+|---|---|
+| `/var/lib/mysql` | MariaDB: users, workspaces, agents |
+| `/var/lib/clickhouse` | ClickHouse: call history and usage |
+| `/var/lib/qdrant` | Qdrant: knowledge-base vectors |
+| `/var/lib/jambonz-studio` | knowledge-base documents |
+| `/etc/jambonz-studio` | Studio's settings and its generated passwords and keys |
+
+On the first run the current contents are copied there. If the data directory already holds them, for example a
+volume from an earlier server or a restored snapshot, they are used as they are, settings and keys included. That is
+how you move Studio to a new server: attach the volume, install the package and run `studio configure` with the same
+`--host` and `--data-dir`.
+
+Set the data directory once; moving a configured Studio to a different data directory is not supported.
+
+## Your own certificate
+
+```bash
+sudo studio configure --cert /path/to/fullchain.pem --key /path/to/privkey.pem
+```
+
+The certificate must be valid for `--host` and not expired; configure checks both. It is copied to
+`/etc/jambonz-studio/tls/`, so later runs don't need the original files. Renewal is up to you: run configure again
+with the new files.
+
+## Secrets from AWS SSM
+
+On AWS you can keep Studio's secrets in SSM Parameter Store instead of on the server. Create these SecureString
+parameters under one path, for example `/agent-studio/prod/`: `MYSQL_PASSWORD`, `REDIS_PASSWORD`, `REDIS_URL`
+(`redis://:<REDIS_PASSWORD>@127.0.0.1:6379/0`), `CLICKHOUSE_PASSWORD`, `QDRANT_API_KEY`, `RAG_TOKEN`,
+`SESSION_SECRET` and `SECRETS_KEKS` (`k1:` followed by 32 random bytes in base64). Optional secrets such as
+`MAILGUN_API_KEY` and `GOOGLE_CLIENT_SECRET` can go there too.
+
+Give the instance a role that can read that path, then:
+
+```bash
+sudo studio configure --host studio.example.com --ssm-path /agent-studio/prod --aws-region us-east-1
+```
+
+configure checks the required parameters are there and generates nothing. Every Studio process reads the parameters
+when it starts. This needs the AWS CLI (`sudo apt-get install awscli`).
