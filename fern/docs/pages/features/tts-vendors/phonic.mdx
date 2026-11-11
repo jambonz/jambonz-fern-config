@@ -1,0 +1,63 @@
+---
+title: Phonic
+subtitle: Forty-two multilingual voices in more than 50 languages, with speed control, for Phonic TTS.
+---
+
+[Phonic](https://docs.phonic.ai) is a speech-to-speech company that also offers a text-to-speech API. Phonic tuning is passed in `synthesizer.options`.
+
+```json
+{
+  "verb": "say",
+  "text": "Hi there, your order ships today.",
+  "synthesizer": {
+    "vendor": "phonic",
+    "language": "en-US",
+    "voice": "sabrina",
+    "options": {
+      "speed": 1.1
+    }
+  }
+}
+```
+
+You can also set these in the portal under **Extra Options** on the speech credential, in which case they apply to every request that uses that credential. Settings supplied on the verb take precedence.
+
+## Credential
+
+Create an API key in your Phonic account. jambonz sends the key as `Authorization: Bearer <api key>`. Add it as a **Phonic** speech credential in the portal or API, using the vendor id `phonic`. Phonic is used for text-to-speech only.
+
+The credential can also set a model and an API host; see [Endpoint override](#endpoint-override).
+
+## Voices and languages
+
+The only model is `merritt`, which Phonic uses when no model is set.
+
+The portal asks Phonic for the voices your API key can use, including custom voices provisioned for your workspace, and lists every voice under every language, the voices that speak that language best first. If Phonic can't be reached, it shows the 42 base voices (`sabrina`, `grant`, `landon`, `virginia`, `eleanor`, and others). Some voices have an accent, which Phonic lists in its [voices page](https://docs.phonic.ai/docs/build/agents/voices).
+
+jambonz sends the language code from `synthesizer.language` without its region, for example `de` for `de-DE`; `nb` and `nn` are sent as `no`, and `tl` as `fil`. A language Phonic does not support is not sent, so Phonic speaks English instead of rejecting the request.
+
+jambonz requests Phonic audio as 16-bit PCM at 24 kHz and resamples it to the call's rate.
+
+## Options
+
+Every option is optional. An option you don't set is not sent, so Phonic's own default applies.
+
+<ParamField path="speed" type="number" required={false}>
+  Speaking rate, from `0.5` to `1.5`. Phonic's default is `1.2`.
+</ParamField>
+
+<ParamField path="model_id" type="string" required={false}>
+  Model. Overrides the model on the credential. Only `merritt` is available.
+</ParamField>
+
+<ParamField path="api_uri" type="string" required={false}>
+  API host. Overrides the API host on the credential; see [Endpoint override](#endpoint-override).
+</ParamField>
+
+## Endpoint override
+
+To use a different Phonic endpoint, set the **API base URL** on the credential, or `api_uri` in its **Extra Options** or in `synthesizer.options`. It is a host name such as `api.phonic.ai`; a trailing `/` is ignored, and an `http://` scheme connects without TLS. Leave it out to use `api.phonic.ai`.
+
+## Streaming
+
+Phonic has no token-streaming websocket for text-to-speech (its websocket is for speech-to-speech conversations), so it does not support [TTS streaming](/guides/features/tts-streaming): use it for one-shot `say`, not for `say` with `stream: true` or the `agent` verb.
