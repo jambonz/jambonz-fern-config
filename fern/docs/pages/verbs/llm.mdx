@@ -871,6 +871,99 @@ Send `llm:update` with `{text: '...'}` to inject a user turn as text (Nova answe
 
 Bedrock ends each bidirectional stream after 8 minutes. jambonz renews the stream before then, at a moment when the agent is not speaking. It replays the setup and the conversation so far as text history, so the call continues without a break. A caller speaking at the exact moment of renewal may need to repeat themselves.
 
+## Phonic
+
+Set `vendor: 'phonic'` to use [Phonic](https://docs.phonic.ai/docs/get-started/overview) speech-to-speech. Phonic listens to the caller, decides when the caller has finished, and answers in its own voice. This vendor requires the mediajam media server.
+
+```js
+session.llm({
+  vendor: 'phonic',
+  model: 'phonic-1',
+  auth: {apiKey: process.env.PHONIC_API_KEY},
+  actionHook: '/final',
+  eventHook: '/event',
+  toolHook: '/toolCall',
+  llmOptions: {
+    config: {
+      system_prompt: 'You answer the phone for Juniper Cafe. Keep answers short.',
+      voice_id: 'sabrina',
+      welcome_message: 'Juniper Cafe, how can I help?',
+      tools: [{
+        type: 'custom_websocket',
+        tool_schema: {
+          type: 'function',
+          function: {
+            name: 'get_hours',
+            description: 'Opening hours for a given day',
+            parameters: {
+              type: 'object',
+              properties: {day: {type: 'string'}},
+              required: ['day'],
+              additionalProperties: false
+            },
+            strict: true
+          }
+        }
+      }]
+    }
+  }
+});
+```
+
+### Authentication
+
+`auth.apiKey` is a Phonic API key (it starts with `ph_`). Leave `auth` out to use the account's Phonic speech-to-speech credential (LLM Services, Speech-to-speech), chosen by `label`.
+
+### Model selection
+
+`model` is optional (`phonic-1` or `phonic-0.5`); without it Phonic uses its current default. `llmOptions.config.model` wins when both are set.
+
+### llmOptions
+
+<ParamField path="llmOptions.config" type="object" required={false}>
+  Phonic's [config message](https://docs.phonic.ai/api-reference/conversations/conversations), sent as given when the session opens: `system_prompt`, `voice_id`, `welcome_message` or `generate_welcome_message`, `agent` and `project` (to start from an agent built in Phonic), `tools`, `default_language` and `additional_languages`, `min_words_to_interrupt`, `turn_taking`, `audio_speed`, `boosted_keywords`, `template_variables` and the rest. jambonz sets `input_format` and `output_format`, and sets `external_id` to the call sid unless you give one, so the conversation can be found in Phonic's dashboard.
+</ParamField>
+
+<ParamField path="llmOptions.dtmf" type="object" required={false}>
+  Phonic takes no keypad input. Set `dtmf: {enable: true, ...}` and jambonz collects the caller's digits using the gather verb's options (`finishOnKey`, `numDigits`, `minDigits`, `maxDigits`, `interDigitTimeout`, `timeout`) and passes each completed entry to the agent as the caller's message.
+</ParamField>
+
+### Speaking first
+
+Phonic speaks first only when the config has a `welcome_message` (or `generate_welcome_message: true`). Otherwise it waits for the caller. `is_welcome_message_interruptible: false` keeps the caller from cutting off the welcome.
+
+### Tool calls
+
+Tools you define inline use Phonic's `custom_websocket` shape shown above. Phonic accepts inline tools only with `strict: true`. When the agent calls one, jambonz calls your `toolHook` with `tool_call_id`, `name` and `args`. Reply with any JSON value; it is returned to Phonic as the tool's `output`. Phonic waits 5 seconds for a result unless the tool sets `tool_call_output_timeout_ms` (up to 180000). If no `toolHook` is configured, jambonz answers the call with an error so the agent is never left waiting.
+
+MCP tools and the handoff and hangup tools are added for you. Tools built in Phonic, such as `natural_conversation_ending`, `keypad_input` or `web_search`, can be named in `tools` as strings.
+
+### Barge-in
+
+Phonic decides when the caller has interrupted (`min_words_to_interrupt`, a welcome that cannot be interrupted). jambonz stops the agent's audio when Phonic reports `interrupted_response`, not on every sound the caller makes.
+
+### Keypad tones from the agent
+
+When the agent sends digits (Phonic's `dtmf` event, for example from the `keypad_input` tool on an outbound call to a phone menu), jambonz plays them as DTMF on the call.
+
+### Events
+
+The `eventHook` receives Phonic's events: `ready_to_start_conversation`, `conversation_created` (with Phonic's `conversation_id`), `user_started_speaking`, `user_finished_speaking`, `input_text` (the caller's words, one at a time), `input_cancelled`, `assistant_started_speaking`, `assistant_finished_speaking`, `interrupted_response`, `tool_call`, `tool_call_output_processed`, `tool_call_interrupted`, `assistant_chose_not_to_respond`, `assistant_ended_conversation`, `dtmf`, `warning` and `error`. The agent's words arrive as `audio_chunk` events carrying only `text`; the audio itself goes to the caller. jambonz adds `output_audio.playback_started` / `output_audio.playback_stopped`, and, when `events` asks for them, the turn events `user_transcript`, `llm_response`, `user_interruption` and `turn_end`. Filter with `events` using these names.
+
+### Updating the conversation mid-call
+
+Send `llm:update` with one of Phonic's client messages: `say` (`{type: 'say', text}`), `generate_reply` (optional `system_message` or `user_message`), `add_system_message`, `update_system_prompt`, `update_tools_subset`, `set_external_id`, `mute`, `unmute` or `reset`.
+
+### How the session ends
+
+When Phonic ends the conversation (for example with the `natural_conversation_ending` tool), jambonz lets the goodbye play and then ends the verb with `completion_reason: 'assistant ended conversation'`; the next verb in your application runs. A configuration Phonic refuses ends the verb at once with `completion_reason: 'session refused'`, and the `error` event names the field (`param_errors`).
+
+### Audio format
+
+Caller audio is sent to Phonic as 16 kHz pcm16 and Phonic's speech is received as 24 kHz pcm16. jambonz sets both formats, so `input_format` and `output_format` in the config are overridden.
+
+A caller who starts talking before the session is up (for example during a `pause` before the `llm` verb) may not be heard: Phonic needs to hear the start of an utterance, and the media server can only send what arrives once the verb has started. The caller is heard normally from their next sentence.
+
 ## ElevenLabs Agents
 
 Set `vendor: 'elevenlabs'` to connect the caller to an [ElevenLabs agent](https://elevenlabs.io/docs/eleven-agents). The agent's prompt, voice and tools are configured in ElevenLabs, so `model` is not used. Identify the agent with `auth.agent_id`; add `auth.api_key` to connect with a signed URL, which ElevenLabs requires when the agent has authentication enabled.
