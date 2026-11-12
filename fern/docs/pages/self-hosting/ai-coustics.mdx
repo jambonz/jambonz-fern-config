@@ -1,0 +1,49 @@
+---
+title: ai-coustics Noise Isolation
+subtitle: Setting up the ai-coustics license and models on a self-hosted media server
+---
+
+The `"aicoustics"` noise isolation vendor runs [ai-coustics](https://ai-coustics.com/) speech enhancement inside the media server (mediajam). It needs a mediajam build that includes ai-coustics support (built with the `aic` tag; on other builds, noise isolation fails with `noise isolation vendor "aicoustics" not implemented`), an ai-coustics license key on the media server, and the model files.
+
+## License
+
+Get an SDK license key from ai-coustics (they offer a free trial). According to ai-coustics, self-service keys use online authorization and usage reporting, so the media server needs outbound internet access.
+
+Set it in `/etc/default/mediajam` and restart mediajam:
+
+```bash
+AIC_SDK_LICENSE=<your ai-coustics license key>
+AIC_MODEL_BASE_PATH=/usr/share/mediajam/aic
+```
+
+```bash
+sudo systemctl restart mediajam
+```
+
+With `AIC_SDK_LICENSE` empty, `"aicoustics"` noise isolation fails at start with a clear error in the mediajam log (`aicoustics: AIC_SDK_LICENSE not set`) and the call continues unfiltered.
+
+## Models
+
+The mediajam package installs these models in `/usr/share/mediajam/aic`:
+
+| File | Used for |
+|------|----------|
+| `quail-s-8khz.aicmodel` | Default for 8 kHz calls (G.711) |
+| `quail-s-16khz.aicmodel` | Default for all other sample rates |
+| `quail-vad.aicmodel` | ai-coustics voice activity detection |
+
+On a source (bare-metal) install, models are looked up in `/usr/local/share/aic` when `AIC_MODEL_BASE_PATH` is not set.
+
+To use another model, put its `.aicmodel` file in `AIC_MODEL_BASE_PATH` and name it in the verb with `model` (file name only, for example `"model": "rook-l-8khz.aicmodel"`). The media server bundles ai-coustics C SDK 0.21.4, which loads model files of format version 5 (the `/v5/` files on the ai-coustics artifact server).
+
+To change the default for every call, set `AIC_NC_MODEL` (enhancement) or `AIC_VAD_MODEL` (VAD) in `/etc/default/mediajam` to a file name in `AIC_MODEL_BASE_PATH`. `AIC_NC_MODEL` replaces both rate-specific defaults, so calls of every sample rate then use that one model.
+
+## Verifying
+
+Place a call with noise isolation on:
+
+```json
+{ "verb": "config", "noiseIsolation": { "enable": true, "vendor": "aicoustics" } }
+```
+
+The mediajam log (`/var/log/mediajam/mediajam.log`) shows `noise isolation started` with `"vendor":"aicoustics"`. A licensing or model problem appears as a `noise.start` command failure with an `aicoustics:` error.

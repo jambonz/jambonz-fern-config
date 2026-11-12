@@ -696,10 +696,11 @@ A `history_summarized` event is sent to the `eventHook`:
 
 The `noiseIsolation` property enables server-side noise cancellation on call audio, improving STT accuracy in noisy environments.
 
-Three vendors are available:
+Four vendors are available:
 - **`"krisp"`** — Krisp's proprietary noise cancellation. [Listen to audio samples](https://lab.krisp.ai/products/voice-isolation/audio-samples) to hear the model in action.
 - **`"rnnoise"`** — Open-source RNNoise-based noise cancellation. No API key required.
 - **`"kugelaudio"`** — KugelAudio Clarity, a cloud noise-removal service. Requires a KugelAudio API key; see [KugelAudio Clarity](#kugelaudio-clarity) below.
+- **`"aicoustics"`** — ai-coustics speech enhancement, running on the media server. Requires an ai-coustics license on the media server; see [ai-coustics](#ai-coustics) below.
 
 <Note>
 Krisp noise isolation has the same licensing requirement as Krisp turn detection — see the [warning above](#krisp-turn-detection) for self-hosted licensing details.
@@ -765,6 +766,35 @@ If there is no key on the verb and no matching credential with **Use for noise i
 - To use a regional KugelAudio endpoint, set `apiUri` in `auth` (for example `api.eu.kugelaudio.com`), or `api_uri` in the credential's **Extra Options**.
 
 **Delay.** Because the audio makes a round trip to KugelAudio, the filtered audio runs a fixed delay behind the original, roughly the round-trip time. Until the first cleaned audio arrives, that direction is silent, so turn noise isolation on before the conversation starts rather than mid-sentence. If KugelAudio stops returning audio for more than a second, jambonz passes the unfiltered audio through and reconnects, so a stall does not leave the line silent.
+
+### ai-coustics
+
+[ai-coustics](https://ai-coustics.com/) speech enhancement runs on the media server, next to the call audio: nothing leaves the server, and there is no network round trip.
+
+```json
+{ "noiseIsolation": { "mode": "aicoustics" } }
+```
+
+It needs a media server (mediajam) built with ai-coustics support.
+
+**License.** The ai-coustics license key is set on the media server, not on the verb or in a speech credential. On self-hosted systems, see [ai-coustics noise isolation](/self-hosting/ai-coustics). Without a license, noise isolation does not start and the call continues unfiltered.
+
+**Options.**
+- `model` — the enhancement model, as a file name in the media server's ai-coustics model directory (for example `"quail-s-16khz.aicmodel"`). Paths are not accepted. Without it, 8 kHz calls use `quail-s-8khz` and other rates use `quail-s-16khz`, unless the operator has set a server-wide default.
+- `level` — enhancement strength 1–100. Default: 100. Lower values mix back more of the original audio; `0` is treated as 100.
+- `direction` — `"read"` (caller audio, default) or `"write"`, as for the other vendors.
+
+```json
+{
+  "noiseIsolation": {
+    "mode": "aicoustics",
+    "model": "quail-s-16khz.aicmodel",
+    "direction": "read"
+  }
+}
+```
+
+**Delay.** The model delays the filtered audio slightly. In our tests the SDK reported 30 ms for the default model on 8 kHz calls; calls at rates other than 8 or 16 kHz are resampled, which adds to it.
 
 ## Error Recovery
 
