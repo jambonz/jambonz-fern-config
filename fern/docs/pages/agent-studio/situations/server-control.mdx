@@ -121,7 +121,14 @@ Starting a situation that is already active does nothing and isn't recorded.
 - **MCP tools:** a result that isn't an error, with `actions` either in its text, when the text is a JSON object, or
   in its `structuredContent`. Studio removes it from the text; any other text reaches the model unchanged.
 - `actions` must be an object; any other value is passed to the model unchanged.
-- Unknown keys in `actions` are ignored.
+- An unknown key in `actions` is recorded on the call as **Invalid action**; the others still apply.
+
+## Other actions
+
+A tool's result can carry any of the [actions](/agent-studio/situations/actions), not only situation changes: update
+the agent's instructions, add context, make it speak, transfer or end the call. Your server can also send them in
+reply to [call events](/agent-studio/situations/call-events), or [push](/agent-studio/situations/push) them into a call
+at any time.
 
 ## Example: a collections agent
 
@@ -158,4 +165,5 @@ A complete server for this example, with signature checks and tests, is at
 
 - [Building a server for Studio](/agent-studio/situations/building-a-server): the requests Studio sends, and how to
   verify them
+- [Actions](/agent-studio/situations/actions): everything else a result can do
 - [Situations](/agent-studio/situations/overview): adding situations to an agent

@@ -1,0 +1,146 @@
+---
+title: Actions
+subtitle: The changes your server can make to a live call, from a tool's result, a reply to a call event, or a push.
+---
+
+Your server steers a call with an `actions` object. It can send one in three places:
+
+| From | When | Page |
+|---|---|---|
+| **A tool's result** | the model calls one of the agent's HTTP or MCP tools | [Starting situations from your server](/agent-studio/situations/server-control) |
+| **A reply to a call event** | Studio posts an event you chose, such as **Caller speaks** | [Call events to your server](/agent-studio/situations/call-events) |
+| **A push** | whenever your server decides, for example when a payment lands | [Pushing into a live call](/agent-studio/situations/push) |
+
+The same actions work in all three:
+
+```json
+{
+  "actions": {
+    "situation": "payment_received",
+    "inject_context": "Payment of $240.00 received at 14:02, reference PAY-8812.",
+    "generate_reply": "Tell the caller their payment has arrived."
+  }
+}
+```
+
+<Note>
+Actions need an agent where jambonz runs speech-to-text, the language model and text-to-speech (a
+[cascaded voice pipeline](/agent-studio/agent-types/cascaded-pipeline)) on jambonz 11.1.13 or later. On other agents
+every action except `end_call` is refused.
+</Note>
+
+## The actions
+
+| Action | Value | What it does |
+|---|---|---|
+| `resolve_situation` | a situation's name | resolves the [situation](/agent-studio/situations/overview) |
+| `situation` | a situation's name | starts the situation |
+| `update_instructions` | text, up to 4,000 characters | sets your application's instructions, below the agent's prompt. `""` removes them |
+| `inject_context` | text, up to 4,000 characters | adds a note to the conversation for the model to use |
+| `generate_reply` | `true`, text, or `{ "instructions", "interrupt" }` | makes the agent speak now |
+| `transfer` | `true`, text, or `{ "reason" }` | asks the agent to transfer the caller |
+| `end_call` | `true`, text, or `{ "say" }` | ends the call, after saying a line if you give one |
+
+One `actions` object can carry any of them. Studio applies them in the order of the table, whatever order you write
+them in.
+
+### `situation` and `resolve_situation`
+
+Start and resolve situations exactly as described in
+[Starting situations from your server](/agent-studio/situations/server-control). Your server can start any situation,
+including one set to **Only your server**.
+
+A resolve in a tool's result waits until the model has answered that result. A resolve from a call event's reply or a
+push reaches the agent at once.
+
+### `update_instructions`
+
+Adds your own instructions to the agent's prompt, under a heading of their own:
+
+```
+<the agent's prompt, and any active situations>
+
+## Instructions from the application
+The caller is a premium customer. Offer the priority line.
+```
+
+- Each `update_instructions` replaces the previous one. `""` removes the block.
+- It never replaces the prompt you wrote in Studio, or a situation's instructions.
+- It stays through situation changes, and for the rest of the call.
+
+Use it for something your system knows that changes how the agent should behave from now on. For a fact the model
+should use once, `inject_context` is lighter.
+
+### `inject_context`
+
+Adds a note to the conversation:
+
+```
+[Note from the application: Payment of $240.00 received at 14:02, reference PAY-8812.]
+```
+
+The model reads it on its next reply. It doesn't make the agent speak: add `generate_reply` for that. The note stays
+in the conversation history, so a later change to the instructions doesn't erase it.
+
+### `generate_reply`
+
+Makes the agent speak now, rather than waiting for the caller.
+
+| Value | Effect |
+|---|---|
+| `true` | the agent replies to the conversation as it stands |
+| `"Tell the caller their payment has arrived."` | the agent replies, following these instructions for this reply only |
+| `{ "instructions": "…", "interrupt": true }` | the same, cutting off what the agent is saying now |
+
+Without `interrupt`, a reply asked for while the agent is speaking or thinking waits until it has finished. If several
+are waiting, only the newest is used.
+
+On jambonz 11.1.13 the reply is spoken but isn't shown as a turn in [Calls](/agent-studio/calls). Later jambonz releases
+show it as a turn.
+
+### `transfer`
+
+Asks the agent to transfer the caller with its own transfer tool, so the transfer is checked and recorded exactly as
+when the agent decides to transfer. The agent tells the caller briefly first. Text, or `reason`, tells the agent why.
+
+`transfer` is refused when the agent has no transfer destination.
+
+### `end_call`
+
+Ends the call. With text, or `say`, the agent says it in its own voice first, then hangs up. It works on every agent,
+whatever its engine.
+
+## Limits
+
+Actions from call-event replies and pushes are limited per call:
+
+| Limit | Per call, in any 60 seconds |
+|---|---|
+| all actions | 30 |
+| `generate_reply` and `transfer` together | 6 |
+
+An action over a limit is refused. Actions in a tool's result aren't limited: the model already paces them.
+
+## Seeing what happened
+
+Every action is recorded on the call's timeline in [Calls](/agent-studio/calls), with where it came from: the tool's
+name, the event your server replied to, or **a push from your server**.
+
+| Timeline | Means |
+|---|---|
+| **Instructions updated**, **Context added**, **Agent asked to reply**, **Agent asked to transfer**, **Call ended** | applied |
+| **Refused:** …, with the reason | not applied |
+| **Invalid action**, with the reason | an unknown action, or a value of the wrong type |
+
+An action is refused when:
+
+- the call has ended, or has been handed to another agent;
+- the agent's engine can't take it;
+- the agent has no situations (`situation`, `resolve_situation`), or no transfer destination (`transfer`);
+- it is over a [limit](#limits);
+- the call's connection to jambonz has closed.
+
+A situation change that can't apply, for example to a situation that isn't active, shows as **Refused to start** or
+**Refused to resolve**, as for tool results.
+
+Your server is never told that an action was refused. Check the call's timeline.
