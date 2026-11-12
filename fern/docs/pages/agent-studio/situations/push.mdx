@@ -1,0 +1,116 @@
+---
+title: Pushing into a live call
+subtitle: Send actions into a call when your system knows something the agent should act on, without waiting for the model or the caller.
+---
+
+A tool's result and a [call event's reply](/agent-studio/situations/call-events) both answer something Studio asked.
+A push is your server speaking first: a payment lands, an order ships, a fraud check comes back, and the agent should
+know now.
+
+```bash
+curl -X POST https://studio.jambonz.org/v1/calls/CALL_SID/actions \
+  -H "Authorization: Bearer stk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"actions": {"situation": "payment_received", "generate_reply": true}}'
+```
+
+A self-hosted Studio takes the same request at its own address.
+
+<Note>
+Pushes need an agent where jambonz runs speech-to-text, the language model and text-to-speech (a
+[cascaded voice pipeline](/agent-studio/agent-types/cascaded-pipeline)). On other agents every action except
+`end_call` is refused.
+</Note>
+
+## Authentication
+
+A push is authenticated with a Studio [API key](/agent-studio/api-keys), sent as a bearer token:
+
+```
+Authorization: Bearer stk_...
+```
+
+A key works for any call in its account, whichever agent is on it.
+
+## The request
+
+`POST /v1/calls/{call_sid}/actions`
+
+- `call_sid` is the jambonz call id. Your server gets it in:
+  - every [call event](/agent-studio/situations/call-events) (`call_sid`);
+  - every tool request (the `X-Studio-Call-Sid` header);
+  - the [result webhook](/agent-studio/webhooks), after the call.
+- The body is a JSON object with one field, `actions`, at most 16 KB. The
+  [actions page](/agent-studio/situations/actions) lists them all.
+
+```json
+{
+  "actions": {
+    "situation": "payment_received",
+    "inject_context": "Payment of $240.00 received at 14:02, reference PAY-8812.",
+    "generate_reply": "Tell the caller their payment has arrived."
+  }
+}
+```
+
+## The response
+
+`202 Accepted` means Studio has handed the actions to the call:
+
+```json
+{ "accepted": true, "call_sid": "b2a9f6c1-4d0e-4a55-9a5e-2f1c0e7d8a31" }
+```
+
+It doesn't mean every action was applied. Each one is checked on the call: an unknown action, a situation the agent
+doesn't have, or an action over the call's limits is refused there. Every action, applied or refused, is on the call's
+timeline in [Calls](/agent-studio/calls), as **by a push from your server**.
+
+### Errors
+
+Errors have the usual Studio shape:
+
+```json
+{ "error": { "code": "CALL_NOT_LIVE", "message": "The call has ended" } }
+```
+
+| Status | `code` | Means |
+|---|---|---|
+| `400` | `VALIDATION_FAILED` | the body isn't `{ "actions": { … } }` |
+| `401` | `API_KEY_INVALID` | no key, a malformed key, or a key that doesn't exist or has been revoked |
+| `404` | `CALL_NOT_FOUND` | no call with that id in the key's account. A call in another account gets the same answer |
+| `409` | `CALL_NOT_LIVE` | the call has ended |
+| `413` | `ACTIONS_TOO_LARGE` | `actions` is over 16 KB |
+| `429` | `RATE_LIMITED` | over a rate limit; `details.retry_after_s` says when to try again |
+
+## Limits
+
+| Limit | |
+|---|---|
+| requests per key | 60 a minute |
+| requests per IP address | 120 a minute |
+| actions per call, from pushes and call-event replies together | see [Actions › Limits](/agent-studio/situations/actions#limits) |
+
+## Example
+
+A collections agent waits on the caller's bank transfer:
+
+1. The agent has a situation, `payment_received`, set to **Only your server**, with instructions to thank the caller,
+   read back the reference and close the account.
+2. When the payment system confirms the transfer, it pushes:
+
+   ```json
+   {
+     "actions": {
+       "situation": "payment_received",
+       "inject_context": "Payment of $1,240.50 received, reference PAY-8812.",
+       "generate_reply": true
+     }
+   }
+   ```
+
+3. The agent picks up the situation's instructions and tells the caller straight away, even mid-silence.
+
+## Next
+
+- [API keys](/agent-studio/api-keys): creating and revoking keys
+- [Actions](/agent-studio/situations/actions): everything a push can do
