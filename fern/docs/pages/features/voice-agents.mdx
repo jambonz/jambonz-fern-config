@@ -600,7 +600,7 @@ session.on('/agent-event', (evt) => {
     case 'user_transcript':
       console.log('User said:', evt.transcript);
       break;
-    case 'agent_response':
+    case 'llm_response':
       console.log('Agent replied:', evt.response);
       break;
     case 'user_interruption':
@@ -622,10 +622,14 @@ session.on('/agent-event', (evt) => {
 | Event | Description | Key fields |
 |-------|-------------|------------|
 | `user_transcript` | User speech recognized | `transcript` |
-| `agent_response` | Assistant reply text | `response` |
-| `user_interruption` | User barged in | — |
+| `llm_response` | Assistant reply text | `response` |
+| `user_interruption` | User barged in | `cause`, `probability`, `spoken_text`, `spoken_estimated` |
 | `turn_end` | End-of-turn summary | `transcript`, `confidence`, `response`, `interrupted`, `latency`, `tool_calls` |
 | `history_summarized` | Conversation summarized | `turn`, `messages_dropped`, `messages_kept`, `summary` |
+| `overlapping_speech` | Caller spoke over the reply without interrupting it | `outcome` (`ignored`, `held`, `answered`), `transcript`, `word_count` |
+| `interrupt_prediction_ignored` | Interrupt prediction before the assistant spoke | `probability`, `state` |
+| `no_response_timeout` | Caller silent; the agent prompts them | `count`, `timeout_ms` |
+| `llm_error` | An LLM request failed | `stage`, `vendor`, `model`, `message`, `retrying` |
 
 ### turn_end Payload
 

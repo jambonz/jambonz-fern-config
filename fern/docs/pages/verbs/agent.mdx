@@ -89,7 +89,7 @@ For a comprehensive guide on building voice AI agents with the agent verb, see [
 </ParamField>
 
 <ParamField path="eventHook" type="string" required={false}>
-  A webhook invoked for agent events. Receives event types: `user_transcript`, `agent_response`, `user_interruption`, `turn_end`, and `history_summarized`. See [eventHook Events](#eventhook-events) below.
+  A webhook invoked for agent events. Receives event types: `user_transcript`, `llm_response`, `user_interruption`, `turn_end`, `history_summarized`, `overlapping_speech`, `interrupt_prediction_ignored`, `no_response_timeout` and `llm_error`. See [eventHook Events](#eventhook-events) below.
 </ParamField>
 
 <ParamField path="greeting" type="boolean | string" required={false} default="true">
@@ -396,12 +396,12 @@ The `eventHook` receives real-time events during the conversation. In WebSocket 
     ```
   </Accordion>
 
-  <Accordion title="agent_response">
+  <Accordion title="llm_response">
     Sent when the LLM finishes generating its response.
 
     ```json
     {
-      "type": "agent_response",
+      "type": "llm_response",
       "response": "The current temperature in Portland is 52°F."
     }
     ```
@@ -412,9 +412,81 @@ The `eventHook` receives real-time events during the conversation. In WebSocket 
 
     ```json
     {
-      "type": "user_interruption"
+      "type": "user_interruption",
+      "cause": "interrupt_prediction",
+      "probability": 0.81,
+      "spoken_text": "Your balance is one hundred"
     }
     ```
+
+    - `cause` — what confirmed the barge-in: `vad` (speech still active after `bargeIn.minSpeechDuration`), `transcript` (words from the recognizer) or `interrupt_prediction` (the turn-taking model)
+    - `probability` — the interrupt prediction's probability; only with `interrupt_prediction`
+    - `spoken_text` — the part of the reply the caller heard; absent when not known
+    - `spoken_estimated` — `true` when `spoken_text` is estimated from playout time because the TTS vendor reports no word alignment
+
+    Speech-to-speech engines send `user_interruption` with no other fields.
+  </Accordion>
+
+  <Accordion title="overlapping_speech">
+    Sent when the caller speaks during the assistant's reply and it is not treated as an interruption (barge-in off, or the interrupt prediction model judged it not an attempt to take the floor).
+
+    ```json
+    {
+      "type": "overlapping_speech",
+      "outcome": "held",
+      "transcript": "call me back tomorrow please",
+      "word_count": 5
+    }
+    ```
+
+    - `outcome` — `ignored`: too short to be a turn (a backchannel such as "okay"), dropped. `held`: kept and added to the caller's next turn. `answered`: the reply ended and the held speech became the caller's turn; `transcript` is then all the held speech.
+  </Accordion>
+
+  <Accordion title="interrupt_prediction_ignored">
+    Sent when the interrupt prediction model fires before the assistant has started speaking. It is usually the tail of the utterance being answered, so it is not treated as an interruption.
+
+    ```json
+    {
+      "type": "interrupt_prediction_ignored",
+      "probability": 0.62,
+      "state": "thinking"
+    }
+    ```
+
+    `state` is `thinking` or `awaiting_turn_gate`.
+  </Accordion>
+
+  <Accordion title="no_response_timeout">
+    Sent when the caller has said nothing for `noResponseTimeout` and the agent prompts them to check they are still there.
+
+    ```json
+    {
+      "type": "no_response_timeout",
+      "count": 1,
+      "timeout_ms": 10000
+    }
+    ```
+
+    `count` is how many times in a row the agent has prompted the silent caller, this one included.
+  </Accordion>
+
+  <Accordion title="llm_error">
+    Sent when a request to the LLM fails. Unless `retrying` is `true`, the agent verb then ends with completion reason `llm_failure`.
+
+    ```json
+    {
+      "type": "llm_error",
+      "stage": "prompt",
+      "vendor": "openai",
+      "model": "gpt-4.1-mini",
+      "message": "429 Rate limit reached for gpt-4.1-mini",
+      "retrying": true
+    }
+    ```
+
+    - `stage` — `prompt` (the request for a reply), `retry_without_tools` (the retry of that request without tools) or `tool_result` (the request that follows a tool result)
+    - `message` — the vendor's error message, at most 200 characters, with anything that looks like a key or token masked
+    - `retrying` — `true` when the agent retries the request without tools
   </Accordion>
 
   <Accordion title="history_summarized">
