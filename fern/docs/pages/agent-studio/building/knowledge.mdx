@@ -15,7 +15,7 @@ Knowledge bases belong to the account (**Knowledge** in the navigation), and sev
 |---|---|
 | **Cascaded voice pipeline** | search, and pinned facts |
 | **Realtime voice API** | search |
-| **Custom harness** | not available: your harness does its own retrieval |
+| **Custom harness** | search, as the `search_knowledge_base` tool your harness can call |
 | **Connected agent** | not available: knowledge lives on the agent's own platform |
 
 ## Creating a knowledge base
@@ -57,6 +57,11 @@ to 10. Only Owners and Admins can change the knowledge attached to an agent.
 With at least one knowledge base attached, the agent gets a `search_knowledge_base` tool. The model calls it with a
 short question when it needs facts, and gets back quoted passages from all the attached knowledge bases. With none
 attached, the agent answers from its prompt only.
+
+A Custom harness agent gets the same tool in `session:start`, with the agent's other tools. Studio adds nothing to
+your harness's prompt: your harness decides when to search, sends a `tool:call` for `search_knowledge_base` with
+`args: {query: "..."}`, and gets the passages back in `tool:result`. See
+[Harness protocol reference](/agent-studio/custom-harness/protocol).
 
 The fold under the list tunes the search:
 

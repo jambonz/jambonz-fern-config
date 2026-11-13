@@ -64,8 +64,9 @@ Audio never goes to the harness. Everything on the socket is JSON text.
      jambonz account, never in the agent's settings or its exported file. Replacing it takes effect at once.
    - **Hear & speak**: the speech recognition and voice jambonz uses for the caller.
 
-3. Optionally, **tools** on the agent. They are offered to your harness in `session:start`, and your harness runs them
-   through jambonz, exactly as a pipeline agent's model would.
+3. Optionally, **tools** and **knowledge bases** on the agent. They are offered to your harness in `session:start`,
+   and your harness runs them through jambonz, exactly as a pipeline agent's model would. Knowledge bases arrive as
+   the `search_knowledge_base` tool; see [Knowledge](/agent-studio/building/knowledge).
 
 ## When the harness is slow or down
 
