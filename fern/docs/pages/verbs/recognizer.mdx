@@ -1884,7 +1884,7 @@ subtitle: A **property** that can be used in verbs like [`gather`](./gather) and
     </ParamField>
 
     <ParamField path="endpointing" type="number | boolean" required={false}>
-      Milliseconds of pause that end an utterance, at least `500`; Saidwire's default is `800`. Setting it is recommended, for example `500`. `false` turns it off: finals still arrive at longer pauses (about one second), but never with `speech_final`. Whenever `endpointing` is set, jambonz also asks for an `UtteranceEnd` after 1000 ms of silence (unless `utteranceEndMs` is set), as with `deepgram`, so turns still end with `endpointing: false`.
+      Milliseconds of pause that end an utterance, at least `500`; Saidwire's default is `800`. Setting it is recommended, for example `500`. `false` turns it off: finals still arrive at pauses of about half of `utteranceEndMs` (500 ms minimum, 1000 ms maximum, so about 500 ms with the default `1000`), but never with `speech_final`. Whenever `endpointing` is set, jambonz also asks for an `UtteranceEnd` after 1000 ms of silence (unless `utteranceEndMs` is set), as with `deepgram`, so turns still end with `endpointing: false`.
     </ParamField>
 
     <ParamField path="utteranceEndMs" type="number" required={false}>
