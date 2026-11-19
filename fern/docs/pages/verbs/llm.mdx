@@ -6,7 +6,7 @@ subtitle: Connect a call to AI language model.
 ```js maxLines=120
 session.llm({
   vendor: 'openai',
-  model: 'gpt-realtime',
+  model: 'gpt-realtime-2.1',
   auth: { apiKey },
   actionHook: '/final',
   eventHook: '/event',
@@ -60,7 +60,7 @@ session.llm({
       audio: {
         input: {
           format: { type: 'audio/pcm', rate: 24000 },
-          transcription: { model: 'whisper-1' },
+          transcription: { model: 'gpt-live-transcribe' },
           turn_detection: {
             type: 'server_vad',
             threshold: 0.8,
@@ -150,14 +150,16 @@ Set `vendor: 'openai'` and supply an OpenAI API key via `auth.apiKey`. `llmOptio
 
 ### Model selection
 
-<ParamField path="model" type="string" required={true}>
+<ParamField path="model" type="string" required={false}>
   GA realtime model name. Common choices:
 
-  - **`gpt-realtime`** — the standard GA realtime conversation model. Recommended starting point.
-  - **`gpt-realtime-2`** — reasoning-capable variant. Emits a `phase: "commentary"` message before `phase: "final_answer"` in its output items; both phases produce audio, so the caller hears the model "think out loud" before the actual answer. Useful for some assistants, surprising for typical greeting-first flows.
+  - **`gpt-realtime-2.1`** — the current realtime conversation model, and the default when `model` is omitted. Recommended starting point.
+  - **`gpt-realtime-2.1-mini`** — lower-cost, lower-latency variant.
   - **`gpt-realtime-whisper`** — streaming transcription model. Emits `response.output_audio_transcript.delta` events but does not endpoint turns server-side (no `.completed` in current GA); not suitable for normal speech-to-speech or gather flows.
 
-  OpenAI deprecated the Realtime preview models (`gpt-4o-realtime-preview-*`) on 2026-05-12; use a GA model.
+  `gpt-realtime-2.1` and `gpt-realtime-2.1-mini` are reasoning models. Before calling a tool they usually speak a short preamble ("Let me check that for you"): a `phase: "commentary"` message in the same response as the `function_call`, followed by a `phase: "final_answer"` message once the tool output is in. Both phases produce audio. To suppress the preamble, say so in `instructions`.
+
+  OpenAI shut down the Realtime preview models (`gpt-4o-realtime-preview-*`) on 2026-05-07, and shuts down `gpt-realtime`, `gpt-realtime-mini`, `gpt-4o-realtime` and `gpt-4o-mini-realtime` on 2027-01-20. Move to `gpt-realtime-2.1` or `gpt-realtime-2.1-mini` ([OpenAI deprecations](https://developers.openai.com/api/docs/deprecations)).
 </ParamField>
 
 ### Instructions
@@ -213,7 +215,7 @@ The compatibility layer is intended as a transitional shim — plan to update ap
 </ParamField>
 
 <ParamField path="session_update.audio.input.transcription.model" type="string" required={false}>
-  Auxiliary transcription model for converting caller audio into text in the conversation log. Common values: `whisper-1`, `gpt-4o-transcribe`, `gpt-realtime-whisper`. This is separate from the conversation model.
+  Auxiliary transcription model for converting caller audio into text in the conversation log. Common values: `gpt-live-transcribe`, `gpt-transcribe`, `gpt-realtime-whisper`. This is separate from the conversation model. (`whisper-1` and the `gpt-4o-*-transcribe` models shut down on 2027-02-26.)
 </ParamField>
 
 <ParamField path="session_update.audio.input.turn_detection" type="object" required={false}>
@@ -628,7 +630,7 @@ Set `vendor: 'microsoft'` to use OpenAI's realtime models deployed on your own [
 ```js
 session.llm({
   vendor: 'microsoft',
-  model: 'gpt-realtime',  // your deployment's name
+  model: 'gpt-realtime-2.1',  // your deployment's name
   auth: { apiKey: process.env.AZURE_OPENAI_API_KEY },
   connectOptions: { host: 'my-resource.openai.azure.com' },
   actionHook: '/final',
@@ -687,7 +689,7 @@ Voice Live is **not** the same thing as `vendor: 'microsoft'`. That vendor targe
 ```js
 session.llm({
   vendor: 'voicelive',
-  model: 'gpt-realtime',
+  model: 'gpt-realtime-2.1',
   auth: { apiKey: process.env.AZURE_VOICELIVE_API_KEY },
   connectOptions: { host: 'my-resource.services.ai.azure.com' },
   actionHook: '/final',
@@ -1183,7 +1185,7 @@ for a human and the model calls the tool, jambonz runs the packaged
 session
   .llm({
     vendor: 'openai',
-    model: 'gpt-realtime',
+    model: 'gpt-realtime-2.1',
     auth: { apiKey: process.env.OPENAI_API_KEY },
     llmOptions: {
       response_create: { instructions: 'You are a helpful support agent.' },
@@ -1219,7 +1221,7 @@ Set `hangup` to let the model end the call on its own. The runtime injects a `ha
 ```js
 session.llm({
   vendor: 'openai',
-  model: 'gpt-realtime',
+  model: 'gpt-realtime-2.1',
   auth: { apiKey },
   hangup: { reason: 'conversation complete' },
   actionHook: '/final',
