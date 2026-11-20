@@ -74,6 +74,9 @@ v1 = HMAC-SHA256(signing_secret, t + "." + METHOD + "." + path_with_query + "." 
 Reject a request whose `v1` does not match, or whose `t` is more than 300 seconds from now. The signing secret is
 created when you first save the tool and shown once; **Rotate secret…** replaces it.
 
+[Building a server for Studio](/agent-studio/situations/building-a-server) covers the requests Studio sends, with
+verification code for Node.js and Python.
+
 ### Testing a tool
 
 **Test this tool** runs the saved tool from Studio's servers with sample values, the way a real call would, and

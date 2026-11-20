@@ -1,0 +1,226 @@
+---
+title: Building a server for Studio
+subtitle: Answer Studio's tool requests, verify that they came from Studio, and shape what the agent hears back.
+---
+
+Your agents reach your own systems through your server. Studio sends it two kinds of request:
+
+| Request | When | Covered here |
+|---|---|---|
+| **Tool requests** | during a call, each time the model uses one of the agent's [HTTP tools](/agent-studio/building/tools#http-tools), and when you press **Test this tool** | yes |
+| **Result webhook** | once per call, after it ends, if the agent has one | its signature, below. The payload is in [Result webhook](/agent-studio/webhooks) |
+
+This page is for any server that answers Studio's tool requests: to look things up for the agent, to take actions, or
+to start and resolve [situations](/agent-studio/situations/server-control). MCP servers work differently, and aren't
+covered here; an MCP tool can still start and resolve situations, as
+[Starting situations from your server](/agent-studio/situations/server-control#which-results-are-read) explains.
+
+A complete example in TypeScript, with tests, is at
+[jambonz/agent-studio-situations-example](https://github.com/jambonz/agent-studio-situations-example).
+
+## What your server needs
+
+- **A public `https` URL** on a public domain name, with a valid certificate. Studio doesn't send tool requests to
+  plain `http`, to IP addresses in private ranges, or to names that resolve to them.
+- **An answer within the tool's timeout**: 1 to 15 seconds, 8 by default. The caller waits in silence while it runs,
+  so aim for well under a second.
+- **No redirects.** Studio doesn't follow them; a `3xx` answer is a failed request.
+
+For a test against a server on your own machine, a tunnel such as ngrok gives you a public `https` URL.
+
+## The request
+
+Each HTTP tool is one request: its method and URL, with the arguments the model fills in.
+
+### Arguments
+
+A `{name}` in the tool's URL is replaced with that argument, URL-encoded. The other arguments are sent according to the
+tool's **Send arguments as** setting:
+
+| Setting | How the remaining arguments are sent |
+|---|---|
+| **JSON body** | as a JSON object, `Content-Type: application/json`. With no arguments the body is `{}` |
+| **Form** | as `application/x-www-form-urlencoded`. A value that isn't a string is sent as JSON text |
+| **Query string** | added to the URL's query string |
+
+A `GET` request always sends them in the query string, and has no body.
+
+Argument names reach your server exactly as the tool's parameters name them.
+
+### Headers
+
+| Header | What it is |
+|---|---|
+| `X-Studio-Signature` | the request's signature: see [Verifying requests](#verifying-requests) |
+| `X-Studio-Timestamp` | the signing time, in Unix seconds; the same as `t` in the signature |
+| `X-Studio-Tool` | the tool's name |
+| `X-Studio-Call-Sid` | the jambonz call id. Not sent by **Test this tool** |
+| `Authorization`, or the header you named | the tool's **Authentication**, if set: a bearer token, basic auth or an API key header |
+| your own | the tool's **Headers** |
+
+Use `X-Studio-Call-Sid` to tie requests from the same call together, and to find the call in
+[Calls](/agent-studio/calls).
+
+## Verifying requests
+
+Studio signs every tool request. Check the signature before you act on a request: without it, anyone who finds your
+URL can call your tool.
+
+```
+X-Studio-Signature: t=<unix seconds>,v1=<hex>
+v1 = hex(HMAC-SHA256(signing_secret, t + "." + METHOD + "." + path_with_query + "." + raw_body))
+```
+
+| Part | What it is |
+|---|---|
+| `t` | the signing time, in Unix seconds |
+| `METHOD` | the HTTP method in capitals, such as `POST` |
+| `path_with_query` | the request's path and query string exactly as received, such as `/orders/42?full=1`. No scheme or host |
+| `raw_body` | the body exactly as received, before any parsing. Empty for a request without a body |
+
+Reject the request when `v1` doesn't match, or when `t` is more than 300 seconds from your server's clock. Compare
+signatures in constant time.
+
+### The signing secret
+
+Each HTTP tool has its own signing secret. Studio creates it when you first save the tool and shows it once. **Rotate
+secret…** on the tool replaces it: requests are signed with the new secret from then on, so give your server the new
+one straight away.
+
+Keep each tool's secret in your server's configuration or secret store, never in code, and look it up by tool:
+`X-Studio-Tool`, or the path you served the tool on.
+
+### Node.js
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const MAX_SKEW_S = 300;
+
+// method: 'POST'; pathWithQuery: req.url as received; rawBody: the body as a string, before parsing
+export function verifyToolRequest(secret, header, method, pathWithQuery, rawBody) {
+  if (!header) return false;
+  const parts = Object.fromEntries(
+    header.split(',').map((p) => {
+      const i = p.indexOf('=');
+      return [p.slice(0, i).trim(), p.slice(i + 1).trim()];
+    }),
+  );
+  const t = Number(parts.t);
+  if (!Number.isInteger(t) || !/^[0-9a-f]{64}$/.test(parts.v1 ?? '')) return false;
+  if (Math.abs(Date.now() / 1000 - t) > MAX_SKEW_S) return false;
+
+  const expected = createHmac('sha256', secret)
+    .update(`${parts.t}.${method}.${pathWithQuery}.${rawBody}`)
+    .digest();
+  return timingSafeEqual(expected, Buffer.from(parts.v1, 'hex'));
+}
+```
+
+With Express, read the raw body with `express.raw({ type: '*/*' })` (or keep it with the `verify` option of
+`express.json()`), and use `req.originalUrl` for the path and query.
+
+### Python
+
+```python
+import hashlib, hmac, time
+
+MAX_SKEW_S = 300
+
+def verify_tool_request(secret: str, header: str | None, method: str, path_with_query: str, raw_body: bytes) -> bool:
+    if not header:
+        return False
+    parts = dict(p.strip().split("=", 1) for p in header.split(",") if "=" in p)
+    t, v1 = parts.get("t", ""), parts.get("v1", "")
+    if not t.isdigit() or abs(time.time() - int(t)) > MAX_SKEW_S:
+        return False
+    signed = f"{t}.{method}.{path_with_query}.".encode() + raw_body
+    expected = hmac.new(secret.encode(), signed, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, v1)
+```
+
+Read the body with your framework's raw-body call, such as `request.get_data()` in Flask or `await request.body()` in
+FastAPI. Take the path and query from the request line as received: some frameworks decode the path, which breaks the
+signature for any path with an encoded character. Under Gunicorn, the WSGI environ's `RAW_URI` has it unchanged.
+
+### Common mistakes
+
+- **Verifying the parsed body.** Re-serialised JSON rarely matches byte for byte. Verify the raw body, then parse it.
+- **Using the full URL.** Sign only the path and query string, as received, without the scheme and host.
+- **Rebuilding the query string.** Use it as it arrived; reordering or re-encoding it changes the signature.
+- **Using the result webhook's formula.** It signs a different string: see below.
+
+### The result webhook's signature
+
+The [result webhook](/agent-studio/webhooks) is signed in the same header with the same `t` and `v1` parts, but `v1`
+covers only the timestamp and the body, and the agent's webhook signing secret (starting `whsec_`) is the key:
+
+```
+v1 = hex(HMAC-SHA256(webhook_signing_secret, t + "." + raw_body))
+```
+
+## The response
+
+Answer with a `2xx` status and a JSON object. What happens next depends on the status:
+
+| Your server | What the model gets |
+|---|---|
+| answers `2xx` with JSON | the object, shaped by the tool's **Response** settings |
+| answers `2xx` with anything else | the text, as `{ "result": "<text>" }` |
+| answers `4xx` | `{ "error": "HTTP <status>", "body": "<the first 500 characters>" }` |
+| answers `5xx`, or can't be reached | the same error, or `request failed`; a `GET` is retried first if the tool has **Retries** |
+| doesn't answer within the timeout | `timeout after <n>s` |
+| answers with a redirect | `redirects not followed` |
+| sends more than 256 KB | `response too large` |
+
+Only `GET` requests are retried, up to twice, and only within the tool's timeout, so a `POST` never reaches your server
+twice. Make a `GET` safe to repeat.
+
+When a request fails, the tool's **If the request fails** setting decides what the caller hears: the model is told it
+failed and recovers, or the agent says a fixed line.
+
+### What the model sees
+
+The tool's **Response** settings shape the result before the model reads it:
+
+- **The full body**, or only the value at a **Field path** such as `order.status` or `items[0].name`;
+- cut to **Max characters**, 2,000 by default. Longer results slow the agent and use tokens.
+
+Return what the model needs to answer the caller, in plain field names, and nothing else. A field like
+`"next_step": "Ask whether they want it delivered or collected."` works better than a code the model has to interpret.
+Never return data the caller shouldn't hear: the model may read out anything in the result.
+
+### Changing situations
+
+A result can start or resolve a [situation](/agent-studio/situations/overview) with an `actions` object:
+
+```json
+{ "verified": true, "actions": { "situation": "negotiation" } }
+```
+
+Studio applies it and removes it before the model sees the result, even with a **Field path** or when the result is
+cut. See [Starting situations from your server](/agent-studio/situations/server-control).
+
+## Testing
+
+- **Test this tool**, on the tool, sends a real, signed request from Studio's servers with sample values, and shows the
+  request, your response and what the model would receive. It tests the saved tool, so save first.
+- A test call shows each tool call on its turn, with its arguments, result and round-trip time.
+- Log each request's tool, `X-Studio-Call-Sid`, status and timing. Logging whole bodies helps while testing, but they
+  hold what callers said, so turn it off for real calls.
+
+## Checklist
+
+- [ ] public `https` URL, no redirects
+- [ ] answers within the tool's timeout, ideally under a second
+- [ ] verifies `X-Studio-Signature` over the raw body, with each tool's own secret
+- [ ] rejects signatures more than 300 seconds old
+- [ ] returns a JSON object with only what the model needs
+- [ ] `GET` tools are safe to repeat
+- [ ] logs the call id with each request, and no caller data in production
+
+## Next
+
+- [Tools](/agent-studio/building/tools): adding HTTP tools to an agent
+- [Starting situations from your server](/agent-studio/situations/server-control)
+- [Result webhook](/agent-studio/webhooks): the payload Studio posts after each call

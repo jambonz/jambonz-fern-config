@@ -1,0 +1,161 @@
+---
+title: Starting situations from your server
+subtitle: Start and resolve situations from your tools' results, so the agent acts only when your systems say it may.
+---
+
+Any of the agent's HTTP or MCP tools can start or resolve a [situation](/agent-studio/situations/overview) by adding an
+`actions` object to its result. This is the only way to start a situation set to **Only your server**, and
+it also works for situations the agent decides.
+
+Your server needs no new endpoint and no new credentials: it answers Studio's tool request as it already does, with
+one more field. [Building a server for Studio](/agent-studio/situations/building-a-server) covers receiving and
+verifying those requests.
+
+## Starting a situation
+
+Add `actions.situation` to the tool's JSON result, with the situation's name:
+
+```json
+{
+  "verified": true,
+  "customer_name": "Jordan Lee",
+  "balance": 1240.5,
+  "actions": { "situation": "negotiation" }
+}
+```
+
+## Resolving a situation
+
+Add `actions.resolve_situation`:
+
+```json
+{
+  "recorded": true,
+  "reference": "AGR-1234",
+  "actions": { "resolve_situation": "negotiation" }
+}
+```
+
+One result can carry both: `{ "actions": { "resolve_situation": "triage", "situation": "negotiation" } }` resolves
+`triage` and starts `negotiation`.
+
+Resolving a situation also ends the active situations that wait for it (**The agent can start it**: only once it has
+started). Your server can start a situation whatever it waits for.
+
+## From an MCP tool
+
+An MCP tool sends `actions` in its result, in either of two places.
+
+**In the text**, when the tool's text content is a JSON object:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"verified\": true, \"customer_name\": \"Jordan Lee\", \"actions\": {\"situation\": \"negotiation\"}}"
+    }
+  ]
+}
+```
+
+The model gets `{"verified": true, "customer_name": "Jordan Lee"}` as the text.
+
+**In `structuredContent`**, when the text is written for the model:
+
+```json
+{
+  "content": [{ "type": "text", "text": "Agreement AGR-1234 recorded." }],
+  "structuredContent": { "recorded": true, "actions": { "resolve_situation": "negotiation" } }
+}
+```
+
+The model gets the text, `Agreement AGR-1234 recorded.`, unchanged.
+
+If the text is a JSON object with `actions`, Studio uses that and ignores `structuredContent`. If your tool declares
+an output schema that doesn't allow extra properties, add `actions` to it, or `structuredContent` won't validate.
+
+A result with `isError: true` changes nothing. Starting and resolving work exactly as for HTTP tools, including
+[when the change reaches the agent](#when-the-change-reaches-the-agent).
+
+## What Studio does with `actions`
+
+Studio removes `actions` from the result before the model sees it. The model gets the rest of the result, and is never
+told that your server changed a situation; it simply finds new instructions or tools.
+
+`actions` survives the tool's response settings: it is applied even when the tool returns only one field of the
+result (**Response** › **path**), and even when the rest of the result is cut short for being too long.
+
+### When the change reaches the agent
+
+| Your result | When the agent's instructions and tools change |
+|---|---|
+| starts a situation | before the model sees the result, so it answers the result with the situation's instructions and tools |
+| resolves a situation | after the model has answered the result |
+| does both | before the model sees the result |
+
+A resolve waits because the result that resolves a situation usually finishes its work, and the model still needs the
+situation's instructions to answer it: "confirm the plan aloud", for example. Everything else about the resolve
+happens at once: it is recorded on the call, and the situation's tools stop being callable straight away.
+
+### When a change is refused
+
+Studio refuses a change, and records it on the call as **Refused to start** or **Refused to resolve**, when:
+
+- the agent has no situation with that name;
+- the result resolves a situation that isn't active;
+- 3 situations are already active and all 3 were started by your server.
+
+When 3 are active and at least one was started by the model, starting another drops the oldest one the model started
+to make room. The call records it as **Dropped**.
+
+A refusal doesn't change the result the model sees, and isn't reported back to your server. Check the call in
+[Calls](/agent-studio/calls) to see it.
+
+Starting a situation that is already active does nothing and isn't recorded.
+
+### Which results are read
+
+- `actions` is read from successful results only. An error result's `actions` is ignored.
+- **HTTP tools:** a `2xx` answer whose body is a JSON object, sent with a JSON `Content-Type`.
+- **MCP tools:** a result that isn't an error, with `actions` either in its text, when the text is a JSON object, or
+  in its `structuredContent`. Studio removes it from the text; any other text reaches the model unchanged.
+- `actions` must be an object; any other value is passed to the model unchanged.
+- Unknown keys in `actions` are ignored.
+
+## Example: a collections agent
+
+A collections agent must verify the caller before it discusses the debt, and must record any payment plan before
+confirming it.
+
+1. **Tools.** Add two HTTP tools:
+   - `verify_identity`: checks the last 4 digits of the account and the ZIP code.
+   - `record_agreement`: records the payment plan.
+2. **Situation.** Add `negotiation`, with **Who can start it** set to **Only your server**:
+   - **Instructions**: "The caller is verified. Their balance and minimum monthly payment are in the verify_identity
+     result. Offer to settle in full first. If they can't, offer 3 payments, then 6. Never go below the minimum
+     monthly payment. Record any agreement with record_agreement before confirming it aloud."
+   - **Tools offered only while active**: `record_agreement`.
+3. **Prompt.** Tell the agent it calls about an overdue account, and must verify the caller with `verify_identity`
+   before discussing anything about it.
+4. **Your server.** `verify_identity` returns `{ "actions": { "situation": "negotiation" } }` when the details match,
+   and `record_agreement` returns `{ "actions": { "resolve_situation": "negotiation" } }` once the plan is stored.
+
+On a call:
+
+- Before verification, the model has no negotiation instructions and isn't offered `record_agreement`. If it calls
+  it anyway, Studio refuses the call.
+- A wrong ZIP code gets `verified: false`, and nothing starts.
+- After a correct verification, the call shows **Started negotiation**, by tool `verify_identity`, and the agent
+  moves on to the balance and the plans.
+- After an agreement, the call shows **Resolved negotiation**, by tool `record_agreement`. The agent confirms the
+  plan, then carries on without the negotiation instructions.
+
+A complete server for this example, with signature checks and tests, is at
+[jambonz/agent-studio-situations-example](https://github.com/jambonz/agent-studio-situations-example).
+
+## Next
+
+- [Building a server for Studio](/agent-studio/situations/building-a-server): the requests Studio sends, and how to
+  verify them
+- [Situations](/agent-studio/situations/overview): adding situations to an agent

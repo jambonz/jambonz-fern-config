@@ -281,6 +281,18 @@ navigation:
           - page: Handing calls to other agents
             path: ./docs/pages/agent-studio/building/handoff.mdx
             slug: handoff
+      - section: Situations
+        slug: situations
+        contents:
+          - page: Overview
+            path: ./docs/pages/agent-studio/situations/overview.mdx
+            slug: overview
+          - page: Starting situations from your server
+            path: ./docs/pages/agent-studio/situations/server-control.mdx
+            slug: server-control
+          - page: Building a server for Studio
+            path: ./docs/pages/agent-studio/situations/building-a-server.mdx
+            slug: building-a-server
       - section: Testing and running
         skip-slug: true
         contents:
@@ -562,6 +574,8 @@ navigation:
             path: ./docs/pages/tutorials/gptlive.mdx
           - page: OpenAI Realtime API
             path: ./docs/pages/tutorials/openai.mdx
+          - page: Pipecat
+            path: ./docs/pages/tutorials/pipecat.mdx
           - page: Qwen Omni Realtime
             path: ./docs/pages/tutorials/qwen.mdx
           - page: xAI Grok Voice ThinkFast 2.0
