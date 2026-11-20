@@ -182,15 +182,15 @@ The `config` verb is non-blocking.
 </ParamField>
 
 <ParamField path="noiseIsolation.vendor" type="string" required={false}>
-  Noise isolation vendor: `"krisp"`, `"rnnoise"` or `"kugelaudio"`. Krisp requires an API key on self-hosted systems. RNNoise is open-source and requires no API key. KugelAudio needs a KugelAudio API key, from a speech credential or from `auth`; see [KugelAudio Clarity](/guides/features/voice-agents#kugelaudio-clarity).
+  Noise isolation vendor: `"krisp"`, `"rnnoise"`, `"kugelaudio"` or `"aicoustics"`. Krisp requires an API key on self-hosted systems. RNNoise is open-source and requires no API key. KugelAudio needs a KugelAudio API key, from a speech credential or from `auth`; see [KugelAudio Clarity](/guides/features/voice-agents#kugelaudio-clarity). ai-coustics needs a license on the media server; see [ai-coustics](/guides/features/voice-agents#ai-coustics).
 </ParamField>
 
 <ParamField path="noiseIsolation.level" type="number" required={false}>
-  Suppression level 0–100. Higher values are more aggressive. Default: 100. Has no effect with KugelAudio.
+  Suppression level 0–100. Higher values are more aggressive. Default: 100. Has no effect with KugelAudio. For ai-coustics, use 1–100 (`0` is treated as 100).
 </ParamField>
 
 <ParamField path="noiseIsolation.model" type="string" required={false}>
-  Optional model name override.
+  Optional model name override. For ai-coustics, a model file name in the media server's ai-coustics model directory (for example `"quail-s-16khz.aicmodel"`).
 </ParamField>
 
 <ParamField path="noiseIsolation.label" type="string" required={false}>

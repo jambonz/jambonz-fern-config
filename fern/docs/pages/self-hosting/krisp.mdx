@@ -81,11 +81,13 @@ If you don't have a Krisp license, you can still build effective voice agents us
 | AssemblyAI | Use `vendor: "assemblyai"` with `u3-rt-pro` model | Native turn-taking support |
 | Speechmatics | Use `vendor: "speechmatics"` for STT | Built-in turn detection |
 
-### Noise Isolation Alternative
+### Noise Isolation Alternatives
 
 | Option | Configuration | Notes |
 |--------|--------------|-------|
 | RNNoise | `noiseIsolation: "rnnoise"` | Open-source, no license required |
+| KugelAudio Clarity | `noiseIsolation: "kugelaudio"` | Cloud service, needs a KugelAudio API key; see [KugelAudio Clarity](/guides/features/voice-agents#kugelaudio-clarity) |
+| ai-coustics | `noiseIsolation: { mode: "aicoustics" }` | Needs an ai-coustics license; see [ai-coustics noise isolation](/self-hosting/ai-coustics) |
 
 ## Usage in the Agent Verb
 
