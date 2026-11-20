@@ -290,6 +290,15 @@ navigation:
           - page: Building a server for Studio
             path: ./docs/pages/agent-studio/situations/building-a-server.mdx
             slug: building-a-server
+          - page: Actions
+            path: ./docs/pages/agent-studio/situations/actions.mdx
+            slug: actions
+          - page: Call events to your server
+            path: ./docs/pages/agent-studio/situations/call-events.mdx
+            slug: call-events
+          - page: Pushing into a live call
+            path: ./docs/pages/agent-studio/situations/push.mdx
+            slug: push
       - section: Testing and running
         skip-slug: true
         contents:
@@ -308,6 +317,9 @@ navigation:
           - page: Result webhook
             path: ./docs/pages/agent-studio/webhooks.mdx
             slug: webhooks
+          - page: API keys
+            path: ./docs/pages/agent-studio/api-keys.mdx
+            slug: api-keys
       - section: Custom harness
         slug: custom-harness
         contents:

@@ -1,0 +1,50 @@
+---
+title: API keys
+subtitle: Keys your own systems use to call Studio's API, such as to push actions into a live call.
+---
+
+A Studio API key lets one of your systems call Studio without signing in. Today a key does one thing:
+[push actions into a live call](/agent-studio/situations/push).
+
+Keys belong to the account, not to an agent: a key works for every call in the account.
+
+## Creating a key
+
+Open **Settings** › **API keys** and choose **New key**.
+
+1. **Name** it after the system that will use it, such as "Payments service", so you know what breaks if you revoke it.
+2. Choose **Create key**.
+3. Copy the key. It starts with `stk_`, and **this is the only time it's shown**: Studio keeps only a hash, so a lost
+   key can't be recovered. Revoke it and make a new one.
+
+Store the key in your system's secret store or configuration, never in code. Make one key for each system that uses
+the API, so you can revoke one without affecting the others.
+
+An account can have up to 20 keys.
+
+## Using a key
+
+Send it as a bearer token:
+
+```
+Authorization: Bearer stk_...
+```
+
+## The key list
+
+**API keys** lists each key with:
+
+- its name;
+- the first characters of the key, to tell keys apart;
+- when it was created;
+- when it was last used, to the minute, or **never used**.
+
+## Revoking a key
+
+**Revoke** on a key, then **Revoke key**, stops it working at once: the next request with it gets `401 API_KEY_INVALID`. A revoked key
+can't be restored.
+
+## Who can manage keys
+
+Only Owners and Admins can see, create and revoke API keys. Creating and revoking are recorded in the account's audit
+log, with the key's name and its first characters.

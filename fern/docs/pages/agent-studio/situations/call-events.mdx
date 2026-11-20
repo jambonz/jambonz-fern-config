@@ -1,0 +1,163 @@
+---
+title: Call events to your server
+subtitle: Studio posts what happens during a call to your server as it happens, and your reply can steer the agent.
+---
+
+An agent can post chosen events to your server while each call runs: the call starting, what the caller says, what
+the agent replies, a tool's result, situations starting and ending, the call ending. Your server can answer any event
+with [actions](/agent-studio/situations/actions): start a situation, add context, change the agent's instructions,
+make it speak, transfer or end the call.
+
+Studio never waits for your answer. The call carries on, and your reply's actions are applied when it arrives.
+
+<Note>
+Call events need an agent where jambonz runs speech-to-text, the language model and text-to-speech (a
+[cascaded voice pipeline](/agent-studio/agent-types/cascaded-pipeline)). An agent with any other engine can't publish
+with call events chosen.
+</Note>
+
+## Turning them on
+
+In the agent builder, open **Situations**. Under **Call events to your server**:
+
+1. **URL**: your server's endpoint, a public `https` URL.
+2. **Events**: the events to post. Nothing is posted until you choose at least one.
+
+An agent with events chosen and no URL won't publish. Test calls from the builder post events too.
+
+## The events
+
+| Event | Builder label | Posted when | `data` |
+|---|---|---|---|
+| `call_start` | **Call starts** | the call reaches the agent | `direction` (`inbound` or `outbound`), `from`, `to`, `test` (true for a test call) |
+| `user_transcript` | **Caller speaks** | the caller finishes a turn | `transcript` |
+| `llm_response` | **Agent replies** | the agent's reply for a turn is complete | `response` |
+| `user_interruption` | **Caller interrupts** | the caller talks over the agent and cuts it off | none |
+| `tool_result` | **Tool returns** | one of the agent's HTTP or MCP tools returns | `name`, `ok` (false for an error result), `result`: what the model got |
+| `situation_entered` | **Situation starts** | a situation starts | `name`, `by` (`model`, `tool`, `webhook` or `push`), `tool`, `active` |
+| `situation_resolved` | **Situation resolves** | a situation is resolved | the same fields as `situation_entered` |
+| `call_end` | **Call ends** | the call ends | `status`, and `sip_status` when there is one |
+
+`user_transcript` and `llm_response` post once per turn and send the conversation's text to your server. Choose them
+only if your server needs it.
+
+## The request
+
+Each event is a `POST` with a JSON body:
+
+```json
+{
+  "event": "user_transcript",
+  "call_sid": "b2a9f6c1-4d0e-4a55-9a5e-2f1c0e7d8a31",
+  "agent_id": "7f3c2a9e-1b4d-4c8e-9f2a-6d5b3e1c0a47",
+  "seq": 4,
+  "turn": 2,
+  "ts": "2026-11-12T14:02:11.482Z",
+  "data": { "transcript": "Has my payment gone through yet?" }
+}
+```
+
+| Field | What it is |
+|---|---|
+| `event` | the event, from the table above |
+| `call_sid` | the jambonz call id. Use it to [push actions](/agent-studio/situations/push) into this call later |
+| `agent_id` | the Studio agent's id |
+| `seq` | the event's number in this call, from 1. Deliveries can arrive out of order: sort by `seq` |
+| `turn` | how many times the caller has spoken so far. It starts again from 0 if the call's connection to Studio is re-established |
+| `ts` | when Studio sent the event |
+| `data` | the event's details |
+
+Headers:
+
+| Header | What it is |
+|---|---|
+| `x-studio-event` | the event, as in the body |
+| `x-studio-signature` | the signature: see below |
+
+### Verifying the signature
+
+Events are signed exactly as the [result webhook](/agent-studio/webhooks#verify-the-signature) is, with the agent's
+same signing secret (starting `whsec_`):
+
+```
+x-studio-signature: t=<unix seconds>,v1=<hex>
+v1 = hex(HMAC-SHA256(signing_secret, t + "." + raw_body))
+```
+
+Verify the raw body exactly as received, and reject a request whose `t` is more than a few minutes from your clock.
+The [result webhook page](/agent-studio/webhooks#verify-the-signature) has the code, and shows where to reveal and
+rotate the secret. Studio creates the secret when you publish the agent, or start a test call, with events chosen.
+
+## Your reply
+
+Answer within 3 seconds with a `2xx` status. The body can be:
+
+- **empty**: nothing happens;
+- **a JSON object with `actions`**: Studio applies them to the call;
+
+```json
+{ "actions": { "inject_context": "Their payment of $240.00 arrived at 14:02.", "generate_reply": true } }
+```
+
+- **any other JSON**: ignored.
+
+Replies are applied in the order they arrive. The [actions page](/agent-studio/situations/actions) lists every action,
+and the per-call limits on actions from replies.
+
+Keep your handler fast. The agent doesn't wait for you, so a slow reply lands later in the conversation than the event
+it answers: by the time a reply to **Caller speaks** arrives, the agent may already be answering the caller.
+
+## Delivery
+
+- **No retries.** An event is posted once. A retried event would arrive too late to be useful.
+- **3-second timeout.** No answer within 3 seconds is a failed delivery.
+- **No redirects.** A `3xx` answer is a failed delivery.
+- **At most 8 deliveries at a time per call.** An event over that is not sent, and is recorded as failed.
+- **Replies up to 64 KB.**
+- **Paused after 3 failures in a row.** The call stops posting events for the rest of the call. A successful delivery
+  resets the count. The next call starts again.
+
+Studio doesn't post to private network addresses, or to names that resolve to them.
+
+### When a delivery fails
+
+Each failure is on the call's timeline in [Calls](/agent-studio/calls) as **Event webhook failed**, with the event and
+the reason:
+
+| Reason | Means |
+|---|---|
+| `no answer in 3 s` | your server didn't answer in time |
+| `HTTP <status>` | your server answered with a status other than `2xx` |
+| `unreachable` | the connection failed |
+| `blocked: private host` | the URL resolves to a private address |
+| `reply is not JSON` | a `2xx` answer with a body that isn't JSON |
+| `reply too large or cut off` | a reply over 64 KB, or one that stopped part way |
+| `too many deliveries in flight` | 8 deliveries for this call were still waiting for your server |
+| `the agent has no signing secret` | publish the agent again to create one |
+
+When the call stops posting, the timeline shows **Event webhook paused**.
+
+## Example
+
+A billing agent tells the caller when their payment lands, using knowledge the model can't have:
+
+1. Choose **Caller speaks** and **Call ends**.
+2. On `user_transcript`, look the caller up by `call_sid`. If they ask about a payment and it has arrived, reply:
+
+   ```json
+   {
+     "actions": {
+       "inject_context": "Payment of $240.00 received at 14:02, reference PAY-8812.",
+       "generate_reply": "Confirm the payment and read the reference."
+     }
+   }
+   ```
+
+3. On `call_end`, stop watching for the call's payments.
+
+If the payment arrives later in the call, [push](/agent-studio/situations/push) the same actions when it does.
+
+## Next
+
+- [Actions](/agent-studio/situations/actions): everything a reply can do
+- [Pushing into a live call](/agent-studio/situations/push): acting on a call without waiting for an event
