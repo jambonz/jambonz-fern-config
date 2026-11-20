@@ -32,7 +32,8 @@ so every transfer goes the same way.
 Connected agent it becomes the description of the client-side tool.
 
 An agent has one transfer destination. For more than one place to go, use **Chosen by the agent**, or send the call to
-another jambonz application with **Send the call to another jambonz application**, further down the section.
+another jambonz application with **Send the call to another jambonz application**, further down the section. To pass
+the call to another Studio agent, see [Handing calls to other agents](/agent-studio/building/handoff).
 
 ### Destination chosen by the agent
 
@@ -170,3 +171,5 @@ Studio hangs up and records the reason CES gives.
   supply
 - the secure detour is on with no destination
 - **Send to another jambonz application** with no application chosen
+- an agent destination that is this agent, or an agent that is gone, unpublished or doesn't receive handoffs (see
+  [Handing calls to other agents](/agent-studio/building/handoff#what-blocks-publishing))
