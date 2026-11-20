@@ -83,14 +83,15 @@ what they last said.
 | At most 4 handoffs per call, returns included | the fifth is refused |
 | The same agent to the same agent at most twice per call | refused as a loop |
 | Straight back to the agent that just handed you the call, before the caller speaks | refused as a loop |
-| A required value is missing or a value doesn't fit its type | refused; the model is told which, and asks the caller |
+| A required value is missing or a value doesn't fit its type | refused; the model is told which value, and to ask the caller for a missing one |
 | The other agent is unpublished, deleted, or doesn't receive handoffs | refused |
 
 A refused handoff leaves the call with the agent that tried, which is told why and keeps helping the caller.
 
 ## In the call history
 
-The call's timeline shows each handoff: **Handed to Billing** with the values passed and the context given, **Billing
+The call's timeline shows each handoff: **Handed to Billing** with the names of the values passed (never the values)
+and the context given, **Billing
 answered** with the time from the handoff to its first reply, **Back with Front desk** for a return, and **Handoff to
 Billing refused** with the reason. A test call's console shows the same.
 
