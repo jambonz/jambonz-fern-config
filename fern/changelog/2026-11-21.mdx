@@ -2,8 +2,8 @@
 jambonz Commercial 11.1.16
 </Card>
 
-**11.1.16** covers 11.1.13 through 11.1.16. It adds jambonz's own turn detection and interrupt
-prediction models to the agent verb as an alternative to Krisp, ai-coustics noise isolation and
+**11.1.16** covers 11.1.13 through 11.1.16. It adds a preview of jambonz's own turn detection and
+interrupt prediction models for the agent verb as an alternative to Krisp, ai-coustics noise isolation and
 VAD, Phonic for text-to-speech and speech-to-speech, KugelAudio Fluid speech-to-speech, and
 ElevenLabs Scribe v3 Live with predicted turn ends. Agent applications receive more events: whether
 each `agent:update` was applied, turn-taking signals, and the end of turns the agent started
@@ -12,13 +12,14 @@ database upgrade from 10.0.x that never completed.
 
 #### New Features & Improvements
 
-1. **jambonz turn detection** — the [agent](/verbs/verbs/agent) verb accepts
+1. **jambonz turn detection (preview)** — the [agent](/verbs/verbs/agent) verb accepts
    `turnDetection: "jambonz"` (or `{mode: "jambonz", threshold}`), which runs jambonz's own
    end-of-turn model in the media server instead of Krisp. The default threshold is 0.9 and
-   falls over 1.6 seconds of silence.
-1. **jambonz interrupt prediction** — `bargeIn: {strategy: "interruptPrediction", vendor:
-   "jambonz"}` runs jambonz's interrupt model. The interrupt vendor must match the turn
-   detection vendor; a mismatch falls back to VAD barge-in with a warning.
+   falls over 1.6 seconds of silence. This is a preview: the model and its defaults may change
+   in later releases.
+1. **jambonz interrupt prediction (preview)** — `bargeIn: {strategy: "interruptPrediction",
+   vendor: "jambonz"}` runs jambonz's interrupt model, also a preview. The interrupt vendor must
+   match the turn detection vendor; a mismatch falls back to VAD barge-in with a warning.
 1. **ai-coustics noise isolation and VAD** — `aicoustics` is a noise isolation vendor
    (`noiseIsolation` on the [agent](/verbs/verbs/agent) and [config](/verbs/verbs/config)
    verbs) and a VAD vendor, with native 8 kHz and 16 kHz models. Self-hosted systems need an
