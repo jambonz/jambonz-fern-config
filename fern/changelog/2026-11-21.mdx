@@ -89,6 +89,9 @@ database upgrade from 10.0.x that never completed.
 - **OAuth sign-in** — a GitHub or Google sign-in that matches no user now shows why on the
   login page, naming the verified address, instead of sending the person to sign up for a
   trial. An invited user is no longer signed in to a trial of their own.
+- **Grafana dashboards** — on AWS mini, medium and large images since 11.1.6, every panel of the
+  Jambonz Metrics dashboard showed `Datasource ... was not found`. The dashboards now use the
+  provisioned InfluxDB datasource.
 - **Websocket reconnects** — an unanswered `session:reconnect` no longer produces unhandled
   rejection log errors.
 - **SIP** — a pending NOTIFY is no longer answered with 500 when a BYE ends the dialog, TCP 2xx
