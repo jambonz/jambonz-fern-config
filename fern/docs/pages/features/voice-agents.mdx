@@ -143,7 +143,7 @@ For AWS Bedrock, pass `accessKeyId`, `secretAccessKey`, and `region` in the `aut
 ## Turn Detection
 
 The `turnDetection` property controls how the agent verb decides the user has finished speaking.
-We currently support only two modes — STT-based detection and [Krisp's turn detection model](https://lab.krisp.ai/products/turn-taking).
+Three modes are supported: STT-based detection, [Krisp's turn detection model](https://lab.krisp.ai/products/turn-taking) and the jambonz turn detection model.
 
 <Note title="Self-Hosted Licensing">
 Krisp turn detection requires a separate Krisp API license on self-hosted deployments. See [Krisp configuration](/self-hosting/krisp) for details. This does not apply to jambonz.cloud customers.
@@ -188,6 +188,27 @@ Contact [support@jambonz.org](mailto:support@jambonz.org) for information on obt
 
 This requirement does not apply to jambonz.cloud customers — Krisp features are included with all jambonz.cloud plans.
 </Warning>
+
+### jambonz turn detection
+
+```json
+{
+  "turnDetection": {
+    "mode": "jambonz",
+    "threshold": 0.9
+  }
+}
+```
+
+Uses the jambonz end-of-turn model, which runs inside the media server and listens to the last 8 seconds of the caller's audio. It is trained for English over the telephone.
+
+- `threshold` — Where the decision threshold starts once the caller goes silent, from 0.0 to 1.0. The threshold then falls to 0 over 1.6 seconds of silence, so a confident end of turn is taken after 200 ms and every turn ends within 1.6 s. Default: 0.9.
+
+The shorthand `"turnDetection": "jambonz"` uses default settings.
+
+<Note>
+The jambonz model does not predict interruptions. With `bargeIn.strategy: "interruptPrediction"` the agent logs a warning and uses VAD barge-in instead.
+</Note>
 
 ## Early Generation (Speculative Preflight)
 
