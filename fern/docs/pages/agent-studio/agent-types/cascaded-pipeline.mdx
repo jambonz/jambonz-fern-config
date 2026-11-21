@@ -105,6 +105,77 @@ filters background noise from the call audio before the agent hears it. When it 
 and what it **Applies to**: **Caller audio** or **Agent audio**. It is on (Krisp) by default for outbound agents and
 off for inbound agents.
 
+### Emotion
+
+**More voice settings** also has **Emotion**. With it on, the agent hears the caller's tone and can change its own
+voice style sentence by sentence: softer and slower for an upset caller, brighter for good news. It needs no extra
+model call. Turned off (the default), the agent works exactly as without it.
+
+The two halves work independently. Each depends on the vendor **and model** you chose in **Hear** and **Speak**.
+Under the switch, a **Hear** line and a **Speak** line say what your current choice will do: a green check when it
+works, an amber warning when it does not, with a button to the setting that fixes it. When the current speech-to-text
+or voice cannot do its part, a **Switch speech-to-text to…** or **Switch the voice to…** list under the line offers
+only the credentials in your account that can, and names the supported vendors you have no credential for yet.
+Picking one changes **Hear** or **Speak** exactly as choosing it there does (the voice is then chosen again); changing
+**Hear** or **Speak** directly works as always, and the lines follow it.
+
+**Hearing the caller's tone.** These speech-to-text vendors report the caller's emotion, and Studio turns that on for
+you:
+
+| Speech-to-text | Model | What the agent gets |
+|---|---|---|
+| Modulate | `velma-2-stt-streaming` (not `velma-2-stt-streaming-english-v2`) | One of 26 labels per utterance (frustrated, anxious, calm, ...), no confidence |
+| Smallest.ai | `pulse-2` (not `pulse`) | A label with a confidence; weak on calm, neutral speech |
+| Inworld | any (voice profile) | A label with a confidence |
+
+The model then reads each caller turn as `[caller tone: frustrated] I already told you my account number`, with the vendor's own word when it has one. Not reported in streaming by the other STT vendors: assemblyai (sentiment is a pre-recorded add-on only), deepgram (sentiment is batch only), speechmatics (laughter and applause events only), gladia (text sentiment arrives as a separate message the agent does not read yet), aws (sentiment only on the Call Analytics API, not the one jambonz uses), and elevenlabs, soniox, google, microsoft and the rest. With them the model judges the tone from the words.
+
+**Changing the voice style.** The model may start a sentence with a style directive. The caller never hears the
+directive: jambonz turns it into the voice vendor's own style tag for that sentence. These voices can do it:
+
+| Text-to-speech | Model | Styles |
+|---|---|---|
+| ElevenLabs | `eleven_v3`, `eleven_v4` | Emotions, soft and loud, sounds. Use a voice made for v3; older voices such as Rachel can fail. |
+| Inworld | `inworld-tts-2` (`inworld-tts-2-flash`: sounds only) | Emotions, speed, volume, sounds |
+| Fish Audio | `s2` models | Emotions, soft and loud, laugh, sigh |
+| Soniox | `tts-rt-v2` | Emotions, speed, soft and loud, sounds |
+| Paxa | `paxa-tts-flash-v2` | Emotions, speed, volume, sounds |
+| Cartesia | `sonic-3` and later (`sonic-3.5`, `sonic-3.6`) | Emotions (English only), speed, volume, laughter |
+| MiniMax | `speech-2.8` models | Sounds only (laugh, sigh, breath) |
+| xAI | any | Sounds only (laugh, sigh, breath, pause) |
+
+Checked against each vendor's documentation and not supported on the streaming connection the agent uses: assemblyai (no emotion parameter; bracketed tags are read aloud), bland (its `[say …]` tags made no audible difference over its streaming socket in live tests), deepgram Aura and deepgramflux (`expressivity` is fixed for the connection), google (Chirp 3 HD has no style control; Gemini-TTS tags are not on the streaming path), hume (acting `description` per request, not yet per sentence), camb (its streaming model takes sound tags only), minimax emotion (fixed at connect; only its sound tags change), murf and sarvam (style fixed per voice or connection), nvidia Magpie (emotion is part of the voice name), rimelabs (Coda takes tags only as best-effort cues), elevenlabs Flash/Turbo/Multilingual, asyncai, gradium, kugelaudio, neuphonic, nineninesix, respeecher, smallestai and svara. With these the voice keeps the style it was configured with.
+
+The model is the one in the voice's **Options** (`model_id`) or, if that is not set, the credential's model. The
+system prompt offers the model only the styles your voice can render.
+
+**Outside these lists:**
+
+| Your choice | What happens | What the Hear or Speak line says |
+|---|---|---|
+| Speech-to-text not in the first table, with **Caller's tone from** set to **Auto** | No tone label reaches the model; it judges the caller's tone from their words instead. | **Hear**: "does not report the caller's tone; the model judges it from the words". |
+| Same, with **Caller's tone from** set to **Speech-to-text** | The caller's tone is not used at all. | **Hear** warns that the tone is never used, with **Let the model judge it**. |
+| Voice not in the second table (AssemblyAI, Deepgram, Google, Rime, ElevenLabs Flash or Turbo, Cartesia `sonic-2`, ...) | The voice keeps its configured style. No style guidance is added to the prompt, and any directive the model writes anyway is removed, never spoken. Hearing the caller still works. | **Speak** warns: "cannot change its style". |
+| A voice whose style depends on the model, with no model set (for example ElevenLabs) | Treated as a voice that cannot change style. | **Speak** warns that no model is set, with **Open voice options** to add `model_id`. |
+| A realtime voice API, connected agent or custom harness | Emotion does not apply; those engines speak with their own voice. | The setting is not shown for those agents. |
+
+None of these stop you from publishing.
+
+Settings, under **Emotion**:
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Caller's tone from** | **Auto** | **Auto**: the speech-to-text label when there is one, else the model judges from the words. **Speech-to-text**: the label only. **Words**: the model only. **Off**: not used. |
+| **Ignore a tone below this confidence** | 0.50 | A label with a lower confidence is dropped. Labels without a confidence (Modulate) are always kept. |
+| **Change the voice style** | on | Let the model direct the voice. Off: the voice keeps its style, and only hearing stays on. |
+| **Emotions the agent may use** | all the voice supports | Untick the ones the agent should never use. |
+| **Allow sounds** | off | Laughs, sighs and similar sounds, where the voice has them. |
+| **Each reply starts** | Neutral | The style every reply begins in. |
+
+**In the test console**, a caller line shows the tone that was heard (`tone: angry`) and an agent line shows the
+styles the reply used (`voice: empathetic → neutral`), in small text under the words. Transcripts and events carry the agent's words without the
+directives.
+
 ## Conversation: turn-taking and interruptions
 
 The **Conversation** section sets how the agent takes turns, handles interruptions and fills silence. A sentence at
