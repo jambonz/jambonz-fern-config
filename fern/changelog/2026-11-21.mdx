@@ -107,7 +107,7 @@ There are no database schema changes since 11.1.12.
 | Component | 11.1.12 | 11.1.16 |
 |---|---|---|
 | jambonz | 11.1.12 | **11.1.16** |
-| mediajam | 0.5.21 | **0.5.22** (0.5.23 on Azure) |
+| mediajam | 0.5.21 | **0.5.22** (0.5.23 on Azure and GCP) |
 | drachtio | 10.1.12 | **10.1.14** |
 | rtpengine | 14.1.1.8-jambonz14 | **14.1.1.8-jambonz15** |
 | jambonz OSS (sbc-*) | 0.9.15 | 0.9.15 |
@@ -122,5 +122,10 @@ There are no database schema changes since 11.1.12.
 server types in 30 regions, amd64 and arm64.
 
 **self-hosted on Azure** - available now: Terraform modules and Compute Gallery images for all
-nine server types, amd64 in 30 regions and arm64 in 29. The Azure images ship mediajam 0.5.23,
-which fixes a crash at startup when the optional jambonz turn-taking models are not installed.
+nine server types, amd64 in 30 regions and arm64 in 29.
+
+**self-hosted on GCP** - available now: Terraform modules and public images for all nine server
+types, amd64 and arm64. GCP images are global, so there is no per-region list.
+
+The Azure and GCP images ship mediajam 0.5.23, which fixes a crash at startup when the optional
+jambonz turn-taking models are not installed.
