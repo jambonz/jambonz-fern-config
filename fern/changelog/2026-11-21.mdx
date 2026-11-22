@@ -1,0 +1,131 @@
+<Card title="11.1.16" icon="regular crown" iconPosition="left">
+jambonz Commercial 11.1.16
+</Card>
+
+**11.1.16** covers 11.1.13 through 11.1.16. It adds a preview of jambonz's own turn detection and
+interrupt prediction models for the agent verb as an alternative to Krisp, ai-coustics noise isolation and
+VAD, Phonic for text-to-speech and speech-to-speech, KugelAudio Fluid speech-to-speech, and
+ElevenLabs Scribe v3 Live with predicted turn ends. Agent applications receive more events: whether
+each `agent:update` was applied, turn-taking signals, and the end of turns the agent started
+itself. The release fixes two API authorization issues, a gather inter-digit timeout bug, and a
+database upgrade from 10.0.x that never completed.
+
+#### New Features & Improvements
+
+1. **jambonz turn detection (preview)** — the [agent](/verbs/verbs/agent) verb accepts
+   `turnDetection: "jambonz"` (or `{mode: "jambonz", threshold}`), which runs jambonz's own
+   end-of-turn model in the media server instead of Krisp. The default threshold is 0.9 and
+   falls over 1.6 seconds of silence. This is a preview: the model and its defaults may change
+   in later releases.
+1. **jambonz interrupt prediction (preview)** — `bargeIn: {strategy: "interruptPrediction",
+   vendor: "jambonz"}` runs jambonz's interrupt model, also a preview. The interrupt vendor must
+   match the turn detection vendor; a mismatch falls back to VAD barge-in with a warning.
+1. **ai-coustics noise isolation and VAD** — `aicoustics` is a noise isolation vendor
+   (`noiseIsolation` on the [agent](/verbs/verbs/agent) and [config](/verbs/verbs/config)
+   verbs) and a VAD vendor, with native 8 kHz and 16 kHz models. Self-hosted systems need an
+   ai-coustics license key.
+1. **Phonic** — `phonic` is a text-to-speech vendor for `say` (no streaming) and a
+   speech-to-speech vendor for the [llm](/verbs/verbs/llm) verb, with `phonic` speech
+   credentials and `phonic_s2s` LLM credentials in the portal and API. See
+   [Phonic](/guides/features/tts-vendor-settings/phonic).
+1. **KugelAudio Fluid speech-to-speech** — `kugelaudio` is a speech-to-speech vendor for the
+   [llm](/verbs/verbs/llm) verb. Without `auth` on the verb, the account's `kugelaudio_s2s`
+   credential is used, and its region (`global`, `eu`, `us`) picks the host.
+1. **ElevenLabs Scribe v3 Live** — `scribe_v3_live` is available as an ElevenLabs speech-to-text
+   model. With the [agent](/verbs/verbs/agent) verb it defaults to the `turn_prediction` commit
+   strategy and ends the caller's turn on each commit, about 0.8 seconds sooner than VAD on a
+   complete question.
+1. **Agent update results** — every `agent:update` now sends an `agent_update` event to the
+   eventHook saying whether it was applied, and why not when it was rejected.
+1. **Turn-taking events** — the agent eventHook now receives `overlapping_speech`,
+   `user_interruption` (with its cause), `interrupt_prediction_ignored`, `no_response_timeout`
+   and `llm_error`, which were previously only in feature-server logs.
+1. **Agent-started turns** — a turn the agent started itself (the greeting, or a reply it was
+   asked to generate) now sends `turn_end` with its response and `agent_initiated: true`.
+1. **Billing** — account users on a paid plan can update their card from the Billing
+   overview (jambonz.cloud).
+
+#### Changes in Behavior
+
+1. **OpenAI Realtime default model** — an [llm](/verbs/verbs/llm) verb with `vendor: openai`
+   and no `model` now uses `gpt-realtime-2.1`. OpenAI retires `gpt-realtime` on 2027-01-20.
+   `vendor: microsoft` keeps `gpt-realtime`, since there the model is the Azure deployment
+   name.
+1. **Gather inter-digit timeout** — in [gather](/verbs/verbs/gather), the first key now stops the
+   no-input timeout and starts `interDigitTimeout`. `minDigits` (else `numDigits`) only decides
+   whether the entry counts; below it the result is a timeout, and the timeout actionHook
+   carries the digits entered. `interDigitTimeout` now works without `minDigits`.
+1. **Credential labels** — a speech or LLM credential label needs to be unique only within an
+   account and vendor; a label on a sibling account no longer blocks it.
+1. **Free trials** — on jambonz.cloud one free trial is allowed per mailbox: `+tag` aliases,
+   and dots in Gmail addresses, count as the same address.
+
+#### Security Fixes
+
+- **API authorization** — `/v1/login` gave some account users a wider scope than their
+  account. It now derives scope the same way as `/signin` and API keys.
+- **View-only users** — a view-only user who signed in to the portal with email and password
+  could make changes. View-only is now enforced for every sign-in method.
+- **Query parameters** — object-valued query parameters and request fields are now treated as
+  plain strings in database queries, so they can no longer widen a query across tenants.
+  Self-hosted 500 responses no longer include internal error details.
+
+#### Bug Fixes
+
+- **Database upgrade from 10.0.x** — upgrading a 10.0.x database to 11.1.x never completed
+  because the `krisp_usage` and `llm_credentials` tables were skipped. They are now created
+  whenever they are missing.
+- **Agent tools updates** — `update_tools` no longer removes the agent's handoff and hangup
+  tools.
+- **Acoustic turn detection** — with Krisp or jambonz turn detection and a speech-to-text vendor
+  that sends no speech start (Deepgram), the LLM sometimes received only part of what the
+  caller said. The whole turn is now kept.
+- **Speech-to-text restarts** — a transcription that the vendor closed (Google's 305-second
+  limit) is restarted; a restart that fails is now reported to the application as an ASR error
+  instead of stopping silently.
+- **Answering machine detection** — three voicemail greeting phrases that were detected as a
+  human (`record your message`, `telephone number and your message`, `número de teléfono`)
+  are now built-in AMD hints.
+- **OAuth sign-in** — a GitHub or Google sign-in that matches no user now shows why on the
+  login page, naming the verified address, instead of sending the person to sign up for a
+  trial. An invited user is no longer signed in to a trial of their own.
+- **Grafana dashboards** — on AWS mini, medium and large images since 11.1.6, every panel of the
+  Jambonz Metrics dashboard showed `Datasource ... was not found`. The dashboards now use the
+  provisioned InfluxDB datasource.
+- **Websocket reconnects** — an unanswered `session:reconnect` no longer produces unhandled
+  rejection log errors.
+- **SIP** — a pending NOTIFY is no longer answered with 500 when a BYE ends the dialog, TCP 2xx
+  responses are retransmitted until the ACK arrives, and stale TLS errors no longer affect new
+  connections.
+
+#### Upgrading
+
+There are no database schema changes since 11.1.12.
+
+#### Component Versions
+
+| Component | 11.1.12 | 11.1.16 |
+|---|---|---|
+| jambonz | 11.1.12 | **11.1.16** |
+| mediajam | 0.5.21 | **0.5.22** (0.5.23 on Azure and GCP) |
+| drachtio | 10.1.12 | **10.1.14** |
+| rtpengine | 14.1.1.8-jambonz14 | **14.1.1.8-jambonz15** |
+| jambonz OSS (sbc-*) | 0.9.15 | 0.9.15 |
+| upload-recordings | 1.9.3 | 1.9.3 |
+| monitoring-agent | 10.2.2 | 10.2.2 |
+| pcap-server | 1.0.5 | 1.0.5 |
+| heplify-server | 1.0.5 | 1.0.5 |
+
+#### Availability
+
+**self-hosted on AWS** - available now: CloudFormation templates and public AMIs for all nine
+server types in 30 regions, amd64 and arm64.
+
+**self-hosted on Azure** - available now: Terraform modules and Compute Gallery images for all
+nine server types, amd64 in 30 regions and arm64 in 29.
+
+**self-hosted on GCP** - available now: Terraform modules and public images for all nine server
+types, amd64 and arm64. GCP images are global, so there is no per-region list.
+
+The Azure and GCP images ship mediajam 0.5.23, which fixes a crash at startup when the optional
+jambonz turn-taking models are not installed.
