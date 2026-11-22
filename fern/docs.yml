@@ -501,8 +501,6 @@ navigation:
             path: ./docs/pages/self-hosting/azure.mdx
           - page: GCP
             path: ./docs/pages/self-hosting/gcp.mdx
-          - page: OCI
-            path: ./docs/pages/self-hosting/oci.mdx
       - section: Bare metal / VPS
         contents:
           - page: Debian package
@@ -694,7 +692,10 @@ redirects:
     destination: "/self-hosting/hosting-providers/azure"
     permanent: true
   - source: "/self-hosting/oci"
-    destination: "/self-hosting/hosting-providers/oci"
+    destination: "/self-hosting/bare-metal-vps/debian-package"
+    permanent: true
+  - source: "/self-hosting/hosting-providers/oci"
+    destination: "/self-hosting/bare-metal-vps/debian-package"
     permanent: true
   - source: "/self-hosting/debian-package"
     destination: "/self-hosting/bare-metal-vps/debian-package"
