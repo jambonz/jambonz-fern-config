@@ -3,12 +3,13 @@ title: Building a server for Studio
 subtitle: Answer Studio's tool requests, verify that they came from Studio, and shape what the agent hears back.
 ---
 
-Your agents reach your own systems through your server. Studio sends it two kinds of request:
+Your agents reach your own systems through your server. Studio sends it three kinds of request:
 
 | Request | When | Covered here |
 |---|---|---|
 | **Tool requests** | during a call, each time the model uses one of the agent's [HTTP tools](/agent-studio/building/tools#http-tools), and when you press **Test this tool** | yes |
 | **Result webhook** | once per call, after it ends, if the agent has one | its signature, below. The payload is in [Result webhook](/agent-studio/webhooks) |
+| **Call events** | during a call, for each event the agent posts | no: see [Call events to your server](/agent-studio/situations/call-events). They're signed as the result webhook is |
 
 This page is for any server that answers Studio's tool requests: to look things up for the agent, to take actions, or
 to start and resolve [situations](/agent-studio/situations/server-control). MCP servers work differently, and aren't
