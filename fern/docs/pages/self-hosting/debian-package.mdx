@@ -3,10 +3,10 @@ title: Debian package
 subtitle: Install jambonz mini on any Debian 12 host using our apt repository.
 ---
 
-For bare metal, any VPS provider (Hetzner, Vultr, DigitalOcean, Linode, OVH, on-prem, etc.), or an existing Debian 12 host, jambonz publishes a `.deb` package that installs the whole single-host stack from `apt`. This is the simplest deployment path when you're not on AWS / Azure / GCP / OCI and don't want to use one of the prebuilt images.
+For bare metal, any other cloud or VPS provider (Exoscale, OCI, Hetzner, Vultr, DigitalOcean, Linode, OVH, on-prem, etc.), or an existing Debian 12 host, jambonz publishes a `.deb` package that installs the whole single-host stack from `apt`. This is the simplest deployment path when you're not on AWS / Azure / GCP and don't want to use one of the prebuilt images.
 
 <Note>
-This guide installs the **jambonz mini** all-in-one deployment (every component on a single host). Multi-host topologies — separate SBC, feature-server, web, and monitoring tiers — currently still require the cloud-image guides (AWS, Azure, GCP, OCI). Multi-host Debian packages are in development.
+This guide installs the **jambonz mini** all-in-one deployment (every component on a single host). Multi-host topologies — separate SBC, feature-server, web, and monitoring tiers — currently still require the cloud-image guides (AWS, Azure, GCP). Multi-host Debian packages are in development.
 </Note>
 
 ## Prerequisites
@@ -447,5 +447,5 @@ sudo mysql -e "DROP DATABASE jambones; DROP USER 'admin'@'%';"
 ## Known limitations
 
 <Warning>
-Multi-host topologies (separate SBC, feature-server, web, and monitoring tiers) are not yet supported via apt. Only the single-host `jambonz-mini` package is currently published. If you need a clustered deployment, use the [AWS](/self-hosting/aws), [Azure](/self-hosting/azure), [GCP](/self-hosting/gcp), [OCI](/self-hosting/oci), or [Kubernetes](/self-hosting/kubernetes) guides instead.
+Multi-host topologies (separate SBC, feature-server, web, and monitoring tiers) are not yet supported via apt. Only the single-host `jambonz-mini` package is currently published. If you need a clustered deployment, use the [AWS](/self-hosting/aws), [Azure](/self-hosting/azure), [GCP](/self-hosting/gcp), or [Kubernetes](/self-hosting/kubernetes) guides instead.
 </Warning>
